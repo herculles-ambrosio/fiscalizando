@@ -77,7 +77,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <p className="px-2 pb-1 text-[11px] uppercase tracking-wide text-sidebar-foreground/50">
               Prefeitura ativa
             </p>
-            <Select value={municipioId ?? undefined} onValueChange={trocar}>
+            <Select value={municipioId ?? ""} onValueChange={trocar}>
               <SelectTrigger className="h-9 border-sidebar-border bg-sidebar-accent/40 text-sm text-sidebar-foreground">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
@@ -141,7 +141,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </header>
         {podeTrocar && (
           <div className="border-b border-border bg-card px-5 py-2 md:hidden">
-            <Select value={municipioId ?? undefined} onValueChange={trocar}>
+            <Select value={municipioId ?? ""} onValueChange={trocar}>
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Prefeitura" />
               </SelectTrigger>
