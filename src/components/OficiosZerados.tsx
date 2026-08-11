@@ -146,7 +146,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
           Gerar ofícios de zerados
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Ofícios de retificação — zerados</DialogTitle>
           <DialogDescription>
@@ -192,6 +192,39 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                   Apenas os selecionados ({selecionados.length})
                 </label>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Prévia do documento</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={gerarPrevia}
+                  disabled={carregandoPrevia || !!progresso}
+                >
+                  {carregandoPrevia ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Eye className="mr-2 h-4 w-4" />
+                  )}
+                  {previaBlob ? "Atualizar prévia" : "Ver prévia"}
+                </Button>
+              </div>
+              {previaBlob && (
+                <p className="text-xs text-muted-foreground">
+                  Exemplo com o primeiro contribuinte: {previaContribuinte}
+                </p>
+              )}
+              <div
+                ref={previaRef}
+                className={
+                  previaBlob
+                    ? "max-h-[45vh] overflow-auto rounded-md border bg-muted/30 p-2 [&_.docx-wrapper]:bg-transparent [&_.docx-wrapper]:p-0 [&_.docx-wrapper>section.docx]:mx-auto [&_.docx-wrapper>section.docx]:shadow-sm"
+                    : "hidden"
+                }
+              />
             </div>
 
             {progresso && (
