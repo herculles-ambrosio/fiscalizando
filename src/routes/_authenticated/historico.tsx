@@ -192,6 +192,7 @@ function Historico() {
                   <TableHead className="text-right">Zerados</TableHead>
                   <TableHead className="text-right">Fora do prazo</TableHead>
                   <TableHead className="text-right">Discrepantes</TableHead>
+                  <TableHead className="w-16 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -213,6 +214,40 @@ function Historico() {
                     <TableCell className="text-right">{c.total_zerados ?? "—"}</TableCell>
                     <TableCell className="text-right">{c.total_fora_prazo ?? "—"}</TableCell>
                     <TableCell className="text-right">{c.total_discrepantes ?? "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Excluir apuração de ${c.exercicio}`}
+                            disabled={excluindo === c.id}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            {excluindo === c.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir apuração {c.exercicio}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Todos os contribuintes apurados e o histórico de ofícios desta
+                              apuração serão removidos. Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => void excluirCarga(c.id)}>
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
