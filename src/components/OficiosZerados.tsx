@@ -198,7 +198,14 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
 
 
   return (
-    <Dialog open={aberto} onOpenChange={(v) => !progresso && setAberto(v)}>
+    <Dialog
+      open={aberto}
+      onOpenChange={(v) => {
+        if (progresso && progresso.fase !== "concluido") return;
+        if (v) setProgresso(null);
+        setAberto(v);
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="secondary" size="sm">
           <FileText className="mr-2 h-4 w-4" />
