@@ -66,15 +66,17 @@ export function ContribuinteDetalhe({
   onOpenChange: (v: boolean) => void;
 }) {
   const { data: config } = useConfiguracao();
+  const { data: modelos } = useModelos();
   const [gerando, setGerando] = useState(false);
+  const [chaveModelo, setChaveModelo] = useState<string>("");
 
-  const precisaOficio = !!contribuinte?.situacoes.some(
-    (s) => s === "OMISSO" || s === "ZERADO",
-  );
+  const disponiveis = modelosParaSituacoes(modelos, contribuinte?.situacoes ?? []);
+  const modelo = disponiveis.find((m) => m.chave === chaveModelo) ?? disponiveis[0] ?? null;
+  const precisaOficio = disponiveis.length > 0;
   const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
 
   async function gerarOficio() {
-    if (!contribuinte || !config) return;
+    if (!contribuinte || !config || !modelo) return;
     setGerando(true);
     try {
       const brasao = await carregarBrasao(config.brasao_path);
@@ -84,8 +86,9 @@ export function ContribuinteDetalhe({
         inscricao_estadual: contribuinte.inscricao_estadual,
         endereco: contribuinte.endereco,
       };
-      const blob = await gerarDocxZerado({
+      const blob = await gerarDocxOficio({
         contribuinte: alvo,
+        modelo,
         config,
         exercicio,
         dataOficio: hojeIso(),
@@ -101,6 +104,7 @@ export function ContribuinteDetalhe({
       setGerando(false);
     }
   }
+
 
   const { data: historico, isFetching } = useQuery({
     enabled: aberto && !!contribuinte,
