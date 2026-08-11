@@ -48,6 +48,8 @@ const POR_PAGINA = 50;
 function Contribuintes() {
   const { cargaId } = Route.useParams();
   const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
+  const [cnae, setCnae] = useState<string>("TODOS");
+  const [cnaeAberto, setCnaeAberto] = useState(false);
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
