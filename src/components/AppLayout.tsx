@@ -28,7 +28,7 @@ import {
 const NAV_BASE = [
   { to: "/dashboard", rotulo: "Painel", icone: BarChart3 },
   { to: "/nova-apuracao", rotulo: "Nova apuração", icone: FileUp },
-  { to: "/historico", rotulo: "Histórico", icone: History },
+  { to: "/historico", rotulo: "Apurações Realizadas", icone: History },
   { to: "/modelos", rotulo: "Modelos de ofício", icone: FileSignature },
   { to: "/emissoes", rotulo: "Ofícios emitidos", icone: FileClock },
   { to: "/configuracoes", rotulo: "Configurações", icone: Settings },
