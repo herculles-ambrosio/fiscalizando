@@ -348,10 +348,37 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
             </div>
 
             {progresso && (
-              <div className="space-y-1.5">
-                <Progress value={(progresso.feitos / progresso.total) * 100} />
-                <p className="text-xs text-muted-foreground">
-                  Gerando {progresso.feitos} de {progresso.total}…
+              <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
+                <div className="flex items-center justify-between text-sm font-medium">
+                  <span className="flex items-center gap-2">
+                    {progresso.fase === "concluido" ? (
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    {progresso.fase === "documentos"
+                      ? "Gerando ofícios"
+                      : progresso.fase === "compactando"
+                        ? "Compactando ZIP"
+                        : "Concluído"}
+                  </span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {progresso.fase === "compactando"
+                      ? `${progresso.feitos}%`
+                      : `${progresso.feitos} / ${progresso.total}`}
+                  </span>
+                </div>
+                <Progress
+                  value={
+                    progresso.total > 0 ? (progresso.feitos / progresso.total) * 100 : 0
+                  }
+                />
+                <p className="truncate text-xs text-muted-foreground">
+                  {progresso.fase === "concluido"
+                    ? `${progresso.total} ofício(s) prontos — download iniciado.`
+                    : progresso.fase === "compactando"
+                      ? "Montando o arquivo ZIP…"
+                      : (progresso.nomeAtual ?? "Preparando…")}
                 </p>
               </div>
             )}
@@ -359,11 +386,17 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
         )}
 
         <DialogFooter>
-          <Button onClick={gerar} disabled={!configOk || !!progresso}>
-            {progresso && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button
+            onClick={gerar}
+            disabled={!configOk || (!!progresso && progresso.fase !== "concluido")}
+          >
+            {!!progresso && progresso.fase !== "concluido" && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Gerar ZIP
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
