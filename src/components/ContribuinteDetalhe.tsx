@@ -13,11 +13,21 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useModelos, modelosParaSituacoes } from "@/hooks/useModelos";
 import { baixarBlob, carregarBrasao } from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
-import { gerarDocxZerado, nomeArquivoOficio } from "@/lib/oficios/zerados";
+import { gerarDocxOficio } from "@/lib/oficios/documento";
+import { nomeArquivoOficio } from "@/lib/oficios/zerados";
 import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
+
 
 export type ContribuinteLinha = {
   id: string;
