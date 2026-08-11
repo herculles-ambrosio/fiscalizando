@@ -1,0 +1,200 @@
+import {
+  AlignmentType,
+  BorderStyle,
+  Document,
+  ImageRun,
+  Packer,
+  Paragraph,
+  TextRun,
+} from "docx";
+import {
+  analisarCorpo,
+  aplicarPlaceholders,
+  MODELOS_PADRAO,
+  type ModeloOficio,
+} from "./modelos";
+import { dataPorExtenso } from "./texto";
+import type { BrasaoImagem, ConfiguracaoMunicipio, ContribuinteOficio } from "./zerados";
+
+const FONTE = "Arial";
+
+export type ParametrosOficio = {
+  modelo: ModeloOficio;
+  contribuinte: ContribuinteOficio;
+  config: ConfiguracaoMunicipio;
+  exercicio: number;
+  dataOficio: string;
+  brasao?: BrasaoImagem | null;
+};
+
+function tituloCabecalho(texto: string, tamanho: number) {
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 40 },
+    children: [new TextRun({ text: texto, bold: true, size: tamanho, font: FONTE })],
+  });
+}
+
+export function construirOficio(params: ParametrosOficio): Document {
+  const { modelo, contribuinte, config, exercicio, dataOficio, brasao } = params;
+  const subst = (t: string) =>
+    aplicarPlaceholders(t, { contribuinte, config, exercicio, dataOficio });
+
+  const cabecalho: Paragraph[] = [];
+
+  if (brasao) {
+    cabecalho.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 80 },
+        children: [
+          new ImageRun({
+            type: brasao.tipo,
+            data: brasao.dados,
+            transformation: { width: 70, height: 70 },
+            altText: {
+              title: "Brasão",
+              description: `Brasão da ${config.nome_prefeitura}`,
+              name: "brasao",
+            },
+          }),
+        ],
+      }),
+    );
+  }
+
+  cabecalho.push(
+    tituloCabecalho(config.nome_prefeitura, 26),
+    tituloCabecalho(config.estado, 22),
+    tituloCabecalho(config.secretaria, 22),
+    tituloCabecalho(config.setor, 20),
+    new Paragraph({
+      spacing: { after: 240 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 1 } },
+      children: [],
+    }),
+  );
+
+  const corpo: Paragraph[] = analisarCorpo(modelo.corpo).map((bloco) => {
+    switch (bloco.tipo) {
+      case "espaco":
+        return new Paragraph({ spacing: { after: 100 }, children: [] });
+      case "citacao":
+        return new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          spacing: { after: 160, line: 276 },
+          children: [
+            new TextRun({ text: subst(bloco.texto), size: 22, font: FONTE, italics: true }),
+          ],
+        });
+      case "centralizado":
+        return new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 160 },
+          children: [new TextRun({ text: subst(bloco.texto), size: 22, font: FONTE, bold: true })],
+        });
+      case "campo":
+        return new Paragraph({
+          spacing: { after: 60 },
+          children: [
+            new TextRun({ text: `${subst(bloco.rotulo)}: `, size: 22, font: FONTE }),
+            new TextRun({ text: subst(bloco.valor), size: 22, font: FONTE, bold: true }),
+          ],
+        });
+      default:
+        return new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          spacing: { after: 160, line: 276 },
+          children: [new TextRun({ text: subst(bloco.texto), size: 22, font: FONTE })],
+        });
+    }
+  });
+
+  return new Document({
+    styles: { default: { document: { run: { font: FONTE, size: 22 } } } },
+    sections: [
+      {
+        properties: {
+          page: {
+            size: { width: 12240, height: 15840 },
+            margin: { top: 1080, right: 1080, bottom: 1080, left: 1080 },
+          },
+        },
+        children: [
+          ...cabecalho,
+
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+            children: [
+              new TextRun({
+                text: subst(modelo.titulo),
+                bold: true,
+                size: 24,
+                font: FONTE,
+              }),
+            ],
+          }),
+
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            spacing: { after: 200 },
+            children: [
+              new TextRun({
+                text: `${config.cidade_data}, ${dataPorExtenso(dataOficio)}.`,
+                size: 22,
+                font: FONTE,
+              }),
+            ],
+          }),
+
+          ...corpo,
+
+          new Paragraph({ spacing: { after: 320 }, children: [] }),
+
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 40 },
+            children: [
+              new TextRun({ text: config.texto_assinatura, bold: true, size: 22, font: FONTE }),
+            ],
+          }),
+          ...(config.signatario_nome
+            ? [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [new TextRun({ text: config.signatario_nome, size: 22, font: FONTE })],
+                }),
+              ]
+            : []),
+          ...(config.signatario_cargo
+            ? [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [new TextRun({ text: config.signatario_cargo, size: 20, font: FONTE })],
+                }),
+              ]
+            : []),
+
+          new Paragraph({ spacing: { after: 400 }, children: [] }),
+
+          new Paragraph({
+            spacing: { after: 240 },
+            children: [new TextRun({ text: "Recebi ____/____/____", size: 22, font: FONTE })],
+          }),
+
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: config.endereco_rodape, size: 18, font: FONTE })],
+          }),
+        ],
+      },
+    ],
+  });
+}
+
+export async function gerarDocxOficio(params: ParametrosOficio): Promise<Blob> {
+  return Packer.toBlob(construirOficio(params));
+}
+
+export const MODELO_ZERADO_PADRAO = MODELOS_PADRAO.find((m) => m.chave === "zerado")!;

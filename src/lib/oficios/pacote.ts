@@ -1,12 +1,13 @@
 import JSZip from "jszip";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  gerarDocxZerado,
   nomeArquivoOficio,
   type BrasaoImagem,
   type ConfiguracaoMunicipio,
   type ContribuinteOficio,
 } from "./zerados";
+import { gerarDocxOficio } from "./documento";
+import type { ModeloOficio } from "./modelos";
 import { nomeArquivoSeguro } from "./texto";
 
 export async function carregarBrasao(path: string | null): Promise<BrasaoImagem | null> {
@@ -27,15 +28,16 @@ export type ProgressoOficios = {
 
 const respirar = () => new Promise((r) => setTimeout(r, 0));
 
-export async function gerarZipOficiosZerados(params: {
+export async function gerarZipOficios(params: {
   contribuintes: ContribuinteOficio[];
+  modelo: ModeloOficio;
   config: ConfiguracaoMunicipio;
   exercicio: number;
   dataOficio: string;
   brasaoPath: string | null;
   onProgresso?: (p: ProgressoOficios) => void;
 }): Promise<Blob> {
-  const { contribuintes, config, exercicio, dataOficio, brasaoPath, onProgresso } = params;
+  const { contribuintes, modelo, config, exercicio, dataOficio, brasaoPath, onProgresso } = params;
   const total = contribuintes.length;
   const brasao = await carregarBrasao(brasaoPath);
   const zip = new JSZip();
@@ -45,7 +47,14 @@ export async function gerarZipOficiosZerados(params: {
 
   for (let i = 0; i < contribuintes.length; i += 1) {
     const contribuinte = contribuintes[i]!;
-    const blob = await gerarDocxZerado({ contribuinte, config, exercicio, dataOficio, brasao });
+    const blob = await gerarDocxOficio({
+      contribuinte,
+      modelo,
+      config,
+      exercicio,
+      dataOficio,
+      brasao,
+    });
     let nome = nomeArquivoOficio(contribuinte);
     let sufixo = 2;
     while (usados.has(nome)) {
@@ -72,7 +81,6 @@ export async function gerarZipOficiosZerados(params: {
   return zipBlob;
 }
 
-
 export function baixarBlob(blob: Blob, nome: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -84,6 +92,6 @@ export function baixarBlob(blob: Blob, nome: string) {
   URL.revokeObjectURL(url);
 }
 
-export function nomeZip(cidade: string, exercicio: number): string {
-  return `oficios_zerados_${nomeArquivoSeguro(cidade)}_${exercicio}.zip`;
+export function nomeZip(chaveModelo: string, cidade: string, exercicio: number): string {
+  return `oficios_${nomeArquivoSeguro(chaveModelo)}_${nomeArquivoSeguro(cidade)}_${exercicio}.zip`;
 }
