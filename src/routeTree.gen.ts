@@ -18,6 +18,7 @@ import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authentica
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
 import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
 import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './routes/_authenticated/consultoria/prefeituras'
+import { Route as AuthenticatedConsultoriaUsuariosRouteImport } from './routes/_authenticated/consultoria/usuarios'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -68,6 +69,12 @@ const AuthenticatedConsultoriaPrefeiturasRoute =
     path: '/prefeituras',
     getParentRoute: () => AuthenticatedConsultoriaRouteRoute,
   } as any)
+const AuthenticatedConsultoriaUsuariosRoute =
+  AuthenticatedConsultoriaUsuariosRouteImport.update({
+    id: '/usuarios',
+    path: '/usuarios',
+    getParentRoute: () => AuthenticatedConsultoriaRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
+  '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -88,6 +96,7 @@ export interface FileRoutesByTo {
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
+  '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -100,6 +109,7 @@ export interface FileRoutesById {
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/_authenticated/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
+  '/_authenticated/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/nova-apuracao'
     | '/cargas/$cargaId'
     | '/consultoria/prefeituras'
+    | '/consultoria/usuarios'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/nova-apuracao'
     | '/cargas/$cargaId'
     | '/consultoria/prefeituras'
+    | '/consultoria/usuarios'
   id:
     | '__root__'
     | '/'
@@ -133,6 +145,7 @@ export interface FileRouteTypes {
     | '/_authenticated/nova-apuracao'
     | '/_authenticated/cargas/$cargaId'
     | '/_authenticated/consultoria/prefeituras'
+    | '/_authenticated/consultoria/usuarios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,17 +218,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConsultoriaPrefeiturasRouteImport
       parentRoute: typeof AuthenticatedConsultoriaRouteRoute
     }
+    '/_authenticated/consultoria/usuarios': {
+      id: '/_authenticated/consultoria/usuarios'
+      path: '/usuarios'
+      fullPath: '/consultoria/usuarios'
+      preLoaderRoute: typeof AuthenticatedConsultoriaUsuariosRouteImport
+      parentRoute: typeof AuthenticatedConsultoriaRouteRoute
+    }
   }
 }
 
 interface AuthenticatedConsultoriaRouteRouteChildren {
   AuthenticatedConsultoriaPrefeiturasRoute: typeof AuthenticatedConsultoriaPrefeiturasRoute
+  AuthenticatedConsultoriaUsuariosRoute: typeof AuthenticatedConsultoriaUsuariosRoute
 }
 
 const AuthenticatedConsultoriaRouteRouteChildren: AuthenticatedConsultoriaRouteRouteChildren =
   {
     AuthenticatedConsultoriaPrefeiturasRoute:
       AuthenticatedConsultoriaPrefeiturasRoute,
+    AuthenticatedConsultoriaUsuariosRoute:
+      AuthenticatedConsultoriaUsuariosRoute,
   }
 
 const AuthenticatedConsultoriaRouteRouteWithChildren =
