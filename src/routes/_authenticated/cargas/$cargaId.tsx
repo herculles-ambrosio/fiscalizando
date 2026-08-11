@@ -164,6 +164,13 @@ function Contribuintes() {
             }}
           >
             {s === "TODOS" ? "Todos" : ROTULO_SITUACAO[s]}
+            <span
+              className={`ml-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
+                filtro === s ? "bg-primary-foreground/20" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {contagens ? contagens[s] : "…"}
+            </span>
           </Button>
         ))}
 
