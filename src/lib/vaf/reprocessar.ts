@@ -19,7 +19,9 @@ type LinhaContribuinte = {
   inscricao_estadual: string;
   situacoes: string[];
   regime_recolhimento: string | null;
+  vaf_atual: number | null;
 };
+
 
 function normalizarRegime(bruto: unknown): string | null {
   const regime = String(bruto ?? "")
