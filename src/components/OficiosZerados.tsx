@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronsUpDown, Eye, FileText, Loader2 } from "lucide-react";
+import { Check, CheckCircle2, ChevronsUpDown, Eye, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
-import { baixarBlob, carregarBrasao, gerarZipOficiosZerados, nomeZip } from "@/lib/oficios/pacote";
+import {
+  baixarBlob,
+  carregarBrasao,
+  gerarZipOficiosZerados,
+  nomeZip,
+  type ProgressoOficios,
+} from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
 import { formatarCnpj } from "@/lib/format";
 import { gerarDocxZerado, type ContribuinteOficio } from "@/lib/oficios/zerados";
@@ -44,7 +50,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   const [aberto, setAberto] = useState(false);
   const [dataOficio, setDataOficio] = useState(hojeIso());
   const [escopo, setEscopo] = useState<"todos" | "selecionados">("todos");
-  const [progresso, setProgresso] = useState<{ feitos: number; total: number } | null>(null);
+  const [progresso, setProgresso] = useState<ProgressoOficios | null>(null);
   const [previaBlob, setPreviaBlob] = useState<Blob | null>(null);
   const [previaContribuinte, setPreviaContribuinte] = useState<string | null>(null);
   const [carregandoPrevia, setCarregandoPrevia] = useState(false);
@@ -168,29 +174,38 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
         toast.error("Nenhum contribuinte zerado para gerar.");
         return;
       }
-      setProgresso({ feitos: 0, total: contribuintes.length });
+      setProgresso({ fase: "documentos", feitos: 0, total: contribuintes.length });
       const zip = await gerarZipOficiosZerados({
         contribuintes,
         config,
         exercicio,
         dataOficio,
         brasaoPath: config.brasao_path,
-        onProgresso: (feitos, total) => setProgresso({ feitos, total }),
+        onProgresso: (p) => setProgresso(p),
       });
       baixarBlob(zip, nomeZip(config.cidade_data.split("/")[0] ?? "municipio", exercicio));
-      toast.success(`${contribuintes.length} ofício(s) gerado(s).`);
-      setAberto(false);
+      toast.success(`${contribuintes.length} ofício(s) gerado(s).`, {
+        description: "O download do ZIP foi iniciado.",
+      });
+      setTimeout(() => setAberto(false), 1200);
     } catch (erro) {
       toast.error("Falha ao gerar os ofícios.", {
         description: erro instanceof Error ? erro.message : undefined,
       });
-    } finally {
       setProgresso(null);
     }
   }
 
+
   return (
-    <Dialog open={aberto} onOpenChange={(v) => !progresso && setAberto(v)}>
+    <Dialog
+      open={aberto}
+      onOpenChange={(v) => {
+        if (progresso && progresso.fase !== "concluido") return;
+        if (v) setProgresso(null);
+        setAberto(v);
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="secondary" size="sm">
           <FileText className="mr-2 h-4 w-4" />
@@ -340,10 +355,37 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
             </div>
 
             {progresso && (
-              <div className="space-y-1.5">
-                <Progress value={(progresso.feitos / progresso.total) * 100} />
-                <p className="text-xs text-muted-foreground">
-                  Gerando {progresso.feitos} de {progresso.total}…
+              <div className="space-y-1.5 rounded-md border bg-muted/30 p-3">
+                <div className="flex items-center justify-between text-sm font-medium">
+                  <span className="flex items-center gap-2">
+                    {progresso.fase === "concluido" ? (
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    {progresso.fase === "documentos"
+                      ? "Gerando ofícios"
+                      : progresso.fase === "compactando"
+                        ? "Compactando ZIP"
+                        : "Concluído"}
+                  </span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {progresso.fase === "compactando"
+                      ? `${progresso.feitos}%`
+                      : `${progresso.feitos} / ${progresso.total}`}
+                  </span>
+                </div>
+                <Progress
+                  value={
+                    progresso.total > 0 ? (progresso.feitos / progresso.total) * 100 : 0
+                  }
+                />
+                <p className="truncate text-xs text-muted-foreground">
+                  {progresso.fase === "concluido"
+                    ? `${progresso.total} ofício(s) prontos — download iniciado.`
+                    : progresso.fase === "compactando"
+                      ? "Montando o arquivo ZIP…"
+                      : (progresso.nomeAtual ?? "Preparando…")}
                 </p>
               </div>
             )}
@@ -351,11 +393,17 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
         )}
 
         <DialogFooter>
-          <Button onClick={gerar} disabled={!configOk || !!progresso}>
-            {progresso && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button
+            onClick={gerar}
+            disabled={!configOk || (!!progresso && progresso.fase !== "concluido")}
+          >
+            {!!progresso && progresso.fase !== "concluido" && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Gerar ZIP
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
