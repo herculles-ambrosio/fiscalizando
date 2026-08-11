@@ -118,6 +118,8 @@ function Contribuintes() {
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [detalhe, setDetalhe] = useState<ContribuinteLinha | null>(null);
+
   const [ordem, setOrdem] = useState<{ coluna: ColunaOrdenavel; asc: boolean }>({
     coluna: "vaf_atual",
     asc: false,
