@@ -18,18 +18,30 @@ export async function carregarBrasao(path: string | null): Promise<BrasaoImagem 
   return { dados: buffer, tipo };
 }
 
+export type ProgressoOficios = {
+  fase: "documentos" | "compactando" | "concluido";
+  feitos: number;
+  total: number;
+  nomeAtual?: string;
+};
+
+const respirar = () => new Promise((r) => setTimeout(r, 0));
+
 export async function gerarZipOficiosZerados(params: {
   contribuintes: ContribuinteOficio[];
   config: ConfiguracaoMunicipio;
   exercicio: number;
   dataOficio: string;
   brasaoPath: string | null;
-  onProgresso?: (feitos: number, total: number) => void;
+  onProgresso?: (p: ProgressoOficios) => void;
 }): Promise<Blob> {
   const { contribuintes, config, exercicio, dataOficio, brasaoPath, onProgresso } = params;
+  const total = contribuintes.length;
   const brasao = await carregarBrasao(brasaoPath);
   const zip = new JSZip();
   const usados = new Set<string>();
+
+  onProgresso?.({ fase: "documentos", feitos: 0, total });
 
   for (let i = 0; i < contribuintes.length; i += 1) {
     const contribuinte = contribuintes[i]!;
@@ -42,11 +54,24 @@ export async function gerarZipOficiosZerados(params: {
     }
     usados.add(nome);
     zip.file(nome, blob);
-    onProgresso?.(i + 1, contribuintes.length);
+    onProgresso?.({
+      fase: "documentos",
+      feitos: i + 1,
+      total,
+      nomeAtual: contribuinte.nome ?? undefined,
+    });
+    // devolve o controle ao navegador para a barra de progresso repintar
+    if (i % 5 === 0) await respirar();
   }
 
-  return zip.generateAsync({ type: "blob" });
+  onProgresso?.({ fase: "compactando", feitos: 0, total: 100 });
+  const zipBlob = await zip.generateAsync({ type: "blob" }, (meta) => {
+    onProgresso?.({ fase: "compactando", feitos: Math.round(meta.percent), total: 100 });
+  });
+  onProgresso?.({ fase: "concluido", feitos: total, total });
+  return zipBlob;
 }
+
 
 export function baixarBlob(blob: Blob, nome: string) {
   const url = URL.createObjectURL(blob);
