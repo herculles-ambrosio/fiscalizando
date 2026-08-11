@@ -308,7 +308,10 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={gerarPrevia}
+                  onClick={() => {
+                    setPreviaAtiva(true);
+                    void gerarPrevia();
+                  }}
                   disabled={carregandoPrevia || !!progresso || !alvo}
                 >
                   {carregandoPrevia ? (
@@ -318,6 +321,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                   )}
                   {previaBlob ? "Atualizar prévia" : "Ver prévia"}
                 </Button>
+
               </div>
               {previaBlob && (
                 <p className="text-xs text-muted-foreground">
