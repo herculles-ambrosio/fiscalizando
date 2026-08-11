@@ -55,6 +55,7 @@ const SITUACOES: Situacao[] = ["OMISSO", "ZERADO", "FORA_DO_PRAZO", "DISCREPANTE
 const POR_PAGINA = 50;
 
 type ColunaOrdenavel =
+
   | "nome"
   | "cnpj"
   | "inscricao_estadual"
