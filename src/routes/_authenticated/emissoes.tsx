@@ -156,6 +156,21 @@ function Emissoes() {
                           </p>
                         )}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => reemitir(e)}
+                          disabled={reemissao.isPending && emitindoId === e.id}
+                        >
+                          {reemissao.isPending && emitindoId === e.id ? (
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <FileDown className="mr-2 h-3.5 w-3.5" />
+                          )}
+                          Baixar novamente
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
