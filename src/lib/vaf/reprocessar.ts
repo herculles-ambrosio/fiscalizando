@@ -62,19 +62,23 @@ async function carregarContribuintes(cargaId: string): Promise<LinhaContribuinte
   return todos;
 }
 
+const SITUACOES_BASE = ["OMISSO", "ZERADO", "FORA_DO_PRAZO", "DISCREPANTE"];
+
 function situacoesAtualizadas(
   situacoes: string[],
   regime: string | null,
   simei: boolean,
   vaf: number | null,
 ): Situacao[] {
-  let base = (situacoes ?? []).filter((s) => s !== "SIMPLES_NACIONAL" && s !== "SIMEI");
+  let base = (situacoes ?? []).filter(
+    (s) => s !== "SIMPLES_NACIONAL" && s !== "SIMEI" && s !== "NORMAL",
+  );
   // Com o VAF do registro 40 preenchido, o SIMEI deixa de ser "zerado".
   if (simei && (vaf ?? 0) !== 0) base = base.filter((s) => s !== "ZERADO");
-  if (base.filter((s) => s !== "SOMENTE_RETORNO").length === 0) base.push("NORMAL");
-  base = base.filter((s) => s !== "NORMAL" || base.length === 1 || base.includes("SOMENTE_RETORNO"));
+  if (!base.some((s) => SITUACOES_BASE.includes(s))) base.push("NORMAL");
   return [...base, ...situacoesDoRegime(regime, simei)] as Situacao[];
 }
+
 
 
 /** Registros SIMEI (tipo 40) do arquivo de retorno guardado. */
