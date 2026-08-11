@@ -62,7 +62,9 @@ const SITUACOES: Situacao[] = [
   "NORMAL",
   "SIMPLES_NACIONAL",
   "SIMEI",
+  "SOMENTE_RETORNO",
 ];
+
 const POR_PAGINA = 50;
 
 type Ordem = { coluna: ColunaOrdenavel; asc: boolean };
