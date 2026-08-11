@@ -79,6 +79,7 @@ export async function processarApuracao(params: {
       vaf_anterior: c.vaf_anterior,
       variacao_pct: c.variacao_pct,
       data_entrega: c.data_entrega,
+      regime_recolhimento: c.regime_recolhimento,
       situacoes: c.situacoes,
     }));
 
@@ -104,6 +105,8 @@ export async function processarApuracao(params: {
         total_fora_prazo: resultado.totais.fora_do_prazo,
         total_discrepantes: resultado.totais.discrepante,
         total_normais: resultado.totais.normal,
+        total_simples_nacional: resultado.totais.simples_nacional,
+        total_simei: resultado.totais.simei,
       })
       .eq("id", cargaId);
     if (erroFinal) throw erroFinal;

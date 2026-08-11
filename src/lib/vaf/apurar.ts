@@ -7,6 +7,8 @@ export const SITUACOES = [
   "FORA_DO_PRAZO",
   "DISCREPANTE",
   "NORMAL",
+  "SIMPLES_NACIONAL",
+  "SIMEI",
 ] as const;
 export type Situacao = (typeof SITUACOES)[number];
 
@@ -16,7 +18,19 @@ export const ROTULO_SITUACAO: Record<Situacao, string> = {
   FORA_DO_PRAZO: "Fora do prazo",
   DISCREPANTE: "Discrepante",
   NORMAL: "Normal",
+  SIMPLES_NACIONAL: "Simples Nacional",
+  SIMEI: "SIMEI (MEI)",
 };
+
+/** Códigos do campo "regime de recolhimento" do arquivo de ativos (SEF/MG). */
+export const REGIME_SIMPLES_NACIONAL = "58";
+export const REGIME_SIMEI = "74";
+
+export function situacoesDoRegime(regime: string | null): Situacao[] {
+  if (regime === REGIME_SIMEI) return ["SIMEI"];
+  if (regime === REGIME_SIMPLES_NACIONAL) return ["SIMPLES_NACIONAL"];
+  return [];
+}
 
 export type ContribuinteApurado = {
   inscricao_estadual: string;
@@ -29,6 +43,7 @@ export type ContribuinteApurado = {
   vaf_anterior: number | null;
   variacao_pct: number | null;
   data_entrega: string | null;
+  regime_recolhimento: string | null;
   situacoes: Situacao[];
 };
 
@@ -133,6 +148,8 @@ export function apurar(
     fora_do_prazo: 0,
     discrepante: 0,
     normal: 0,
+    simples_nacional: 0,
+    simei: 0,
   };
 
   for (const [ie, ativo] of ativos) {
@@ -182,6 +199,10 @@ export function apurar(
     if (variacao != null && Math.abs(variacao) / 100 >= limiar) situacoes.push("DISCREPANTE");
     if (situacoes.length === 0) situacoes.push("NORMAL");
 
+    const regime = String(ativo["regime_recolhimento"] ?? "").trim().padStart(2, "0");
+    const regimeNormalizado = regime === "00" ? null : regime;
+    situacoes.push(...situacoesDoRegime(regimeNormalizado));
+
     totais.ativos += 1;
     for (const s of situacoes) {
       const chave = s.toLowerCase() as keyof typeof totais;
@@ -201,6 +222,7 @@ export function apurar(
       vaf_anterior: vafAnterior,
       variacao_pct: variacao,
       data_entrega: dataEntregaISO,
+      regime_recolhimento: regimeNormalizado,
       situacoes,
     });
   }
