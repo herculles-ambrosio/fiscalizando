@@ -411,13 +411,19 @@ function Contribuintes() {
                 <TableBody>
                   {data?.linhas.map((c) => {
                     const zerado = (c.situacoes as string[]).includes("ZERADO");
+                    const somenteRetorno = (c.situacoes as string[]).includes("SOMENTE_RETORNO");
                     return (
                       <TableRow
                         key={c.id}
                         tabIndex={0}
                         role="button"
                         aria-label={`Ver detalhes de ${c.nome ?? c.inscricao_estadual}`}
-                        className="cursor-pointer"
+                        className={
+                          somenteRetorno
+                            ? "cursor-pointer bg-destructive/10 text-destructive hover:bg-destructive/15"
+                            : "cursor-pointer"
+                        }
+
                         onClick={() => setDetalhe(c as unknown as ContribuinteLinha)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
