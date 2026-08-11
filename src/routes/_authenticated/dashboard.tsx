@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { FileUp, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { usePerfil } from "@/hooks/usePerfil";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatarDataHora } from "@/lib/format";
@@ -42,16 +42,17 @@ const CARDS = [
 ] as const;
 
 function Dashboard() {
-  const { data: perfil } = usePerfil();
+  const { municipioId } = useMunicipioAtivo();
   const navigate = useNavigate();
 
   const { data: carga, isLoading } = useQuery({
-    queryKey: ["ultima-carga", perfil?.municipio_id],
-    enabled: !!perfil,
+    queryKey: ["ultima-carga", municipioId],
+    enabled: !!municipioId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cargas")
         .select("*")
+        .eq("municipio_id", municipioId!)
         .eq("status", "concluida")
         .order("criado_em", { ascending: false })
         .limit(1)
