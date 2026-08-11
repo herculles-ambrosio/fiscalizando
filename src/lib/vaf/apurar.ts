@@ -9,6 +9,7 @@ export const SITUACOES = [
   "NORMAL",
   "SIMPLES_NACIONAL",
   "SIMEI",
+  "SOMENTE_RETORNO",
 ] as const;
 export type Situacao = (typeof SITUACOES)[number];
 
@@ -20,6 +21,7 @@ export const ROTULO_SITUACAO: Record<Situacao, string> = {
   NORMAL: "Normal",
   SIMPLES_NACIONAL: "Simples Nacional",
   SIMEI: "SIMEI (MEI)",
+  SOMENTE_RETORNO: "Somente retorno",
 };
 
 /** Códigos do campo "regime de recolhimento" do arquivo de ativos (SEF/MG). */
@@ -32,21 +34,48 @@ export function situacoesDoRegime(regime: string | null, simei = false): Situaca
   return [];
 }
 
+export type RegistroSimei = {
+  inscricao_estadual: string;
+  nome: string | null;
+  cnpj: string | null;
+  /** VAF próprio do registro 40 — vem em reais inteiros (sem decimais implícitas). */
+  vaf: number;
+  data_entrada: string | null;
+  regime_recolhimento: string | null;
+};
+
 /**
- * Inscrições estaduais do SIMEI (MEI) segundo o arquivo de retorno da SEF-MG:
- * registro tipo "40" ("Registro Conteúdo Simples - Simei"), campo 19-34 =
- * município (3) + inscrição estadual (13).
+ * Registros tipo "40" ("Registro Conteúdo Simples - Simei") do arquivo de
+ * retorno da SEF-MG. Campo 19-34 = município (3) + inscrição estadual (13).
  */
-export function iesSimeiDoRetorno(textoRetorno: string): Set<string> {
-  const ies = new Set<string>();
+export function registrosSimeiDoRetorno(textoRetorno: string): Map<string, RegistroSimei> {
+  const mapa = new Map<string, RegistroSimei>();
   for (const linha of separarLinhas(textoRetorno)) {
     if (linha.slice(0, 2) !== "40") continue;
     const campo = linha.slice(18, 34).replace(/[^0-9]/g, "");
     if (campo.length < 13) continue;
-    ies.add(campo.slice(-13));
+    const ie = campo.slice(-13);
+    const reg = parseLinha(linha, LAYOUTS_RETORNO["40"]!);
+    const digitosVaf = String(reg["valor_vaf"] ?? "").replace(/[^0-9]/g, "");
+    const valor = digitosVaf ? Number(digitosVaf) : 0;
+    const cnpj = String(reg["cnpj"] ?? "").replace(/[^0-9]/g, "");
+    const regime = String(reg["regime_recolhimento"] ?? "").trim().padStart(2, "0");
+    mapa.set(ie, {
+      inscricao_estadual: ie,
+      nome: String(reg["nome_contribuinte"] ?? "").trim() || null,
+      cnpj: cnpj ? cnpj.padStart(14, "0") : null,
+      vaf: String(reg["sinal_valor_vaf"] ?? "").trim() === "-" ? -valor : valor,
+      data_entrada: dataSefParaISO(String(reg["data_entrada_vaf"] ?? "")),
+      regime_recolhimento: regime === "00" ? null : regime,
+    });
   }
-  return ies;
+  return mapa;
 }
+
+export function iesSimeiDoRetorno(textoRetorno: string): Set<string> {
+  return new Set(registrosSimeiDoRetorno(textoRetorno).keys());
+}
+
 
 export type ContribuinteApurado = {
   inscricao_estadual: string;
