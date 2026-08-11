@@ -54,7 +54,49 @@ export const Route = createFileRoute("/_authenticated/cargas/$cargaId")({
 const SITUACOES: Situacao[] = ["OMISSO", "ZERADO", "FORA_DO_PRAZO", "DISCREPANTE", "NORMAL"];
 const POR_PAGINA = 50;
 
+type Ordem = { coluna: ColunaOrdenavel; asc: boolean };
+
+function ColunaHead({
+  coluna,
+  ordem,
+  onSort,
+  alinhar,
+  children,
+}: {
+  coluna: ColunaOrdenavel;
+  ordem: Ordem;
+  onSort: (c: ColunaOrdenavel) => void;
+  alinhar?: "right";
+  children: React.ReactNode;
+}) {
+  const ativa = ordem.coluna === coluna;
+  return (
+    <TableHead className={alinhar === "right" ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => onSort(coluna)}
+        aria-label={`Ordenar por ${typeof children === "string" ? children : coluna}`}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${
+          alinhar === "right" ? "flex-row-reverse" : ""
+        } ${ativa ? "text-foreground font-semibold" : ""}`}
+      >
+        {children}
+        {ativa ? (
+          ordem.asc ? (
+            <ArrowUp className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
+  );
+}
+
 type ColunaOrdenavel =
+
 
   | "nome"
   | "cnpj"
