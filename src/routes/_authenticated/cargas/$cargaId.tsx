@@ -201,6 +201,62 @@ function Contribuintes() {
           </Button>
         ))}
 
+        <Popover open={cnaeAberto} onOpenChange={setCnaeAberto}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              role="combobox"
+              aria-expanded={cnaeAberto}
+              className="justify-between gap-2"
+            >
+              {cnae === "TODOS" ? "CNAE: todos" : `CNAE ${cnae}`}
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar CNAE…" />
+              <CommandList>
+                <CommandEmpty>Nenhum CNAE encontrado.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="todos"
+                    onSelect={() => {
+                      setCnae("TODOS");
+                      setPagina(0);
+                      setCnaeAberto(false);
+                    }}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${cnae === "TODOS" ? "opacity-100" : "opacity-0"}`}
+                    />
+                    Todos os CNAEs
+                  </CommandItem>
+                  {(cnaes ?? []).map((c) => (
+                    <CommandItem
+                      key={c.codigo}
+                      value={c.codigo}
+                      onSelect={() => {
+                        setCnae(c.codigo);
+                        setPagina(0);
+                        setCnaeAberto(false);
+                      }}
+                    >
+                      <Check
+                        className={`mr-2 h-4 w-4 ${cnae === c.codigo ? "opacity-100" : "opacity-0"}`}
+                      />
+                      <span className="flex-1">{c.codigo}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{c.total}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+
         <form
           className="ml-auto flex gap-2"
           onSubmit={(e) => {
