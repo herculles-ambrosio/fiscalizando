@@ -277,5 +277,28 @@ export function apurar(
     });
   }
 
+  // ---- SIMEI presentes no retorno que não constam no arquivo de ativos ----
+  for (const [ie, reg] of registrosSimei) {
+    if (ativos.has(ie)) continue;
+    const situacoes: Situacao[] = ["SIMEI", "SOMENTE_RETORNO"];
+    totais.ativos += 1;
+    for (const s of situacoes) totais[s.toLowerCase() as keyof typeof totais] += 1;
+    contribuintes.push({
+      inscricao_estadual: ie,
+      cnpj: reg.cnpj,
+      nome: reg.nome,
+      endereco: null,
+      cnae: null,
+      entregou_declaracao: true,
+      vaf_atual: reg.vaf,
+      vaf_anterior: null,
+      variacao_pct: null,
+      data_entrega: reg.data_entrada,
+      regime_recolhimento: reg.regime_recolhimento,
+      situacoes,
+    });
+  }
+
   return { exercicio, contribuintes, totais };
+
 }
