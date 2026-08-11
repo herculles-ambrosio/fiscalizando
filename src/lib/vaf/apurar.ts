@@ -145,7 +145,9 @@ export function apurar(
   const reg10 = new Map<string, Record<string, any>[]>();
   const reg02 = new Map<string, Record<string, any>>();
   const contagemExercicio = new Map<number, number>();
-  const iesSimei = iesSimeiDoRetorno(textoRetorno);
+  const registrosSimei = registrosSimeiDoRetorno(textoRetorno);
+  const iesSimei = new Set(registrosSimei.keys());
+
 
   for (const linha of separarLinhas(textoRetorno)) {
     const tipo = linha.slice(0, 2);
