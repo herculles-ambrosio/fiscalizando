@@ -14,6 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
 import { OficiosZerados } from "@/components/OficiosZerados";
+import { ContribuinteDetalhe, type ContribuinteLinha } from "@/components/ContribuinteDetalhe";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,6 +118,8 @@ function Contribuintes() {
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [detalhe, setDetalhe] = useState<ContribuinteLinha | null>(null);
+
   const [ordem, setOrdem] = useState<{ coluna: ColunaOrdenavel; asc: boolean }>({
     coluna: "vaf_atual",
     asc: false,
@@ -395,8 +399,21 @@ function Contribuintes() {
                   {data?.linhas.map((c) => {
                     const zerado = (c.situacoes as string[]).includes("ZERADO");
                     return (
-                      <TableRow key={c.id}>
-                        <TableCell>
+                      <TableRow
+                        key={c.id}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Ver detalhes de ${c.nome ?? c.inscricao_estadual}`}
+                        className="cursor-pointer"
+                        onClick={() => setDetalhe(c as unknown as ContribuinteLinha)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setDetalhe(c as unknown as ContribuinteLinha);
+                          }
+                        }}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           {zerado && (
                             <Checkbox
                               checked={selecionados.includes(c.id)}
@@ -405,6 +422,7 @@ function Contribuintes() {
                             />
                           )}
                         </TableCell>
+
                         <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
                         <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
                         <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
@@ -485,7 +503,14 @@ function Contribuintes() {
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
-      </div>
+
+      <ContribuinteDetalhe
+        contribuinte={detalhe}
+        aberto={!!detalhe}
+        onOpenChange={(v) => !v && setDetalhe(null)}
+      />
+    </div>
+
     </div>
   );
 }
