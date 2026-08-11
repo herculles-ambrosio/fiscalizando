@@ -27,7 +27,11 @@ import { baixarBlob, carregarBrasao } from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
 import { gerarDocxOficio } from "@/lib/oficios/documento";
 import { nomeArquivoOficio } from "@/lib/oficios/zerados";
-import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
+import { marcarStatusEmissoes, registrarEmissoes } from "@/lib/oficios/registro";
+import { useEmissoes } from "@/hooks/useEmissoes";
+import { StatusEmissaoBadge } from "@/components/StatusEmissaoBadge";
+import { formatarCnpj, formatarData, formatarDataHora, formatarMoeda, formatarPercentual } from "@/lib/format";
+
 
 
 export type ContribuinteLinha = {
