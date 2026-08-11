@@ -4,6 +4,7 @@ import { Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "@/hooks/usePerfil";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { CONFIG_VAZIA, useConfiguracao, useSalvarConfiguracao } from "@/hooks/useConfiguracao";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ const CAMPOS: { chave: keyof ConfiguracaoMunicipio; rotulo: string; dica?: strin
 
 function Configuracoes() {
   const { data: perfil } = usePerfil();
+  const { municipioId } = useMunicipioAtivo();
   const { data: config, isLoading } = useConfiguracao();
   const salvar = useSalvarConfiguracao();
   const [valores, setValores] = useState<ConfiguracaoMunicipio>(CONFIG_VAZIA);
@@ -53,7 +55,7 @@ function Configuracoes() {
   const [brasaoUrl, setBrasaoUrl] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const admin = perfil?.papel === "admin";
+  const admin = perfil?.ehConsultoria || perfil?.papel === "prefeitura_admin";
 
   useEffect(() => {
     if (!config) return;
@@ -89,10 +91,10 @@ function Configuracoes() {
   }, [brasaoPath]);
 
   async function enviarBrasao(arquivo: File) {
-    if (!perfil) return;
+    if (!municipioId) return;
     setEnviando(true);
     const extensao = arquivo.name.toLowerCase().endsWith(".png") ? "png" : "jpg";
-    const caminho = `${perfil.municipio_id}/brasao.${extensao}`;
+    const caminho = `${municipioId}/brasao.${extensao}`;
     const { error } = await supabase.storage
       .from("brasoes")
       .upload(caminho, arquivo, { upsert: true, contentType: arquivo.type });

@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Loader2, Upload } from "lucide-react";
 import { usePerfil } from "@/hooks/usePerfil";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { processarApuracao, type ProgressoEtapa } from "@/lib/vaf/processar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/nova-apuracao")({
 
 function NovaApuracao() {
   const { data: perfil } = usePerfil();
+  const { municipioId } = useMunicipioAtivo();
   const navigate = useNavigate();
   const [ativos, setAtivos] = useState<File | null>(null);
   const [retorno, setRetorno] = useState<File | null>(null);
@@ -44,12 +46,12 @@ function NovaApuracao() {
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    if (!perfil || !ativos || !retorno) return;
+    if (!perfil || !municipioId || !ativos || !retorno) return;
     setErro(null);
     setProgresso({ etapa: "Iniciando", percentual: 0 });
     try {
       const cargaId = await processarApuracao({
-        municipioId: perfil.municipio_id,
+        municipioId,
         usuarioId: perfil.id,
         arquivoAtivos: ativos,
         arquivoRetorno: retorno,

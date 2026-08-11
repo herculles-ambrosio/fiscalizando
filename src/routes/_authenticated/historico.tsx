@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatarDataHora } from "@/lib/format";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({
@@ -34,12 +35,15 @@ export const Route = createFileRoute("/_authenticated/historico")({
 });
 
 function Historico() {
+  const { municipioId } = useMunicipioAtivo();
   const { data, isLoading } = useQuery({
-    queryKey: ["cargas"],
+    queryKey: ["cargas", municipioId],
+    enabled: !!municipioId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cargas")
         .select("*")
+        .eq("municipio_id", municipioId!)
         .order("criado_em", { ascending: false });
       if (error) throw error;
       return data;

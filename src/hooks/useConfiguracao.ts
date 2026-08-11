@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { usePerfil } from "./usePerfil";
+import { useMunicipioAtivo } from "./useMunicipio";
 import type { ConfiguracaoMunicipio } from "@/lib/oficios/zerados";
 
 export type ConfigRegistro = ConfiguracaoMunicipio & {
@@ -22,16 +22,16 @@ export const CONFIG_VAZIA: ConfiguracaoMunicipio = {
 };
 
 export function useConfiguracao() {
-  const { data: perfil } = usePerfil();
+  const { municipioId } = useMunicipioAtivo();
 
   return useQuery({
-    queryKey: ["configuracao", perfil?.municipio_id],
-    enabled: !!perfil,
+    queryKey: ["configuracao", municipioId],
+    enabled: !!municipioId,
     queryFn: async (): Promise<ConfigRegistro | null> => {
       const { data, error } = await supabase
         .from("configuracoes_municipio")
         .select("*")
-        .eq("municipio_id", perfil!.municipio_id)
+        .eq("municipio_id", municipioId!)
         .maybeSingle();
       if (error) throw error;
       return (data as ConfigRegistro | null) ?? null;
@@ -40,15 +40,15 @@ export function useConfiguracao() {
 }
 
 export function useSalvarConfiguracao() {
-  const { data: perfil } = usePerfil();
+  const { municipioId } = useMunicipioAtivo();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (valores: ConfiguracaoMunicipio & { brasao_path?: string | null }) => {
-      if (!perfil) throw new Error("Perfil não carregado.");
+      if (!municipioId) throw new Error("Nenhuma prefeitura selecionada.");
       const { error } = await supabase
         .from("configuracoes_municipio")
-        .upsert({ ...valores, municipio_id: perfil.municipio_id }, { onConflict: "municipio_id" });
+        .upsert({ ...valores, municipio_id: municipioId }, { onConflict: "municipio_id" });
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["configuracao"] }),

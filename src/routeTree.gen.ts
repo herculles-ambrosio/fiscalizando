@@ -12,10 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_authenticated/consultoria/route'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
+import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
+import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './routes/_authenticated/consultoria/prefeituras'
+import { Route as AuthenticatedConsultoriaUsuariosRouteImport } from './routes/_authenticated/consultoria/usuarios'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,6 +34,12 @@ const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
     path: '/configuracoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedConsultoriaRouteRoute =
+  AuthenticatedConsultoriaRouteRouteImport.update({
+    id: '/consultoria',
+    path: '/consultoria',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -48,65 +58,107 @@ const AuthenticatedNovaApuracaoRoute =
     path: '/nova-apuracao',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTrocarSenhaRoute =
+  AuthenticatedTrocarSenhaRouteImport.update({
+    id: '/trocar-senha',
+    path: '/trocar-senha',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCargasCargaIdRoute =
   AuthenticatedCargasCargaIdRouteImport.update({
     id: '/cargas/$cargaId',
     path: '/cargas/$cargaId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedConsultoriaPrefeiturasRoute =
+  AuthenticatedConsultoriaPrefeiturasRouteImport.update({
+    id: '/prefeituras',
+    path: '/prefeituras',
+    getParentRoute: () => AuthenticatedConsultoriaRouteRoute,
+  } as any)
+const AuthenticatedConsultoriaUsuariosRoute =
+  AuthenticatedConsultoriaUsuariosRouteImport.update({
+    id: '/usuarios',
+    path: '/usuarios',
+    getParentRoute: () => AuthenticatedConsultoriaRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
+  '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
+  '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
+  '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
+  '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
+  '/_authenticated/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
+  '/_authenticated/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/consultoria'
     | '/configuracoes'
     | '/dashboard'
     | '/historico'
     | '/nova-apuracao'
+    | '/trocar-senha'
     | '/cargas/$cargaId'
+    | '/consultoria/prefeituras'
+    | '/consultoria/usuarios'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/consultoria'
     | '/configuracoes'
     | '/dashboard'
     | '/historico'
     | '/nova-apuracao'
+    | '/trocar-senha'
     | '/cargas/$cargaId'
+    | '/consultoria/prefeituras'
+    | '/consultoria/usuarios'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_authenticated/consultoria'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/historico'
     | '/_authenticated/nova-apuracao'
+    | '/_authenticated/trocar-senha'
     | '/_authenticated/cargas/$cargaId'
+    | '/_authenticated/consultoria/prefeituras'
+    | '/_authenticated/consultoria/usuarios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -137,6 +189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/consultoria': {
+      id: '/_authenticated/consultoria'
+      path: '/consultoria'
+      fullPath: '/consultoria'
+      preLoaderRoute: typeof AuthenticatedConsultoriaRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -158,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNovaApuracaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/trocar-senha': {
+      id: '/_authenticated/trocar-senha'
+      path: '/trocar-senha'
+      fullPath: '/trocar-senha'
+      preLoaderRoute: typeof AuthenticatedTrocarSenhaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/cargas/$cargaId': {
       id: '/_authenticated/cargas/$cargaId'
       path: '/cargas/$cargaId'
@@ -165,22 +231,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCargasCargaIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/consultoria/prefeituras': {
+      id: '/_authenticated/consultoria/prefeituras'
+      path: '/prefeituras'
+      fullPath: '/consultoria/prefeituras'
+      preLoaderRoute: typeof AuthenticatedConsultoriaPrefeiturasRouteImport
+      parentRoute: typeof AuthenticatedConsultoriaRouteRoute
+    }
+    '/_authenticated/consultoria/usuarios': {
+      id: '/_authenticated/consultoria/usuarios'
+      path: '/usuarios'
+      fullPath: '/consultoria/usuarios'
+      preLoaderRoute: typeof AuthenticatedConsultoriaUsuariosRouteImport
+      parentRoute: typeof AuthenticatedConsultoriaRouteRoute
+    }
   }
 }
 
+interface AuthenticatedConsultoriaRouteRouteChildren {
+  AuthenticatedConsultoriaPrefeiturasRoute: typeof AuthenticatedConsultoriaPrefeiturasRoute
+  AuthenticatedConsultoriaUsuariosRoute: typeof AuthenticatedConsultoriaUsuariosRoute
+}
+
+const AuthenticatedConsultoriaRouteRouteChildren: AuthenticatedConsultoriaRouteRouteChildren =
+  {
+    AuthenticatedConsultoriaPrefeiturasRoute:
+      AuthenticatedConsultoriaPrefeiturasRoute,
+    AuthenticatedConsultoriaUsuariosRoute:
+      AuthenticatedConsultoriaUsuariosRoute,
+  }
+
+const AuthenticatedConsultoriaRouteRouteWithChildren =
+  AuthenticatedConsultoriaRouteRoute._addFileChildren(
+    AuthenticatedConsultoriaRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedConsultoriaRouteRoute: typeof AuthenticatedConsultoriaRouteRouteWithChildren
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
+  AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
   AuthenticatedCargasCargaIdRoute: typeof AuthenticatedCargasCargaIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedConsultoriaRouteRoute:
+    AuthenticatedConsultoriaRouteRouteWithChildren,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
+  AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
   AuthenticatedCargasCargaIdRoute: AuthenticatedCargasCargaIdRoute,
 }
 
@@ -194,13 +297,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

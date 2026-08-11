@@ -244,23 +244,26 @@ export type Database = {
         Row: {
           criado_em: string
           id: string
-          municipio_id: string
+          municipio_id: string | null
           nome: string | null
           papel: string
+          precisa_trocar_senha: boolean
         }
         Insert: {
           criado_em?: string
           id: string
-          municipio_id: string
+          municipio_id?: string | null
           nome?: string | null
           papel?: string
+          precisa_trocar_senha?: boolean
         }
         Update: {
           criado_em?: string
           id?: string
-          municipio_id?: string
+          municipio_id?: string | null
           nome?: string | null
           papel?: string
+          precisa_trocar_senha?: boolean
         }
         Relationships: [
           {
