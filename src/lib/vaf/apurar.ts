@@ -218,7 +218,7 @@ export function apurar(
 
     const regime = String(ativo["regime_recolhimento"] ?? "").trim().padStart(2, "0");
     const regimeNormalizado = regime === "00" ? null : regime;
-    situacoes.push(...situacoesDoRegime(regimeNormalizado));
+    situacoes.push(...situacoesDoRegime(regimeNormalizado, iesSimei.has(ie)));
 
     totais.ativos += 1;
     for (const s of situacoes) {
