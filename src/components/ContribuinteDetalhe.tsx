@@ -13,11 +13,21 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useModelos, modelosParaSituacoes } from "@/hooks/useModelos";
 import { baixarBlob, carregarBrasao } from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
-import { gerarDocxZerado, nomeArquivoOficio } from "@/lib/oficios/zerados";
+import { gerarDocxOficio } from "@/lib/oficios/documento";
+import { nomeArquivoOficio } from "@/lib/oficios/zerados";
 import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
+
 
 export type ContribuinteLinha = {
   id: string;
@@ -56,15 +66,17 @@ export function ContribuinteDetalhe({
   onOpenChange: (v: boolean) => void;
 }) {
   const { data: config } = useConfiguracao();
+  const { data: modelos } = useModelos();
   const [gerando, setGerando] = useState(false);
+  const [chaveModelo, setChaveModelo] = useState<string>("");
 
-  const precisaOficio = !!contribuinte?.situacoes.some(
-    (s) => s === "OMISSO" || s === "ZERADO",
-  );
+  const disponiveis = modelosParaSituacoes(modelos, contribuinte?.situacoes ?? []);
+  const modelo = disponiveis.find((m) => m.chave === chaveModelo) ?? disponiveis[0] ?? null;
+  const precisaOficio = disponiveis.length > 0;
   const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
 
   async function gerarOficio() {
-    if (!contribuinte || !config) return;
+    if (!contribuinte || !config || !modelo) return;
     setGerando(true);
     try {
       const brasao = await carregarBrasao(config.brasao_path);
@@ -74,8 +86,9 @@ export function ContribuinteDetalhe({
         inscricao_estadual: contribuinte.inscricao_estadual,
         endereco: contribuinte.endereco,
       };
-      const blob = await gerarDocxZerado({
+      const blob = await gerarDocxOficio({
         contribuinte: alvo,
+        modelo,
         config,
         exercicio,
         dataOficio: hojeIso(),
@@ -91,6 +104,7 @@ export function ContribuinteDetalhe({
       setGerando(false);
     }
   }
+
 
   const { data: historico, isFetching } = useQuery({
     enabled: aberto && !!contribuinte,
@@ -131,18 +145,31 @@ export function ContribuinteDetalhe({
 
             {precisaOficio && (
               <div className="space-y-2 rounded-lg border p-3">
+                <Select value={modelo?.chave ?? ""} onValueChange={setChaveModelo}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Modelo do ofício" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {disponiveis.map((m) => (
+                      <SelectItem key={m.chave} value={m.chave}>
+                        {m.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   className="w-full"
                   onClick={() => void gerarOficio()}
-                  disabled={gerando || !configOk}
+                  disabled={gerando || !configOk || !modelo}
                 >
                   {gerando ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <FileDown className="mr-2 h-4 w-4" />
                   )}
-                  Gerar ofício de retificação
+                  Gerar ofício
                 </Button>
+
                 {!configOk && (
                   <p className="text-xs text-muted-foreground">
                     Preencha os dados da prefeitura em Configurações para emitir o ofício.

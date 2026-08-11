@@ -16,6 +16,13 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -25,16 +32,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useModelos } from "@/hooks/useModelos";
 import {
   baixarBlob,
   carregarBrasao,
-  gerarZipOficiosZerados,
+  gerarZipOficios,
   nomeZip,
   type ProgressoOficios,
 } from "@/lib/oficios/pacote";
+import { gerarDocxOficio } from "@/lib/oficios/documento";
+import { ROTULO_SITUACAO, type ModeloOficio, type SituacaoOficio } from "@/lib/oficios/modelos";
 import { hojeIso } from "@/lib/oficios/texto";
 import { formatarCnpj } from "@/lib/format";
-import { gerarDocxZerado, type ContribuinteOficio } from "@/lib/oficios/zerados";
+import type { ContribuinteOficio } from "@/lib/oficios/zerados";
 import { cn } from "@/lib/utils";
 
 type ContribuinteLista = ContribuinteOficio & { id: string };
@@ -45,9 +55,11 @@ type Props = {
   selecionados: string[];
 };
 
-export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
+export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
   const { data: config } = useConfiguracao();
+  const { data: modelos } = useModelos();
   const [aberto, setAberto] = useState(false);
+  const [chaveModelo, setChaveModelo] = useState<string>("");
   const [dataOficio, setDataOficio] = useState(hojeIso());
   const [escopo, setEscopo] = useState<"todos" | "selecionados">("todos");
   const [progresso, setProgresso] = useState<ProgressoOficios | null>(null);
@@ -62,6 +74,9 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
 
   const previaRef = useRef<HTMLDivElement | null>(null);
 
+  const ativos = (modelos ?? []).filter((m) => m.ativo);
+  const modelo: ModeloOficio | null =
+    ativos.find((m) => m.chave === chaveModelo) ?? ativos[0] ?? null;
   const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
   const alvo = lista.find((c) => c.id === alvoId) ?? lista[0] ?? null;
 
@@ -98,11 +113,10 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
       clearTimeout(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previaAtiva, dataOficio, escopo, alvoId, alvo?.id]);
-
+  }, [previaAtiva, dataOficio, escopo, alvoId, alvo?.id, modelo?.chave]);
 
   useEffect(() => {
-    if (!aberto || !configOk) return;
+    if (!aberto || !configOk || !modelo) return;
     let cancelado = false;
     setCarregandoLista(true);
     buscarContribuintes()
@@ -121,19 +135,20 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
       cancelado = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aberto, configOk, escopo, cargaId, selecionados.join(",")]);
+  }, [aberto, configOk, escopo, cargaId, modelo?.chave, selecionados.join(",")]);
 
   async function gerarPrevia() {
-    if (!config) return;
+    if (!config || !modelo) return;
     if (!alvo) {
-      toast.error("Nenhum contribuinte zerado para pré-visualizar.");
+      toast.error("Nenhum contribuinte para pré-visualizar.");
       return;
     }
     setCarregandoPrevia(true);
     try {
       const brasao = await carregarBrasao(config.brasao_path);
-      const blob = await gerarDocxZerado({
+      const blob = await gerarDocxOficio({
         contribuinte: alvo,
+        modelo,
         config,
         exercicio,
         dataOficio,
@@ -155,9 +170,10 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
       .from("contribuintes_apurados")
       .select("id, nome, cnpj, inscricao_estadual, endereco")
       .eq("carga_id", cargaId)
-      .contains("situacoes", ["ZERADO"])
       .order("nome");
 
+    const situacao = modelo?.situacao as SituacaoOficio | undefined;
+    if (situacao && situacao !== "GERAL") q = q.contains("situacoes", [situacao]);
     if (escopo === "selecionados") q = q.in("id", selecionados);
 
     const { data, error } = await q;
@@ -165,25 +181,28 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
     return (data ?? []) as ContribuinteLista[];
   }
 
-
   async function gerar() {
-    if (!config) return;
+    if (!config || !modelo) return;
     try {
       const contribuintes = await buscarContribuintes();
       if (!contribuintes.length) {
-        toast.error("Nenhum contribuinte zerado para gerar.");
+        toast.error("Nenhum contribuinte para este modelo.");
         return;
       }
       setProgresso({ fase: "documentos", feitos: 0, total: contribuintes.length });
-      const zip = await gerarZipOficiosZerados({
+      const zip = await gerarZipOficios({
         contribuintes,
+        modelo,
         config,
         exercicio,
         dataOficio,
         brasaoPath: config.brasao_path,
         onProgresso: (p) => setProgresso(p),
       });
-      baixarBlob(zip, nomeZip(config.cidade_data.split("/")[0] ?? "municipio", exercicio));
+      baixarBlob(
+        zip,
+        nomeZip(modelo.chave, config.cidade_data.split("/")[0] ?? "municipio", exercicio),
+      );
       toast.success(`${contribuintes.length} ofício(s) gerado(s).`, {
         description: "O download do ZIP foi iniciado.",
       });
@@ -195,7 +214,6 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
       setProgresso(null);
     }
   }
-
 
   return (
     <Dialog
@@ -209,14 +227,14 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
       <DialogTrigger asChild>
         <Button variant="secondary" size="sm">
           <FileText className="mr-2 h-4 w-4" />
-          Gerar ofícios de zerados
+          Gerar ofícios
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Ofícios de retificação — zerados</DialogTitle>
+          <DialogTitle>Emissão de ofícios</DialogTitle>
           <DialogDescription>
-            Um arquivo .docx por empresa, entregues em um único ZIP.
+            Escolha o modelo; um arquivo .docx por empresa é entregue em um único ZIP.
           </DialogDescription>
         </DialogHeader>
 
@@ -227,6 +245,22 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
           </p>
         ) : (
           <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Modelo do ofício</Label>
+              <Select value={modelo?.chave ?? ""} onValueChange={setChaveModelo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o modelo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ativos.map((m) => (
+                    <SelectItem key={m.chave} value={m.chave}>
+                      {m.nome} — {ROTULO_SITUACAO[m.situacao]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="data-oficio">Data do ofício</Label>
               <Input
@@ -246,7 +280,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                     checked={escopo === "todos"}
                     onChange={() => setEscopo("todos")}
                   />
-                  Todos os zerados desta apuração
+                  Todos os contribuintes desta apuração compatíveis com o modelo
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -258,6 +292,9 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                   Apenas os selecionados ({selecionados.length})
                 </label>
               </div>
+              <p className="text-xs text-muted-foreground">
+                {carregandoLista ? "Contando…" : `${lista.length} contribuinte(s) neste escopo.`}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -277,7 +314,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                         <span className="truncate">
                           {carregandoLista
                             ? "Carregando contribuintes…"
-                            : (alvo?.nome ?? "Nenhum contribuinte zerado")}
+                            : (alvo?.nome ?? "Nenhum contribuinte")}
                         </span>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -336,12 +373,9 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                   )}
                   {previaBlob ? "Atualizar prévia" : "Ver prévia"}
                 </Button>
-
               </div>
               {previaBlob && (
-                <p className="text-xs text-muted-foreground">
-                  Prévia de: {previaContribuinte}
-                </p>
+                <p className="text-xs text-muted-foreground">Prévia de: {previaContribuinte}</p>
               )}
 
               <div
@@ -376,9 +410,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                   </span>
                 </div>
                 <Progress
-                  value={
-                    progresso.total > 0 ? (progresso.feitos / progresso.total) * 100 : 0
-                  }
+                  value={progresso.total > 0 ? (progresso.feitos / progresso.total) * 100 : 0}
                 />
                 <p className="truncate text-xs text-muted-foreground">
                   {progresso.fase === "concluido"
@@ -395,7 +427,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
         <DialogFooter>
           <Button
             onClick={gerar}
-            disabled={!configOk || (!!progresso && progresso.fase !== "concluido")}
+            disabled={!configOk || !modelo || (!!progresso && progresso.fase !== "concluido")}
           >
             {!!progresso && progresso.fase !== "concluido" && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -403,7 +435,6 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
             Gerar ZIP
           </Button>
         </DialogFooter>
-
       </DialogContent>
     </Dialog>
   );

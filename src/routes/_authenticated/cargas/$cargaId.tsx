@@ -13,7 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
-import { OficiosZerados } from "@/components/OficiosZerados";
+import { OficiosDialog } from "@/components/OficiosDialog";
 import { ContribuinteDetalhe, type ContribuinteLinha } from "@/components/ContribuinteDetalhe";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -252,7 +252,7 @@ function Contribuintes() {
           </p>
         </div>
         {carga && (
-          <OficiosZerados
+          <OficiosDialog
             cargaId={cargaId}
             exercicio={carga.exercicio}
             selecionados={selecionados}
