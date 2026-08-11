@@ -146,7 +146,7 @@ function NovaApuracao() {
 
             {erro && <p className="text-sm text-destructive">{erro}</p>}
 
-            <Button type="submit" className="w-full" disabled={processando || !perfil}>
+            <Button type="submit" className="w-full" disabled={processando}>
               {processando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
