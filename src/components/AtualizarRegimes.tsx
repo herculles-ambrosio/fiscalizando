@@ -69,7 +69,7 @@ export function AtualizarRegimes({ cargaId }: { cargaId: string }) {
     );
   }
 
-  if (!pendente) return null;
+  if (!carga?.arquivo_ativos_path) return null;
 
   return (
     <Button variant="outline" size="sm" onClick={reprocessar}>
