@@ -336,14 +336,15 @@ function Contribuintes() {
                         }
                       />
                     </TableHead>
-                    <TableHead>Contribuinte</TableHead>
-                    <TableHead>CNPJ</TableHead>
-                    <TableHead>IE</TableHead>
-                    <TableHead>CNAE</TableHead>
-                    <TableHead className="text-right">VAF atual</TableHead>
-                    <TableHead className="text-right">VAF anterior</TableHead>
-                    <TableHead className="text-right">Variação</TableHead>
-                    <TableHead>Entrega</TableHead>
+                    <ColunaHead coluna="nome" ordem={ordem} onSort={ordenarPor}>Contribuinte</ColunaHead>
+                    <ColunaHead coluna="cnpj" ordem={ordem} onSort={ordenarPor}>CNPJ</ColunaHead>
+                    <ColunaHead coluna="inscricao_estadual" ordem={ordem} onSort={ordenarPor}>IE</ColunaHead>
+                    <ColunaHead coluna="cnae" ordem={ordem} onSort={ordenarPor}>CNAE</ColunaHead>
+                    <ColunaHead coluna="vaf_atual" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF atual</ColunaHead>
+                    <ColunaHead coluna="vaf_anterior" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF anterior</ColunaHead>
+                    <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
+                    <ColunaHead coluna="data_entrega" ordem={ordem} onSort={ordenarPor}>Entrega</ColunaHead>
+
                     <TableHead>Situação</TableHead>
                   </TableRow>
                 </TableHeader>
