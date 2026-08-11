@@ -198,7 +198,9 @@ export function apurar(
     normal: 0,
     simples_nacional: 0,
     simei: 0,
+    somente_retorno: 0,
   };
+
 
   for (const [ie, ativo] of ativos) {
     const declaracoes = (reg01.get(ie) ?? []).filter(
