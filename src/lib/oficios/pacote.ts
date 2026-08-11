@@ -1,0 +1,64 @@
+import JSZip from "jszip";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  gerarDocxZerado,
+  nomeArquivoOficio,
+  type BrasaoImagem,
+  type ConfiguracaoMunicipio,
+  type ContribuinteOficio,
+} from "./zerados";
+import { nomeArquivoSeguro } from "./texto";
+
+export async function carregarBrasao(path: string | null): Promise<BrasaoImagem | null> {
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from("brasoes").download(path);
+  if (error || !data) return null;
+  const buffer = new Uint8Array(await data.arrayBuffer());
+  const tipo: BrasaoImagem["tipo"] = path.toLowerCase().endsWith(".png") ? "png" : "jpg";
+  return { dados: buffer, tipo };
+}
+
+export async function gerarZipOficiosZerados(params: {
+  contribuintes: ContribuinteOficio[];
+  config: ConfiguracaoMunicipio;
+  exercicio: number;
+  dataOficio: string;
+  brasaoPath: string | null;
+  onProgresso?: (feitos: number, total: number) => void;
+}): Promise<Blob> {
+  const { contribuintes, config, exercicio, dataOficio, brasaoPath, onProgresso } = params;
+  const brasao = await carregarBrasao(brasaoPath);
+  const zip = new JSZip();
+  const usados = new Set<string>();
+
+  for (let i = 0; i < contribuintes.length; i += 1) {
+    const contribuinte = contribuintes[i]!;
+    const blob = await gerarDocxZerado({ contribuinte, config, exercicio, dataOficio, brasao });
+    let nome = nomeArquivoOficio(contribuinte);
+    let sufixo = 2;
+    while (usados.has(nome)) {
+      nome = nomeArquivoOficio(contribuinte).replace(/\.docx$/, `_${sufixo}.docx`);
+      sufixo += 1;
+    }
+    usados.add(nome);
+    zip.file(nome, blob);
+    onProgresso?.(i + 1, contribuintes.length);
+  }
+
+  return zip.generateAsync({ type: "blob" });
+}
+
+export function baixarBlob(blob: Blob, nome: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export function nomeZip(cidade: string, exercicio: number): string {
+  return `oficios_zerados_${nomeArquivoSeguro(cidade)}_${exercicio}.zip`;
+}
