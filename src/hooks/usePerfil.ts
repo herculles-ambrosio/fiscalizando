@@ -22,12 +22,16 @@ export function useSessao() {
   return { sessao, carregando };
 }
 
+export type Papel = "superadmin" | "consultor" | "prefeitura_admin" | "prefeitura_operador";
+
 export type PerfilCompleto = {
   id: string;
   nome: string | null;
-  papel: string;
-  municipio_id: string;
-  municipio: { id: string; nome: string; uf: string; codigo_sef: string };
+  papel: Papel;
+  municipio_id: string | null;
+  precisa_trocar_senha: boolean;
+  ehConsultoria: boolean;
+  ehSuperadmin: boolean;
 };
 
 export function usePerfil() {
@@ -39,17 +43,20 @@ export function usePerfil() {
       if (!user) return null;
       const { data, error } = await supabase
         .from("perfis")
-        .select("id, nome, papel, municipio_id, municipios(id, nome, uf, codigo_sef)")
+        .select("id, nome, papel, municipio_id, precisa_trocar_senha")
         .eq("id", user.id)
         .maybeSingle();
       if (error) throw error;
-      if (!data || !data.municipios) return null;
+      if (!data) return null;
+      const papel = data.papel as Papel;
       return {
         id: data.id,
         nome: data.nome,
-        papel: data.papel,
+        papel,
         municipio_id: data.municipio_id,
-        municipio: data.municipios as PerfilCompleto["municipio"],
+        precisa_trocar_senha: data.precisa_trocar_senha ?? false,
+        ehConsultoria: papel === "superadmin" || papel === "consultor",
+        ehSuperadmin: papel === "superadmin",
       };
     },
     staleTime: 5 * 60 * 1000,
