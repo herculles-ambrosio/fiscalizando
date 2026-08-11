@@ -506,6 +506,7 @@ function Contribuintes() {
 
       <ContribuinteDetalhe
         contribuinte={detalhe}
+        exercicio={carga.exercicio}
         aberto={!!detalhe}
         onOpenChange={(v) => !v && setDetalhe(null)}
       />
