@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FileText, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Eye, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
-import { baixarBlob, gerarZipOficiosZerados, nomeZip } from "@/lib/oficios/pacote";
+import { baixarBlob, carregarBrasao, gerarZipOficiosZerados, nomeZip } from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
-import type { ContribuinteOficio } from "@/lib/oficios/zerados";
+import { gerarDocxZerado, type ContribuinteOficio } from "@/lib/oficios/zerados";
 
 type Props = {
   cargaId: string;
@@ -32,8 +32,66 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   const [dataOficio, setDataOficio] = useState(hojeIso());
   const [escopo, setEscopo] = useState<"todos" | "selecionados">("todos");
   const [progresso, setProgresso] = useState<{ feitos: number; total: number } | null>(null);
+  const [previaBlob, setPreviaBlob] = useState<Blob | null>(null);
+  const [previaContribuinte, setPreviaContribuinte] = useState<string | null>(null);
+  const [carregandoPrevia, setCarregandoPrevia] = useState(false);
+  const previaRef = useRef<HTMLDivElement | null>(null);
 
   const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
+
+  useEffect(() => {
+    if (!previaBlob || !previaRef.current) return;
+    let cancelado = false;
+    const alvo = previaRef.current;
+    (async () => {
+      const { renderAsync } = await import("docx-preview");
+      if (cancelado) return;
+      alvo.innerHTML = "";
+      await renderAsync(previaBlob, alvo, undefined, {
+        className: "docx",
+        inWrapper: true,
+        ignoreHeight: true,
+        ignoreWidth: false,
+      });
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [previaBlob]);
+
+  useEffect(() => {
+    setPreviaBlob(null);
+  }, [dataOficio, escopo]);
+
+  async function gerarPrevia() {
+    if (!config) return;
+    setCarregandoPrevia(true);
+    try {
+      const contribuintes = await buscarContribuintes(1);
+      const primeiro = contribuintes[0];
+      if (!primeiro) {
+        toast.error("Nenhum contribuinte zerado para pré-visualizar.");
+        return;
+      }
+      const brasao = await carregarBrasao(config.brasao_path);
+      const blob = await gerarDocxZerado({
+        contribuinte: primeiro,
+        config,
+        exercicio,
+        dataOficio,
+        brasao,
+      });
+      setPreviaContribuinte(primeiro.nome ?? "—");
+      setPreviaBlob(blob);
+    } catch (erro) {
+      toast.error("Falha ao gerar a prévia.", {
+        description: erro instanceof Error ? erro.message : undefined,
+      });
+    } finally {
+      setCarregandoPrevia(false);
+    }
+  }
+
 
   async function buscarContribuintes(): Promise<ContribuinteOficio[]> {
     let q = supabase
