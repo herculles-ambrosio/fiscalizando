@@ -4,6 +4,7 @@ import { Loader2, Upload } from "lucide-react";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { processarApuracao, type ProgressoEtapa } from "@/lib/vaf/processar";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,13 +47,29 @@ function NovaApuracao() {
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    if (!perfil || !municipioId || !ativos || !retorno) return;
+    if (!ativos || !retorno) {
+      setErro("Selecione os dois arquivos da SEF-MG.");
+      return;
+    }
+    let usuarioId = perfil?.id ?? null;
+    if (!usuarioId) {
+      const { data } = await supabase.auth.getUser();
+      usuarioId = data.user?.id ?? null;
+    }
+    if (!usuarioId) {
+      setErro("Sessão expirada. Entre novamente para processar a apuração.");
+      return;
+    }
+    if (!municipioId) {
+      setErro("Selecione um município antes de processar.");
+      return;
+    }
     setErro(null);
     setProgresso({ etapa: "Iniciando", percentual: 0 });
     try {
       const cargaId = await processarApuracao({
         municipioId,
-        usuarioId: perfil.id,
+        usuarioId,
         arquivoAtivos: ativos,
         arquivoRetorno: retorno,
         opcoes: {
@@ -146,7 +163,7 @@ function NovaApuracao() {
 
             {erro && <p className="text-sm text-destructive">{erro}</p>}
 
-            <Button type="submit" className="w-full" disabled={processando || !perfil}>
+            <Button type="submit" className="w-full" disabled={processando}>
               {processando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
