@@ -72,8 +72,15 @@ export function ContribuinteDetalhe({
 }) {
   const { data: config } = useConfiguracao();
   const { data: modelos } = useModelos();
+  const queryClient = useQueryClient();
   const [gerando, setGerando] = useState(false);
   const [chaveModelo, setChaveModelo] = useState<string>("");
+  const { data: emissoes } = useEmissoes({
+    ativo: aberto && !!contribuinte,
+    inscricaoEstadual: contribuinte?.inscricao_estadual,
+    limite: 30,
+  });
+
 
   const disponiveis = modelosParaSituacoes(modelos, contribuinte?.situacoes ?? []);
   const modelo = disponiveis.find((m) => m.chave === chaveModelo) ?? disponiveis[0] ?? null;
