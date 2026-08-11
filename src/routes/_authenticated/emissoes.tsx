@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Search } from "lucide-react";
+import { FileDown, Loader2, Search } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +25,8 @@ import { useEmissoes } from "@/hooks/useEmissoes";
 import { useModelos } from "@/hooks/useModelos";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { StatusEmissaoBadge } from "@/components/StatusEmissaoBadge";
+import { useReemitirOficio } from "@/hooks/useReemitirOficio";
+import type { EmissaoRegistro } from "@/lib/oficios/registro";
 import { formatarCnpj, formatarDataHora } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/emissoes")({
@@ -52,6 +56,21 @@ function Emissoes() {
   const [busca, setBusca] = useState("");
   const [modeloChave, setModeloChave] = useState("todos");
   const [status, setStatus] = useState("todos");
+
+  const [emitindoId, setEmitindoId] = useState<string | null>(null);
+  const reemissao = useReemitirOficio();
+
+  function reemitir(emissao: EmissaoRegistro) {
+    setEmitindoId(emissao.id);
+    reemissao.mutate(emissao, {
+      onSuccess: () => toast.success("Ofício gerado novamente."),
+      onError: (erro) =>
+        toast.error("Falha ao gerar o ofício novamente.", {
+          description: erro instanceof Error ? erro.message : undefined,
+        }),
+      onSettled: () => setEmitindoId(null),
+    });
+  }
 
   const { data, isLoading } = useEmissoes({
     busca,
@@ -123,6 +142,7 @@ function Emissoes() {
                   <TableHead>Emissão</TableHead>
                   <TableHead>Usuário</TableHead>
                   <TableHead>Download</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -156,11 +176,26 @@ function Emissoes() {
                           </p>
                         )}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => reemitir(e)}
+                          disabled={reemissao.isPending && emitindoId === e.id}
+                        >
+                          {reemissao.isPending && emitindoId === e.id ? (
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <FileDown className="mr-2 h-3.5 w-3.5" />
+                          )}
+                          Baixar novamente
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
                       Nenhum ofício emitido ainda.
                     </TableCell>
                   </TableRow>
