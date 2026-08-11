@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { Eye, FileText, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Eye, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +27,11 @@ import {
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { baixarBlob, carregarBrasao, gerarZipOficiosZerados, nomeZip } from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
+import { formatarCnpj } from "@/lib/format";
 import { gerarDocxZerado, type ContribuinteOficio } from "@/lib/oficios/zerados";
+import { cn } from "@/lib/utils";
+
+type ContribuinteLista = ContribuinteOficio & { id: string };
 
 type Props = {
   cargaId: string;
@@ -35,19 +48,24 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   const [previaBlob, setPreviaBlob] = useState<Blob | null>(null);
   const [previaContribuinte, setPreviaContribuinte] = useState<string | null>(null);
   const [carregandoPrevia, setCarregandoPrevia] = useState(false);
+  const [lista, setLista] = useState<ContribuinteLista[]>([]);
+  const [carregandoLista, setCarregandoLista] = useState(false);
+  const [alvoId, setAlvoId] = useState<string | null>(null);
+  const [comboAberto, setComboAberto] = useState(false);
   const previaRef = useRef<HTMLDivElement | null>(null);
 
   const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
+  const alvo = lista.find((c) => c.id === alvoId) ?? lista[0] ?? null;
 
   useEffect(() => {
     if (!previaBlob || !previaRef.current) return;
     let cancelado = false;
-    const alvo = previaRef.current;
+    const destino = previaRef.current;
     (async () => {
       const { renderAsync } = await import("docx-preview");
       if (cancelado) return;
-      alvo.innerHTML = "";
-      await renderAsync(previaBlob, alvo, undefined, {
+      destino.innerHTML = "";
+      await renderAsync(previaBlob, destino, undefined, {
         className: "docx",
         inWrapper: true,
         ignoreHeight: true,
@@ -61,27 +79,47 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
 
   useEffect(() => {
     setPreviaBlob(null);
-  }, [dataOficio, escopo]);
+  }, [dataOficio, escopo, alvoId]);
+
+  useEffect(() => {
+    if (!aberto || !configOk) return;
+    let cancelado = false;
+    setCarregandoLista(true);
+    buscarContribuintes()
+      .then((dados) => {
+        if (cancelado) return;
+        setLista(dados);
+        setAlvoId((atual) => (dados.some((c) => c.id === atual) ? atual : (dados[0]?.id ?? null)));
+      })
+      .catch(() => {
+        if (!cancelado) toast.error("Não foi possível carregar a lista de contribuintes.");
+      })
+      .finally(() => {
+        if (!cancelado) setCarregandoLista(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aberto, configOk, escopo, cargaId, selecionados.join(",")]);
 
   async function gerarPrevia() {
     if (!config) return;
+    if (!alvo) {
+      toast.error("Nenhum contribuinte zerado para pré-visualizar.");
+      return;
+    }
     setCarregandoPrevia(true);
     try {
-      const contribuintes = await buscarContribuintes(1);
-      const primeiro = contribuintes[0];
-      if (!primeiro) {
-        toast.error("Nenhum contribuinte zerado para pré-visualizar.");
-        return;
-      }
       const brasao = await carregarBrasao(config.brasao_path);
       const blob = await gerarDocxZerado({
-        contribuinte: primeiro,
+        contribuinte: alvo,
         config,
         exercicio,
         dataOficio,
         brasao,
       });
-      setPreviaContribuinte(primeiro.nome ?? "—");
+      setPreviaContribuinte(alvo.nome ?? "—");
       setPreviaBlob(blob);
     } catch (erro) {
       toast.error("Falha ao gerar a prévia.", {
@@ -92,8 +130,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
     }
   }
 
-
-  async function buscarContribuintes(limite?: number): Promise<ContribuinteOficio[]> {
+  async function buscarContribuintes(): Promise<ContribuinteLista[]> {
     let q = supabase
       .from("contribuintes_apurados")
       .select("id, nome, cnpj, inscricao_estadual, endereco")
@@ -102,12 +139,12 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
       .order("nome");
 
     if (escopo === "selecionados") q = q.in("id", selecionados);
-    if (limite) q = q.limit(limite);
 
     const { data, error } = await q;
     if (error) throw error;
-    return (data ?? []) as ContribuinteOficio[];
+    return (data ?? []) as ContribuinteLista[];
   }
+
 
   async function gerar() {
     if (!config) return;
@@ -195,14 +232,70 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label>Prévia do documento</Label>
+              <div className="flex items-end justify-between gap-2">
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Label>Contribuinte da prévia</Label>
+                  <Popover open={comboAberto} onOpenChange={setComboAberto}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={comboAberto}
+                        disabled={carregandoLista || !lista.length}
+                        className="w-full justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {carregandoLista
+                            ? "Carregando contribuintes…"
+                            : (alvo?.nome ?? "Nenhum contribuinte zerado")}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[--radix-popover-trigger-width] p-0"
+                      align="start"
+                    >
+                      <Command>
+                        <CommandInput placeholder="Buscar por nome ou CNPJ…" />
+                        <CommandList>
+                          <CommandEmpty>Nenhum contribuinte encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {lista.map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.nome ?? ""} ${c.cnpj ?? ""} ${c.inscricao_estadual}`}
+                                onSelect={() => {
+                                  setAlvoId(c.id);
+                                  setComboAberto(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    alvo?.id === c.id ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                <span className="truncate">
+                                  {c.nome ?? "—"}
+                                  <span className="ml-2 text-xs text-muted-foreground">
+                                    {formatarCnpj(c.cnpj)}
+                                  </span>
+                                </span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   onClick={gerarPrevia}
-                  disabled={carregandoPrevia || !!progresso}
+                  disabled={carregandoPrevia || !!progresso || !alvo}
                 >
                   {carregandoPrevia ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -214,9 +307,10 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
               </div>
               {previaBlob && (
                 <p className="text-xs text-muted-foreground">
-                  Exemplo com o primeiro contribuinte: {previaContribuinte}
+                  Prévia de: {previaContribuinte}
                 </p>
               )}
+
               <div
                 ref={previaRef}
                 className={
