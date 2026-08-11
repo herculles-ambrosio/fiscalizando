@@ -26,10 +26,26 @@ export const ROTULO_SITUACAO: Record<Situacao, string> = {
 export const REGIME_SIMPLES_NACIONAL = "58";
 export const REGIME_SIMEI = "74";
 
-export function situacoesDoRegime(regime: string | null): Situacao[] {
-  if (regime === REGIME_SIMEI) return ["SIMEI"];
+export function situacoesDoRegime(regime: string | null, simei = false): Situacao[] {
+  if (simei || regime === REGIME_SIMEI) return ["SIMEI"];
   if (regime === REGIME_SIMPLES_NACIONAL) return ["SIMPLES_NACIONAL"];
   return [];
+}
+
+/**
+ * Inscrições estaduais do SIMEI (MEI) segundo o arquivo de retorno da SEF-MG:
+ * registro tipo "40" ("Registro Conteúdo Simples - Simei"), campo 19-34 =
+ * município (3) + inscrição estadual (13).
+ */
+export function iesSimeiDoRetorno(textoRetorno: string): Set<string> {
+  const ies = new Set<string>();
+  for (const linha of separarLinhas(textoRetorno)) {
+    if (linha.slice(0, 2) !== "40") continue;
+    const campo = linha.slice(18, 34).replace(/[^0-9]/g, "");
+    if (campo.length < 13) continue;
+    ies.add(campo.slice(-13));
+  }
+  return ies;
 }
 
 export type ContribuinteApurado = {
@@ -100,6 +116,7 @@ export function apurar(
   const reg10 = new Map<string, Record<string, any>[]>();
   const reg02 = new Map<string, Record<string, any>>();
   const contagemExercicio = new Map<number, number>();
+  const iesSimei = iesSimeiDoRetorno(textoRetorno);
 
   for (const linha of separarLinhas(textoRetorno)) {
     const tipo = linha.slice(0, 2);
@@ -201,7 +218,7 @@ export function apurar(
 
     const regime = String(ativo["regime_recolhimento"] ?? "").trim().padStart(2, "0");
     const regimeNormalizado = regime === "00" ? null : regime;
-    situacoes.push(...situacoesDoRegime(regimeNormalizado));
+    situacoes.push(...situacoesDoRegime(regimeNormalizado, iesSimei.has(ie)));
 
     totais.ativos += 1;
     for (const s of situacoes) {

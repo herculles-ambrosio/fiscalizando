@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { LAYOUT_ATIVOS } from "./layouts";
 import { decodificarArquivo, parseLinha, separarLinhas } from "./parser";
-import { situacoesDoRegime, type Situacao } from "./apurar";
+import { iesSimeiDoRetorno, situacoesDoRegime, type Situacao } from "./apurar";
 
 const TAMANHO_PAGINA = 1000;
 const CONCORRENCIA = 20;
@@ -54,9 +54,21 @@ async function carregarContribuintes(cargaId: string): Promise<LinhaContribuinte
   return todos;
 }
 
-function situacoesAtualizadas(situacoes: string[], regime: string | null): Situacao[] {
+function situacoesAtualizadas(
+  situacoes: string[],
+  regime: string | null,
+  simei: boolean,
+): Situacao[] {
   const base = (situacoes ?? []).filter((s) => s !== "SIMPLES_NACIONAL" && s !== "SIMEI");
-  return [...base, ...situacoesDoRegime(regime)] as Situacao[];
+  return [...base, ...situacoesDoRegime(regime, simei)] as Situacao[];
+}
+
+/** Inscrições em SIMEI conforme o registro 40 do arquivo de retorno guardado. */
+async function lerSimeiDoRetorno(caminho: string | null): Promise<Set<string>> {
+  if (!caminho) return new Set();
+  const { data, error } = await supabase.storage.from("uploads").download(caminho);
+  if (error || !data) return new Set();
+  return iesSimeiDoRetorno(decodificarArquivo(await data.arrayBuffer()));
 }
 
 /** Reprocessa uma apuração já gravada, preenchendo regime e as situações Simples Nacional/SIMEI. */
@@ -69,7 +81,7 @@ export async function reprocessarRegimesDaCarga(
   progresso({ etapa: "Localizando arquivo de ativos", percentual: 5 });
   const { data: carga, error: erroCarga } = await supabase
     .from("cargas")
-    .select("id, arquivo_ativos_path")
+    .select("id, arquivo_ativos_path, arquivo_retorno_path")
     .eq("id", cargaId)
     .single();
   if (erroCarga || !carga) throw erroCarga ?? new Error("Apuração não encontrada.");
@@ -78,6 +90,7 @@ export async function reprocessarRegimesDaCarga(
 
   progresso({ etapa: "Lendo arquivo de ativos", percentual: 15 });
   const regimes = await lerRegimesDoArquivo(carga.arquivo_ativos_path);
+  const iesSimei = await lerSimeiDoRetorno(carga.arquivo_retorno_path);
 
   progresso({ etapa: "Carregando contribuintes", percentual: 30 });
   const contribuintes = await carregarContribuintes(cargaId);
@@ -85,7 +98,7 @@ export async function reprocessarRegimesDaCarga(
   const pendentes = contribuintes
     .map((c) => {
       const regime = regimes.get(c.inscricao_estadual) ?? null;
-      const situacoes = situacoesAtualizadas(c.situacoes, regime);
+      const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
       const mudou =
         regime !== c.regime_recolhimento ||
         situacoes.join("|") !== (c.situacoes ?? []).join("|");
@@ -115,7 +128,7 @@ export async function reprocessarRegimesDaCarga(
   let simei = 0;
   for (const c of contribuintes) {
     const regime = regimes.get(c.inscricao_estadual) ?? null;
-    const situacoes = situacoesAtualizadas(c.situacoes, regime);
+    const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
     if (situacoes.includes("SIMPLES_NACIONAL")) simplesNacional += 1;
     if (situacoes.includes("SIMEI")) simei += 1;
   }
