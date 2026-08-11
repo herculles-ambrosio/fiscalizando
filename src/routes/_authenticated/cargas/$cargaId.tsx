@@ -237,6 +237,22 @@ function Contribuintes() {
                     </TableRow>
                   )}
                 </TableBody>
+                {!!data?.linhas.length && (
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={5} className="font-medium">
+                        {data.linhas.length} contribuinte(s) nesta página · {data.total} no total
+                      </TableCell>
+                      <TableCell className="text-right font-medium whitespace-nowrap">
+                        {formatarMoeda(totalVafAtual)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium whitespace-nowrap">
+                        {formatarMoeda(totalVafAnterior)}
+                      </TableCell>
+                      <TableCell colSpan={3} />
+                    </TableRow>
+                  </TableFooter>
+                )}
               </Table>
             </div>
           )}
