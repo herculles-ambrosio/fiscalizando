@@ -78,8 +78,20 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   }, [previaBlob]);
 
   useEffect(() => {
+    if (!previaAtiva) return;
     setPreviaBlob(null);
-  }, [dataOficio, escopo, alvoId]);
+    if (!alvo) return;
+    let cancelado = false;
+    const id = setTimeout(() => {
+      if (!cancelado) void gerarPrevia();
+    }, 150);
+    return () => {
+      cancelado = true;
+      clearTimeout(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previaAtiva, dataOficio, escopo, alvoId, alvo?.id]);
+
 
   useEffect(() => {
     if (!aberto || !configOk) return;
