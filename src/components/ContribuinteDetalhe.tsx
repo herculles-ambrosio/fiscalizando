@@ -46,13 +46,52 @@ function Campo({ rotulo, valor }: { rotulo: string; valor: React.ReactNode }) {
 
 export function ContribuinteDetalhe({
   contribuinte,
+  exercicio,
   aberto,
   onOpenChange,
 }: {
   contribuinte: ContribuinteLinha | null;
+  exercicio: number;
   aberto: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const { data: config } = useConfiguracao();
+  const [gerando, setGerando] = useState(false);
+
+  const precisaOficio = !!contribuinte?.situacoes.some(
+    (s) => s === "OMISSO" || s === "ZERADO",
+  );
+  const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
+
+  async function gerarOficio() {
+    if (!contribuinte || !config) return;
+    setGerando(true);
+    try {
+      const brasao = await carregarBrasao(config.brasao_path);
+      const alvo = {
+        nome: contribuinte.nome,
+        cnpj: contribuinte.cnpj,
+        inscricao_estadual: contribuinte.inscricao_estadual,
+        endereco: contribuinte.endereco,
+      };
+      const blob = await gerarDocxZerado({
+        contribuinte: alvo,
+        config,
+        exercicio,
+        dataOficio: hojeIso(),
+        brasao,
+      });
+      baixarBlob(blob, nomeArquivoOficio(alvo));
+      toast.success("Ofício gerado.");
+    } catch (erro) {
+      toast.error("Falha ao gerar o ofício.", {
+        description: erro instanceof Error ? erro.message : undefined,
+      });
+    } finally {
+      setGerando(false);
+    }
+  }
+
   const { data: historico, isFetching } = useQuery({
     enabled: aberto && !!contribuinte,
     queryKey: ["contribuinte-historico", contribuinte?.municipio_id, contribuinte?.inscricao_estadual],
