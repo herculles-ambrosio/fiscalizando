@@ -5,6 +5,7 @@ import { FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
+import { REGIME_SIMEI, REGIME_SIMPLES_NACIONAL } from "@/lib/vaf/apurar";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -49,8 +50,16 @@ export type ContribuinteLinha = {
   vaf_anterior: number | null;
   variacao_pct: number | null;
   data_entrega: string | null;
+  regime_recolhimento?: string | null;
   situacoes: string[];
 };
+
+function rotuloRegime(regime: string | null): string {
+  if (!regime) return "—";
+  if (regime === REGIME_SIMEI) return `SIMEI (MEI) · ${regime}`;
+  if (regime === REGIME_SIMPLES_NACIONAL) return `Simples Nacional · ${regime}`;
+  return regime;
+}
 
 function Campo({ rotulo, valor }: { rotulo: string; valor: React.ReactNode }) {
   return (
@@ -223,6 +232,10 @@ export function ContribuinteDetalhe({
 
             <div className="grid grid-cols-2 gap-4">
               <Campo rotulo="CNAE" valor={contribuinte.cnae ?? "—"} />
+              <Campo
+                rotulo="Regime"
+                valor={rotuloRegime(contribuinte.regime_recolhimento ?? null)}
+              />
               <Campo
                 rotulo="Declaração"
                 valor={contribuinte.entregou_declaracao ? "Entregue" : "Não entregue"}

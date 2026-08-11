@@ -7,6 +7,8 @@ const CLASSES: Record<Situacao, string> = {
   FORA_DO_PRAZO: "bg-prazo text-prazo-foreground border-prazo-foreground/20",
   DISCREPANTE: "bg-discrepante text-discrepante-foreground border-discrepante-foreground/20",
   NORMAL: "bg-normal text-normal-foreground border-normal-foreground/20",
+  SIMPLES_NACIONAL: "bg-secondary text-secondary-foreground border-border",
+  SIMEI: "bg-accent text-accent-foreground border-border",
 };
 
 export function SituacaoBadge({ situacao }: { situacao: string }) {

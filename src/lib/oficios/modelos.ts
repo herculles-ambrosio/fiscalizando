@@ -7,6 +7,8 @@ export const SITUACOES_OFICIO = [
   "OMISSO",
   "FORA_DO_PRAZO",
   "DISCREPANTE",
+  "SIMPLES_NACIONAL",
+  "SIMEI",
   "GERAL",
 ] as const;
 
@@ -17,6 +19,8 @@ export const ROTULO_SITUACAO: Record<SituacaoOficio, string> = {
   OMISSO: "Omisso",
   FORA_DO_PRAZO: "Fora do prazo",
   DISCREPANTE: "Discrepante",
+  SIMPLES_NACIONAL: "Simples Nacional",
+  SIMEI: "SIMEI (MEI)",
   GERAL: "Geral (qualquer situação)",
 };
 

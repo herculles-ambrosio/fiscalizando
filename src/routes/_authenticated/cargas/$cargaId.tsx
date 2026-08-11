@@ -53,7 +53,15 @@ export const Route = createFileRoute("/_authenticated/cargas/$cargaId")({
   component: Contribuintes,
 });
 
-const SITUACOES: Situacao[] = ["OMISSO", "ZERADO", "FORA_DO_PRAZO", "DISCREPANTE", "NORMAL"];
+const SITUACOES: Situacao[] = [
+  "OMISSO",
+  "ZERADO",
+  "FORA_DO_PRAZO",
+  "DISCREPANTE",
+  "NORMAL",
+  "SIMPLES_NACIONAL",
+  "SIMEI",
+];
 const POR_PAGINA = 50;
 
 type Ordem = { coluna: ColunaOrdenavel; asc: boolean };

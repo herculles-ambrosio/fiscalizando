@@ -39,6 +39,12 @@ const CARDS = [
     cor: "bg-discrepante text-discrepante-foreground",
   },
   { chave: "total_normais", rotulo: "Normais", cor: "bg-normal text-normal-foreground" },
+  {
+    chave: "total_simples_nacional",
+    rotulo: "Simples Nacional",
+    cor: "bg-secondary text-secondary-foreground",
+  },
+  { chave: "total_simei", rotulo: "SIMEI (MEI)", cor: "bg-accent text-accent-foreground" },
 ] as const;
 
 function Dashboard() {
