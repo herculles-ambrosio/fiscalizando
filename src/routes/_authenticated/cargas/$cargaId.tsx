@@ -4,9 +4,11 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
+import { OficiosZerados } from "@/components/OficiosZerados";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -48,6 +50,20 @@ function Contribuintes() {
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+
+  const { data: carga } = useQuery({
+    queryKey: ["carga", cargaId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cargas")
+        .select("id, exercicio")
+        .eq("id", cargaId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data, isFetching } = useQuery({
     queryKey: ["contribuintes", cargaId, filtro, termo, pagina],
@@ -70,14 +86,35 @@ function Contribuintes() {
   });
 
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
+  const zeradosPagina = (data?.linhas ?? []).filter((c) =>
+    (c.situacoes as string[]).includes("ZERADO"),
+  );
+  const todosMarcados =
+    zeradosPagina.length > 0 && zeradosPagina.every((c) => selecionados.includes(c.id));
+
+  function alternar(id: string, marcado: boolean) {
+    setSelecionados((atual) =>
+      marcado ? [...new Set([...atual, id])] : atual.filter((x) => x !== id),
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Contribuintes apurados</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {data ? `${data.total} registros encontrados` : "Carregando…"}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Contribuintes apurados</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {data ? `${data.total} registros encontrados` : "Carregando…"}
+            {selecionados.length ? ` · ${selecionados.length} selecionado(s)` : ""}
+          </p>
+        </div>
+        {carga && (
+          <OficiosZerados
+            cargaId={cargaId}
+            exercicio={carga.exercicio}
+            selecionados={selecionados}
+          />
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -126,6 +163,20 @@ function Contribuintes() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={todosMarcados}
+                        disabled={!zeradosPagina.length}
+                        aria-label="Selecionar zerados desta página"
+                        onCheckedChange={(v) =>
+                          setSelecionados((atual) =>
+                            v
+                              ? [...new Set([...atual, ...zeradosPagina.map((c) => c.id)])]
+                              : atual.filter((id) => !zeradosPagina.some((c) => c.id === id)),
+                          )
+                        }
+                      />
+                    </TableHead>
                     <TableHead>Contribuinte</TableHead>
                     <TableHead>CNPJ</TableHead>
                     <TableHead>IE</TableHead>
@@ -138,36 +189,48 @@ function Contribuintes() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.linhas.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
-                      <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
-                      <TableCell>{c.cnae ?? "—"}</TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {formatarMoeda(c.vaf_atual)}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {formatarMoeda(c.vaf_anterior)}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {formatarPercentual(c.variacao_pct)}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {formatarData(c.data_entrega)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {(c.situacoes as string[]).map((s) => (
-                            <SituacaoBadge key={s} situacao={s} />
-                          ))}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {data?.linhas.map((c) => {
+                    const zerado = (c.situacoes as string[]).includes("ZERADO");
+                    return (
+                      <TableRow key={c.id}>
+                        <TableCell>
+                          {zerado && (
+                            <Checkbox
+                              checked={selecionados.includes(c.id)}
+                              aria-label={`Selecionar ${c.nome ?? c.inscricao_estadual}`}
+                              onCheckedChange={(v) => alternar(c.id, v === true)}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
+                        <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
+                        <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
+                        <TableCell>{c.cnae ?? "—"}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          {formatarMoeda(c.vaf_atual)}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          {formatarMoeda(c.vaf_anterior)}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          {formatarPercentual(c.variacao_pct)}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {formatarData(c.data_entrega)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {(c.situacoes as string[]).map((s) => (
+                              <SituacaoBadge key={s} situacao={s} />
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {!data?.linhas.length && (
                     <TableRow>
-                      <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                         Nenhum contribuinte encontrado com esses filtros.
                       </TableCell>
                     </TableRow>

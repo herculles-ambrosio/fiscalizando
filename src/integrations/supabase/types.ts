@@ -85,6 +85,65 @@ export type Database = {
           },
         ]
       }
+      configuracoes_municipio: {
+        Row: {
+          atualizado_em: string
+          brasao_path: string | null
+          cidade_data: string
+          criado_em: string
+          endereco_rodape: string
+          estado: string
+          id: string
+          municipio_id: string
+          nome_prefeitura: string
+          secretaria: string
+          setor: string
+          signatario_cargo: string
+          signatario_nome: string
+          texto_assinatura: string
+        }
+        Insert: {
+          atualizado_em?: string
+          brasao_path?: string | null
+          cidade_data?: string
+          criado_em?: string
+          endereco_rodape?: string
+          estado?: string
+          id?: string
+          municipio_id: string
+          nome_prefeitura?: string
+          secretaria?: string
+          setor?: string
+          signatario_cargo?: string
+          signatario_nome?: string
+          texto_assinatura?: string
+        }
+        Update: {
+          atualizado_em?: string
+          brasao_path?: string | null
+          cidade_data?: string
+          criado_em?: string
+          endereco_rodape?: string
+          estado?: string
+          id?: string
+          municipio_id?: string
+          nome_prefeitura?: string
+          secretaria?: string
+          setor?: string
+          signatario_cargo?: string
+          signatario_nome?: string
+          texto_assinatura?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuracoes_municipio_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: true
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contribuintes_apurados: {
         Row: {
           carga_id: string

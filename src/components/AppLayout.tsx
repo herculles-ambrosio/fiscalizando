@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BarChart3, FileUp, History, LogOut, Landmark } from "lucide-react";
+import { BarChart3, FileUp, History, LogOut, Landmark, Settings } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ const NAV = [
   { to: "/dashboard", rotulo: "Painel", icone: BarChart3 },
   { to: "/nova-apuracao", rotulo: "Nova apuração", icone: FileUp },
   { to: "/historico", rotulo: "Histórico", icone: History },
+  { to: "/configuracoes", rotulo: "Configurações", icone: Settings },
 ];
 
 export function AppLayout({ children }: { children: ReactNode }) {
