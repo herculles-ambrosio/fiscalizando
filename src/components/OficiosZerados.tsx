@@ -52,6 +52,8 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   const [carregandoLista, setCarregandoLista] = useState(false);
   const [alvoId, setAlvoId] = useState<string | null>(null);
   const [comboAberto, setComboAberto] = useState(false);
+  const [previaAtiva, setPreviaAtiva] = useState(false);
+
   const previaRef = useRef<HTMLDivElement | null>(null);
 
   const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
