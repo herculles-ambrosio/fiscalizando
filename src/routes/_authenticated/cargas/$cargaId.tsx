@@ -14,6 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
 import { OficiosZerados } from "@/components/OficiosZerados";
+import { ContribuinteDetalhe, type ContribuinteLinha } from "@/components/ContribuinteDetalhe";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
