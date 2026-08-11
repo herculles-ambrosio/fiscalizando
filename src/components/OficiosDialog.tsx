@@ -31,7 +31,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useQueryClient } from "@tanstack/react-query";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { marcarStatusEmissoes, registrarEmissoes } from "@/lib/oficios/registro";
 import { useModelos } from "@/hooks/useModelos";
 import {
   baixarBlob,
@@ -58,6 +61,8 @@ type Props = {
 export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
   const { data: config } = useConfiguracao();
   const { data: modelos } = useModelos();
+  const { municipioId } = useMunicipioAtivo();
+  const queryClient = useQueryClient();
   const [aberto, setAberto] = useState(false);
   const [chaveModelo, setChaveModelo] = useState<string>("");
   const [dataOficio, setDataOficio] = useState(hojeIso());
@@ -183,6 +188,7 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
 
   async function gerar() {
     if (!config || !modelo) return;
+    let ids: string[] = [];
     try {
       const contribuintes = await buscarContribuintes();
       if (!contribuintes.length) {
@@ -190,6 +196,22 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
         return;
       }
       setProgresso({ fase: "documentos", feitos: 0, total: contribuintes.length });
+      const nomeArquivoZip = nomeZip(
+        modelo.chave,
+        config.cidade_data.split("/")[0] ?? "municipio",
+        exercicio,
+      );
+      if (municipioId) {
+        ids = await registrarEmissoes({
+          contribuintes,
+          modelo,
+          municipioId,
+          cargaId,
+          exercicio,
+          tipo: "lote",
+          arquivoNome: nomeArquivoZip,
+        });
+      }
       const zip = await gerarZipOficios({
         contribuintes,
         modelo,
@@ -199,21 +221,23 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
         brasaoPath: config.brasao_path,
         onProgresso: (p) => setProgresso(p),
       });
-      baixarBlob(
-        zip,
-        nomeZip(modelo.chave, config.cidade_data.split("/")[0] ?? "municipio", exercicio),
-      );
+      baixarBlob(zip, nomeArquivoZip);
+      await marcarStatusEmissoes(ids, "baixado");
+      void queryClient.invalidateQueries({ queryKey: ["oficios-emitidos"] });
       toast.success(`${contribuintes.length} ofício(s) gerado(s).`, {
         description: "O download do ZIP foi iniciado.",
       });
       setTimeout(() => setAberto(false), 1200);
     } catch (erro) {
+      await marcarStatusEmissoes(ids, "erro", erro instanceof Error ? erro.message : undefined);
+      void queryClient.invalidateQueries({ queryKey: ["oficios-emitidos"] });
       toast.error("Falha ao gerar os ofícios.", {
         description: erro instanceof Error ? erro.message : undefined,
       });
       setProgresso(null);
     }
   }
+
 
   return (
     <Dialog

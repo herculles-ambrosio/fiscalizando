@@ -5,6 +5,7 @@ import {
   FileUp,
   History,
   FileSignature,
+  FileClock,
   Landmark,
   LogOut,
   Settings,
@@ -29,6 +30,7 @@ const NAV_BASE = [
   { to: "/nova-apuracao", rotulo: "Nova apuração", icone: FileUp },
   { to: "/historico", rotulo: "Histórico", icone: History },
   { to: "/modelos", rotulo: "Modelos de ofício", icone: FileSignature },
+  { to: "/emissoes", rotulo: "Ofícios emitidos", icone: FileClock },
   { to: "/configuracoes", rotulo: "Configurações", icone: Settings },
 ];
 

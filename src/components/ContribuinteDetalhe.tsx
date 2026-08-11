@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +27,11 @@ import { baixarBlob, carregarBrasao } from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
 import { gerarDocxOficio } from "@/lib/oficios/documento";
 import { nomeArquivoOficio } from "@/lib/oficios/zerados";
-import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
+import { marcarStatusEmissoes, registrarEmissoes } from "@/lib/oficios/registro";
+import { useEmissoes } from "@/hooks/useEmissoes";
+import { StatusEmissaoBadge } from "@/components/StatusEmissaoBadge";
+import { formatarCnpj, formatarData, formatarDataHora, formatarMoeda, formatarPercentual } from "@/lib/format";
+
 
 
 export type ContribuinteLinha = {
@@ -67,8 +72,15 @@ export function ContribuinteDetalhe({
 }) {
   const { data: config } = useConfiguracao();
   const { data: modelos } = useModelos();
+  const queryClient = useQueryClient();
   const [gerando, setGerando] = useState(false);
   const [chaveModelo, setChaveModelo] = useState<string>("");
+  const { data: emissoes } = useEmissoes({
+    ativo: aberto && !!contribuinte,
+    inscricaoEstadual: contribuinte?.inscricao_estadual,
+    limite: 30,
+  });
+
 
   const disponiveis = modelosParaSituacoes(modelos, contribuinte?.situacoes ?? []);
   const modelo = disponiveis.find((m) => m.chave === chaveModelo) ?? disponiveis[0] ?? null;
@@ -78,14 +90,25 @@ export function ContribuinteDetalhe({
   async function gerarOficio() {
     if (!contribuinte || !config || !modelo) return;
     setGerando(true);
+    let ids: string[] = [];
     try {
       const brasao = await carregarBrasao(config.brasao_path);
       const alvo = {
+        id: contribuinte.id,
         nome: contribuinte.nome,
         cnpj: contribuinte.cnpj,
         inscricao_estadual: contribuinte.inscricao_estadual,
         endereco: contribuinte.endereco,
       };
+      const nomeArquivo = nomeArquivoOficio(alvo);
+      ids = await registrarEmissoes({
+        contribuintes: [alvo],
+        modelo,
+        municipioId: contribuinte.municipio_id,
+        exercicio,
+        tipo: "individual",
+        arquivoNome: nomeArquivo,
+      });
       const blob = await gerarDocxOficio({
         contribuinte: alvo,
         modelo,
@@ -94,16 +117,20 @@ export function ContribuinteDetalhe({
         dataOficio: hojeIso(),
         brasao,
       });
-      baixarBlob(blob, nomeArquivoOficio(alvo));
+      baixarBlob(blob, nomeArquivo);
+      await marcarStatusEmissoes(ids, "baixado");
       toast.success("Ofício gerado.");
     } catch (erro) {
+      await marcarStatusEmissoes(ids, "erro", erro instanceof Error ? erro.message : undefined);
       toast.error("Falha ao gerar o ofício.", {
         description: erro instanceof Error ? erro.message : undefined,
       });
     } finally {
+      void queryClient.invalidateQueries({ queryKey: ["oficios-emitidos"] });
       setGerando(false);
     }
   }
+
 
 
   const { data: historico, isFetching } = useQuery({
@@ -193,6 +220,37 @@ export function ContribuinteDetalhe({
             <Campo rotulo="Endereço" valor={contribuinte.endereco ?? "—"} />
 
             <Separator />
+
+            <div>
+              <h3 className="mb-3 text-sm font-semibold">Histórico de ofícios emitidos</h3>
+              {emissoes?.length ? (
+                <ul className="space-y-2">
+                  {emissoes.map((e) => (
+                    <li key={e.id} className="rounded-lg border p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium">{e.modelo_nome}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Exercício {e.exercicio} ·{" "}
+                            {e.tipo_emissao === "lote" ? "Lote (ZIP)" : "Individual"}
+                          </p>
+                        </div>
+                        <StatusEmissaoBadge status={e.status_download} />
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {formatarDataHora(e.criado_em)} · {e.emitido_por_nome ?? "—"}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum ofício emitido ainda.</p>
+              )}
+            </div>
+
+            <Separator />
+
+
 
             <div>
               <h3 className="mb-3 text-sm font-semibold">Histórico de cargas</h3>
