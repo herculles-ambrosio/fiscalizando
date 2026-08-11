@@ -23,7 +23,7 @@ export function AtualizarRegimes({ cargaId }: { cargaId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cargas")
-        .select("total_simples_nacional, total_simei, arquivo_ativos_path")
+        .select("total_simples_nacional, total_simei, arquivo_ativos_path, arquivo_retorno_path")
         .eq("id", cargaId)
         .single();
       if (error) throw error;
