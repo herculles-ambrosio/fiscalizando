@@ -25,7 +25,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
-import { baixarBlob, carregarBrasao, gerarZipOficiosZerados, nomeZip } from "@/lib/oficios/pacote";
+import {
+  baixarBlob,
+  carregarBrasao,
+  gerarZipOficiosZerados,
+  nomeZip,
+  type ProgressoOficios,
+} from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
 import { formatarCnpj } from "@/lib/format";
 import { gerarDocxZerado, type ContribuinteOficio } from "@/lib/oficios/zerados";
