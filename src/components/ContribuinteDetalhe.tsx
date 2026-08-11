@@ -145,18 +145,31 @@ export function ContribuinteDetalhe({
 
             {precisaOficio && (
               <div className="space-y-2 rounded-lg border p-3">
+                <Select value={modelo?.chave ?? ""} onValueChange={setChaveModelo}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Modelo do ofício" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {disponiveis.map((m) => (
+                      <SelectItem key={m.chave} value={m.chave}>
+                        {m.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   className="w-full"
                   onClick={() => void gerarOficio()}
-                  disabled={gerando || !configOk}
+                  disabled={gerando || !configOk || !modelo}
                 >
                   {gerando ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <FileDown className="mr-2 h-4 w-4" />
                   )}
-                  Gerar ofício de retificação
+                  Gerar ofício
                 </Button>
+
                 {!configOk && (
                   <p className="text-xs text-muted-foreground">
                     Preencha os dados da prefeitura em Configurações para emitir o ofício.
