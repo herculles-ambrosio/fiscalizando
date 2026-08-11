@@ -129,6 +129,28 @@ export function ContribuinteDetalhe({
               ))}
             </div>
 
+            {precisaOficio && (
+              <div className="space-y-2 rounded-lg border p-3">
+                <Button
+                  className="w-full"
+                  onClick={() => void gerarOficio()}
+                  disabled={gerando || !configOk}
+                >
+                  {gerando ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileDown className="mr-2 h-4 w-4" />
+                  )}
+                  Gerar ofício de retificação
+                </Button>
+                {!configOk && (
+                  <p className="text-xs text-muted-foreground">
+                    Preencha os dados da prefeitura em Configurações para emitir o ofício.
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <Campo rotulo="CNAE" valor={contribuinte.cnae ?? "—"} />
               <Campo
