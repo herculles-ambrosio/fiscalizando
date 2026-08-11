@@ -1,7 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, ChevronsUpDown, Loader2, Search } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
 import { OficiosZerados } from "@/components/OficiosZerados";
@@ -48,6 +57,8 @@ const POR_PAGINA = 50;
 function Contribuintes() {
   const { cargaId } = Route.useParams();
   const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
+  const [cnae, setCnae] = useState<string>("TODOS");
+  const [cnaeAberto, setCnaeAberto] = useState(false);
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
@@ -67,7 +78,7 @@ function Contribuintes() {
   });
 
   const { data, isFetching } = useQuery({
-    queryKey: ["contribuintes", cargaId, filtro, termo, pagina],
+    queryKey: ["contribuintes", cargaId, filtro, cnae, termo, pagina],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
@@ -78,6 +89,7 @@ function Contribuintes() {
         .range(pagina * POR_PAGINA, pagina * POR_PAGINA + POR_PAGINA - 1);
 
       if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (cnae !== "TODOS") q = q.eq("cnae", cnae);
       if (termo) q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
 
       const { data, error, count } = await q;
@@ -86,8 +98,30 @@ function Contribuintes() {
     },
   });
 
+  const { data: cnaes } = useQuery({
+    queryKey: ["contribuintes-cnaes", cargaId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contribuintes_apurados")
+        .select("cnae")
+        .eq("carga_id", cargaId)
+        .not("cnae", "is", null)
+        .limit(20000);
+      if (error) throw error;
+      const mapa = new Map<string, number>();
+      for (const linha of data ?? []) {
+        const c = (linha.cnae ?? "").trim();
+        if (!c) continue;
+        mapa.set(c, (mapa.get(c) ?? 0) + 1);
+      }
+      return [...mapa.entries()]
+        .map(([codigo, total]) => ({ codigo, total }))
+        .sort((a, b) => b.total - a.total);
+    },
+  });
+
   const { data: contagens } = useQuery({
-    queryKey: ["contribuintes-contagens", cargaId, termo],
+    queryKey: ["contribuintes-contagens", cargaId, cnae, termo],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const contar = async (situacao?: Situacao) => {
@@ -96,6 +130,7 @@ function Contribuintes() {
           .select("id", { count: "exact", head: true })
           .eq("carga_id", cargaId);
         if (situacao) q = q.contains("situacoes", [situacao]);
+        if (cnae !== "TODOS") q = q.eq("cnae", cnae);
         if (termo)
           q = q.or(
             `nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`,
@@ -117,6 +152,7 @@ function Contribuintes() {
       return mapa;
     },
   });
+
 
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
   const totalVafAtual = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
@@ -173,6 +209,62 @@ function Contribuintes() {
             </span>
           </Button>
         ))}
+
+        <Popover open={cnaeAberto} onOpenChange={setCnaeAberto}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              role="combobox"
+              aria-expanded={cnaeAberto}
+              className="justify-between gap-2"
+            >
+              {cnae === "TODOS" ? "CNAE: todos" : `CNAE ${cnae}`}
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar CNAE…" />
+              <CommandList>
+                <CommandEmpty>Nenhum CNAE encontrado.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="todos"
+                    onSelect={() => {
+                      setCnae("TODOS");
+                      setPagina(0);
+                      setCnaeAberto(false);
+                    }}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${cnae === "TODOS" ? "opacity-100" : "opacity-0"}`}
+                    />
+                    Todos os CNAEs
+                  </CommandItem>
+                  {(cnaes ?? []).map((c) => (
+                    <CommandItem
+                      key={c.codigo}
+                      value={c.codigo}
+                      onSelect={() => {
+                        setCnae(c.codigo);
+                        setPagina(0);
+                        setCnaeAberto(false);
+                      }}
+                    >
+                      <Check
+                        className={`mr-2 h-4 w-4 ${cnae === c.codigo ? "opacity-100" : "opacity-0"}`}
+                      />
+                      <span className="flex-1">{c.codigo}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{c.total}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
 
         <form
           className="ml-auto flex gap-2"
