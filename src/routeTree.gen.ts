@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
+import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,18 +41,26 @@ const AuthenticatedNovaApuracaoRoute =
     path: '/nova-apuracao',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCargasCargaIdRoute =
+  AuthenticatedCargasCargaIdRouteImport.update({
+    id: '/cargas/$cargaId',
+    path: '/cargas/$cargaId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -60,12 +69,14 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/historico' | '/nova-apuracao'
+  fullPaths:
+    '/' | '/dashboard' | '/historico' | '/nova-apuracao' | '/cargas/$cargaId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/historico' | '/nova-apuracao'
+  to: '/' | '/dashboard' | '/historico' | '/nova-apuracao' | '/cargas/$cargaId'
   id:
     | '__root__'
     | '/'
@@ -73,6 +84,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/historico'
     | '/_authenticated/nova-apuracao'
+    | '/_authenticated/cargas/$cargaId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -117,6 +129,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNovaApuracaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cargas/$cargaId': {
+      id: '/_authenticated/cargas/$cargaId'
+      path: '/cargas/$cargaId'
+      fullPath: '/cargas/$cargaId'
+      preLoaderRoute: typeof AuthenticatedCargasCargaIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -124,12 +143,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
+  AuthenticatedCargasCargaIdRoute: typeof AuthenticatedCargasCargaIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
+  AuthenticatedCargasCargaIdRoute: AuthenticatedCargasCargaIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
