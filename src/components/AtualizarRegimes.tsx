@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ export function AtualizarRegimes({ cargaId }: { cargaId: string }) {
       );
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["contribuintes"] }),
-        queryClient.invalidateQueries({ queryKey: ["contagens"] }),
+        queryClient.invalidateQueries({ queryKey: ["contribuintes-contagens"] }),
         queryClient.invalidateQueries({ queryKey: ["carga"] }),
         queryClient.invalidateQueries({ queryKey: ["cargas"] }),
         refetch(),
@@ -79,8 +79,4 @@ export function AtualizarRegimes({ cargaId }: { cargaId: string }) {
       Atualizar regimes
     </Button>
   );
-}
-
-export function IconeCarregando() {
-  return <Loader2 className="h-4 w-4 animate-spin" />;
 }
