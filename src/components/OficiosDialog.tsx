@@ -31,7 +31,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useQueryClient } from "@tanstack/react-query";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { marcarStatusEmissoes, registrarEmissoes } from "@/lib/oficios/registro";
 import { useModelos } from "@/hooks/useModelos";
 import {
   baixarBlob,
@@ -58,6 +61,8 @@ type Props = {
 export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
   const { data: config } = useConfiguracao();
   const { data: modelos } = useModelos();
+  const { municipioId } = useMunicipioAtivo();
+  const queryClient = useQueryClient();
   const [aberto, setAberto] = useState(false);
   const [chaveModelo, setChaveModelo] = useState<string>("");
   const [dataOficio, setDataOficio] = useState(hojeIso());
