@@ -168,26 +168,28 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
         toast.error("Nenhum contribuinte zerado para gerar.");
         return;
       }
-      setProgresso({ feitos: 0, total: contribuintes.length });
+      setProgresso({ fase: "documentos", feitos: 0, total: contribuintes.length });
       const zip = await gerarZipOficiosZerados({
         contribuintes,
         config,
         exercicio,
         dataOficio,
         brasaoPath: config.brasao_path,
-        onProgresso: (feitos, total) => setProgresso({ feitos, total }),
+        onProgresso: (p) => setProgresso(p),
       });
       baixarBlob(zip, nomeZip(config.cidade_data.split("/")[0] ?? "municipio", exercicio));
-      toast.success(`${contribuintes.length} ofício(s) gerado(s).`);
-      setAberto(false);
+      toast.success(`${contribuintes.length} ofício(s) gerado(s).`, {
+        description: "O download do ZIP foi iniciado.",
+      });
+      setTimeout(() => setAberto(false), 1200);
     } catch (erro) {
       toast.error("Falha ao gerar os ofícios.", {
         description: erro instanceof Error ? erro.message : undefined,
       });
-    } finally {
       setProgresso(null);
     }
   }
+
 
   return (
     <Dialog open={aberto} onOpenChange={(v) => !progresso && setAberto(v)}>
