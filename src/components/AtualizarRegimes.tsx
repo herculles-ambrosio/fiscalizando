@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,7 @@ import { reprocessarRegimesDaCarga, type ProgressoReprocesso } from "@/lib/vaf/r
  */
 export function AtualizarRegimes({ cargaId }: { cargaId: string }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [progresso, setProgresso] = useState<ProgressoReprocesso | null>(null);
   const jaTentou = useRef<string | null>(null);
 
@@ -41,13 +43,9 @@ export function AtualizarRegimes({ cargaId }: { cargaId: string }) {
       toast.success(
         `Regimes atualizados: ${r.simplesNacional} Simples Nacional e ${r.simei} SIMEI.`,
       );
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["contribuintes"] }),
-        queryClient.invalidateQueries({ queryKey: ["contribuintes-contagens"] }),
-        queryClient.invalidateQueries({ queryKey: ["carga"] }),
-        queryClient.invalidateQueries({ queryKey: ["cargas"] }),
-        refetch(),
-      ]);
+      await queryClient.invalidateQueries({ refetchType: "all" });
+      await refetch();
+      await router.invalidate();
     } catch (erro) {
       toast.error(erro instanceof Error ? erro.message : "Falha ao atualizar os regimes.");
     } finally {
