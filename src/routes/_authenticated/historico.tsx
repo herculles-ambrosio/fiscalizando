@@ -110,11 +110,38 @@ function Historico() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [municipioId, pendentes]);
 
+  const [excluindo, setExcluindo] = useState<string | null>(null);
+
+  async function excluirCarga(cargaId: string) {
+    setExcluindo(cargaId);
+    try {
+      const oficios = await supabase.from("oficios_emitidos").delete().eq("carga_id", cargaId);
+      if (oficios.error) throw oficios.error;
+      const contribuintes = await supabase
+        .from("contribuintes_apurados")
+        .delete()
+        .eq("carga_id", cargaId);
+      if (contribuintes.error) throw contribuintes.error;
+      const carga = await supabase.from("cargas").delete().eq("id", cargaId);
+      if (carga.error) throw carga.error;
+      toast.success("Apuração excluída.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["cargas"] }),
+        recarregarPendentes(),
+      ]);
+    } catch (erro) {
+      toast.error(erro instanceof Error ? erro.message : "Falha ao excluir a apuração.");
+    } finally {
+      setExcluindo(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Histórico</h1>
+          <h1 className="text-2xl font-semibold">Apurações Realizadas</h1>
+
           <p className="mt-1 text-sm text-muted-foreground">
             Apurações processadas pelo município.
           </p>
