@@ -93,7 +93,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   }
 
 
-  async function buscarContribuintes(): Promise<ContribuinteOficio[]> {
+  async function buscarContribuintes(limite?: number): Promise<ContribuinteOficio[]> {
     let q = supabase
       .from("contribuintes_apurados")
       .select("id, nome, cnpj, inscricao_estadual, endereco")
@@ -102,6 +102,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
       .order("nome");
 
     if (escopo === "selecionados") q = q.in("id", selecionados);
+    if (limite) q = q.limit(limite);
 
     const { data, error } = await q;
     if (error) throw error;
