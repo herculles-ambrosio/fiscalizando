@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
-import { Check, ChevronLeft, ChevronRight, ChevronsUpDown, Loader2, Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronLeft, ChevronRight, ChevronsUpDown, Loader2, Search } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -54,6 +54,59 @@ export const Route = createFileRoute("/_authenticated/cargas/$cargaId")({
 const SITUACOES: Situacao[] = ["OMISSO", "ZERADO", "FORA_DO_PRAZO", "DISCREPANTE", "NORMAL"];
 const POR_PAGINA = 50;
 
+type Ordem = { coluna: ColunaOrdenavel; asc: boolean };
+
+function ColunaHead({
+  coluna,
+  ordem,
+  onSort,
+  alinhar,
+  children,
+}: {
+  coluna: ColunaOrdenavel;
+  ordem: Ordem;
+  onSort: (c: ColunaOrdenavel) => void;
+  alinhar?: "right";
+  children: React.ReactNode;
+}) {
+  const ativa = ordem.coluna === coluna;
+  return (
+    <TableHead className={alinhar === "right" ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => onSort(coluna)}
+        aria-label={`Ordenar por ${typeof children === "string" ? children : coluna}`}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${
+          alinhar === "right" ? "flex-row-reverse" : ""
+        } ${ativa ? "text-foreground font-semibold" : ""}`}
+      >
+        {children}
+        {ativa ? (
+          ordem.asc ? (
+            <ArrowUp className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
+  );
+}
+
+type ColunaOrdenavel =
+
+
+  | "nome"
+  | "cnpj"
+  | "inscricao_estadual"
+  | "cnae"
+  | "vaf_atual"
+  | "vaf_anterior"
+  | "variacao_pct"
+  | "data_entrega";
+
 function Contribuintes() {
   const { cargaId } = Route.useParams();
   const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
@@ -63,6 +116,19 @@ function Contribuintes() {
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [ordem, setOrdem] = useState<{ coluna: ColunaOrdenavel; asc: boolean }>({
+    coluna: "vaf_atual",
+    asc: false,
+  });
+
+  const ordenarPor = (coluna: ColunaOrdenavel) => {
+    setPagina(0);
+    setOrdem((atual) =>
+      atual.coluna === coluna
+        ? { coluna, asc: !atual.asc }
+        : { coluna, asc: coluna === "nome" || coluna === "cnae" || coluna === "cnpj" || coluna === "inscricao_estadual" },
+    );
+  };
 
   const { data: carga } = useQuery({
     queryKey: ["carga", cargaId],
@@ -78,14 +144,15 @@ function Contribuintes() {
   });
 
   const { data, isFetching } = useQuery({
-    queryKey: ["contribuintes", cargaId, filtro, cnae, termo, pagina],
+    queryKey: ["contribuintes", cargaId, filtro, cnae, termo, pagina, ordem.coluna, ordem.asc],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
         .from("contribuintes_apurados")
         .select("*", { count: "exact" })
         .eq("carga_id", cargaId)
-        .order("vaf_atual", { ascending: false, nullsFirst: false })
+        .order(ordem.coluna, { ascending: ordem.asc, nullsFirst: false })
+        .order("id", { ascending: true })
         .range(pagina * POR_PAGINA, pagina * POR_PAGINA + POR_PAGINA - 1);
 
       if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
@@ -97,6 +164,7 @@ function Contribuintes() {
       return { linhas: data, total: count ?? 0 };
     },
   });
+
 
   const { data: cnaes } = useQuery({
     queryKey: ["contribuintes-cnaes", cargaId],
@@ -311,14 +379,15 @@ function Contribuintes() {
                         }
                       />
                     </TableHead>
-                    <TableHead>Contribuinte</TableHead>
-                    <TableHead>CNPJ</TableHead>
-                    <TableHead>IE</TableHead>
-                    <TableHead>CNAE</TableHead>
-                    <TableHead className="text-right">VAF atual</TableHead>
-                    <TableHead className="text-right">VAF anterior</TableHead>
-                    <TableHead className="text-right">Variação</TableHead>
-                    <TableHead>Entrega</TableHead>
+                    <ColunaHead coluna="nome" ordem={ordem} onSort={ordenarPor}>Contribuinte</ColunaHead>
+                    <ColunaHead coluna="cnpj" ordem={ordem} onSort={ordenarPor}>CNPJ</ColunaHead>
+                    <ColunaHead coluna="inscricao_estadual" ordem={ordem} onSort={ordenarPor}>IE</ColunaHead>
+                    <ColunaHead coluna="cnae" ordem={ordem} onSort={ordenarPor}>CNAE</ColunaHead>
+                    <ColunaHead coluna="vaf_atual" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF atual</ColunaHead>
+                    <ColunaHead coluna="vaf_anterior" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF anterior</ColunaHead>
+                    <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
+                    <ColunaHead coluna="data_entrega" ordem={ordem} onSort={ordenarPor}>Entrega</ColunaHead>
+
                     <TableHead>Situação</TableHead>
                   </TableRow>
                 </TableHeader>
