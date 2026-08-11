@@ -131,9 +131,34 @@ export async function reprocessarRegimesDaCarga(
     });
   }
 
+  // SIMEI presentes no retorno que não constam na apuração (não estão no arquivo de ativos).
+  progresso({ etapa: "Incluindo SIMEI somente do retorno", percentual: 92 });
+  const jaGravados = new Set(contribuintes.map((c) => c.inscricao_estadual));
+  const faltantes = [...registrosSimei.values()].filter(
+    (r) => !jaGravados.has(r.inscricao_estadual),
+  );
+  const novasLinhas = faltantes.map((r) => ({
+    carga_id: cargaId,
+    municipio_id: carga.municipio_id,
+    inscricao_estadual: r.inscricao_estadual,
+    cnpj: r.cnpj,
+    nome: r.nome,
+    entregou_declaracao: true,
+    vaf_atual: r.vaf,
+    data_entrega: r.data_entrada,
+    regime_recolhimento: r.regime_recolhimento,
+    situacoes: ["SIMEI", "SOMENTE_RETORNO"],
+  }));
+  for (let i = 0; i < novasLinhas.length; i += 500) {
+    const { error } = await supabase
+      .from("contribuintes_apurados")
+      .insert(novasLinhas.slice(i, i + 500));
+    if (error) throw error;
+  }
+
   // Totais finais recalculados sobre o conjunto completo da carga.
   let simplesNacional = 0;
-  let simei = 0;
+  let simei = faltantes.length;
   for (const c of contribuintes) {
     const regime = regimes.get(c.inscricao_estadual) ?? null;
     const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
@@ -141,15 +166,25 @@ export async function reprocessarRegimesDaCarga(
     if (situacoes.includes("SIMEI")) simei += 1;
   }
 
-  progresso({ etapa: "Atualizando totais", percentual: 95 });
+  progresso({ etapa: "Atualizando totais", percentual: 96 });
   const { error: erroTotais } = await supabase
     .from("cargas")
-    .update({ total_simples_nacional: simplesNacional, total_simei: simei })
+    .update({
+      total_simples_nacional: simplesNacional,
+      total_simei: simei,
+      total_ativos: contribuintes.length + faltantes.length,
+    })
     .eq("id", cargaId);
   if (erroTotais) throw erroTotais;
 
   progresso({ etapa: "Concluída", percentual: 100 });
-  return { atualizados: pendentes.length, simplesNacional, simei };
+  return {
+    atualizados: pendentes.length,
+    simplesNacional,
+    simei,
+    incluidos: faltantes.length,
+  };
+
 }
 
 export type CargaPendente = { id: string; exercicio: number };
