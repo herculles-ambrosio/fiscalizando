@@ -146,7 +146,6 @@ export function apurar(
   const reg02 = new Map<string, Record<string, any>>();
   const contagemExercicio = new Map<number, number>();
   const registrosSimei = registrosSimeiDoRetorno(textoRetorno);
-  const iesSimei = new Set(registrosSimei.keys());
 
 
   for (const linha of separarLinhas(textoRetorno)) {
@@ -207,7 +206,7 @@ export function apurar(
       (r) => Number(String(r["exercicio"]).trim()) === exercicio,
     );
     const regSimei = registrosSimei.get(ie);
-    let entregou = declaracoes.length > 0 || !!regSimei;
+    const entregou = declaracoes.length > 0 || !!regSimei;
     const declaracao = declaracoes.sort(
       (a, b) => chaveData(b["data_processamento"]) - chaveData(a["data_processamento"]),
     )[0];
