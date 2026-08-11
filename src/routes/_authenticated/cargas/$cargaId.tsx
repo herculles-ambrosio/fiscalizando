@@ -163,6 +163,20 @@ function Contribuintes() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={todosMarcados}
+                        disabled={!zeradosPagina.length}
+                        aria-label="Selecionar zerados desta página"
+                        onCheckedChange={(v) =>
+                          setSelecionados((atual) =>
+                            v
+                              ? [...new Set([...atual, ...zeradosPagina.map((c) => c.id)])]
+                              : atual.filter((id) => !zeradosPagina.some((c) => c.id === id)),
+                          )
+                        }
+                      />
+                    </TableHead>
                     <TableHead>Contribuinte</TableHead>
                     <TableHead>CNPJ</TableHead>
                     <TableHead>IE</TableHead>
@@ -175,36 +189,48 @@ function Contribuintes() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.linhas.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
-                      <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
-                      <TableCell>{c.cnae ?? "—"}</TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {formatarMoeda(c.vaf_atual)}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {formatarMoeda(c.vaf_anterior)}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {formatarPercentual(c.variacao_pct)}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {formatarData(c.data_entrega)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {(c.situacoes as string[]).map((s) => (
-                            <SituacaoBadge key={s} situacao={s} />
-                          ))}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {data?.linhas.map((c) => {
+                    const zerado = (c.situacoes as string[]).includes("ZERADO");
+                    return (
+                      <TableRow key={c.id}>
+                        <TableCell>
+                          {zerado && (
+                            <Checkbox
+                              checked={selecionados.includes(c.id)}
+                              aria-label={`Selecionar ${c.nome ?? c.inscricao_estadual}`}
+                              onCheckedChange={(v) => alternar(c.id, v === true)}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
+                        <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
+                        <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
+                        <TableCell>{c.cnae ?? "—"}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          {formatarMoeda(c.vaf_atual)}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          {formatarMoeda(c.vaf_anterior)}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          {formatarPercentual(c.variacao_pct)}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {formatarData(c.data_entrega)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {(c.situacoes as string[]).map((s) => (
+                              <SituacaoBadge key={s} situacao={s} />
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {!data?.linhas.length && (
                     <TableRow>
-                      <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                         Nenhum contribuinte encontrado com esses filtros.
                       </TableCell>
                     </TableRow>
