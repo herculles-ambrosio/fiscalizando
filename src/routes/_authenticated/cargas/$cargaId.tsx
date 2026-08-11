@@ -259,14 +259,18 @@ function Contribuintes() {
             {selecionados.length ? ` · ${selecionados.length} selecionado(s)` : ""}
           </p>
         </div>
-        {carga && (
-          <OficiosDialog
-            cargaId={cargaId}
-            exercicio={carga.exercicio}
-            selecionados={selecionados}
-          />
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <AtualizarRegimes cargaId={cargaId} />
+          {carga && (
+            <OficiosDialog
+              cargaId={cargaId}
+              exercicio={carga.exercicio}
+              selecionados={selecionados}
+            />
+          )}
+        </div>
       </div>
+
 
       <div className="flex flex-wrap items-center gap-2">
         {(["TODOS", ...SITUACOES] as const).map((s) => (
