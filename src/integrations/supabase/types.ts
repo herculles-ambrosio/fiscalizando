@@ -14,13 +14,211 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cargas: {
+        Row: {
+          arquivo_ativos_path: string | null
+          arquivo_retorno_path: string | null
+          concluida_em: string | null
+          criado_em: string
+          criado_por: string | null
+          data_limite_entrega: string | null
+          exercicio: number
+          id: string
+          limiar_discrepancia: number
+          mensagem_erro: string | null
+          municipio_id: string
+          status: string
+          total_ativos: number | null
+          total_discrepantes: number | null
+          total_fora_prazo: number | null
+          total_normais: number | null
+          total_omissos: number | null
+          total_zerados: number | null
+        }
+        Insert: {
+          arquivo_ativos_path?: string | null
+          arquivo_retorno_path?: string | null
+          concluida_em?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          data_limite_entrega?: string | null
+          exercicio: number
+          id?: string
+          limiar_discrepancia?: number
+          mensagem_erro?: string | null
+          municipio_id: string
+          status?: string
+          total_ativos?: number | null
+          total_discrepantes?: number | null
+          total_fora_prazo?: number | null
+          total_normais?: number | null
+          total_omissos?: number | null
+          total_zerados?: number | null
+        }
+        Update: {
+          arquivo_ativos_path?: string | null
+          arquivo_retorno_path?: string | null
+          concluida_em?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          data_limite_entrega?: string | null
+          exercicio?: number
+          id?: string
+          limiar_discrepancia?: number
+          mensagem_erro?: string | null
+          municipio_id?: string
+          status?: string
+          total_ativos?: number | null
+          total_discrepantes?: number | null
+          total_fora_prazo?: number | null
+          total_normais?: number | null
+          total_omissos?: number | null
+          total_zerados?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cargas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contribuintes_apurados: {
+        Row: {
+          carga_id: string
+          cnae: string | null
+          cnpj: string | null
+          criado_em: string
+          data_entrega: string | null
+          endereco: string | null
+          entregou_declaracao: boolean
+          id: string
+          inscricao_estadual: string
+          municipio_id: string
+          nome: string | null
+          oficio_path: string | null
+          situacoes: string[]
+          vaf_anterior: number | null
+          vaf_atual: number | null
+          variacao_pct: number | null
+        }
+        Insert: {
+          carga_id: string
+          cnae?: string | null
+          cnpj?: string | null
+          criado_em?: string
+          data_entrega?: string | null
+          endereco?: string | null
+          entregou_declaracao?: boolean
+          id?: string
+          inscricao_estadual: string
+          municipio_id: string
+          nome?: string | null
+          oficio_path?: string | null
+          situacoes?: string[]
+          vaf_anterior?: number | null
+          vaf_atual?: number | null
+          variacao_pct?: number | null
+        }
+        Update: {
+          carga_id?: string
+          cnae?: string | null
+          cnpj?: string | null
+          criado_em?: string
+          data_entrega?: string | null
+          endereco?: string | null
+          entregou_declaracao?: boolean
+          id?: string
+          inscricao_estadual?: string
+          municipio_id?: string
+          nome?: string | null
+          oficio_path?: string | null
+          situacoes?: string[]
+          vaf_anterior?: number | null
+          vaf_atual?: number | null
+          variacao_pct?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribuintes_apurados_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contribuintes_apurados_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      municipios: {
+        Row: {
+          codigo_sef: string
+          criado_em: string
+          id: string
+          nome: string
+          uf: string
+        }
+        Insert: {
+          codigo_sef: string
+          criado_em?: string
+          id?: string
+          nome: string
+          uf?: string
+        }
+        Update: {
+          codigo_sef?: string
+          criado_em?: string
+          id?: string
+          nome?: string
+          uf?: string
+        }
+        Relationships: []
+      }
+      perfis: {
+        Row: {
+          criado_em: string
+          id: string
+          municipio_id: string
+          nome: string | null
+          papel: string
+        }
+        Insert: {
+          criado_em?: string
+          id: string
+          municipio_id: string
+          nome?: string | null
+          papel?: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          municipio_id?: string
+          nome?: string | null
+          papel?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfis_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      meu_municipio_id: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
