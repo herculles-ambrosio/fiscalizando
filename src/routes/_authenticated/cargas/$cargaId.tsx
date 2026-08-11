@@ -223,8 +223,24 @@ function Contribuintes() {
         return count ?? 0;
       };
 
+      const contarTodos = async () => {
+        let q = supabase
+          .from("contribuintes_apurados")
+          .select("id", { count: "exact", head: true })
+          .eq("carga_id", cargaId)
+          .not("situacoes", "cs", "{SOMENTE_RETORNO}");
+        if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+        if (termo)
+          q = q.or(
+            `nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`,
+          );
+        const { count, error } = await q;
+        if (error) throw error;
+        return count ?? 0;
+      };
+
       const [todos, ...porSituacao] = await Promise.all([
-        contar(),
+        contarTodos(),
         ...SITUACOES.map((s) => contar(s)),
       ]);
 
