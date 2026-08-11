@@ -46,7 +46,23 @@ function NovaApuracao() {
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    if (!perfil || !municipioId || !ativos || !retorno) return;
+    if (!ativos || !retorno) {
+      setErro("Selecione os dois arquivos da SEF-MG.");
+      return;
+    }
+    let usuarioId = perfil?.id ?? null;
+    if (!usuarioId) {
+      const { data } = await supabase.auth.getUser();
+      usuarioId = data.user?.id ?? null;
+    }
+    if (!usuarioId) {
+      setErro("Sessão expirada. Entre novamente para processar a apuração.");
+      return;
+    }
+    if (!municipioId) {
+      setErro("Selecione um município antes de processar.");
+      return;
+    }
     setErro(null);
     setProgresso({ etapa: "Iniciando", percentual: 0 });
     try {
