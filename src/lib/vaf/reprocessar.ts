@@ -180,11 +180,15 @@ export async function reprocessarRegimesDaCarga(
   // Totais finais recalculados sobre o conjunto completo da carga.
   let simplesNacional = 0;
   let simei = faltantes.length;
+  let zerados = 0;
   for (const c of contribuintes) {
     const regime = regimes.get(c.inscricao_estadual) ?? null;
-    const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
+    const reg = registrosSimei.get(c.inscricao_estadual);
+    const vaf = reg && (c.vaf_atual ?? 0) === 0 ? reg.vaf : c.vaf_atual;
+    const situacoes = situacoesAtualizadas(c.situacoes, regime, !!reg, vaf);
     if (situacoes.includes("SIMPLES_NACIONAL")) simplesNacional += 1;
     if (situacoes.includes("SIMEI")) simei += 1;
+    if (situacoes.includes("ZERADO")) zerados += 1;
   }
 
   progresso({ etapa: "Atualizando totais", percentual: 96 });
@@ -193,10 +197,12 @@ export async function reprocessarRegimesDaCarga(
     .update({
       total_simples_nacional: simplesNacional,
       total_simei: simei,
+      total_zerados: zerados,
       total_ativos: contribuintes.length + faltantes.length,
     })
     .eq("id", cargaId);
   if (erroTotais) throw erroTotais;
+
 
   progresso({ etapa: "Concluída", percentual: 100 });
   return {
