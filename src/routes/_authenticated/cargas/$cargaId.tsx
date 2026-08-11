@@ -54,6 +54,16 @@ export const Route = createFileRoute("/_authenticated/cargas/$cargaId")({
 const SITUACOES: Situacao[] = ["OMISSO", "ZERADO", "FORA_DO_PRAZO", "DISCREPANTE", "NORMAL"];
 const POR_PAGINA = 50;
 
+type ColunaOrdenavel =
+  | "nome"
+  | "cnpj"
+  | "inscricao_estadual"
+  | "cnae"
+  | "vaf_atual"
+  | "vaf_anterior"
+  | "variacao_pct"
+  | "data_entrega";
+
 function Contribuintes() {
   const { cargaId } = Route.useParams();
   const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
@@ -63,6 +73,19 @@ function Contribuintes() {
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [ordem, setOrdem] = useState<{ coluna: ColunaOrdenavel; asc: boolean }>({
+    coluna: "vaf_atual",
+    asc: false,
+  });
+
+  const ordenarPor = (coluna: ColunaOrdenavel) => {
+    setPagina(0);
+    setOrdem((atual) =>
+      atual.coluna === coluna
+        ? { coluna, asc: !atual.asc }
+        : { coluna, asc: coluna === "nome" || coluna === "cnae" || coluna === "cnpj" || coluna === "inscricao_estadual" },
+    );
+  };
 
   const { data: carga } = useQuery({
     queryKey: ["carga", cargaId],
@@ -78,14 +101,15 @@ function Contribuintes() {
   });
 
   const { data, isFetching } = useQuery({
-    queryKey: ["contribuintes", cargaId, filtro, cnae, termo, pagina],
+    queryKey: ["contribuintes", cargaId, filtro, cnae, termo, pagina, ordem.coluna, ordem.asc],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
         .from("contribuintes_apurados")
         .select("*", { count: "exact" })
         .eq("carga_id", cargaId)
-        .order("vaf_atual", { ascending: false, nullsFirst: false })
+        .order(ordem.coluna, { ascending: ordem.asc, nullsFirst: false })
+        .order("id", { ascending: true })
         .range(pagina * POR_PAGINA, pagina * POR_PAGINA + POR_PAGINA - 1);
 
       if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
@@ -97,6 +121,7 @@ function Contribuintes() {
       return { linhas: data, total: count ?? 0 };
     },
   });
+
 
   const { data: cnaes } = useQuery({
     queryKey: ["contribuintes-cnaes", cargaId],
