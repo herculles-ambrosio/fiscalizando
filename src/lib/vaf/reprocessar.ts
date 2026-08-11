@@ -90,7 +90,7 @@ export async function reprocessarRegimesDaCarga(
 
   progresso({ etapa: "Lendo arquivo de ativos", percentual: 15 });
   const regimes = await lerRegimesDoArquivo(carga.arquivo_ativos_path);
-  const simei = await lerSimeiDoRetorno(carga.arquivo_retorno_path);
+  const iesSimei = await lerSimeiDoRetorno(carga.arquivo_retorno_path);
 
   progresso({ etapa: "Carregando contribuintes", percentual: 30 });
   const contribuintes = await carregarContribuintes(cargaId);
@@ -98,7 +98,7 @@ export async function reprocessarRegimesDaCarga(
   const pendentes = contribuintes
     .map((c) => {
       const regime = regimes.get(c.inscricao_estadual) ?? null;
-      const situacoes = situacoesAtualizadas(c.situacoes, regime, simei.has(c.inscricao_estadual));
+      const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
       const mudou =
         regime !== c.regime_recolhimento ||
         situacoes.join("|") !== (c.situacoes ?? []).join("|");
@@ -128,7 +128,7 @@ export async function reprocessarRegimesDaCarga(
   let simei = 0;
   for (const c of contribuintes) {
     const regime = regimes.get(c.inscricao_estadual) ?? null;
-    const situacoes = situacoesAtualizadas(c.situacoes, regime, simei.has(c.inscricao_estadual));
+    const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
     if (situacoes.includes("SIMPLES_NACIONAL")) simplesNacional += 1;
     if (situacoes.includes("SIMEI")) simei += 1;
   }
