@@ -69,25 +69,25 @@ function situacoesAtualizadas(
   return [...base, ...situacoesDoRegime(regime, simei)] as Situacao[];
 }
 
-/** Inscrições em SIMEI conforme o registro 40 do arquivo de retorno guardado. */
-async function lerSimeiDoRetorno(caminho: string | null): Promise<Set<string>> {
-  if (!caminho) return new Set();
+/** Registros SIMEI (tipo 40) do arquivo de retorno guardado. */
+async function lerSimeiDoRetorno(caminho: string | null): Promise<Map<string, RegistroSimei>> {
+  if (!caminho) return new Map();
   const { data, error } = await supabase.storage.from("uploads").download(caminho);
-  if (error || !data) return new Set();
-  return iesSimeiDoRetorno(decodificarArquivo(await data.arrayBuffer()));
+  if (error || !data) return new Map();
+  return registrosSimeiDoRetorno(decodificarArquivo(await data.arrayBuffer()));
 }
 
 /** Reprocessa uma apuração já gravada, preenchendo regime e as situações Simples Nacional/SIMEI. */
 export async function reprocessarRegimesDaCarga(
   cargaId: string,
   onProgresso?: (p: ProgressoReprocesso) => void,
-): Promise<{ atualizados: number; simplesNacional: number; simei: number }> {
+): Promise<{ atualizados: number; simplesNacional: number; simei: number; incluidos: number }> {
   const progresso = onProgresso ?? (() => {});
 
   progresso({ etapa: "Localizando arquivo de ativos", percentual: 5 });
   const { data: carga, error: erroCarga } = await supabase
     .from("cargas")
-    .select("id, arquivo_ativos_path, arquivo_retorno_path")
+    .select("id, municipio_id, arquivo_ativos_path, arquivo_retorno_path")
     .eq("id", cargaId)
     .single();
   if (erroCarga || !carga) throw erroCarga ?? new Error("Apuração não encontrada.");
@@ -96,7 +96,9 @@ export async function reprocessarRegimesDaCarga(
 
   progresso({ etapa: "Lendo arquivo de ativos", percentual: 15 });
   const regimes = await lerRegimesDoArquivo(carga.arquivo_ativos_path);
-  const iesSimei = await lerSimeiDoRetorno(carga.arquivo_retorno_path);
+  const registrosSimei = await lerSimeiDoRetorno(carga.arquivo_retorno_path);
+  const iesSimei = new Set(registrosSimei.keys());
+
 
   progresso({ etapa: "Carregando contribuintes", percentual: 30 });
   const contribuintes = await carregarContribuintes(cargaId);
