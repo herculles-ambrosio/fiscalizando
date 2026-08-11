@@ -59,12 +59,78 @@ function Historico() {
     },
   });
 
+  const queryClient = useQueryClient();
+  const [progresso, setProgresso] = useState<ProgressoReprocesso | null>(null);
+  const jaTentou = useRef<string | null>(null);
+
+  const { data: pendentes, refetch: recarregarPendentes } = useQuery({
+    queryKey: ["cargas-sem-regime", municipioId],
+    enabled: !!municipioId,
+    queryFn: () => listarCargasSemRegime(municipioId!),
+  });
+
+  async function reprocessar() {
+    if (!municipioId || progresso) return;
+    setProgresso({ etapa: "Iniciando", percentual: 0 });
+    try {
+      const r = await reprocessarCargasPendentes(municipioId, setProgresso);
+      if (r.erros.length) toast.error(r.erros.join(" • "));
+      if (r.cargas > 0)
+        toast.success(
+          `${r.cargas} apuração(ões) atualizada(s) com Regime, Simples Nacional e SIMEI.`,
+        );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["cargas"] }),
+        recarregarPendentes(),
+      ]);
+    } catch (erro) {
+      toast.error(erro instanceof Error ? erro.message : "Falha ao reprocessar apurações.");
+    } finally {
+      setProgresso(null);
+    }
+  }
+
+  // Reprocessa sozinho as apurações antigas ao abrir a tela (uma vez por município).
+  useEffect(() => {
+    if (!municipioId || !pendentes?.length) return;
+    if (jaTentou.current === municipioId) return;
+    jaTentou.current = municipioId;
+    void reprocessar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [municipioId, pendentes]);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Histórico</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Apurações processadas pelo município.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Histórico</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Apurações processadas pelo município.
+          </p>
+        </div>
+        <Button variant="outline" onClick={reprocessar} disabled={!municipioId || !!progresso}>
+          {progresso ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          Atualizar regimes
+        </Button>
       </div>
+
+      {progresso ? (
+        <Card>
+          <CardContent className="space-y-2 p-4">
+            <p className="text-sm text-muted-foreground">{progresso.etapa}</p>
+            <Progress value={progresso.percentual} />
+          </CardContent>
+        </Card>
+      ) : pendentes?.length ? (
+        <p className="text-sm text-muted-foreground">
+          {pendentes.length} apuração(ões) sem os dados de regime — clique em “Atualizar regimes”.
+        </p>
+      ) : null}
+
 
       <Card>
         <CardContent className="p-0">
