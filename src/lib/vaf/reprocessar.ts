@@ -109,7 +109,6 @@ export async function reprocessarRegimesDaCarga(
   progresso({ etapa: "Lendo arquivo de ativos", percentual: 15 });
   const regimes = await lerRegimesDoArquivo(carga.arquivo_ativos_path);
   const registrosSimei = await lerSimeiDoRetorno(carga.arquivo_retorno_path);
-  const iesSimei = new Set(registrosSimei.keys());
 
 
   progresso({ etapa: "Carregando contribuintes", percentual: 30 });
