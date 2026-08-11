@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { FileDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +13,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { baixarBlob, carregarBrasao } from "@/lib/oficios/pacote";
+import { hojeIso } from "@/lib/oficios/texto";
+import { gerarDocxZerado, nomeArquivoOficio } from "@/lib/oficios/zerados";
 import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
 
 export type ContribuinteLinha = {
@@ -39,13 +46,52 @@ function Campo({ rotulo, valor }: { rotulo: string; valor: React.ReactNode }) {
 
 export function ContribuinteDetalhe({
   contribuinte,
+  exercicio,
   aberto,
   onOpenChange,
 }: {
   contribuinte: ContribuinteLinha | null;
+  exercicio: number;
   aberto: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const { data: config } = useConfiguracao();
+  const [gerando, setGerando] = useState(false);
+
+  const precisaOficio = !!contribuinte?.situacoes.some(
+    (s) => s === "OMISSO" || s === "ZERADO",
+  );
+  const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
+
+  async function gerarOficio() {
+    if (!contribuinte || !config) return;
+    setGerando(true);
+    try {
+      const brasao = await carregarBrasao(config.brasao_path);
+      const alvo = {
+        nome: contribuinte.nome,
+        cnpj: contribuinte.cnpj,
+        inscricao_estadual: contribuinte.inscricao_estadual,
+        endereco: contribuinte.endereco,
+      };
+      const blob = await gerarDocxZerado({
+        contribuinte: alvo,
+        config,
+        exercicio,
+        dataOficio: hojeIso(),
+        brasao,
+      });
+      baixarBlob(blob, nomeArquivoOficio(alvo));
+      toast.success("Ofício gerado.");
+    } catch (erro) {
+      toast.error("Falha ao gerar o ofício.", {
+        description: erro instanceof Error ? erro.message : undefined,
+      });
+    } finally {
+      setGerando(false);
+    }
+  }
+
   const { data: historico, isFetching } = useQuery({
     enabled: aberto && !!contribuinte,
     queryKey: ["contribuinte-historico", contribuinte?.municipio_id, contribuinte?.inscricao_estadual],
@@ -82,6 +128,28 @@ export function ContribuinteDetalhe({
                 <SituacaoBadge key={s} situacao={s} />
               ))}
             </div>
+
+            {precisaOficio && (
+              <div className="space-y-2 rounded-lg border p-3">
+                <Button
+                  className="w-full"
+                  onClick={() => void gerarOficio()}
+                  disabled={gerando || !configOk}
+                >
+                  {gerando ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileDown className="mr-2 h-4 w-4" />
+                  )}
+                  Gerar ofício de retificação
+                </Button>
+                {!configOk && (
+                  <p className="text-xs text-muted-foreground">
+                    Preencha os dados da prefeitura em Configurações para emitir o ofício.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <Campo rotulo="CNAE" valor={contribuinte.cnae ?? "—"} />
