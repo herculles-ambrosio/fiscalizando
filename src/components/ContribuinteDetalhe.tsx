@@ -222,6 +222,37 @@ export function ContribuinteDetalhe({
             <Separator />
 
             <div>
+              <h3 className="mb-3 text-sm font-semibold">Histórico de ofícios emitidos</h3>
+              {emissoes?.length ? (
+                <ul className="space-y-2">
+                  {emissoes.map((e) => (
+                    <li key={e.id} className="rounded-lg border p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium">{e.modelo_nome}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Exercício {e.exercicio} ·{" "}
+                            {e.tipo_emissao === "lote" ? "Lote (ZIP)" : "Individual"}
+                          </p>
+                        </div>
+                        <StatusEmissaoBadge status={e.status_download} />
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {formatarDataHora(e.criado_em)} · {e.emitido_por_nome ?? "—"}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum ofício emitido ainda.</p>
+              )}
+            </div>
+
+            <Separator />
+
+
+
+            <div>
               <h3 className="mb-3 text-sm font-semibold">Histórico de cargas</h3>
               {isFetching && !historico ? (
                 <div className="flex h-20 items-center justify-center text-muted-foreground">
