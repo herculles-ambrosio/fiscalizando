@@ -1,7 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { LAYOUT_ATIVOS } from "./layouts";
 import { decodificarArquivo, parseLinha, separarLinhas } from "./parser";
-import { iesSimeiDoRetorno, situacoesDoRegime, type Situacao } from "./apurar";
+import {
+  registrosSimeiDoRetorno,
+  situacoesDoRegime,
+  type RegistroSimei,
+  type Situacao,
+} from "./apurar";
+
 
 const TAMANHO_PAGINA = 1000;
 const CONCORRENCIA = 20;
