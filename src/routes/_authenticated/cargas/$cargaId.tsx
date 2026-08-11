@@ -50,6 +50,20 @@ function Contribuintes() {
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+
+  const { data: carga } = useQuery({
+    queryKey: ["carga", cargaId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cargas")
+        .select("id, exercicio")
+        .eq("id", cargaId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data, isFetching } = useQuery({
     queryKey: ["contribuintes", cargaId, filtro, termo, pagina],
@@ -72,14 +86,35 @@ function Contribuintes() {
   });
 
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
+  const zeradosPagina = (data?.linhas ?? []).filter((c) =>
+    (c.situacoes as string[]).includes("ZERADO"),
+  );
+  const todosMarcados =
+    zeradosPagina.length > 0 && zeradosPagina.every((c) => selecionados.includes(c.id));
+
+  function alternar(id: string, marcado: boolean) {
+    setSelecionados((atual) =>
+      marcado ? [...new Set([...atual, id])] : atual.filter((x) => x !== id),
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Contribuintes apurados</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {data ? `${data.total} registros encontrados` : "Carregando…"}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Contribuintes apurados</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {data ? `${data.total} registros encontrados` : "Carregando…"}
+            {selecionados.length ? ` · ${selecionados.length} selecionado(s)` : ""}
+          </p>
+        </div>
+        {carga && (
+          <OficiosZerados
+            cargaId={cargaId}
+            exercicio={carga.exercicio}
+            selecionados={selecionados}
+          />
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
