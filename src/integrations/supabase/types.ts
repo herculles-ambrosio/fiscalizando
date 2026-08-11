@@ -216,6 +216,53 @@ export type Database = {
           },
         ]
       }
+      modelos_oficio: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          chave: string
+          corpo: string
+          criado_em: string
+          id: string
+          municipio_id: string
+          nome: string
+          situacao: string
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          chave: string
+          corpo?: string
+          criado_em?: string
+          id?: string
+          municipio_id: string
+          nome: string
+          situacao: string
+          titulo?: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          chave?: string
+          corpo?: string
+          criado_em?: string
+          id?: string
+          municipio_id?: string
+          nome?: string
+          situacao?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modelos_oficio_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       municipios: {
         Row: {
           codigo_sef: string
