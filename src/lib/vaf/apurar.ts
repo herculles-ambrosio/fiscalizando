@@ -206,7 +206,8 @@ export function apurar(
     const declaracoes = (reg01.get(ie) ?? []).filter(
       (r) => Number(String(r["exercicio"]).trim()) === exercicio,
     );
-    const entregou = declaracoes.length > 0;
+    const regSimei = registrosSimei.get(ie);
+    let entregou = declaracoes.length > 0 || !!regSimei;
     const declaracao = declaracoes.sort(
       (a, b) => chaveData(b["data_processamento"]) - chaveData(a["data_processamento"]),
     )[0];
@@ -218,11 +219,14 @@ export function apurar(
       (a, b) => chaveData(b["data_processamento"]) - chaveData(a["data_processamento"]),
     )[0];
 
-    const vafAtual = historico
+    let vafAtual = historico
       ? (sinalAplicado(historico["valor_vaf_num"] ?? 0, historico["sinal_valor_vaf"]) ?? 0)
       : entregou
         ? 0
         : null;
+
+    // SIMEI: o VAF oficial vem do registro 40 (o registro 10 costuma vir zerado).
+    if (regSimei && (vafAtual == null || vafAtual === 0)) vafAtual = regSimei.vaf;
 
     const anterior = reg02.get(ie);
     const vafAnterior = anterior
@@ -237,7 +241,9 @@ export function apurar(
       variacao = ((vafAtual - vafAnterior) / Math.abs(vafAnterior)) * 100;
     }
 
-    const dataEntregaISO = declaracao ? dataSefParaISO(declaracao["data_entrega"]) : null;
+    const dataEntregaISO = declaracao
+      ? dataSefParaISO(declaracao["data_entrega"])
+      : (regSimei?.data_entrada ?? null);
 
     const situacoes: Situacao[] = [];
     if (!entregou) situacoes.push("OMISSO");
@@ -251,7 +257,8 @@ export function apurar(
 
     const regime = String(ativo["regime_recolhimento"] ?? "").trim().padStart(2, "0");
     const regimeNormalizado = regime === "00" ? null : regime;
-    situacoes.push(...situacoesDoRegime(regimeNormalizado, iesSimei.has(ie)));
+    situacoes.push(...situacoesDoRegime(regimeNormalizado, !!regSimei));
+
 
     totais.ativos += 1;
     for (const s of situacoes) {
