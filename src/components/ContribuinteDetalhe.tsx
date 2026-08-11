@@ -78,14 +78,25 @@ export function ContribuinteDetalhe({
   async function gerarOficio() {
     if (!contribuinte || !config || !modelo) return;
     setGerando(true);
+    let ids: string[] = [];
     try {
       const brasao = await carregarBrasao(config.brasao_path);
       const alvo = {
+        id: contribuinte.id,
         nome: contribuinte.nome,
         cnpj: contribuinte.cnpj,
         inscricao_estadual: contribuinte.inscricao_estadual,
         endereco: contribuinte.endereco,
       };
+      const nomeArquivo = nomeArquivoOficio(alvo);
+      ids = await registrarEmissoes({
+        contribuintes: [alvo],
+        modelo,
+        municipioId: contribuinte.municipio_id,
+        exercicio,
+        tipo: "individual",
+        arquivoNome: nomeArquivo,
+      });
       const blob = await gerarDocxOficio({
         contribuinte: alvo,
         modelo,
@@ -94,16 +105,20 @@ export function ContribuinteDetalhe({
         dataOficio: hojeIso(),
         brasao,
       });
-      baixarBlob(blob, nomeArquivoOficio(alvo));
+      baixarBlob(blob, nomeArquivo);
+      await marcarStatusEmissoes(ids, "baixado");
       toast.success("Ofício gerado.");
     } catch (erro) {
+      await marcarStatusEmissoes(ids, "erro", erro instanceof Error ? erro.message : undefined);
       toast.error("Falha ao gerar o ofício.", {
         description: erro instanceof Error ? erro.message : undefined,
       });
     } finally {
+      void queryClient.invalidateQueries({ queryKey: ["oficios-emitidos"] });
       setGerando(false);
     }
   }
+
 
 
   const { data: historico, isFetching } = useQuery({
