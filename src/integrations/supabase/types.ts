@@ -33,6 +33,8 @@ export type Database = {
           total_fora_prazo: number | null
           total_normais: number | null
           total_omissos: number | null
+          total_simei: number | null
+          total_simples_nacional: number | null
           total_zerados: number | null
         }
         Insert: {
@@ -53,6 +55,8 @@ export type Database = {
           total_fora_prazo?: number | null
           total_normais?: number | null
           total_omissos?: number | null
+          total_simei?: number | null
+          total_simples_nacional?: number | null
           total_zerados?: number | null
         }
         Update: {
@@ -73,6 +77,8 @@ export type Database = {
           total_fora_prazo?: number | null
           total_normais?: number | null
           total_omissos?: number | null
+          total_simei?: number | null
+          total_simples_nacional?: number | null
           total_zerados?: number | null
         }
         Relationships: [
@@ -158,6 +164,7 @@ export type Database = {
           municipio_id: string
           nome: string | null
           oficio_path: string | null
+          regime_recolhimento: string | null
           situacoes: string[]
           vaf_anterior: number | null
           vaf_atual: number | null
@@ -176,6 +183,7 @@ export type Database = {
           municipio_id: string
           nome?: string | null
           oficio_path?: string | null
+          regime_recolhimento?: string | null
           situacoes?: string[]
           vaf_anterior?: number | null
           vaf_atual?: number | null
@@ -194,6 +202,7 @@ export type Database = {
           municipio_id?: string
           nome?: string | null
           oficio_path?: string | null
+          regime_recolhimento?: string | null
           situacoes?: string[]
           vaf_anterior?: number | null
           vaf_atual?: number | null
