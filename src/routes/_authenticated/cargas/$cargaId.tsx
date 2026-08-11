@@ -13,6 +13,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -86,6 +87,8 @@ function Contribuintes() {
   });
 
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
+  const totalVafAtual = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
+  const totalVafAnterior = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_anterior ?? 0), 0);
   const zeradosPagina = (data?.linhas ?? []).filter((c) =>
     (c.situacoes as string[]).includes("ZERADO"),
   );
@@ -236,6 +239,22 @@ function Contribuintes() {
                     </TableRow>
                   )}
                 </TableBody>
+                {!!data?.linhas.length && (
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={5} className="font-medium">
+                        {data.linhas.length} contribuinte(s) nesta página · {data.total} no total
+                      </TableCell>
+                      <TableCell className="text-right font-medium whitespace-nowrap">
+                        {formatarMoeda(totalVafAtual)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium whitespace-nowrap">
+                        {formatarMoeda(totalVafAnterior)}
+                      </TableCell>
+                      <TableCell colSpan={3} />
+                    </TableRow>
+                  </TableFooter>
+                )}
               </Table>
             </div>
           )}
