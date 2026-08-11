@@ -29,6 +29,8 @@ import { gerarDocxOficio } from "@/lib/oficios/documento";
 import { nomeArquivoOficio } from "@/lib/oficios/zerados";
 import { marcarStatusEmissoes, registrarEmissoes } from "@/lib/oficios/registro";
 import { useEmissoes } from "@/hooks/useEmissoes";
+import { useReemitirOficio } from "@/hooks/useReemitirOficio";
+import type { EmissaoRegistro } from "@/lib/oficios/registro";
 import { StatusEmissaoBadge } from "@/components/StatusEmissaoBadge";
 import { formatarCnpj, formatarData, formatarDataHora, formatarMoeda, formatarPercentual } from "@/lib/format";
 
@@ -75,6 +77,20 @@ export function ContribuinteDetalhe({
   const queryClient = useQueryClient();
   const [gerando, setGerando] = useState(false);
   const [chaveModelo, setChaveModelo] = useState<string>("");
+  const [reemitindoId, setReemitindoId] = useState<string | null>(null);
+  const reemissao = useReemitirOficio();
+
+  function reemitir(emissao: EmissaoRegistro) {
+    setReemitindoId(emissao.id);
+    reemissao.mutate(emissao, {
+      onSuccess: () => toast.success("Ofício gerado novamente."),
+      onError: (erro) =>
+        toast.error("Falha ao gerar o ofício novamente.", {
+          description: erro instanceof Error ? erro.message : undefined,
+        }),
+      onSettled: () => setReemitindoId(null),
+    });
+  }
   const { data: emissoes } = useEmissoes({
     ativo: aberto && !!contribuinte,
     inscricaoEstadual: contribuinte?.inscricao_estadual,
@@ -240,6 +256,20 @@ export function ContribuinteDetalhe({
                       <p className="mt-2 text-xs text-muted-foreground">
                         {formatarDataHora(e.criado_em)} · {e.emitido_por_nome ?? "—"}
                       </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 w-full"
+                        onClick={() => reemitir(e)}
+                        disabled={reemissao.isPending && reemitindoId === e.id}
+                      >
+                        {reemissao.isPending && reemitindoId === e.id ? (
+                          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <FileDown className="mr-2 h-3.5 w-3.5" />
+                        )}
+                        Baixar novamente
+                      </Button>
                     </li>
                   ))}
                 </ul>
