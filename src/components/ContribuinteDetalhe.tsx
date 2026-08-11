@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { FileDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +13,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { baixarBlob, carregarBrasao } from "@/lib/oficios/pacote";
+import { hojeIso } from "@/lib/oficios/texto";
+import { gerarDocxZerado, nomeArquivoOficio } from "@/lib/oficios/zerados";
 import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
 
 export type ContribuinteLinha = {
