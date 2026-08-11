@@ -69,7 +69,7 @@ function NovaApuracao() {
     try {
       const cargaId = await processarApuracao({
         municipioId,
-        usuarioId: perfil.id,
+        usuarioId,
         arquivoAtivos: ativos,
         arquivoRetorno: retorno,
         opcoes: {
