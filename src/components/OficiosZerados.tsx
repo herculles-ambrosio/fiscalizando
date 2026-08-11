@@ -44,7 +44,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   const [aberto, setAberto] = useState(false);
   const [dataOficio, setDataOficio] = useState(hojeIso());
   const [escopo, setEscopo] = useState<"todos" | "selecionados">("todos");
-  const [progresso, setProgresso] = useState<{ feitos: number; total: number } | null>(null);
+  const [progresso, setProgresso] = useState<ProgressoOficios | null>(null);
   const [previaBlob, setPreviaBlob] = useState<Blob | null>(null);
   const [previaContribuinte, setPreviaContribuinte] = useState<string | null>(null);
   const [carregandoPrevia, setCarregandoPrevia] = useState(false);
