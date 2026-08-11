@@ -287,6 +287,94 @@ export type Database = {
         }
         Relationships: []
       }
+      oficios_emitidos: {
+        Row: {
+          arquivo_nome: string | null
+          baixado_em: string | null
+          carga_id: string | null
+          cnpj: string | null
+          contribuinte_id: string | null
+          criado_em: string
+          emitido_por: string | null
+          emitido_por_nome: string | null
+          erro_mensagem: string | null
+          exercicio: number
+          id: string
+          inscricao_estadual: string
+          modelo_chave: string
+          modelo_nome: string
+          municipio_id: string
+          nome_contribuinte: string | null
+          situacao: string
+          status_download: string
+          tipo_emissao: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          baixado_em?: string | null
+          carga_id?: string | null
+          cnpj?: string | null
+          contribuinte_id?: string | null
+          criado_em?: string
+          emitido_por?: string | null
+          emitido_por_nome?: string | null
+          erro_mensagem?: string | null
+          exercicio: number
+          id?: string
+          inscricao_estadual: string
+          modelo_chave: string
+          modelo_nome: string
+          municipio_id: string
+          nome_contribuinte?: string | null
+          situacao?: string
+          status_download?: string
+          tipo_emissao?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          baixado_em?: string | null
+          carga_id?: string | null
+          cnpj?: string | null
+          contribuinte_id?: string | null
+          criado_em?: string
+          emitido_por?: string | null
+          emitido_por_nome?: string | null
+          erro_mensagem?: string | null
+          exercicio?: number
+          id?: string
+          inscricao_estadual?: string
+          modelo_chave?: string
+          modelo_nome?: string
+          municipio_id?: string
+          nome_contribuinte?: string | null
+          situacao?: string
+          status_download?: string
+          tipo_emissao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oficios_emitidos_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oficios_emitidos_contribuinte_id_fkey"
+            columns: ["contribuinte_id"]
+            isOneToOne: false
+            referencedRelation: "contribuintes_apurados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oficios_emitidos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfis: {
         Row: {
           criado_em: string
