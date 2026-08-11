@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_authenticated/consultoria/route'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEmissoesRouteImport } from './routes/_authenticated/emissoes'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedModelosRouteImport } from './routes/_authenticated/modelos'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
@@ -46,6 +47,11 @@ const AuthenticatedConsultoriaRouteRoute =
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEmissoesRoute = AuthenticatedEmissoesRouteImport.update({
+  id: '/emissoes',
+  path: '/emissoes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/emissoes': typeof AuthenticatedEmissoesRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/emissoes': typeof AuthenticatedEmissoesRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/emissoes': typeof AuthenticatedEmissoesRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/modelos': typeof AuthenticatedModelosRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/consultoria'
     | '/configuracoes'
     | '/dashboard'
+    | '/emissoes'
     | '/historico'
     | '/modelos'
     | '/nova-apuracao'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/consultoria'
     | '/configuracoes'
     | '/dashboard'
+    | '/emissoes'
     | '/historico'
     | '/modelos'
     | '/nova-apuracao'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/_authenticated/consultoria'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/emissoes'
     | '/_authenticated/historico'
     | '/_authenticated/modelos'
     | '/_authenticated/nova-apuracao'
@@ -213,6 +225,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/emissoes': {
+      id: '/_authenticated/emissoes'
+      path: '/emissoes'
+      fullPath: '/emissoes'
+      preLoaderRoute: typeof AuthenticatedEmissoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/historico': {
@@ -289,6 +308,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConsultoriaRouteRoute: typeof AuthenticatedConsultoriaRouteRouteWithChildren
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEmissoesRoute: typeof AuthenticatedEmissoesRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedModelosRoute: typeof AuthenticatedModelosRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
@@ -301,6 +321,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedConsultoriaRouteRouteWithChildren,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEmissoesRoute: AuthenticatedEmissoesRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedModelosRoute: AuthenticatedModelosRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
