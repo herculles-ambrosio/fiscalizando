@@ -1,11 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   listarCargasSemRegime,
   reprocessarCargasPendentes,
@@ -99,11 +110,38 @@ function Historico() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [municipioId, pendentes]);
 
+  const [excluindo, setExcluindo] = useState<string | null>(null);
+
+  async function excluirCarga(cargaId: string) {
+    setExcluindo(cargaId);
+    try {
+      const oficios = await supabase.from("oficios_emitidos").delete().eq("carga_id", cargaId);
+      if (oficios.error) throw oficios.error;
+      const contribuintes = await supabase
+        .from("contribuintes_apurados")
+        .delete()
+        .eq("carga_id", cargaId);
+      if (contribuintes.error) throw contribuintes.error;
+      const carga = await supabase.from("cargas").delete().eq("id", cargaId);
+      if (carga.error) throw carga.error;
+      toast.success("Apuração excluída.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["cargas"] }),
+        recarregarPendentes(),
+      ]);
+    } catch (erro) {
+      toast.error(erro instanceof Error ? erro.message : "Falha ao excluir a apuração.");
+    } finally {
+      setExcluindo(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Histórico</h1>
+          <h1 className="text-2xl font-semibold">Apurações Realizadas</h1>
+
           <p className="mt-1 text-sm text-muted-foreground">
             Apurações processadas pelo município.
           </p>
@@ -154,6 +192,7 @@ function Historico() {
                   <TableHead className="text-right">Zerados</TableHead>
                   <TableHead className="text-right">Fora do prazo</TableHead>
                   <TableHead className="text-right">Discrepantes</TableHead>
+                  <TableHead className="w-16 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -175,6 +214,40 @@ function Historico() {
                     <TableCell className="text-right">{c.total_zerados ?? "—"}</TableCell>
                     <TableCell className="text-right">{c.total_fora_prazo ?? "—"}</TableCell>
                     <TableCell className="text-right">{c.total_discrepantes ?? "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Excluir apuração de ${c.exercicio}`}
+                            disabled={excluindo === c.id}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            {excluindo === c.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir apuração {c.exercicio}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Todos os contribuintes apurados e o histórico de ofícios desta
+                              apuração serão removidos. Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => void excluirCarga(c.id)}>
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
