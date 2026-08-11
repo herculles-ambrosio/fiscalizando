@@ -55,7 +55,7 @@ function NovaApuracao() {
         arquivoRetorno: retorno,
         opcoes: {
           limiarDiscrepancia: limiar / 100,
-          dataLimiteEntrega: dataLimite || undefined,
+          dataLimiteEntrega: dataLimite || null,
         },
         onProgresso: setProgresso,
       });
