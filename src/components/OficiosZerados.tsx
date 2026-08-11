@@ -52,6 +52,8 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   const [carregandoLista, setCarregandoLista] = useState(false);
   const [alvoId, setAlvoId] = useState<string | null>(null);
   const [comboAberto, setComboAberto] = useState(false);
+  const [previaAtiva, setPreviaAtiva] = useState(false);
+
   const previaRef = useRef<HTMLDivElement | null>(null);
 
   const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
@@ -78,8 +80,20 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
   }, [previaBlob]);
 
   useEffect(() => {
+    if (!previaAtiva) return;
     setPreviaBlob(null);
-  }, [dataOficio, escopo, alvoId]);
+    if (!alvo) return;
+    let cancelado = false;
+    const id = setTimeout(() => {
+      if (!cancelado) void gerarPrevia();
+    }, 150);
+    return () => {
+      cancelado = true;
+      clearTimeout(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previaAtiva, dataOficio, escopo, alvoId, alvo?.id]);
+
 
   useEffect(() => {
     if (!aberto || !configOk) return;
@@ -294,7 +308,10 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={gerarPrevia}
+                  onClick={() => {
+                    setPreviaAtiva(true);
+                    void gerarPrevia();
+                  }}
                   disabled={carregandoPrevia || !!progresso || !alvo}
                 >
                   {carregandoPrevia ? (
@@ -304,6 +321,7 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
                   )}
                   {previaBlob ? "Atualizar prévia" : "Ver prévia"}
                 </Button>
+
               </div>
               {previaBlob && (
                 <p className="text-xs text-muted-foreground">
