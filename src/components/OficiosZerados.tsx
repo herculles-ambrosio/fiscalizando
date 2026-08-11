@@ -232,14 +232,70 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Label>Prévia do documento</Label>
+              <div className="flex items-end justify-between gap-2">
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Label>Contribuinte da prévia</Label>
+                  <Popover open={comboAberto} onOpenChange={setComboAberto}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={comboAberto}
+                        disabled={carregandoLista || !lista.length}
+                        className="w-full justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {carregandoLista
+                            ? "Carregando contribuintes…"
+                            : (alvo?.nome ?? "Nenhum contribuinte zerado")}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[--radix-popover-trigger-width] p-0"
+                      align="start"
+                    >
+                      <Command>
+                        <CommandInput placeholder="Buscar por nome ou CNPJ…" />
+                        <CommandList>
+                          <CommandEmpty>Nenhum contribuinte encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {lista.map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.nome ?? ""} ${c.cnpj ?? ""} ${c.inscricao_estadual}`}
+                                onSelect={() => {
+                                  setAlvoId(c.id);
+                                  setComboAberto(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    alvo?.id === c.id ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                <span className="truncate">
+                                  {c.nome ?? "—"}
+                                  <span className="ml-2 text-xs text-muted-foreground">
+                                    {formatarCnpj(c.cnpj)}
+                                  </span>
+                                </span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   onClick={gerarPrevia}
-                  disabled={carregandoPrevia || !!progresso}
+                  disabled={carregandoPrevia || !!progresso || !alvo}
                 >
                   {carregandoPrevia ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -251,9 +307,10 @@ export function OficiosZerados({ cargaId, exercicio, selecionados }: Props) {
               </div>
               {previaBlob && (
                 <p className="text-xs text-muted-foreground">
-                  Exemplo com o primeiro contribuinte: {previaContribuinte}
+                  Prévia de: {previaContribuinte}
                 </p>
               )}
+
               <div
                 ref={previaRef}
                 className={
