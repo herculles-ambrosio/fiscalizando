@@ -22,7 +22,7 @@ export type ProgressoOficios = {
   fase: "documentos" | "compactando" | "concluido";
   feitos: number;
   total: number;
-  nomeAtual?: string;
+  nomeAtual?: string | undefined;
 };
 
 const respirar = () => new Promise((r) => setTimeout(r, 0));
