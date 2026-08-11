@@ -1,0 +1,31 @@
+export function formatarMoeda(valor: number | null | undefined): string {
+  if (valor == null) return "—";
+  return valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 2,
+  });
+}
+
+export function formatarPercentual(valor: number | null | undefined): string {
+  if (valor == null) return "—";
+  const sinal = valor > 0 ? "+" : "";
+  return `${sinal}${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+}
+
+export function formatarCnpj(cnpj: string | null | undefined): string {
+  if (!cnpj) return "—";
+  const d = cnpj.replace(/\D/g, "").padStart(14, "0");
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
+export function formatarData(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const [ano, mes, dia] = iso.slice(0, 10).split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+export function formatarDataHora(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
