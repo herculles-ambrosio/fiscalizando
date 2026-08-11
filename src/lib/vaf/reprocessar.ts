@@ -137,7 +137,11 @@ export async function reprocessarRegimesDaCarga(
       lote.map(async (c) => {
         const { error } = await supabase
           .from("contribuintes_apurados")
-          .update({ regime_recolhimento: c.regime, situacoes: c.situacoes })
+          .update({
+            regime_recolhimento: c.regime,
+            situacoes: c.situacoes,
+            vaf_atual: c.vaf,
+          })
           .eq("id", c.id);
         if (error) throw error;
       }),
