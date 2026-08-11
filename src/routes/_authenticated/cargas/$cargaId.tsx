@@ -503,7 +503,14 @@ function Contribuintes() {
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
-      </div>
+
+      <ContribuinteDetalhe
+        contribuinte={detalhe}
+        aberto={!!detalhe}
+        onOpenChange={(v) => !v && setDetalhe(null)}
+      />
+    </div>
+
     </div>
   );
 }
