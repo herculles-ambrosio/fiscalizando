@@ -51,7 +51,7 @@ async function carregarContribuintes(cargaId: string): Promise<LinhaContribuinte
   for (let pagina = 0; ; pagina += 1) {
     const { data, error } = await supabase
       .from("contribuintes_apurados")
-      .select("id, inscricao_estadual, situacoes, regime_recolhimento")
+      .select("id, inscricao_estadual, situacoes, regime_recolhimento, vaf_atual")
       .eq("carga_id", cargaId)
       .order("id")
       .range(pagina * TAMANHO_PAGINA, (pagina + 1) * TAMANHO_PAGINA - 1);
@@ -66,10 +66,16 @@ function situacoesAtualizadas(
   situacoes: string[],
   regime: string | null,
   simei: boolean,
+  vaf: number | null,
 ): Situacao[] {
-  const base = (situacoes ?? []).filter((s) => s !== "SIMPLES_NACIONAL" && s !== "SIMEI");
+  let base = (situacoes ?? []).filter((s) => s !== "SIMPLES_NACIONAL" && s !== "SIMEI");
+  // Com o VAF do registro 40 preenchido, o SIMEI deixa de ser "zerado".
+  if (simei && (vaf ?? 0) !== 0) base = base.filter((s) => s !== "ZERADO");
+  if (base.filter((s) => s !== "SOMENTE_RETORNO").length === 0) base.push("NORMAL");
+  base = base.filter((s) => s !== "NORMAL" || base.length === 1 || base.includes("SOMENTE_RETORNO"));
   return [...base, ...situacoesDoRegime(regime, simei)] as Situacao[];
 }
+
 
 /** Registros SIMEI (tipo 40) do arquivo de retorno guardado. */
 async function lerSimeiDoRetorno(caminho: string | null): Promise<Map<string, RegistroSimei>> {
