@@ -118,13 +118,18 @@ export async function reprocessarRegimesDaCarga(
   const pendentes = contribuintes
     .map((c) => {
       const regime = regimes.get(c.inscricao_estadual) ?? null;
-      const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
+      const simei = registrosSimei.get(c.inscricao_estadual);
+      // SIMEI: o VAF oficial vem do registro 40 (o registro 10 vem zerado).
+      const vaf = simei && (c.vaf_atual ?? 0) === 0 ? simei.vaf : c.vaf_atual;
+      const situacoes = situacoesAtualizadas(c.situacoes, regime, !!simei, vaf);
       const mudou =
         regime !== c.regime_recolhimento ||
+        vaf !== c.vaf_atual ||
         situacoes.join("|") !== (c.situacoes ?? []).join("|");
-      return { id: c.id, regime, situacoes, mudou };
+      return { id: c.id, regime, situacoes, vaf, mudou };
     })
     .filter((c) => c.mudou);
+
 
   for (let i = 0; i < pendentes.length; i += CONCORRENCIA) {
     const lote = pendentes.slice(i, i + CONCORRENCIA);
