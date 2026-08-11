@@ -19,7 +19,9 @@ type LinhaContribuinte = {
   inscricao_estadual: string;
   situacoes: string[];
   regime_recolhimento: string | null;
+  vaf_atual: number | null;
 };
+
 
 function normalizarRegime(bruto: unknown): string | null {
   const regime = String(bruto ?? "")
@@ -49,7 +51,7 @@ async function carregarContribuintes(cargaId: string): Promise<LinhaContribuinte
   for (let pagina = 0; ; pagina += 1) {
     const { data, error } = await supabase
       .from("contribuintes_apurados")
-      .select("id, inscricao_estadual, situacoes, regime_recolhimento")
+      .select("id, inscricao_estadual, situacoes, regime_recolhimento, vaf_atual")
       .eq("carga_id", cargaId)
       .order("id")
       .range(pagina * TAMANHO_PAGINA, (pagina + 1) * TAMANHO_PAGINA - 1);
@@ -60,14 +62,24 @@ async function carregarContribuintes(cargaId: string): Promise<LinhaContribuinte
   return todos;
 }
 
+const SITUACOES_BASE = ["OMISSO", "ZERADO", "FORA_DO_PRAZO", "DISCREPANTE"];
+
 function situacoesAtualizadas(
   situacoes: string[],
   regime: string | null,
   simei: boolean,
+  vaf: number | null,
 ): Situacao[] {
-  const base = (situacoes ?? []).filter((s) => s !== "SIMPLES_NACIONAL" && s !== "SIMEI");
+  let base = (situacoes ?? []).filter(
+    (s) => s !== "SIMPLES_NACIONAL" && s !== "SIMEI" && s !== "NORMAL",
+  );
+  // Com o VAF do registro 40 preenchido, o SIMEI deixa de ser "zerado".
+  if (simei && (vaf ?? 0) !== 0) base = base.filter((s) => s !== "ZERADO");
+  if (!base.some((s) => SITUACOES_BASE.includes(s))) base.push("NORMAL");
   return [...base, ...situacoesDoRegime(regime, simei)] as Situacao[];
 }
+
+
 
 /** Registros SIMEI (tipo 40) do arquivo de retorno guardado. */
 async function lerSimeiDoRetorno(caminho: string | null): Promise<Map<string, RegistroSimei>> {
@@ -97,7 +109,6 @@ export async function reprocessarRegimesDaCarga(
   progresso({ etapa: "Lendo arquivo de ativos", percentual: 15 });
   const regimes = await lerRegimesDoArquivo(carga.arquivo_ativos_path);
   const registrosSimei = await lerSimeiDoRetorno(carga.arquivo_retorno_path);
-  const iesSimei = new Set(registrosSimei.keys());
 
 
   progresso({ etapa: "Carregando contribuintes", percentual: 30 });
@@ -106,13 +117,18 @@ export async function reprocessarRegimesDaCarga(
   const pendentes = contribuintes
     .map((c) => {
       const regime = regimes.get(c.inscricao_estadual) ?? null;
-      const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
+      const simei = registrosSimei.get(c.inscricao_estadual);
+      // SIMEI: o VAF oficial vem do registro 40 (o registro 10 vem zerado).
+      const vaf = simei && (c.vaf_atual ?? 0) === 0 ? simei.vaf : c.vaf_atual;
+      const situacoes = situacoesAtualizadas(c.situacoes, regime, !!simei, vaf);
       const mudou =
         regime !== c.regime_recolhimento ||
+        vaf !== c.vaf_atual ||
         situacoes.join("|") !== (c.situacoes ?? []).join("|");
-      return { id: c.id, regime, situacoes, mudou };
+      return { id: c.id, regime, situacoes, vaf, mudou };
     })
     .filter((c) => c.mudou);
+
 
   for (let i = 0; i < pendentes.length; i += CONCORRENCIA) {
     const lote = pendentes.slice(i, i + CONCORRENCIA);
@@ -120,7 +136,11 @@ export async function reprocessarRegimesDaCarga(
       lote.map(async (c) => {
         const { error } = await supabase
           .from("contribuintes_apurados")
-          .update({ regime_recolhimento: c.regime, situacoes: c.situacoes })
+          .update({
+            regime_recolhimento: c.regime,
+            situacoes: c.situacoes,
+            vaf_atual: c.vaf,
+          })
           .eq("id", c.id);
         if (error) throw error;
       }),
@@ -159,11 +179,15 @@ export async function reprocessarRegimesDaCarga(
   // Totais finais recalculados sobre o conjunto completo da carga.
   let simplesNacional = 0;
   let simei = faltantes.length;
+  let zerados = 0;
   for (const c of contribuintes) {
     const regime = regimes.get(c.inscricao_estadual) ?? null;
-    const situacoes = situacoesAtualizadas(c.situacoes, regime, iesSimei.has(c.inscricao_estadual));
+    const reg = registrosSimei.get(c.inscricao_estadual);
+    const vaf = reg && (c.vaf_atual ?? 0) === 0 ? reg.vaf : c.vaf_atual;
+    const situacoes = situacoesAtualizadas(c.situacoes, regime, !!reg, vaf);
     if (situacoes.includes("SIMPLES_NACIONAL")) simplesNacional += 1;
     if (situacoes.includes("SIMEI")) simei += 1;
+    if (situacoes.includes("ZERADO")) zerados += 1;
   }
 
   progresso({ etapa: "Atualizando totais", percentual: 96 });
@@ -172,10 +196,12 @@ export async function reprocessarRegimesDaCarga(
     .update({
       total_simples_nacional: simplesNacional,
       total_simei: simei,
+      total_zerados: zerados,
       total_ativos: contribuintes.length + faltantes.length,
     })
     .eq("id", cargaId);
   if (erroTotais) throw erroTotais;
+
 
   progresso({ etapa: "Concluída", percentual: 100 });
   return {
