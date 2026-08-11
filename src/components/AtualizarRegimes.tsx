@@ -41,8 +41,10 @@ export function AtualizarRegimes({ cargaId }: { cargaId: string }) {
     try {
       const r = await reprocessarRegimesDaCarga(cargaId, setProgresso);
       toast.success(
-        `Regimes atualizados: ${r.simplesNacional} Simples Nacional e ${r.simei} SIMEI.`,
+        `Regimes atualizados: ${r.simplesNacional} Simples Nacional e ${r.simei} SIMEI` +
+          (r.incluidos > 0 ? ` (${r.incluidos} incluídos somente do retorno).` : "."),
       );
+
       await queryClient.invalidateQueries({ refetchType: "all" });
       await refetch();
       await router.invalidate();

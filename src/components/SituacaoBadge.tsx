@@ -9,6 +9,8 @@ const CLASSES: Record<Situacao, string> = {
   NORMAL: "bg-normal text-normal-foreground border-normal-foreground/20",
   SIMPLES_NACIONAL: "bg-secondary text-secondary-foreground border-border",
   SIMEI: "bg-accent text-accent-foreground border-border",
+  SOMENTE_RETORNO: "bg-destructive text-destructive-foreground border-destructive/30",
+
 };
 
 export function SituacaoBadge({ situacao }: { situacao: string }) {
