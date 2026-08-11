@@ -86,6 +86,38 @@ function Contribuintes() {
     },
   });
 
+  const { data: contagens } = useQuery({
+    queryKey: ["contribuintes-contagens", cargaId, termo],
+    placeholderData: keepPreviousData,
+    queryFn: async () => {
+      const contar = async (situacao?: Situacao) => {
+        let q = supabase
+          .from("contribuintes_apurados")
+          .select("id", { count: "exact", head: true })
+          .eq("carga_id", cargaId);
+        if (situacao) q = q.contains("situacoes", [situacao]);
+        if (termo)
+          q = q.or(
+            `nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`,
+          );
+        const { count, error } = await q;
+        if (error) throw error;
+        return count ?? 0;
+      };
+
+      const [todos, ...porSituacao] = await Promise.all([
+        contar(),
+        ...SITUACOES.map((s) => contar(s)),
+      ]);
+
+      const mapa: Record<string, number> = { TODOS: todos };
+      SITUACOES.forEach((s, i) => {
+        mapa[s] = porSituacao[i] ?? 0;
+      });
+      return mapa;
+    },
+  });
+
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
   const totalVafAtual = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
   const totalVafAnterior = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_anterior ?? 0), 0);
