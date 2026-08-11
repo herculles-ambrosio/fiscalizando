@@ -4,6 +4,7 @@ import {
   Building2,
   FileUp,
   History,
+  FileSignature,
   Landmark,
   LogOut,
   Settings,
@@ -27,6 +28,7 @@ const NAV_BASE = [
   { to: "/dashboard", rotulo: "Painel", icone: BarChart3 },
   { to: "/nova-apuracao", rotulo: "Nova apuração", icone: FileUp },
   { to: "/historico", rotulo: "Histórico", icone: History },
+  { to: "/modelos", rotulo: "Modelos de ofício", icone: FileSignature },
   { to: "/configuracoes", rotulo: "Configurações", icone: Settings },
 ];
 
