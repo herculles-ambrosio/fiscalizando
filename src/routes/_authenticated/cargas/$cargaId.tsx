@@ -395,8 +395,21 @@ function Contribuintes() {
                   {data?.linhas.map((c) => {
                     const zerado = (c.situacoes as string[]).includes("ZERADO");
                     return (
-                      <TableRow key={c.id}>
-                        <TableCell>
+                      <TableRow
+                        key={c.id}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Ver detalhes de ${c.nome ?? c.inscricao_estadual}`}
+                        className="cursor-pointer"
+                        onClick={() => setDetalhe(c as unknown as ContribuinteLinha)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setDetalhe(c as unknown as ContribuinteLinha);
+                          }
+                        }}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           {zerado && (
                             <Checkbox
                               checked={selecionados.includes(c.id)}
@@ -405,6 +418,7 @@ function Contribuintes() {
                             />
                           )}
                         </TableCell>
+
                         <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
                         <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
                         <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
