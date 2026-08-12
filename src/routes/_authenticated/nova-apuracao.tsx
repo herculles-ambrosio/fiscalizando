@@ -199,6 +199,49 @@ function NovaApuracao() {
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
+                <Label htmlFor="competencia-mes">Competência — mês</Label>
+                <Select
+                  value={competenciaMes ? String(competenciaMes) : "nenhum"}
+                  onValueChange={(v) =>
+                    setCompetenciaMes(v === "nenhum" ? null : Number(v))
+                  }
+                >
+                  <SelectTrigger id="competencia-mes">
+                    <SelectValue placeholder="Sem mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhum">Sem mês (anual)</SelectItem>
+                    {MESES_CURTOS.map((m, i) => (
+                      <SelectItem key={m} value={String(i + 1)}>
+                        {String(i + 1).padStart(2, "0")} · {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="competencia-ano">Competência — ano</Label>
+                <Input
+                  id="competencia-ano"
+                  type="number"
+                  min={1990}
+                  max={2100}
+                  placeholder="Detectado do arquivo"
+                  value={competenciaAno ?? ""}
+                  onChange={(e) =>
+                    setCompetenciaAno(e.target.value ? Number(e.target.value) : null)
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Em branco, usa o exercício detectado nos arquivos.
+                </p>
+              </div>
+            </div>
+
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-2">
                 <Label htmlFor="limiar">Limiar de discrepância (%)</Label>
                 <Input
                   id="limiar"
