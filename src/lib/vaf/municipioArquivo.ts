@@ -67,3 +67,104 @@ export async function detectarMunicipioDosArquivos(params: {
   }
   return { codigo, nome };
 }
+
+export type EvidenciaMunicipio = {
+  arquivo: "ativos" | "retorno";
+  linha: number;
+  registro: string;
+  codigo: string;
+  trecho: string;
+};
+
+export type ConferenciaArquivos = {
+  ativos: MunicipioArquivo | null;
+  retorno: MunicipioArquivo | null;
+  divergente: boolean;
+  evidencias: EvidenciaMunicipio[];
+};
+
+function evidenciasAtivos(texto: string): EvidenciaMunicipio[] {
+  const out: EvidenciaMunicipio[] = [];
+  const linhas = texto.split(/\r?\n/);
+  for (let i = 0; i < linhas.length && out.length < 2000; i++) {
+    const l = linhas[i];
+    if (!l || !l.trim()) continue;
+    const codigo = normalizarCodigoSef(l.slice(516, 519));
+    if (!codigo) continue;
+    out.push({
+      arquivo: "ativos",
+      linha: i + 1,
+      registro: l.slice(0, 2),
+      codigo,
+      trecho: l.slice(0, 60).trim(),
+    });
+  }
+  return out;
+}
+
+function evidenciasRetorno(texto: string): EvidenciaMunicipio[] {
+  const out: EvidenciaMunicipio[] = [];
+  const linhas = texto.split(/\r?\n/);
+  for (let i = 0; i < linhas.length && out.length < 2000; i++) {
+    const l = linhas[i];
+    if (!l || !l.trim()) continue;
+    const codigo = normalizarCodigoSef(l.slice(2, 5));
+    if (!codigo) continue;
+    out.push({
+      arquivo: "retorno",
+      linha: i + 1,
+      registro: l.slice(0, 2),
+      codigo,
+      trecho: l.slice(0, 60).trim(),
+    });
+  }
+  return out;
+}
+
+/**
+ * Compara o município do arquivo de ativos com o do retorno e devolve
+ * os registros (linha + trecho) que comprovam a divergência.
+ */
+export async function conferirMunicipioEntreArquivos(params: {
+  ativos?: File | null;
+  retorno?: File | null;
+}): Promise<ConferenciaArquivos> {
+  const { ativos, retorno } = params;
+  if (!ativos || !retorno) {
+    return { ativos: null, retorno: null, divergente: false, evidencias: [] };
+  }
+  const [textoAtivos, textoRetorno] = await Promise.all([lerInicio(ativos), lerInicio(retorno)]);
+  const infoAtivos = detectarMunicipioAtivos(textoAtivos);
+  const infoRetorno = detectarMunicipioRetorno(textoRetorno);
+
+  const codA =
+    infoAtivos.codigo ?? normalizarCodigoSef(codigoMunicipioDoArquivo(ativos.name));
+  const codR =
+    infoRetorno.codigo ?? normalizarCodigoSef(codigoMunicipioDoArquivo(retorno.name));
+
+  const divergente = !!codA && !!codR && codA !== codR;
+  if (!divergente) {
+    return {
+      ativos: { ...infoAtivos, codigo: codA },
+      retorno: { ...infoRetorno, codigo: codR },
+      divergente: false,
+      evidencias: [],
+    };
+  }
+
+  const evidencias = [
+    ...evidenciasAtivos(textoAtivos)
+      .filter((e) => e.codigo === codA)
+      .slice(0, 3),
+    ...evidenciasRetorno(textoRetorno)
+      .filter((e) => e.codigo === codR)
+      .slice(0, 3),
+  ];
+
+  return {
+    ativos: { ...infoAtivos, codigo: codA },
+    retorno: { ...infoRetorno, codigo: codR },
+    divergente: true,
+    evidencias,
+  };
+}

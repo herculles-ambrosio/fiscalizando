@@ -6,9 +6,12 @@ import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { processarApuracao, type ProgressoEtapa } from "@/lib/vaf/processar";
 import {
+  conferirMunicipioEntreArquivos,
   detectarMunicipioDosArquivos,
   normalizarCodigoSef,
+  type ConferenciaArquivos,
   type MunicipioArquivo,
+
 } from "@/lib/vaf/municipioArquivo";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -103,10 +106,13 @@ function NovaApuracao() {
 
   const processando = progresso !== null && progresso.percentual < 100;
 
+  const [conferencia, setConferencia] = useState<ConferenciaArquivos | null>(null);
+
   useEffect(() => {
     let cancelado = false;
     if (!ativos && !retorno) {
       setMunicipioArquivo({ codigo: null, nome: null });
+      setConferencia(null);
       return;
     }
     detectarMunicipioDosArquivos({ ativos, retorno })
@@ -116,20 +122,30 @@ function NovaApuracao() {
       .catch(() => {
         if (!cancelado) setMunicipioArquivo({ codigo: null, nome: null });
       });
+    conferirMunicipioEntreArquivos({ ativos, retorno })
+      .then((c) => {
+        if (!cancelado) setConferencia(c);
+      })
+      .catch(() => {
+        if (!cancelado) setConferencia(null);
+      });
     return () => {
       cancelado = true;
     };
   }, [ativos, retorno]);
 
+  const arquivosDeMunicipiosDiferentes = conferencia?.divergente ?? false;
   const codigoArquivo = municipioArquivo.codigo;
   const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
-  const municipioDivergente = !!codigoArquivo && !!codigoAtivo && codigoArquivo !== codigoAtivo;
+  const municipioDivergente =
+    !arquivosDeMunicipiosDiferentes && !!codigoArquivo && !!codigoAtivo && codigoArquivo !== codigoAtivo;
   const municipioCadastrado = codigoArquivo
     ? (municipios.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ?? null)
     : null;
   const rotuloArquivo = municipioArquivo.nome
     ? `${municipioArquivo.nome} (código ${codigoArquivo})`
     : `código ${codigoArquivo}`;
+
 
   async function criarPrefeitura() {
     if (!codigoArquivo) return;
@@ -192,6 +208,12 @@ function NovaApuracao() {
     }
     if (!municipioId) {
       setErro("Selecione um município antes de processar.");
+      return;
+    }
+    if (arquivosDeMunicipiosDiferentes) {
+      setErro(
+        `Os arquivos são de municípios diferentes: ativos código ${conferencia?.ativos?.codigo} e retorno código ${conferencia?.retorno?.codigo}. Envie ativos e retorno da mesma prefeitura.`,
+      );
       return;
     }
     if (municipioDivergente) {
@@ -408,6 +430,38 @@ function NovaApuracao() {
               </div>
             </div>
 
+            {arquivosDeMunicipiosDiferentes && conferencia && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Arquivos de municípios diferentes</AlertTitle>
+                <AlertDescription className="space-y-2">
+                  <p>
+                    O arquivo de <strong>ativos</strong> é do município de código{" "}
+                    <strong>{conferencia.ativos?.codigo ?? "?"}</strong> e o de{" "}
+                    <strong>retorno</strong> é do código{" "}
+                    <strong>
+                      {conferencia.retorno?.codigo ?? "?"}
+                      {conferencia.retorno?.nome ? ` — ${conferencia.retorno.nome}` : ""}
+                    </strong>
+                    . Envie os dois arquivos da mesma prefeitura.
+                  </p>
+                  {conferencia.evidencias.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium">Registros que causaram a divergência:</p>
+                      <ul className="space-y-1 font-mono text-[11px]">
+                        {conferencia.evidencias.map((ev) => (
+                          <li key={`${ev.arquivo}-${ev.linha}`} className="truncate">
+                            {ev.arquivo} · linha {ev.linha} · registro {ev.registro} · código{" "}
+                            {ev.codigo} · {ev.trecho}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {municipioDivergente && (
               <Alert variant="destructive">
                 <Building2 className="h-4 w-4" />
@@ -531,7 +585,7 @@ function NovaApuracao() {
             <Button
               type="submit"
               className="w-full"
-              disabled={processando || municipioDivergente}
+              disabled={processando || municipioDivergente || arquivosDeMunicipiosDiferentes}
             >
               {processando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
