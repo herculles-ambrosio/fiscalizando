@@ -139,7 +139,7 @@ function TabelaMunicipios({
               <TableCell>{nomePorCodigo(l.codigo)}</TableCell>
               <TableCell className="text-right font-mono">{formatarMoeda(l.valor)}</TableCell>
               <TableCell className="text-right text-muted-foreground">
-                {total ? ((l.valor / total) * 100).toFixed(1) : "0,0"}%
+                {(total ? (l.valor / total) * 100 : 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
               </TableCell>
             </TableRow>
           ))}
