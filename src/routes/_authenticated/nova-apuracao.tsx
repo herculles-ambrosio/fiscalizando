@@ -585,7 +585,7 @@ function NovaApuracao() {
             <Button
               type="submit"
               className="w-full"
-              disabled={processando || municipioDivergente}
+              disabled={processando || municipioDivergente || arquivosDeMunicipiosDiferentes}
             >
               {processando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
