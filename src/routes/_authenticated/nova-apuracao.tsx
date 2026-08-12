@@ -1,9 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Loader2, Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, Building2, CheckCircle2, Loader2, Upload } from "lucide-react";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { processarApuracao, type ProgressoEtapa } from "@/lib/vaf/processar";
+import {
+  detectarMunicipioDosArquivos,
+  normalizarCodigoSef,
+  type MunicipioArquivo,
+} from "@/lib/vaf/municipioArquivo";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +18,14 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -30,6 +44,7 @@ import {
   formatarCompetencia,
   type TipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
+
 
 
 export const Route = createFileRoute("/_authenticated/nova-apuracao")({
