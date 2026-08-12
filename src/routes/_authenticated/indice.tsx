@@ -251,7 +251,11 @@ function PaginaIndice() {
   }
 
   const conferencia = apuracao ? conferirLiquido(apuracao) : null;
-  const participacao = apuracao && apuracao.vafEstadual ? apuracao.indice : 0;
+  const divergente =
+    !!apuracao &&
+    !!municipio?.codigo_sef &&
+    String(municipio.codigo_sef).padStart(3, "0") !== apuracao.codigoMunicipio.padStart(3, "0");
+  const mostrarRelatorio = !!apuracao && !divergente;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
