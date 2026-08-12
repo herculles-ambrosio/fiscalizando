@@ -182,3 +182,35 @@
     letter-spacing: -0.01em;
   }
 }
+
+@media print {
+  .no-print,
+  aside,
+  header {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  #relatorio-indice {
+    font-size: 11px;
+  }
+
+  #relatorio-indice [role="tabpanel"][hidden] {
+    display: block !important;
+  }
+
+  #relatorio-indice table {
+    page-break-inside: auto;
+  }
+
+  #relatorio-indice tr {
+    page-break-inside: avoid;
+  }
+}
