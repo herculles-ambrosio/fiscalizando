@@ -219,7 +219,9 @@ function Historico() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Exercício</TableHead>
+                  <TableHead>Competência</TableHead>
                   <TableHead>Tipo de retorno</TableHead>
+
                   <TableHead>Processada em</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ativos</TableHead>
