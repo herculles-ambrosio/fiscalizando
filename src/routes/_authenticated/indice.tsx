@@ -365,15 +365,15 @@ function PaginaIndice() {
             <Kpi
               rotulo="Índice do município"
               valor={formatarIndice(apuracao.indice)}
-              detalhe="Participação no VAF estadual"
+              detalhe="Participação percentual no VAF estadual"
               destaque
             />
             <Kpi rotulo="Valor líquido (VAF municipal)" valor={formatarMoeda(apuracao.valorLiquido)} />
             <Kpi rotulo="VAF estadual" valor={formatarMoeda(apuracao.vafEstadual)} />
             <Kpi
-              rotulo="Participação"
-              valor={`${(participacao * 100).toFixed(4).replace(".", ",")}%`}
-              detalhe={`${apuracao.totalDeclaracoes.toLocaleString("pt-BR")} declarações no arquivo`}
+              rotulo="Declarações no arquivo"
+              valor={apuracao.totalDeclaracoes.toLocaleString("pt-BR")}
+              detalhe={`${apuracao.creditosExternos.length} créditos externos · ${apuracao.simei.length} SIMEI`}
             />
           </div>
 
