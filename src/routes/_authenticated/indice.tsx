@@ -310,7 +310,18 @@ function PaginaIndice() {
         </Alert>
       )}
 
-      {apuracao && (
+      {divergente && apuracao && (
+        <Alert variant="destructive" className="no-print">
+          <AlertTitle>Arquivo de outro município</AlertTitle>
+          <AlertDescription>
+            O arquivo é do município de código {apuracao.codigoMunicipio}, diferente da prefeitura
+            ativa ({municipio?.codigo_sef} — {municipio?.nome}). Troque a prefeitura ativa para
+            apurar este índice.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {mostrarRelatorio && apuracao && (
         <div id="relatorio-indice" className="space-y-6">
           {/* Cabeçalho institucional */}
           <div className="rounded-xl border border-border bg-card p-6">
