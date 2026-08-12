@@ -41,7 +41,7 @@ import {
   TIPOS_RETORNO,
   MESES_CURTOS,
   anoDoArquivo,
-
+  anoDoArquivoAtivos,
   rotuloMes,
   sugerirTipoRetorno,
   validarCompetencia,
