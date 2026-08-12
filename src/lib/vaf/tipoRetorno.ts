@@ -65,7 +65,7 @@ export function anoDoArquivo(nome: string): number | null {
 /** Código do município no nome padrão SEF-MG (P443RT1226 -> "443"). */
 export function codigoMunicipioDoArquivo(nome: string): string | null {
   const m = /P(\d{3})(AT|RT)/i.exec(nome.replace(/\s+/g, ""));
-  return m ? m[1] : null;
+  return m?.[1] ?? null;
 }
 
 /** Ano do arquivo de contribuintes ativos (P443AT0026 -> 2026). */
