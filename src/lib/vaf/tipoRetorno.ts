@@ -33,3 +33,24 @@ export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: numb
   if (remessa === 13) return { tipo: "indice_definitivo", mes: null };
   return { tipo: "mensal", mes: remessa };
 }
+
+export const MESES_CURTOS = [
+  "jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez",
+] as const;
+
+/** Rótulo da competência: "mm/aaaa" quando há mês, senão só o ano. */
+export function formatarCompetencia(
+  mes: number | null | undefined,
+  ano: number | null | undefined,
+): string {
+  if (!ano) return "—";
+  if (!mes || mes < 1 || mes > 12) return String(ano);
+  return `${String(mes).padStart(2, "0")}/${ano}`;
+}
+
+export function competenciaOrdenavel(
+  mes: number | null | undefined,
+  ano: number | null | undefined,
+): number {
+  return (ano ?? 0) * 100 + (mes ?? 0);
+}
