@@ -54,3 +54,10 @@ export function competenciaOrdenavel(
 ): number {
   return (ano ?? 0) * 100 + (mes ?? 0);
 }
+
+/** Ano de competência a partir do nome padrão SEF-MG (P443RT1226 -> 2026). */
+export function anoDoArquivo(nome: string): number | null {
+  const m = /RT(\d{2})(\d{2})/i.exec(nome.replace(/\s+/g, ""));
+  if (!m) return null;
+  return 2000 + Number(m[2]);
+}
