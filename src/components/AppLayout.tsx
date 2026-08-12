@@ -9,6 +9,7 @@ import {
   FileClock,
   Landmark,
   LogOut,
+  Percent,
   Settings,
   Users,
 } from "lucide-react";
@@ -31,6 +32,7 @@ const NAV_BASE = [
   { to: "/nova-apuracao", rotulo: "Nova apuração", icone: FileUp },
   { to: "/historico", rotulo: "Apurações Realizadas", icone: History },
   { to: "/comparacao", rotulo: "Comparar apurações", icone: GitCompareArrows },
+  { to: "/indice", rotulo: "Índice do VAF", icone: Percent },
   { to: "/modelos", rotulo: "Modelos de ofício", icone: FileSignature },
   { to: "/emissoes", rotulo: "Ofícios emitidos", icone: FileClock },
   { to: "/configuracoes", rotulo: "Configurações", icone: Settings },
