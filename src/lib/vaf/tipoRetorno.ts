@@ -30,7 +30,7 @@ export function remessaDoArquivo(nome: string): number | null {
 
 export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: number | null } {
   const remessa = remessaDoArquivo(nome);
-  if (remessa === 13) return { tipo: "indice_definitivo", mes: null };
+  if (remessa === 13) return { tipo: "indice_definitivo", mes: 13 };
   return { tipo: "mensal", mes: remessa };
 }
 
@@ -38,15 +38,24 @@ export const MESES_CURTOS = [
   "jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez",
 ] as const;
 
+/** Rótulo do mês/remessa, incluindo a remessa 13 (fechamento). */
+export function rotuloMes(mes: number | null | undefined): string {
+  if (!mes) return "—";
+  if (mes === 13) return "13 · fechamento";
+  if (mes < 1 || mes > 12) return String(mes);
+  return `${String(mes).padStart(2, "0")} · ${MESES_CURTOS[mes - 1]}`;
+}
+
 /** Rótulo da competência: "mm/aaaa" quando há mês, senão só o ano. */
 export function formatarCompetencia(
   mes: number | null | undefined,
   ano: number | null | undefined,
 ): string {
   if (!ano) return "—";
-  if (!mes || mes < 1 || mes > 12) return String(ano);
+  if (!mes || mes < 1 || mes > 13) return String(ano);
   return `${String(mes).padStart(2, "0")}/${ano}`;
 }
+
 
 export function competenciaOrdenavel(
   mes: number | null | undefined,
