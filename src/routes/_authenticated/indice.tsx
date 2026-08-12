@@ -362,6 +362,55 @@ function PaginaIndice() {
         </Alert>
       )}
 
+      {apuracao?.estimado && (
+        <Card className="no-print border-amber-500/40 bg-amber-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Projeção do índice provisório</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Este arquivo de retorno mensal não traz o registro de índice fechado pela SEF-MG
+              (tipo 16/17). O sistema projeta o índice com os dados do próprio arquivo: créditos
+              externos (registros 11/35), créditos e débitos entre municípios (12/13) — exatos — e
+              VAF próprio somado das declarações (registro 10), que é a parte estimada. Use para
+              previsão e estratégia, não como valor oficial.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="vaf-estadual-ref">VAF estadual de referência (R$)</Label>
+                <Input
+                  id="vaf-estadual-ref"
+                  inputMode="numeric"
+                  placeholder="ex.: 925287575000"
+                  value={vafEstadualRef}
+                  onChange={(e) => setVafEstadualRef(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {apuracao.origemVafEstadual === "arquivo"
+                    ? "O arquivo já informa o VAF estadual; a referência é ignorada."
+                    : "Informe o VAF estadual do último índice definitivo para projetar o percentual."}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="fator-calibragem">Fator de calibragem do VAF próprio</Label>
+                <Input
+                  id="fator-calibragem"
+                  inputMode="decimal"
+                  placeholder="1"
+                  value={fator}
+                  onChange={(e) => setFator(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Razão entre o VAF próprio do último definitivo e a soma declarada daquele ano
+                  (ex.: 1,17). Mantenha 1 para não calibrar.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
       {mostrarRelatorio && apuracao && (
         <div id="relatorio-indice" className="space-y-6">
           {/* Cabeçalho institucional */}
