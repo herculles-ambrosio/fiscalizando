@@ -194,6 +194,13 @@ function NovaApuracao() {
       setErro("Selecione um município antes de processar.");
       return;
     }
+    if (municipioDivergente) {
+      setErro(
+        `Os arquivos são da prefeitura ${rotuloArquivo} e o município ativo é ${municipio?.nome}. Troque de prefeitura ou cadastre a prefeitura do arquivo antes de processar.`,
+      );
+      return;
+    }
+
     if (precisaMotivo && motivoAjuste.trim().length < 5) {
       setErro(
         "Informe o motivo da correção manual da competência (mínimo de 5 caracteres) para prosseguir.",
