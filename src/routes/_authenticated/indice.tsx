@@ -626,8 +626,10 @@ function PaginaIndice() {
           <CardContent className="py-14 text-center">
             <FileUp className="mx-auto h-8 w-8 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">
-              Selecione o arquivo de índices (ex.: <span className="font-mono">P443RT…​.txt</span>)
-              para apurar VAF A, VAF B, VAF C, valor líquido e índice.
+              Selecione o arquivo de índices ou o retorno mensal (ex.:{" "}
+              <span className="font-mono">P443RT…​.txt</span>) para apurar VAF A, VAF B, VAF C,
+              valor líquido e índice.
+
             </p>
           </CardContent>
         </Card>
