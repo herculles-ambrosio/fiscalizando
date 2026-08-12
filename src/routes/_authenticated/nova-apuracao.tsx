@@ -192,6 +192,96 @@ function NovaApuracao() {
     (competenciaMes !== detectada.mes || competenciaAno !== detectada.ano);
   const precisaMotivo = competenciaAlterada || temErroCompetencia;
 
+  type CargaExistente = {
+    id: string;
+    exercicio: number;
+    criado_em: string;
+    tipo_retorno: string;
+    competencia_mes: number | null;
+    competencia_ano: number | null;
+  };
+  const [duplicadas, setDuplicadas] = useState<CargaExistente[]>([]);
+  const [dialogoDuplicada, setDialogoDuplicada] = useState(false);
+  const [substituindo, setSubstituindo] = useState(false);
+
+  async function buscarDuplicadas(municipio: string): Promise<CargaExistente[]> {
+    let q = supabase
+      .from("cargas")
+      .select("id, exercicio, criado_em, tipo_retorno, competencia_mes, competencia_ano")
+      .eq("municipio_id", municipio)
+      .eq("tipo_retorno", tipoRetorno);
+    q = competenciaMes === null ? q.is("competencia_mes", null) : q.eq("competencia_mes", competenciaMes);
+    if (competenciaAno !== null) q = q.eq("competencia_ano", competenciaAno);
+    const { data, error } = await q;
+    if (error) return [];
+    return (data ?? []) as CargaExistente[];
+  }
+
+  async function excluirCargas(ids: string[]) {
+    for (const id of ids) {
+      const oficios = await supabase.from("oficios_emitidos").delete().eq("carga_id", id);
+      if (oficios.error) throw oficios.error;
+      const contribuintes = await supabase
+        .from("contribuintes_apurados")
+        .delete()
+        .eq("carga_id", id);
+      if (contribuintes.error) throw contribuintes.error;
+      const carga = await supabase.from("cargas").delete().eq("id", id);
+      if (carga.error) throw carga.error;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["cargas"] });
+  }
+
+  async function executar(usuarioId: string, municipio: string) {
+    setErro(null);
+    setProgresso({ etapa: "Iniciando", percentual: 0 });
+    try {
+      const cargaId = await processarApuracao({
+        municipioId: municipio,
+        usuarioId,
+        arquivoAtivos: ativos!,
+        arquivoRetorno: retorno!,
+        opcoes: {
+          limiarDiscrepancia: limiar / 100,
+          dataLimiteEntrega: dataLimite || null,
+        },
+        tipoRetorno,
+        mesReferencia: tipoRetorno === "mensal" ? mesReferencia : null,
+        competenciaMes: competenciaMes,
+        competenciaAno: competenciaAno,
+        competenciaMotivo: precisaMotivo ? motivoAjuste.trim() : null,
+        competenciaDetectadaMes: detectada.mes,
+        competenciaDetectadaAno: detectada.ano,
+        onProgresso: setProgresso,
+      });
+      navigate({ to: "/cargas/$cargaId", params: { cargaId } });
+    } catch (e) {
+      setProgresso(null);
+      setErro(e instanceof Error ? e.message : "Falha ao processar os arquivos.");
+    }
+  }
+
+  async function substituirEProcessar() {
+    let usuarioId = perfil?.id ?? null;
+    if (!usuarioId) {
+      const { data } = await supabase.auth.getUser();
+      usuarioId = data.user?.id ?? null;
+    }
+    if (!usuarioId || !municipioId) return;
+    setSubstituindo(true);
+    try {
+      await excluirCargas(duplicadas.map((c) => c.id));
+      setDialogoDuplicada(false);
+      setDuplicadas([]);
+      await executar(usuarioId, municipioId);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao excluir a apuração existente.");
+      setDialogoDuplicada(false);
+    } finally {
+      setSubstituindo(false);
+    }
+  }
+
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
     if (!ativos || !retorno) {
@@ -237,34 +327,17 @@ function NovaApuracao() {
       );
       return;
     }
-    setErro(null);
-    setProgresso({ etapa: "Iniciando", percentual: 0 });
-    try {
-      const cargaId = await processarApuracao({
-        municipioId,
-        usuarioId,
-        arquivoAtivos: ativos,
-        arquivoRetorno: retorno,
-        opcoes: {
-          limiarDiscrepancia: limiar / 100,
-          dataLimiteEntrega: dataLimite || null,
-        },
-        tipoRetorno,
-        mesReferencia: tipoRetorno === "mensal" ? mesReferencia : null,
-        competenciaMes: competenciaMes,
-        competenciaAno: competenciaAno,
-        competenciaMotivo: precisaMotivo ? motivoAjuste.trim() : null,
-        competenciaDetectadaMes: detectada.mes,
-        competenciaDetectadaAno: detectada.ano,
-        onProgresso: setProgresso,
 
-      });
-      navigate({ to: "/cargas/$cargaId", params: { cargaId } });
-    } catch (e) {
-      setProgresso(null);
-      setErro(e instanceof Error ? e.message : "Falha ao processar os arquivos.");
+    const existentes = await buscarDuplicadas(municipioId);
+    if (existentes.length > 0) {
+      setDuplicadas(existentes);
+      setDialogoDuplicada(true);
+      return;
     }
+
+    await executar(usuarioId, municipioId);
   }
+
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
