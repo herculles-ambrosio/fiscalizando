@@ -98,7 +98,10 @@ function NovaApuracao() {
         },
         tipoRetorno,
         mesReferencia: tipoRetorno === "mensal" ? mesReferencia : null,
+        competenciaMes: competenciaMes,
+        competenciaAno: competenciaAno,
         onProgresso: setProgresso,
+
       });
       navigate({ to: "/cargas/$cargaId", params: { cargaId } });
     } catch (e) {
