@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Loader2, Upload } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertTriangle, CheckCircle2, Loader2, Upload } from "lucide-react";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { processarApuracao, type ProgressoEtapa } from "@/lib/vaf/processar";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -24,6 +25,7 @@ import {
   anoDoArquivo,
 
   sugerirTipoRetorno,
+  validarCompetencia,
   type TipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
 
@@ -65,7 +67,22 @@ function NovaApuracao() {
 
   const [erro, setErro] = useState<string | null>(null);
 
+  const [ignorarAlertas, setIgnorarAlertas] = useState(false);
+
   const processando = progresso !== null && progresso.percentual < 100;
+
+  const alertas = useMemo(
+    () =>
+      validarCompetencia({
+        nomeAtivos: ativos?.name ?? null,
+        nomeRetorno: retorno?.name ?? null,
+        tipoRetorno,
+        competenciaMes,
+        competenciaAno,
+      }),
+    [ativos, retorno, tipoRetorno, competenciaMes, competenciaAno],
+  );
+  const temErroCompetencia = alertas.some((a) => a.nivel === "erro");
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -84,6 +101,13 @@ function NovaApuracao() {
     }
     if (!municipioId) {
       setErro("Selecione um município antes de processar.");
+      return;
+    }
+    if (temErroCompetencia && !ignorarAlertas) {
+      setIgnorarAlertas(true);
+      setErro(
+        "A competência informada não confere com os arquivos. Revise os alertas ou clique novamente em Processar apuração para continuar assim mesmo.",
+      );
       return;
     }
     setErro(null);
@@ -205,7 +229,7 @@ function NovaApuracao() {
                 <Select
                   value={competenciaMes ? String(competenciaMes) : "nenhum"}
                   onValueChange={(v) =>
-                    setCompetenciaMes(v === "nenhum" ? null : Number(v))
+                    { setIgnorarAlertas(false); setCompetenciaMes(v === "nenhum" ? null : Number(v)); }
                   }
                 >
                   <SelectTrigger id="competencia-mes">
@@ -232,7 +256,7 @@ function NovaApuracao() {
                   placeholder="Detectado do arquivo"
                   value={competenciaAno ?? ""}
                   onChange={(e) =>
-                    setCompetenciaAno(e.target.value ? Number(e.target.value) : null)
+                    { setIgnorarAlertas(false); setCompetenciaAno(e.target.value ? Number(e.target.value) : null); }
                   }
                 />
                 <p className="text-xs text-muted-foreground">
@@ -271,6 +295,34 @@ function NovaApuracao() {
                 </p>
               </div>
             </div>
+
+            {(ativos || retorno) && (
+              alertas.length === 0 ? (
+                <Alert>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertTitle>Competência validada</AlertTitle>
+                  <AlertDescription>
+                    A competência confere com os nomes dos arquivos enviados.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert variant={temErroCompetencia ? "destructive" : "default"}>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>
+                    {temErroCompetencia
+                      ? "Competência inconsistente"
+                      : "Verifique a competência"}
+                  </AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc space-y-1 pl-4">
+                      {alertas.map((a) => (
+                        <li key={a.mensagem}>{a.mensagem}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )
+            )}
 
             {progresso && (
               <div className="space-y-2">
