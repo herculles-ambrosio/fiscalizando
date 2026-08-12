@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { apurar, type OpcoesApuracao } from "./apurar";
 import { decodificarArquivo } from "./parser";
+import type { TipoRetorno } from "./tipoRetorno";
 
 export type ProgressoEtapa = {
   etapa: string;
@@ -19,9 +20,20 @@ export async function processarApuracao(params: {
   arquivoAtivos: File;
   arquivoRetorno: File;
   opcoes: OpcoesApuracao;
+  tipoRetorno?: TipoRetorno;
+  mesReferencia?: number | null;
   onProgresso?: (p: ProgressoEtapa) => void;
 }): Promise<string> {
-  const { municipioId, usuarioId, arquivoAtivos, arquivoRetorno, opcoes, onProgresso } = params;
+  const {
+    municipioId,
+    usuarioId,
+    arquivoAtivos,
+    arquivoRetorno,
+    opcoes,
+    tipoRetorno = "mensal",
+    mesReferencia = null,
+    onProgresso,
+  } = params;
   const progresso = onProgresso ?? (() => {});
 
   progresso({ etapa: "Lendo arquivos", percentual: 5 });
@@ -44,6 +56,8 @@ export async function processarApuracao(params: {
       limiar_discrepancia: opcoes.limiarDiscrepancia ?? 0.3,
       data_limite_entrega: dataLimite,
       criado_por: usuarioId,
+      tipo_retorno: tipoRetorno,
+      mes_referencia: mesReferencia,
     })
     .select("id")
     .single();
