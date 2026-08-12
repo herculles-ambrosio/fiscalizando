@@ -53,9 +53,12 @@ function NovaApuracao() {
   const [retorno, setRetorno] = useState<File | null>(null);
   const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>("mensal");
   const [mesReferencia, setMesReferencia] = useState<number | null>(null);
+  const [competenciaMes, setCompetenciaMes] = useState<number | null>(null);
+  const [competenciaAno, setCompetenciaAno] = useState<number | null>(null);
   const [limiar, setLimiar] = useState(30);
   const [dataLimite, setDataLimite] = useState("");
   const [progresso, setProgresso] = useState<ProgressoEtapa | null>(null);
+
   const [erro, setErro] = useState<string | null>(null);
 
   const processando = progresso !== null && progresso.percentual < 100;
