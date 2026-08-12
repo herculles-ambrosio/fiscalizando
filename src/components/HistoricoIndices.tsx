@@ -315,9 +315,9 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+        </AlertDialogContent>
       </AlertDialog>
+
     </Card>
   );
 }
