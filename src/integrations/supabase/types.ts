@@ -18,8 +18,14 @@ export type Database = {
         Row: {
           arquivo_ativos_path: string | null
           arquivo_retorno_path: string | null
+          competencia_ajustada: boolean
+          competencia_ajustada_em: string | null
+          competencia_ajustada_por: string | null
           competencia_ano: number | null
+          competencia_detectada_ano: number | null
+          competencia_detectada_mes: number | null
           competencia_mes: number | null
+          competencia_motivo: string | null
           concluida_em: string | null
           criado_em: string
           criado_por: string | null
@@ -44,8 +50,14 @@ export type Database = {
         Insert: {
           arquivo_ativos_path?: string | null
           arquivo_retorno_path?: string | null
+          competencia_ajustada?: boolean
+          competencia_ajustada_em?: string | null
+          competencia_ajustada_por?: string | null
           competencia_ano?: number | null
+          competencia_detectada_ano?: number | null
+          competencia_detectada_mes?: number | null
           competencia_mes?: number | null
+          competencia_motivo?: string | null
           concluida_em?: string | null
           criado_em?: string
           criado_por?: string | null
@@ -70,8 +82,14 @@ export type Database = {
         Update: {
           arquivo_ativos_path?: string | null
           arquivo_retorno_path?: string | null
+          competencia_ajustada?: boolean
+          competencia_ajustada_em?: string | null
+          competencia_ajustada_por?: string | null
           competencia_ano?: number | null
+          competencia_detectada_ano?: number | null
+          competencia_detectada_mes?: number | null
           competencia_mes?: number | null
+          competencia_motivo?: string | null
           concluida_em?: string | null
           criado_em?: string
           criado_por?: string | null

@@ -247,6 +247,17 @@ function Historico() {
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {formatarCompetencia(c.competencia_mes, c.competencia_ano)}
+                      {c.competencia_ajustada && (
+                        <span
+                          className="ml-2 cursor-help text-xs text-amber-600 dark:text-amber-400"
+                          title={`Competência corrigida manualmente. Detectado: ${formatarCompetencia(
+                            c.competencia_detectada_mes,
+                            c.competencia_detectada_ano,
+                          )}. Motivo: ${c.competencia_motivo ?? "—"}`}
+                        >
+                          ajustada
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
 

@@ -24,6 +24,9 @@ export async function processarApuracao(params: {
   mesReferencia?: number | null;
   competenciaMes?: number | null;
   competenciaAno?: number | null;
+  competenciaMotivo?: string | null;
+  competenciaDetectadaMes?: number | null;
+  competenciaDetectadaAno?: number | null;
   onProgresso?: (p: ProgressoEtapa) => void;
 }): Promise<string> {
   const {
@@ -36,6 +39,9 @@ export async function processarApuracao(params: {
     mesReferencia = null,
     competenciaMes = null,
     competenciaAno = null,
+    competenciaMotivo = null,
+    competenciaDetectadaMes = null,
+    competenciaDetectadaAno = null,
     onProgresso,
   } = params;
   const progresso = onProgresso ?? (() => {});
@@ -65,6 +71,12 @@ export async function processarApuracao(params: {
       mes_referencia: mesReferencia,
       competencia_mes: competenciaMes ?? (tipoRetorno === "mensal" ? mesReferencia : null),
       competencia_ano: competenciaAno ?? resultado.exercicio,
+      competencia_detectada_mes: competenciaDetectadaMes,
+      competencia_detectada_ano: competenciaDetectadaAno,
+      competencia_ajustada: Boolean(competenciaMotivo?.trim()),
+      competencia_motivo: competenciaMotivo?.trim() || null,
+      competencia_ajustada_por: competenciaMotivo?.trim() ? usuarioId : null,
+      competencia_ajustada_em: competenciaMotivo?.trim() ? new Date().toISOString() : null,
     })
 
     .select("id")
