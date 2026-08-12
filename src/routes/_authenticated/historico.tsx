@@ -44,6 +44,7 @@ import {
   TIPOS_RETORNO,
   rotuloTipoRetorno,
   type TipoRetorno,
+  formatarCompetencia,
 } from "@/lib/vaf/tipoRetorno";
 import { formatarDataHora } from "@/lib/format";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
@@ -219,7 +220,9 @@ function Historico() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Exercício</TableHead>
+                  <TableHead>Competência</TableHead>
                   <TableHead>Tipo de retorno</TableHead>
+
                   <TableHead>Processada em</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ativos</TableHead>
@@ -242,7 +245,11 @@ function Historico() {
                         {c.exercicio}
                       </Link>
                     </TableCell>
+                    <TableCell className="tabular-nums">
+                      {formatarCompetencia(c.competencia_mes, c.competencia_ano)}
+                    </TableCell>
                     <TableCell>
+
                       <Badge
                         variant={
                           c.tipo_retorno === "indice_definitivo"

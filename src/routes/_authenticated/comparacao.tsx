@@ -18,7 +18,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda, formatarPercentual } from "@/lib/format";
-import { rotuloTipoRetorno } from "@/lib/vaf/tipoRetorno";
+import {
+  competenciaOrdenavel,
+  formatarCompetencia,
+  rotuloTipoRetorno,
+} from "@/lib/vaf/tipoRetorno";
 
 export const Route = createFileRoute("/_authenticated/comparacao")({
   head: () => ({
@@ -108,7 +112,13 @@ function Comparacao() {
       selecionadas
         .map((id) => (cargas ?? []).find((c) => c.id === id))
         .filter((c): c is NonNullable<typeof c> => !!c)
-        .sort((a, b) => a.exercicio - b.exercicio || a.criado_em.localeCompare(b.criado_em)),
+        .sort(
+          (a, b) =>
+            competenciaOrdenavel(a.competencia_mes, a.competencia_ano) -
+              competenciaOrdenavel(b.competencia_mes, b.competencia_ano) ||
+            a.exercicio - b.exercicio ||
+            a.criado_em.localeCompare(b.criado_em),
+        ),
     [selecionadas, cargas],
   );
 
@@ -229,7 +239,9 @@ function Comparacao() {
                       }
                     />
                     <span className="space-y-1">
-                      <span className="block font-medium">Exercício {c.exercicio}</span>
+                      <span className="block font-medium">
+                        Competência {formatarCompetencia(c.competencia_mes, c.competencia_ano)}
+                      </span>
                       <Badge variant="outline">{rotuloTipoRetorno(c.tipo_retorno)}</Badge>
                       <span className="block text-xs text-muted-foreground">
                         {c.total_ativos ?? 0} contribuintes
@@ -267,7 +279,8 @@ function Comparacao() {
                       <TableHead>Indicador</TableHead>
                       {escolhidas.map((c) => (
                         <TableHead key={c.id} className="text-right">
-                          {c.exercicio} · {rotuloTipoRetorno(c.tipo_retorno)}
+                          {formatarCompetencia(c.competencia_mes, c.competencia_ano)} ·{" "}
+                          {rotuloTipoRetorno(c.tipo_retorno)}
                         </TableHead>
                       ))}
                       <TableHead className="text-right">Variação</TableHead>
@@ -323,7 +336,8 @@ function Comparacao() {
                       <TableHead>Contribuinte</TableHead>
                       {escolhidas.map((c) => (
                         <TableHead key={c.id} className="text-right">
-                          {c.exercicio} · {rotuloTipoRetorno(c.tipo_retorno)}
+                          {formatarCompetencia(c.competencia_mes, c.competencia_ano)} ·{" "}
+                          {rotuloTipoRetorno(c.tipo_retorno)}
                         </TableHead>
                       ))}
                       <TableHead className="text-right">Δ p.p.</TableHead>
@@ -379,7 +393,8 @@ function Comparacao() {
                       <TableHead>CNAE</TableHead>
                       {escolhidas.map((c) => (
                         <TableHead key={c.id} className="text-right">
-                          {c.exercicio} · {rotuloTipoRetorno(c.tipo_retorno)}
+                          {formatarCompetencia(c.competencia_mes, c.competencia_ano)} ·{" "}
+                          {rotuloTipoRetorno(c.tipo_retorno)}
                         </TableHead>
                       ))}
                       <TableHead className="text-right">Variação</TableHead>
@@ -426,7 +441,8 @@ function Comparacao() {
                       <TableHead>CNPJ</TableHead>
                       {escolhidas.map((c) => (
                         <TableHead key={c.id} className="text-right">
-                          {c.exercicio} · {rotuloTipoRetorno(c.tipo_retorno)}
+                          {formatarCompetencia(c.competencia_mes, c.competencia_ano)} ·{" "}
+                          {rotuloTipoRetorno(c.tipo_retorno)}
                         </TableHead>
                       ))}
                       <TableHead className="text-right">Variação</TableHead>

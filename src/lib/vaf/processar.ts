@@ -22,6 +22,8 @@ export async function processarApuracao(params: {
   opcoes: OpcoesApuracao;
   tipoRetorno?: TipoRetorno;
   mesReferencia?: number | null;
+  competenciaMes?: number | null;
+  competenciaAno?: number | null;
   onProgresso?: (p: ProgressoEtapa) => void;
 }): Promise<string> {
   const {
@@ -32,9 +34,12 @@ export async function processarApuracao(params: {
     opcoes,
     tipoRetorno = "mensal",
     mesReferencia = null,
+    competenciaMes = null,
+    competenciaAno = null,
     onProgresso,
   } = params;
   const progresso = onProgresso ?? (() => {});
+
 
   progresso({ etapa: "Lendo arquivos", percentual: 5 });
   const [textoAtivos, textoRetorno] = await Promise.all([
@@ -58,7 +63,10 @@ export async function processarApuracao(params: {
       criado_por: usuarioId,
       tipo_retorno: tipoRetorno,
       mes_referencia: mesReferencia,
+      competencia_mes: competenciaMes ?? (tipoRetorno === "mensal" ? mesReferencia : null),
+      competencia_ano: competenciaAno ?? resultado.exercicio,
     })
+
     .select("id")
     .single();
   if (erroCarga || !carga) throw erroCarga ?? new Error("Não foi possível criar a carga.");

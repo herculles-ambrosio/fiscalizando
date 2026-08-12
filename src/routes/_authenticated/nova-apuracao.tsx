@@ -20,9 +20,13 @@ import {
 import {
   ROTULO_TIPO_RETORNO,
   TIPOS_RETORNO,
+  MESES_CURTOS,
+  anoDoArquivo,
+
   sugerirTipoRetorno,
   type TipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
+
 
 export const Route = createFileRoute("/_authenticated/nova-apuracao")({
   head: () => ({
@@ -53,9 +57,12 @@ function NovaApuracao() {
   const [retorno, setRetorno] = useState<File | null>(null);
   const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>("mensal");
   const [mesReferencia, setMesReferencia] = useState<number | null>(null);
+  const [competenciaMes, setCompetenciaMes] = useState<number | null>(null);
+  const [competenciaAno, setCompetenciaAno] = useState<number | null>(null);
   const [limiar, setLimiar] = useState(30);
   const [dataLimite, setDataLimite] = useState("");
   const [progresso, setProgresso] = useState<ProgressoEtapa | null>(null);
+
   const [erro, setErro] = useState<string | null>(null);
 
   const processando = progresso !== null && progresso.percentual < 100;
@@ -93,7 +100,10 @@ function NovaApuracao() {
         },
         tipoRetorno,
         mesReferencia: tipoRetorno === "mensal" ? mesReferencia : null,
+        competenciaMes: competenciaMes,
+        competenciaAno: competenciaAno,
         onProgresso: setProgresso,
+
       });
       navigate({ to: "/cargas/$cargaId", params: { cargaId } });
     } catch (e) {
@@ -142,8 +152,11 @@ function NovaApuracao() {
                     const sugestao = sugerirTipoRetorno(arquivo.name);
                     setTipoRetorno(sugestao.tipo);
                     setMesReferencia(sugestao.mes);
+                    setCompetenciaMes(sugestao.mes && sugestao.mes <= 12 ? sugestao.mes : null);
+                    setCompetenciaAno(anoDoArquivo(arquivo.name));
                   }
                 }}
+
               />
             </div>
 
@@ -185,6 +198,49 @@ function NovaApuracao() {
                 />
               </div>
             )}
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="competencia-mes">Competência — mês</Label>
+                <Select
+                  value={competenciaMes ? String(competenciaMes) : "nenhum"}
+                  onValueChange={(v) =>
+                    setCompetenciaMes(v === "nenhum" ? null : Number(v))
+                  }
+                >
+                  <SelectTrigger id="competencia-mes">
+                    <SelectValue placeholder="Sem mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhum">Sem mês (anual)</SelectItem>
+                    {MESES_CURTOS.map((m, i) => (
+                      <SelectItem key={m} value={String(i + 1)}>
+                        {String(i + 1).padStart(2, "0")} · {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="competencia-ano">Competência — ano</Label>
+                <Input
+                  id="competencia-ano"
+                  type="number"
+                  min={1990}
+                  max={2100}
+                  placeholder="Detectado do arquivo"
+                  value={competenciaAno ?? ""}
+                  onChange={(e) =>
+                    setCompetenciaAno(e.target.value ? Number(e.target.value) : null)
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Em branco, usa o exercício detectado nos arquivos.
+                </p>
+              </div>
+            </div>
+
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">

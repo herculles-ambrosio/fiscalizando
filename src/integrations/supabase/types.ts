@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           arquivo_ativos_path: string | null
           arquivo_retorno_path: string | null
+          competencia_ano: number | null
+          competencia_mes: number | null
           concluida_em: string | null
           criado_em: string
           criado_por: string | null
@@ -42,6 +44,8 @@ export type Database = {
         Insert: {
           arquivo_ativos_path?: string | null
           arquivo_retorno_path?: string | null
+          competencia_ano?: number | null
+          competencia_mes?: number | null
           concluida_em?: string | null
           criado_em?: string
           criado_por?: string | null
@@ -66,6 +70,8 @@ export type Database = {
         Update: {
           arquivo_ativos_path?: string | null
           arquivo_retorno_path?: string | null
+          competencia_ano?: number | null
+          competencia_mes?: number | null
           concluida_em?: string | null
           criado_em?: string
           criado_por?: string | null
