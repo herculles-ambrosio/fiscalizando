@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ import {
 
   sugerirTipoRetorno,
   validarCompetencia,
+  formatarCompetencia,
   type TipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
 
@@ -68,6 +70,11 @@ function NovaApuracao() {
   const [erro, setErro] = useState<string | null>(null);
 
   const [ignorarAlertas, setIgnorarAlertas] = useState(false);
+  const [detectada, setDetectada] = useState<{ mes: number | null; ano: number | null }>({
+    mes: null,
+    ano: null,
+  });
+  const [motivoAjuste, setMotivoAjuste] = useState("");
 
   const processando = progresso !== null && progresso.percentual < 100;
 
@@ -83,6 +90,10 @@ function NovaApuracao() {
     [ativos, retorno, tipoRetorno, competenciaMes, competenciaAno],
   );
   const temErroCompetencia = alertas.some((a) => a.nivel === "erro");
+  const competenciaAlterada =
+    (detectada.mes !== null || detectada.ano !== null) &&
+    (competenciaMes !== detectada.mes || competenciaAno !== detectada.ano);
+  const precisaMotivo = competenciaAlterada || temErroCompetencia;
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -103,7 +114,13 @@ function NovaApuracao() {
       setErro("Selecione um município antes de processar.");
       return;
     }
-    if (temErroCompetencia && !ignorarAlertas) {
+    if (precisaMotivo && motivoAjuste.trim().length < 5) {
+      setErro(
+        "Informe o motivo da correção manual da competência (mínimo de 5 caracteres) para prosseguir.",
+      );
+      return;
+    }
+    if (temErroCompetencia && !precisaMotivo && !ignorarAlertas) {
       setIgnorarAlertas(true);
       setErro(
         "A competência informada não confere com os arquivos. Revise os alertas ou clique novamente em Processar apuração para continuar assim mesmo.",
@@ -126,6 +143,9 @@ function NovaApuracao() {
         mesReferencia: tipoRetorno === "mensal" ? mesReferencia : null,
         competenciaMes: competenciaMes,
         competenciaAno: competenciaAno,
+        competenciaMotivo: precisaMotivo ? motivoAjuste.trim() : null,
+        competenciaDetectadaMes: detectada.mes,
+        competenciaDetectadaAno: detectada.ano,
         onProgresso: setProgresso,
 
       });
@@ -177,7 +197,12 @@ function NovaApuracao() {
                     setTipoRetorno(sugestao.tipo);
                     setMesReferencia(sugestao.mes);
                     setCompetenciaMes(sugestao.mes && sugestao.mes <= 12 ? sugestao.mes : null);
-                    setCompetenciaAno(anoDoArquivo(arquivo.name));
+                    const anoDetectado = anoDoArquivo(arquivo.name);
+                    const mesDetectado = sugestao.mes && sugestao.mes <= 12 ? sugestao.mes : null;
+                    setCompetenciaAno(anoDetectado);
+                    setDetectada({ mes: mesDetectado, ano: anoDetectado });
+                    setMotivoAjuste("");
+                    setIgnorarAlertas(false);
                   }
                 }}
 
@@ -322,6 +347,30 @@ function NovaApuracao() {
                   </AlertDescription>
                 </Alert>
               )
+            )}
+
+            {precisaMotivo && (
+              <div className="space-y-2 rounded-lg border border-dashed p-4">
+                <Label htmlFor="motivo-competencia">
+                  Motivo da correção manual da competência
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Detectado no arquivo:{" "}
+                  <strong>{formatarCompetencia(detectada.mes, detectada.ano)}</strong> · Informado:{" "}
+                  <strong>{formatarCompetencia(competenciaMes, competenciaAno)}</strong>
+                </p>
+                <Textarea
+                  id="motivo-competencia"
+                  rows={3}
+                  placeholder="Ex.: arquivo renomeado pela prefeitura; a remessa 12 refere-se à competência 11/2026."
+                  value={motivoAjuste}
+                  onChange={(e) => setMotivoAjuste(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  O motivo fica registrado na apuração junto com a competência detectada
+                  automaticamente.
+                </p>
+              </div>
             )}
 
             {progresso && (
