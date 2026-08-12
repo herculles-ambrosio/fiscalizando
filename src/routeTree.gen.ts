@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedComparacaoRouteImport } from './routes/_authenticated/comparacao'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_authenticated/consultoria/route'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedComparacaoRoute = AuthenticatedComparacaoRouteImport.update({
+  id: '/comparacao',
+  path: '/comparacao',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
@@ -98,6 +104,7 @@ const AuthenticatedConsultoriaUsuariosRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
+  '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/emissoes': typeof AuthenticatedEmissoesRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
+  '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/emissoes': typeof AuthenticatedEmissoesRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
+  '/_authenticated/comparacao': typeof AuthenticatedComparacaoRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/emissoes': typeof AuthenticatedEmissoesRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/consultoria'
+    | '/comparacao'
     | '/configuracoes'
     | '/dashboard'
     | '/emissoes'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/consultoria'
+    | '/comparacao'
     | '/configuracoes'
     | '/dashboard'
     | '/emissoes'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_authenticated/consultoria'
+    | '/_authenticated/comparacao'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/emissoes'
@@ -205,6 +217,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/comparacao': {
+      id: '/_authenticated/comparacao'
+      path: '/comparacao'
+      fullPath: '/comparacao'
+      preLoaderRoute: typeof AuthenticatedComparacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/configuracoes': {
       id: '/_authenticated/configuracoes'
@@ -306,6 +325,7 @@ const AuthenticatedConsultoriaRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedConsultoriaRouteRoute: typeof AuthenticatedConsultoriaRouteRouteWithChildren
+  AuthenticatedComparacaoRoute: typeof AuthenticatedComparacaoRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEmissoesRoute: typeof AuthenticatedEmissoesRoute
@@ -319,6 +339,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConsultoriaRouteRoute:
     AuthenticatedConsultoriaRouteRouteWithChildren,
+  AuthenticatedComparacaoRoute: AuthenticatedComparacaoRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEmissoesRoute: AuthenticatedEmissoesRoute,

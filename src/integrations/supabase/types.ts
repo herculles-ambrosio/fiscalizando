@@ -26,8 +26,10 @@ export type Database = {
           id: string
           limiar_discrepancia: number
           mensagem_erro: string | null
+          mes_referencia: number | null
           municipio_id: string
           status: string
+          tipo_retorno: string
           total_ativos: number | null
           total_discrepantes: number | null
           total_fora_prazo: number | null
@@ -48,8 +50,10 @@ export type Database = {
           id?: string
           limiar_discrepancia?: number
           mensagem_erro?: string | null
+          mes_referencia?: number | null
           municipio_id: string
           status?: string
+          tipo_retorno?: string
           total_ativos?: number | null
           total_discrepantes?: number | null
           total_fora_prazo?: number | null
@@ -70,8 +74,10 @@ export type Database = {
           id?: string
           limiar_discrepancia?: number
           mensagem_erro?: string | null
+          mes_referencia?: number | null
           municipio_id?: string
           status?: string
+          tipo_retorno?: string
           total_ativos?: number | null
           total_discrepantes?: number | null
           total_fora_prazo?: number | null
