@@ -430,6 +430,38 @@ function NovaApuracao() {
               </div>
             </div>
 
+            {arquivosDeMunicipiosDiferentes && conferencia && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Arquivos de municípios diferentes</AlertTitle>
+                <AlertDescription className="space-y-2">
+                  <p>
+                    O arquivo de <strong>ativos</strong> é do município de código{" "}
+                    <strong>{conferencia.ativos?.codigo ?? "?"}</strong> e o de{" "}
+                    <strong>retorno</strong> é do código{" "}
+                    <strong>
+                      {conferencia.retorno?.codigo ?? "?"}
+                      {conferencia.retorno?.nome ? ` — ${conferencia.retorno.nome}` : ""}
+                    </strong>
+                    . Envie os dois arquivos da mesma prefeitura.
+                  </p>
+                  {conferencia.evidencias.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium">Registros que causaram a divergência:</p>
+                      <ul className="space-y-1 font-mono text-[11px]">
+                        {conferencia.evidencias.map((ev) => (
+                          <li key={`${ev.arquivo}-${ev.linha}`} className="truncate">
+                            {ev.arquivo} · linha {ev.linha} · registro {ev.registro} · código{" "}
+                            {ev.codigo} · {ev.trecho}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {municipioDivergente && (
               <Alert variant="destructive">
                 <Building2 className="h-4 w-4" />
