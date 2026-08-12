@@ -63,7 +63,10 @@ export async function processarApuracao(params: {
       criado_por: usuarioId,
       tipo_retorno: tipoRetorno,
       mes_referencia: mesReferencia,
+      competencia_mes: competenciaMes ?? (tipoRetorno === "mensal" ? mesReferencia : null),
+      competencia_ano: competenciaAno ?? resultado.exercicio,
     })
+
     .select("id")
     .single();
   if (erroCarga || !carga) throw erroCarga ?? new Error("Não foi possível criar a carga.");
