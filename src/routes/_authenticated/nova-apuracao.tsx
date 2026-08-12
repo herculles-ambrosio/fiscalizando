@@ -70,7 +70,8 @@ export const Route = createFileRoute("/_authenticated/nova-apuracao")({
 
 function NovaApuracao() {
   const { data: perfil } = usePerfil();
-  const { municipioId } = useMunicipioAtivo();
+  const { municipioId, municipio, municipios, podeTrocar, trocar } = useMunicipioAtivo();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [ativos, setAtivos] = useState<File | null>(null);
   const [retorno, setRetorno] = useState<File | null>(null);
@@ -91,7 +92,71 @@ function NovaApuracao() {
   });
   const [motivoAjuste, setMotivoAjuste] = useState("");
 
+  const [municipioArquivo, setMunicipioArquivo] = useState<MunicipioArquivo>({
+    codigo: null,
+    nome: null,
+  });
+  const [dialogoPrefeitura, setDialogoPrefeitura] = useState(false);
+  const [novaPrefeituraNome, setNovaPrefeituraNome] = useState("");
+  const [salvandoPrefeitura, setSalvandoPrefeitura] = useState(false);
+  const [erroPrefeitura, setErroPrefeitura] = useState<string | null>(null);
+
   const processando = progresso !== null && progresso.percentual < 100;
+
+  useEffect(() => {
+    let cancelado = false;
+    if (!ativos && !retorno) {
+      setMunicipioArquivo({ codigo: null, nome: null });
+      return;
+    }
+    detectarMunicipioDosArquivos({ ativos, retorno })
+      .then((info) => {
+        if (!cancelado) setMunicipioArquivo(info);
+      })
+      .catch(() => {
+        if (!cancelado) setMunicipioArquivo({ codigo: null, nome: null });
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [ativos, retorno]);
+
+  const codigoArquivo = municipioArquivo.codigo;
+  const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
+  const municipioDivergente = !!codigoArquivo && !!codigoAtivo && codigoArquivo !== codigoAtivo;
+  const municipioCadastrado = codigoArquivo
+    ? (municipios.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ?? null)
+    : null;
+  const rotuloArquivo = municipioArquivo.nome
+    ? `${municipioArquivo.nome} (código ${codigoArquivo})`
+    : `código ${codigoArquivo}`;
+
+  async function criarPrefeitura() {
+    if (!codigoArquivo) return;
+    const nome = novaPrefeituraNome.trim();
+    if (nome.length < 2) {
+      setErroPrefeitura("Informe o nome da prefeitura.");
+      return;
+    }
+    setSalvandoPrefeitura(true);
+    setErroPrefeitura(null);
+    const { data, error } = await supabase
+      .from("municipios")
+      .insert({ nome, uf: "MG", codigo_sef: codigoArquivo })
+      .select("id")
+      .single();
+    setSalvandoPrefeitura(false);
+    if (error || !data) {
+      setErroPrefeitura(
+        error?.message ?? "Não foi possível cadastrar a prefeitura. Verifique suas permissões.",
+      );
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    trocar(data.id);
+    setDialogoPrefeitura(false);
+  }
+
 
   const alertas = useMemo(
     () =>
