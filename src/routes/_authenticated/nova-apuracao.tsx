@@ -210,6 +210,12 @@ function NovaApuracao() {
       setErro("Selecione um município antes de processar.");
       return;
     }
+    if (arquivosDeMunicipiosDiferentes) {
+      setErro(
+        `Os arquivos são de municípios diferentes: ativos código ${conferencia?.ativos?.codigo} e retorno código ${conferencia?.retorno?.codigo}. Envie ativos e retorno da mesma prefeitura.`,
+      );
+      return;
+    }
     if (municipioDivergente) {
       setErro(
         `Os arquivos são da prefeitura ${rotuloArquivo} e o município ativo é ${municipio?.nome}. Troque de prefeitura ou cadastre a prefeitura do arquivo antes de processar.`,
