@@ -145,24 +145,25 @@ export function validarCompetencia(params: {
   }
 
   if (tipoRetorno === "mensal") {
-    if (remessa && remessa <= 12 && competenciaMes && competenciaMes !== remessa) {
+    if (remessa && competenciaMes && competenciaMes !== remessa) {
       alertas.push({
         nivel: "erro",
         mensagem: `Mês da competência (${String(competenciaMes).padStart(2, "0")}) diferente da remessa do arquivo (${String(remessa).padStart(2, "0")}).`,
       });
     }
-    if (remessa && remessa <= 12 && !competenciaMes) {
+    if (remessa && !competenciaMes) {
       alertas.push({
         nivel: "aviso",
         mensagem: `O arquivo indica a remessa ${String(remessa).padStart(2, "0")}; informe o mês da competência.`,
       });
     }
-  } else if (competenciaMes) {
+  } else if (competenciaMes && !(competenciaMes === 13 && remessa === 13)) {
     alertas.push({
       nivel: "aviso",
       mensagem: `Retornos de índice ${tipoRetorno === "indice_definitivo" ? "definitivo" : "provisório"} normalmente são anuais — o mês ${String(competenciaMes).padStart(2, "0")} foi informado.`,
     });
   }
+
 
   return alertas;
 }
