@@ -20,9 +20,11 @@ import {
 import {
   ROTULO_TIPO_RETORNO,
   TIPOS_RETORNO,
+  anoDoArquivo,
   sugerirTipoRetorno,
   type TipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
+
 
 export const Route = createFileRoute("/_authenticated/nova-apuracao")({
   head: () => ({
