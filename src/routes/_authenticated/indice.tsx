@@ -230,17 +230,7 @@ function PaginaIndice() {
     setCarregando(true);
     try {
       const texto = decodificarArquivo(await file.arrayBuffer());
-      const resultado = apurarIndice(texto);
-      if (
-        municipio?.codigo_sef &&
-        String(municipio.codigo_sef).padStart(3, "0") !== resultado.codigoMunicipio.padStart(3, "0")
-      ) {
-        setErro(
-          `O arquivo é do município de código ${resultado.codigoMunicipio}, diferente da prefeitura ativa (${municipio.codigo_sef} — ${municipio.nome}). Troque a prefeitura ativa antes de apurar.`,
-        );
-        return;
-      }
-      setApuracao(resultado);
+      setApuracao(apurarIndice(texto));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     } finally {
