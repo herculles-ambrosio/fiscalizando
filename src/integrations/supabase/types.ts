@@ -255,6 +255,111 @@ export type Database = {
           },
         ]
       }
+      indices_apurados: {
+        Row: {
+          acerto_credito: number
+          acerto_debito: number
+          arquivo_nome: string | null
+          atualizado_em: string
+          carga_id: string | null
+          competencia_ano: number | null
+          competencia_mes: number | null
+          credito_externo: number
+          credito_interno: number
+          credito_proprio: number
+          criado_em: string
+          criado_por: string | null
+          debito: number
+          estimado: boolean
+          exercicio: number
+          fator_calibragem: number
+          id: string
+          indice: number
+          municipio_id: string
+          origem_vaf_estadual: string | null
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          tipo_indice: string
+          total_declaracoes: number
+          vaf_estadual: number
+          vaf_proprio: number
+          valor_liquido: number
+        }
+        Insert: {
+          acerto_credito?: number
+          acerto_debito?: number
+          arquivo_nome?: string | null
+          atualizado_em?: string
+          carga_id?: string | null
+          competencia_ano?: number | null
+          competencia_mes?: number | null
+          credito_externo?: number
+          credito_interno?: number
+          credito_proprio?: number
+          criado_em?: string
+          criado_por?: string | null
+          debito?: number
+          estimado?: boolean
+          exercicio: number
+          fator_calibragem?: number
+          id?: string
+          indice?: number
+          municipio_id: string
+          origem_vaf_estadual?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          tipo_indice?: string
+          total_declaracoes?: number
+          vaf_estadual?: number
+          vaf_proprio?: number
+          valor_liquido?: number
+        }
+        Update: {
+          acerto_credito?: number
+          acerto_debito?: number
+          arquivo_nome?: string | null
+          atualizado_em?: string
+          carga_id?: string | null
+          competencia_ano?: number | null
+          competencia_mes?: number | null
+          credito_externo?: number
+          credito_interno?: number
+          credito_proprio?: number
+          criado_em?: string
+          criado_por?: string | null
+          debito?: number
+          estimado?: boolean
+          exercicio?: number
+          fator_calibragem?: number
+          id?: string
+          indice?: number
+          municipio_id?: string
+          origem_vaf_estadual?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          tipo_indice?: string
+          total_declaracoes?: number
+          vaf_estadual?: number
+          vaf_proprio?: number
+          valor_liquido?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indices_apurados_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "indices_apurados_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modelos_oficio: {
         Row: {
           ativo: boolean

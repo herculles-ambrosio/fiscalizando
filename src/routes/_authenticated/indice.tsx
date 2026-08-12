@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, FileUp, Printer, TrendingUp, Loader2 } from "lucide-react";
+import { Download, FileUp, Printer, Save, TrendingUp, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +18,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useSalvarIndice } from "@/hooks/useIndicesHistorico";
+import { HistoricoIndices } from "@/components/HistoricoIndices";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
+import { anoDoArquivo, remessaDoArquivo, formatarCompetencia } from "@/lib/vaf/tipoRetorno";
 import {
   apurarIndice,
   conferirLiquido,
@@ -32,6 +36,7 @@ import {
 } from "@/lib/vaf/indice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 
 
 export const Route = createFileRoute("/_authenticated/indice")({
@@ -214,7 +219,9 @@ function TabelaContribuintes({ linhas }: { linhas: LinhaContribuinte[] }) {
 const CHAVE_REF = "vaf_indice_referencia";
 
 function PaginaIndice() {
-  const { municipio, municipios } = useMunicipioAtivo();
+  const { municipio, municipioId, municipios } = useMunicipioAtivo();
+  const salvarIndice = useSalvarIndice();
+
   const { data: config } = useConfiguracao();
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [texto, setTexto] = useState<string | null>(null);
@@ -297,6 +304,37 @@ function PaginaIndice() {
     String(municipio.codigo_sef).padStart(3, "0") !== apuracao.codigoMunicipio.padStart(3, "0");
   const mostrarRelatorio = !!apuracao && !divergente;
 
+  // Competência do arquivo (P443RT1226 -> 12/2026); o exercício vem do ano base apurado.
+  const competencia = useMemo(() => {
+    const nome = arquivo?.name ?? "";
+    const mes = nome ? remessaDoArquivo(nome) : null;
+    const ano = nome ? anoDoArquivo(nome) : null;
+    const anoFallback = apuracao?.periodoFim ? Number(apuracao.periodoFim.slice(0, 4)) : null;
+    return { mes, ano: ano ?? anoFallback };
+  }, [arquivo?.name, apuracao?.periodoFim]);
+
+  const exercicio = apuracao?.anoBase ?? competencia.ano ?? null;
+
+  async function salvarNoHistorico() {
+    if (!apuracao || !municipioId || !exercicio) return;
+    try {
+      const r = await salvarIndice.mutateAsync({
+        municipioId,
+        apuracao,
+        exercicio,
+        competenciaMes: competencia.mes,
+        competenciaAno: competencia.ano,
+        arquivoNome: arquivo?.name ?? null,
+      });
+      toast.success(
+        r.substituido
+          ? "Índice atualizado no histórico desta competência."
+          : "Índice salvo no histórico.",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível salvar o índice.");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -321,6 +359,18 @@ function PaginaIndice() {
             <FileUp className="mr-2 h-4 w-4" />
             {arquivo ? "Trocar arquivo" : "Selecionar arquivo"}
           </Button>
+          <Button
+            variant="outline"
+            disabled={!mostrarRelatorio || !exercicio || salvarIndice.isPending}
+            onClick={salvarNoHistorico}
+          >
+            {salvarIndice.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            Salvar no histórico
+          </Button>
           <Button variant="outline" disabled={!apuracao} onClick={baixarCsv}>
             <Download className="mr-2 h-4 w-4" />
             CSV
@@ -331,6 +381,17 @@ function PaginaIndice() {
           </Button>
         </div>
       </div>
+
+      {mostrarRelatorio && exercicio && (
+        <p className="no-print text-xs text-muted-foreground">
+          Será salvo como exercício <span className="font-medium">{exercicio}</span> · competência{" "}
+          <span className="font-medium">
+            {formatarCompetencia(competencia.mes, competencia.ano)}
+          </span>{" "}
+          · {apuracao?.estimado ? "projeção provisória" : `índice ${apuracao?.tipoIndice}`}.
+        </p>
+      )}
+
 
       {arquivo && (
         <p className="no-print text-xs text-muted-foreground">
@@ -634,6 +695,9 @@ function PaginaIndice() {
           </CardContent>
         </Card>
       )}
+
+      <HistoricoIndices municipioId={municipioId} />
+
     </div>
   );
 }
