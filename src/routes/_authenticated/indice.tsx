@@ -454,12 +454,20 @@ function PaginaIndice() {
           {/* KPIs */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Kpi
-              rotulo="Índice do município"
+              rotulo={apuracao.estimado ? "Índice projetado" : "Índice do município"}
               valor={formatarIndice(apuracao.indice)}
-              detalhe="Participação percentual no VAF estadual"
+              detalhe={
+                apuracao.estimado
+                  ? "Projeção com base no retorno mensal — não oficial"
+                  : "Participação percentual no VAF estadual"
+              }
               destaque
             />
-            <Kpi rotulo="Valor líquido (VAF municipal)" valor={formatarMoeda(apuracao.valorLiquido)} />
+            <Kpi
+              rotulo={apuracao.estimado ? "Valor líquido projetado" : "Valor líquido (VAF municipal)"}
+              valor={formatarMoeda(apuracao.valorLiquido)}
+            />
+
             <Kpi rotulo="VAF estadual" valor={formatarMoeda(apuracao.vafEstadual)} />
             <Kpi
               rotulo="Declarações no arquivo"
