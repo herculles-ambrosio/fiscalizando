@@ -244,7 +244,11 @@ function Historico() {
                         {c.exercicio}
                       </Link>
                     </TableCell>
+                    <TableCell className="tabular-nums">
+                      {formatarCompetencia(c.competencia_mes, c.competencia_ano)}
+                    </TableCell>
                     <TableCell>
+
                       <Badge
                         variant={
                           c.tipo_retorno === "indice_definitivo"
