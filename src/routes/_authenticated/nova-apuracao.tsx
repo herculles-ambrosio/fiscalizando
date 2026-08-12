@@ -1,9 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Loader2, Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, Building2, CheckCircle2, Loader2, Upload } from "lucide-react";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { processarApuracao, type ProgressoEtapa } from "@/lib/vaf/processar";
+import {
+  detectarMunicipioDosArquivos,
+  normalizarCodigoSef,
+  type MunicipioArquivo,
+} from "@/lib/vaf/municipioArquivo";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +18,14 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -30,6 +44,7 @@ import {
   formatarCompetencia,
   type TipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
+
 
 
 export const Route = createFileRoute("/_authenticated/nova-apuracao")({
@@ -55,7 +70,8 @@ export const Route = createFileRoute("/_authenticated/nova-apuracao")({
 
 function NovaApuracao() {
   const { data: perfil } = usePerfil();
-  const { municipioId } = useMunicipioAtivo();
+  const { municipioId, municipio, municipios, podeTrocar, trocar } = useMunicipioAtivo();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [ativos, setAtivos] = useState<File | null>(null);
   const [retorno, setRetorno] = useState<File | null>(null);
@@ -76,7 +92,71 @@ function NovaApuracao() {
   });
   const [motivoAjuste, setMotivoAjuste] = useState("");
 
+  const [municipioArquivo, setMunicipioArquivo] = useState<MunicipioArquivo>({
+    codigo: null,
+    nome: null,
+  });
+  const [dialogoPrefeitura, setDialogoPrefeitura] = useState(false);
+  const [novaPrefeituraNome, setNovaPrefeituraNome] = useState("");
+  const [salvandoPrefeitura, setSalvandoPrefeitura] = useState(false);
+  const [erroPrefeitura, setErroPrefeitura] = useState<string | null>(null);
+
   const processando = progresso !== null && progresso.percentual < 100;
+
+  useEffect(() => {
+    let cancelado = false;
+    if (!ativos && !retorno) {
+      setMunicipioArquivo({ codigo: null, nome: null });
+      return;
+    }
+    detectarMunicipioDosArquivos({ ativos, retorno })
+      .then((info) => {
+        if (!cancelado) setMunicipioArquivo(info);
+      })
+      .catch(() => {
+        if (!cancelado) setMunicipioArquivo({ codigo: null, nome: null });
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [ativos, retorno]);
+
+  const codigoArquivo = municipioArquivo.codigo;
+  const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
+  const municipioDivergente = !!codigoArquivo && !!codigoAtivo && codigoArquivo !== codigoAtivo;
+  const municipioCadastrado = codigoArquivo
+    ? (municipios.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ?? null)
+    : null;
+  const rotuloArquivo = municipioArquivo.nome
+    ? `${municipioArquivo.nome} (código ${codigoArquivo})`
+    : `código ${codigoArquivo}`;
+
+  async function criarPrefeitura() {
+    if (!codigoArquivo) return;
+    const nome = novaPrefeituraNome.trim();
+    if (nome.length < 2) {
+      setErroPrefeitura("Informe o nome da prefeitura.");
+      return;
+    }
+    setSalvandoPrefeitura(true);
+    setErroPrefeitura(null);
+    const { data, error } = await supabase
+      .from("municipios")
+      .insert({ nome, uf: "MG", codigo_sef: codigoArquivo })
+      .select("id")
+      .single();
+    setSalvandoPrefeitura(false);
+    if (error || !data) {
+      setErroPrefeitura(
+        error?.message ?? "Não foi possível cadastrar a prefeitura. Verifique suas permissões.",
+      );
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    trocar(data.id);
+    setDialogoPrefeitura(false);
+  }
+
 
   const alertas = useMemo(
     () =>
@@ -114,6 +194,13 @@ function NovaApuracao() {
       setErro("Selecione um município antes de processar.");
       return;
     }
+    if (municipioDivergente) {
+      setErro(
+        `Os arquivos são da prefeitura ${rotuloArquivo} e o município ativo é ${municipio?.nome}. Troque de prefeitura ou cadastre a prefeitura do arquivo antes de processar.`,
+      );
+      return;
+    }
+
     if (precisaMotivo && motivoAjuste.trim().length < 5) {
       setErro(
         "Informe o motivo da correção manual da competência (mínimo de 5 caracteres) para prosseguir.",
@@ -321,6 +408,63 @@ function NovaApuracao() {
               </div>
             </div>
 
+            {municipioDivergente && (
+              <Alert variant="destructive">
+                <Building2 className="h-4 w-4" />
+                <AlertTitle>Arquivos de outra prefeitura</AlertTitle>
+                <AlertDescription className="space-y-3">
+                  <p>
+                    Os arquivos enviados são de <strong>{rotuloArquivo}</strong>, mas a prefeitura
+                    ativa é <strong>{municipio?.nome}</strong>. A apuração não será gravada em{" "}
+                    {municipio?.nome}.
+                  </p>
+                  {municipioCadastrado ? (
+                    podeTrocar ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => trocar(municipioCadastrado.id)}
+                      >
+                        Trocar para {municipioCadastrado.nome}
+                      </Button>
+                    ) : (
+                      <p className="text-xs">
+                        Essa prefeitura já está cadastrada; peça à consultoria para processar o
+                        arquivo nela.
+                      </p>
+                    )
+                  ) : perfil?.ehSuperadmin ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setNovaPrefeituraNome(municipioArquivo.nome ?? "");
+                        setErroPrefeitura(null);
+                        setDialogoPrefeitura(true);
+                      }}
+                    >
+                      Cadastrar prefeitura {municipioArquivo.nome ?? `código ${codigoArquivo}`}
+                    </Button>
+                  ) : (
+                    <p className="text-xs">
+                      Essa prefeitura ainda não está cadastrada. Solicite o cadastro ao
+                      administrador.
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!municipioDivergente && codigoArquivo && municipio && (
+              <p className="text-xs text-muted-foreground">
+                Arquivos identificados como da prefeitura <strong>{municipio.nome}</strong> (código{" "}
+                {codigoArquivo}).
+              </p>
+            )}
+
+
             {(ativos || retorno) && (
               alertas.length === 0 ? (
                 <Alert>
@@ -384,7 +528,11 @@ function NovaApuracao() {
 
             {erro && <p className="text-sm text-destructive">{erro}</p>}
 
-            <Button type="submit" className="w-full" disabled={processando}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={processando || municipioDivergente}
+            >
               {processando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -395,6 +543,49 @@ function NovaApuracao() {
           </CardContent>
         </Card>
       </form>
+
+      <Dialog open={dialogoPrefeitura} onOpenChange={setDialogoPrefeitura}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cadastrar prefeitura</DialogTitle>
+            <DialogDescription>
+              Detectada nos arquivos a prefeitura de código {codigoArquivo}. Confirme o nome para
+              cadastrá-la e usá-la nesta apuração.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nova-prefeitura-nome">Nome do município</Label>
+              <Input
+                id="nova-prefeitura-nome"
+                value={novaPrefeituraNome}
+                onChange={(e) => setNovaPrefeituraNome(e.target.value)}
+                placeholder="Ex.: Martins Soares"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nova-prefeitura-codigo">Código SEF</Label>
+              <Input id="nova-prefeitura-codigo" value={codigoArquivo ?? ""} readOnly />
+            </div>
+            {erroPrefeitura && <p className="text-sm text-destructive">{erroPrefeitura}</p>}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogoPrefeitura(false)}
+              disabled={salvandoPrefeitura}
+            >
+              Cancelar
+            </Button>
+            <Button type="button" onClick={criarPrefeitura} disabled={salvandoPrefeitura}>
+              {salvandoPrefeitura && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Cadastrar e usar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+
 }
