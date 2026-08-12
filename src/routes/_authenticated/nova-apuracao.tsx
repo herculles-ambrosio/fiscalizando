@@ -714,7 +714,43 @@ function NovaApuracao() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={dialogoDuplicada} onOpenChange={setDialogoDuplicada}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Competência já processada</DialogTitle>
+            <DialogDescription>
+              Já existe apuração de {ROTULO_TIPO_RETORNO[tipoRetorno]} para a competência{" "}
+              {formatarCompetencia(competenciaMes, competenciaAno)} neste município. Deseja
+              substituir pela nova apuração? A apuração anterior e seus dados serão apagados.
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-1 text-sm text-muted-foreground">
+            {duplicadas.map((c) => (
+              <li key={c.id}>
+                Exercício {c.exercicio} · processada em{" "}
+                {new Date(c.criado_em).toLocaleString("pt-BR")}
+              </li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogoDuplicada(false)}
+              disabled={substituindo}
+            >
+              Não, manter a atual
+            </Button>
+            <Button type="button" onClick={() => void substituirEProcessar()} disabled={substituindo}>
+              {substituindo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sim, substituir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 
 }
