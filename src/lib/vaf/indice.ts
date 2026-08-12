@@ -329,7 +329,7 @@ export function formatarIndice(valor: number): string {
 export function csvIndice(a: ApuracaoIndice, nomeMunicipio: string): string {
   const br = (v: number) => v.toFixed(2).replace(".", ",");
   const linhas: string[][] = [
-    ["Relatorio", `Indice ${a.tipoIndice}`],
+    ["Relatorio", `Indice ${a.tipoIndice}${a.estimado ? " (projecao)" : ""}`],
     ["Municipio", `${a.codigoMunicipio} ${nomeMunicipio}`],
     ["Ano base", String(a.anoBase ?? "")],
     [],
