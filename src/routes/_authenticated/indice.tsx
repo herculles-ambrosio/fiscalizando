@@ -23,11 +23,16 @@ import {
   apurarIndice,
   conferirLiquido,
   csvIndice,
+  estimarIndiceProvisorio,
   formatarIndice,
+  possuiIndice,
   type ApuracaoIndice,
   type LinhaContribuinte,
   type LinhaMunicipio,
 } from "@/lib/vaf/indice";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 
 export const Route = createFileRoute("/_authenticated/indice")({
   head: () => ({
