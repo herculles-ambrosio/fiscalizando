@@ -150,8 +150,11 @@ function NovaApuracao() {
                     const sugestao = sugerirTipoRetorno(arquivo.name);
                     setTipoRetorno(sugestao.tipo);
                     setMesReferencia(sugestao.mes);
+                    setCompetenciaMes(sugestao.mes && sugestao.mes <= 12 ? sugestao.mes : null);
+                    setCompetenciaAno(anoDoArquivo(arquivo.name));
                   }
                 }}
+
               />
             </div>
 
