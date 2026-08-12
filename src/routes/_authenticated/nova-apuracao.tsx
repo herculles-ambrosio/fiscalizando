@@ -320,6 +320,14 @@ function NovaApuracao() {
       );
       return;
     }
+    const anoAtivos = ativos ? anoDoArquivoAtivos(ativos.name) : null;
+    const anoRetorno = retorno ? anoDoArquivo(retorno.name) : null;
+    if (anoAtivos && anoRetorno && anoAtivos !== anoRetorno) {
+      setErro(
+        `O ano do arquivo de contribuintes ativos (${anoAtivos}) difere do ano do arquivo de retorno (${anoRetorno}). Não é possível processar uma apuração com anos diferentes.`,
+      );
+      return;
+    }
     if (temErroCompetencia && !precisaMotivo && !ignorarAlertas) {
       setIgnorarAlertas(true);
       setErro(
