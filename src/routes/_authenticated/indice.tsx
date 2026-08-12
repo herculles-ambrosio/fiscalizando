@@ -304,6 +304,37 @@ function PaginaIndice() {
     String(municipio.codigo_sef).padStart(3, "0") !== apuracao.codigoMunicipio.padStart(3, "0");
   const mostrarRelatorio = !!apuracao && !divergente;
 
+  // Competência do arquivo (P443RT1226 -> 12/2026); o exercício vem do ano base apurado.
+  const competencia = useMemo(() => {
+    const nome = arquivo?.name ?? "";
+    const mes = nome ? remessaDoArquivo(nome) : null;
+    const ano = nome ? anoDoArquivo(nome) : null;
+    const anoFallback = apuracao?.periodoFim ? Number(apuracao.periodoFim.slice(0, 4)) : null;
+    return { mes, ano: ano ?? anoFallback };
+  }, [arquivo?.name, apuracao?.periodoFim]);
+
+  const exercicio = apuracao?.anoBase ?? competencia.ano ?? null;
+
+  async function salvarNoHistorico() {
+    if (!apuracao || !municipioId || !exercicio) return;
+    try {
+      const r = await salvarIndice.mutateAsync({
+        municipioId,
+        apuracao,
+        exercicio,
+        competenciaMes: competencia.mes,
+        competenciaAno: competencia.ano,
+        arquivoNome: arquivo?.name ?? null,
+      });
+      toast.success(
+        r.substituido
+          ? "Índice atualizado no histórico desta competência."
+          : "Índice salvo no histórico.",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível salvar o índice.");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -328,6 +359,18 @@ function PaginaIndice() {
             <FileUp className="mr-2 h-4 w-4" />
             {arquivo ? "Trocar arquivo" : "Selecionar arquivo"}
           </Button>
+          <Button
+            variant="outline"
+            disabled={!mostrarRelatorio || !exercicio || salvarIndice.isPending}
+            onClick={salvarNoHistorico}
+          >
+            {salvarIndice.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            Salvar no histórico
+          </Button>
           <Button variant="outline" disabled={!apuracao} onClick={baixarCsv}>
             <Download className="mr-2 h-4 w-4" />
             CSV
@@ -338,6 +381,17 @@ function PaginaIndice() {
           </Button>
         </div>
       </div>
+
+      {mostrarRelatorio && exercicio && (
+        <p className="no-print text-xs text-muted-foreground">
+          Será salvo como exercício <span className="font-medium">{exercicio}</span> · competência{" "}
+          <span className="font-medium">
+            {formatarCompetencia(competencia.mes, competencia.ano)}
+          </span>{" "}
+          · {apuracao?.estimado ? "projeção provisória" : `índice ${apuracao?.tipoIndice}`}.
+        </p>
+      )}
+
 
       {arquivo && (
         <p className="no-print text-xs text-muted-foreground">
