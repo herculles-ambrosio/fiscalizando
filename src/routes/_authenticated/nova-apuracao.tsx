@@ -305,9 +305,9 @@ function NovaApuracao() {
                     const sugestao = sugerirTipoRetorno(arquivo.name);
                     setTipoRetorno(sugestao.tipo);
                     setMesReferencia(sugestao.mes);
-                    setCompetenciaMes(sugestao.mes && sugestao.mes <= 12 ? sugestao.mes : null);
+                    setCompetenciaMes(sugestao.mes ?? null);
                     const anoDetectado = anoDoArquivo(arquivo.name);
-                    const mesDetectado = sugestao.mes && sugestao.mes <= 12 ? sugestao.mes : null;
+                    const mesDetectado = sugestao.mes ?? null;
                     setCompetenciaAno(anoDetectado);
                     setDetectada({ mes: mesDetectado, ano: anoDetectado });
                     setMotivoAjuste("");
