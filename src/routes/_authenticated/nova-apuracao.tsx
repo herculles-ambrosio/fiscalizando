@@ -103,10 +103,13 @@ function NovaApuracao() {
 
   const processando = progresso !== null && progresso.percentual < 100;
 
+  const [conferencia, setConferencia] = useState<ConferenciaArquivos | null>(null);
+
   useEffect(() => {
     let cancelado = false;
     if (!ativos && !retorno) {
       setMunicipioArquivo({ codigo: null, nome: null });
+      setConferencia(null);
       return;
     }
     detectarMunicipioDosArquivos({ ativos, retorno })
@@ -116,20 +119,30 @@ function NovaApuracao() {
       .catch(() => {
         if (!cancelado) setMunicipioArquivo({ codigo: null, nome: null });
       });
+    conferirMunicipioEntreArquivos({ ativos, retorno })
+      .then((c) => {
+        if (!cancelado) setConferencia(c);
+      })
+      .catch(() => {
+        if (!cancelado) setConferencia(null);
+      });
     return () => {
       cancelado = true;
     };
   }, [ativos, retorno]);
 
+  const arquivosDeMunicipiosDiferentes = conferencia?.divergente ?? false;
   const codigoArquivo = municipioArquivo.codigo;
   const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
-  const municipioDivergente = !!codigoArquivo && !!codigoAtivo && codigoArquivo !== codigoAtivo;
+  const municipioDivergente =
+    !arquivosDeMunicipiosDiferentes && !!codigoArquivo && !!codigoAtivo && codigoArquivo !== codigoAtivo;
   const municipioCadastrado = codigoArquivo
     ? (municipios.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ?? null)
     : null;
   const rotuloArquivo = municipioArquivo.nome
     ? `${municipioArquivo.nome} (código ${codigoArquivo})`
     : `código ${codigoArquivo}`;
+
 
   async function criarPrefeitura() {
     if (!codigoArquivo) return;
