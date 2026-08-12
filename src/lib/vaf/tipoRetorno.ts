@@ -119,8 +119,8 @@ export function validarCompetencia(params: {
 
   if (anoAtivos && anoRetorno && anoAtivos !== anoRetorno) {
     alertas.push({
-      nivel: "aviso",
-      mensagem: `O arquivo de ativos é de ${anoAtivos} e o de retorno de ${anoRetorno}. Confirme se é isso mesmo.`,
+      nivel: "erro",
+      mensagem: `O arquivo de contribuintes ativos é de ${anoAtivos} e o de retorno de ${anoRetorno}. Apuração bloqueada — ambos devem ser do mesmo ano.`,
     });
   }
 
