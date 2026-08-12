@@ -219,7 +219,9 @@ function TabelaContribuintes({ linhas }: { linhas: LinhaContribuinte[] }) {
 const CHAVE_REF = "vaf_indice_referencia";
 
 function PaginaIndice() {
-  const { municipio, municipios } = useMunicipioAtivo();
+  const { municipio, municipioId, municipios } = useMunicipioAtivo();
+  const salvarIndice = useSalvarIndice();
+
   const { data: config } = useConfiguracao();
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [texto, setTexto] = useState<string | null>(null);
