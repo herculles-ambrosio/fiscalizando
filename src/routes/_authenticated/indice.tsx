@@ -206,14 +206,35 @@ function TabelaContribuintes({ linhas }: { linhas: LinhaContribuinte[] }) {
   );
 }
 
+const CHAVE_REF = "vaf_indice_referencia";
+
 function PaginaIndice() {
   const { municipio, municipios } = useMunicipioAtivo();
   const { data: config } = useConfiguracao();
   const [arquivo, setArquivo] = useState<File | null>(null);
-  const [apuracao, setApuracao] = useState<ApuracaoIndice | null>(null);
+  const [texto, setTexto] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [vafEstadualRef, setVafEstadualRef] = useState<string>("");
+  const [fator, setFator] = useState<string>("1");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try {
+      const salvo = JSON.parse(localStorage.getItem(CHAVE_REF) ?? "null") as {
+        vafEstadual?: string;
+        fator?: string;
+      } | null;
+      if (salvo?.vafEstadual) setVafEstadualRef(salvo.vafEstadual);
+      if (salvo?.fator) setFator(salvo.fator);
+    } catch {
+      /* ignora */
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(CHAVE_REF, JSON.stringify({ vafEstadual: vafEstadualRef, fator }));
+  }, [vafEstadualRef, fator]);
 
   const nomePorCodigo = useMemo(() => {
     const mapa = new Map(
@@ -222,15 +243,28 @@ function PaginaIndice() {
     return (codigo: string) => mapa.get(codigo.padStart(3, "0")) ?? "—";
   }, [municipios]);
 
+  const apuracao = useMemo<ApuracaoIndice | null>(() => {
+    if (!texto) return null;
+    try {
+      if (possuiIndice(texto)) return apurarIndice(texto);
+      return estimarIndiceProvisorio(texto, {
+        vafEstadualReferencia: Number(vafEstadualRef.replace(/[^0-9]/g, "")) || 0,
+        fatorCalibragem: Number(fator.replace(",", ".")) || 1,
+        codigoMunicipio: municipio?.codigo_sef ? String(municipio.codigo_sef).padStart(3, "0") : "",
+      });
+    } catch {
+      return null;
+    }
+  }, [texto, vafEstadualRef, fator, municipio?.codigo_sef]);
+
   async function selecionar(file: File | null) {
     setArquivo(file);
-    setApuracao(null);
+    setTexto(null);
     setErro(null);
     if (!file) return;
     setCarregando(true);
     try {
-      const texto = decodificarArquivo(await file.arrayBuffer());
-      setApuracao(apurarIndice(texto));
+      setTexto(decodificarArquivo(await file.arrayBuffer()));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     } finally {
@@ -245,17 +279,19 @@ function PaginaIndice() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `indice_${apuracao.tipoIndice}_${apuracao.codigoMunicipio}_${apuracao.anoBase ?? ""}.csv`;
+    a.download = `indice_${apuracao.estimado ? "provisorio_estimado" : apuracao.tipoIndice}_${apuracao.codigoMunicipio}_${apuracao.anoBase ?? ""}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  const conferencia = apuracao ? conferirLiquido(apuracao) : null;
+  const conferencia = apuracao && !apuracao.estimado ? conferirLiquido(apuracao) : null;
   const divergente =
     !!apuracao &&
     !!municipio?.codigo_sef &&
+    !!apuracao.codigoMunicipio &&
     String(municipio.codigo_sef).padStart(3, "0") !== apuracao.codigoMunicipio.padStart(3, "0");
   const mostrarRelatorio = !!apuracao && !divergente;
+
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
