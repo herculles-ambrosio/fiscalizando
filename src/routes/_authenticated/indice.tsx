@@ -695,6 +695,9 @@ function PaginaIndice() {
           </CardContent>
         </Card>
       )}
+
+      <HistoricoIndices municipioId={municipioId} />
+
     </div>
   );
 }
