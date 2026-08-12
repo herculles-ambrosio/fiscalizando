@@ -528,7 +528,11 @@ function NovaApuracao() {
 
             {erro && <p className="text-sm text-destructive">{erro}</p>}
 
-            <Button type="submit" className="w-full" disabled={processando}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={processando || municipioDivergente}
+            >
               {processando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -539,6 +543,49 @@ function NovaApuracao() {
           </CardContent>
         </Card>
       </form>
+
+      <Dialog open={dialogoPrefeitura} onOpenChange={setDialogoPrefeitura}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cadastrar prefeitura</DialogTitle>
+            <DialogDescription>
+              Detectada nos arquivos a prefeitura de código {codigoArquivo}. Confirme o nome para
+              cadastrá-la e usá-la nesta apuração.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nova-prefeitura-nome">Nome do município</Label>
+              <Input
+                id="nova-prefeitura-nome"
+                value={novaPrefeituraNome}
+                onChange={(e) => setNovaPrefeituraNome(e.target.value)}
+                placeholder="Ex.: Martins Soares"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nova-prefeitura-codigo">Código SEF</Label>
+              <Input id="nova-prefeitura-codigo" value={codigoArquivo ?? ""} readOnly />
+            </div>
+            {erroPrefeitura && <p className="text-sm text-destructive">{erroPrefeitura}</p>}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogoPrefeitura(false)}
+              disabled={salvandoPrefeitura}
+            >
+              Cancelar
+            </Button>
+            <Button type="button" onClick={criarPrefeitura} disabled={salvandoPrefeitura}>
+              {salvandoPrefeitura && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Cadastrar e usar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+
 }
