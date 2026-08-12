@@ -304,8 +304,9 @@ function PaginaIndice() {
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">Índice do VAF</h1>
           <p className="text-sm text-muted-foreground">
-            Envie o arquivo de índices da SEF-MG (provisório ou definitivo) para gerar o relatório
-            consolidado do município.
+            Envie o arquivo de índices da SEF-MG (provisório ou definitivo) ou um retorno mensal —
+            neste caso o sistema projeta o índice provisório para previsões.
+
           </p>
         </div>
         <div className="flex gap-2">
