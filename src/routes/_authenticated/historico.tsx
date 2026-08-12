@@ -44,6 +44,7 @@ import {
   TIPOS_RETORNO,
   rotuloTipoRetorno,
   type TipoRetorno,
+  formatarCompetencia,
 } from "@/lib/vaf/tipoRetorno";
 import { formatarDataHora } from "@/lib/format";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
