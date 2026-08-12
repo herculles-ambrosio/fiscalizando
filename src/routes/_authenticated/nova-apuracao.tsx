@@ -42,6 +42,7 @@ import {
   MESES_CURTOS,
   anoDoArquivo,
 
+  rotuloMes,
   sugerirTipoRetorno,
   validarCompetencia,
   formatarCompetencia,
@@ -305,9 +306,9 @@ function NovaApuracao() {
                     const sugestao = sugerirTipoRetorno(arquivo.name);
                     setTipoRetorno(sugestao.tipo);
                     setMesReferencia(sugestao.mes);
-                    setCompetenciaMes(sugestao.mes && sugestao.mes <= 12 ? sugestao.mes : null);
+                    setCompetenciaMes(sugestao.mes ?? null);
                     const anoDetectado = anoDoArquivo(arquivo.name);
-                    const mesDetectado = sugestao.mes && sugestao.mes <= 12 ? sugestao.mes : null;
+                    const mesDetectado = sugestao.mes ?? null;
                     setCompetenciaAno(anoDetectado);
                     setDetectada({ mes: mesDetectado, ano: anoDetectado });
                     setMotivoAjuste("");
@@ -371,12 +372,13 @@ function NovaApuracao() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nenhum">Sem mês (anual)</SelectItem>
-                    {MESES_CURTOS.map((m, i) => (
-                      <SelectItem key={m} value={String(i + 1)}>
-                        {String(i + 1).padStart(2, "0")} · {m}
+                    {[...MESES_CURTOS.map((_, i) => i + 1), 13].map((m) => (
+                      <SelectItem key={m} value={String(m)}>
+                        {rotuloMes(m)}
                       </SelectItem>
                     ))}
                   </SelectContent>
+
                 </Select>
               </div>
 
