@@ -437,8 +437,9 @@ function PaginaIndice() {
                   variant={apuracao.tipoIndice === "definitivo" ? "default" : "secondary"}
                   className="uppercase"
                 >
-                  Índice {apuracao.tipoIndice}
+                  {apuracao.estimado ? "Projeção · provisório" : `Índice ${apuracao.tipoIndice}`}
                 </Badge>
+
                 <p className="mt-2 text-xs text-muted-foreground">
                   Período: {formatarData(apuracao.periodoInicio)} a{" "}
                   {formatarData(apuracao.periodoFim)}
