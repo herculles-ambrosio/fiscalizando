@@ -6,9 +6,12 @@ import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { processarApuracao, type ProgressoEtapa } from "@/lib/vaf/processar";
 import {
+  conferirMunicipioEntreArquivos,
   detectarMunicipioDosArquivos,
   normalizarCodigoSef,
+  type ConferenciaArquivos,
   type MunicipioArquivo,
+
 } from "@/lib/vaf/municipioArquivo";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
