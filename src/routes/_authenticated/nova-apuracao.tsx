@@ -10,6 +10,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ROTULO_TIPO_RETORNO,
+  TIPOS_RETORNO,
+  sugerirTipoRetorno,
+  type TipoRetorno,
+} from "@/lib/vaf/tipoRetorno";
 
 export const Route = createFileRoute("/_authenticated/nova-apuracao")({
   head: () => ({
@@ -38,6 +51,8 @@ function NovaApuracao() {
   const navigate = useNavigate();
   const [ativos, setAtivos] = useState<File | null>(null);
   const [retorno, setRetorno] = useState<File | null>(null);
+  const [tipoRetorno, setTipoRetorno] = useState<TipoRetorno>("mensal");
+  const [mesReferencia, setMesReferencia] = useState<number | null>(null);
   const [limiar, setLimiar] = useState(30);
   const [dataLimite, setDataLimite] = useState("");
   const [progresso, setProgresso] = useState<ProgressoEtapa | null>(null);
@@ -76,6 +91,8 @@ function NovaApuracao() {
           limiarDiscrepancia: limiar / 100,
           dataLimiteEntrega: dataLimite || null,
         },
+        tipoRetorno,
+        mesReferencia: tipoRetorno === "mensal" ? mesReferencia : null,
         onProgresso: setProgresso,
       });
       navigate({ to: "/cargas/$cargaId", params: { cargaId } });
@@ -118,9 +135,56 @@ function NovaApuracao() {
                 type="file"
                 accept=".txt"
                 required
-                onChange={(e) => setRetorno(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  const arquivo = e.target.files?.[0] ?? null;
+                  setRetorno(arquivo);
+                  if (arquivo) {
+                    const sugestao = sugerirTipoRetorno(arquivo.name);
+                    setTipoRetorno(sugestao.tipo);
+                    setMesReferencia(sugestao.mes);
+                  }
+                }}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tipo-retorno">Tipo de retorno</Label>
+              <Select
+                value={tipoRetorno}
+                onValueChange={(v) => setTipoRetorno(v as TipoRetorno)}
+              >
+                <SelectTrigger id="tipo-retorno">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIPOS_RETORNO.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {ROTULO_TIPO_RETORNO[t]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Sugerido pelo nome do arquivo (remessa 13 = índice definitivo). Ajuste se
+                necessário.
+              </p>
+            </div>
+
+            {tipoRetorno === "mensal" && (
+              <div className="space-y-2">
+                <Label htmlFor="mes-referencia">Remessa/mês de referência</Label>
+                <Input
+                  id="mes-referencia"
+                  type="number"
+                  min={1}
+                  max={13}
+                  value={mesReferencia ?? ""}
+                  onChange={(e) =>
+                    setMesReferencia(e.target.value ? Number(e.target.value) : null)
+                  }
+                />
+              </div>
+            )}
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
