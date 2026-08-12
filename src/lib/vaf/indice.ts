@@ -31,6 +31,12 @@ export type LinhaContribuinte = {
 
 export type ApuracaoIndice = {
   tipoIndice: "provisorio" | "definitivo";
+  /** true quando o índice foi estimado a partir do retorno mensal (sem registro 16/17) */
+  estimado?: boolean;
+  /** origem do VAF estadual usado no cálculo do índice */
+  origemVafEstadual?: "arquivo" | "referencia";
+  /** fator aplicado ao VAF próprio na estimativa (1 = sem calibragem) */
+  fatorCalibragem?: number;
   codigoMunicipio: string;
   anoBase: number | null;
   periodoInicio: string | null;
@@ -60,6 +66,7 @@ export type ApuracaoIndice = {
   totalDeclaracoes: number;
 };
 
+
 function dataSefPonto(valor: string): string | null {
   // "1.1.2024" / "31.12.2024" -> ISO
   const partes = valor.trim().split(".");
@@ -79,39 +86,45 @@ export function possuiIndice(textoRetorno: string): boolean {
   return separarLinhas(textoRetorno).some((l) => l.startsWith("16") || l.startsWith("17"));
 }
 
-export function apurarIndice(textoRetorno: string): ApuracaoIndice {
-  const linhas = separarLinhas(textoRetorno);
+type Detalhamento = {
+  creditosExternos: LinhaContribuinte[];
+  contribuintesVaf: LinhaContribuinte[];
+  simei: LinhaContribuinte[];
+  creditosPorMunicipio: LinhaMunicipio[];
+  debitosPorMunicipio: LinhaMunicipio[];
+  totalDeclaracoes: number;
+  somaCreditosExternos: number;
+  somaCreditosMunicipios: number;
+  somaDebitosMunicipios: number;
+  /** soma do VAF declarado (registro 10, com sinal) — base do VAF próprio estimado */
+  somaVafDeclarado: number;
+  /** exercício mais frequente nos registros 10 */
+  exercicio: number | null;
+};
 
-  const linhaIndice =
-    linhas.find((l) => l.startsWith("17")) ?? linhas.find((l) => l.startsWith("16"));
-  if (!linhaIndice) {
-    throw new Error(
-      "O arquivo não contém registro de índice (tipo 16 provisório ou 17 definitivo).",
-    );
-  }
-  const tipoIndice = linhaIndice.startsWith("17") ? "definitivo" : "provisorio";
-
-  const linha99 = linhas.find((l) => l.startsWith("99"));
-  const periodoInicio = linha99 ? dataSefPonto(texto(linha99, 44, 53)) : null;
-  const periodoFim = linha99 ? dataSefPonto(texto(linha99, 54, 63)) : null;
-
+function coletarDetalhamento(linhas: string[]): Detalhamento {
   const creditosExternos: LinhaContribuinte[] = [];
   const contribuintesVaf: LinhaContribuinte[] = [];
   const simei: LinhaContribuinte[] = [];
   const creditosMapa = new Map<string, number>();
   const debitosMapa = new Map<string, number>();
+  const exercicios = new Map<number, number>();
   let totalDeclaracoes = 0;
+  let somaCreditosExternos = 0;
+  let somaVafDeclarado = 0;
 
   for (const l of linhas) {
     const tipo = l.slice(0, 2);
     if (tipo === "11") {
+      const valor = num(l, 81, 95);
+      somaCreditosExternos += valor;
       creditosExternos.push({
         inscricao_estadual: texto(l, 22, 34),
         cnpj: texto(l, 96, 109).replace(/[^0-9]/g, "") || null,
         nome: texto(l, 38, 72) || null,
         municipio: texto(l, 35, 37),
         data: dataDdMmAaaa(texto(l, 73, 80)),
-        valor: num(l, 81, 95),
+        valor,
       });
     } else if (tipo === "12") {
       const cod = texto(l, 19, 21);
@@ -139,9 +152,16 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
         valor: sinal * num(l, 82, 95),
       };
       if (tipo === "40") simei.push(registro);
-      else creditosExternos.push(registro);
+      else {
+        somaCreditosExternos += registro.valor;
+        creditosExternos.push(registro);
+      }
     } else if (tipo === "10") {
       totalDeclaracoes += 1;
+      const sinal = l[114] === "-" ? -1 : 1;
+      somaVafDeclarado += sinal * num(l, 116, 129);
+      const ex = num(l, 19, 22);
+      if (ex > 1990) exercicios.set(ex, (exercicios.get(ex) ?? 0) + 1);
     }
   }
 
@@ -155,12 +175,51 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
       .map(([codigo, valor]) => ({ codigo, valor }))
       .sort((a, b) => b.valor - a.valor);
 
+  const creditosPorMunicipio = paraLista(creditosMapa);
+  const debitosPorMunicipio = paraLista(debitosMapa);
+  const exercicio =
+    [...exercicios.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+  return {
+    creditosExternos,
+    contribuintesVaf,
+    simei,
+    creditosPorMunicipio,
+    debitosPorMunicipio,
+    totalDeclaracoes,
+    somaCreditosExternos,
+    somaCreditosMunicipios: creditosPorMunicipio.reduce((s, m) => s + m.valor, 0),
+    somaDebitosMunicipios: debitosPorMunicipio.reduce((s, m) => s + m.valor, 0),
+    somaVafDeclarado,
+    exercicio,
+  };
+}
+
+export function apurarIndice(textoRetorno: string): ApuracaoIndice {
+  const linhas = separarLinhas(textoRetorno);
+
+  const linhaIndice =
+    linhas.find((l) => l.startsWith("17")) ?? linhas.find((l) => l.startsWith("16"));
+  if (!linhaIndice) {
+    throw new Error(
+      "O arquivo não contém registro de índice (tipo 16 provisório ou 17 definitivo).",
+    );
+  }
+  const tipoIndice = linhaIndice.startsWith("17") ? "definitivo" : "provisorio";
+
+  const linha99 = linhas.find((l) => l.startsWith("99"));
+  const periodoInicio = linha99 ? dataSefPonto(texto(linha99, 44, 53)) : null;
+  const periodoFim = linha99 ? dataSefPonto(texto(linha99, 54, 63)) : null;
+
+  const d = coletarDetalhamento(linhas);
   const anoTexto = periodoFim?.slice(0, 4);
 
   return {
     tipoIndice,
+    estimado: false,
+    origemVafEstadual: "arquivo",
     codigoMunicipio: texto(linhaIndice, 3, 5),
-    anoBase: anoTexto ? Number(anoTexto) : null,
+    anoBase: anoTexto ? Number(anoTexto) : d.exercicio,
     periodoInicio,
     periodoFim,
     vafProprio: num(linhaIndice, 19, 33),
@@ -176,14 +235,79 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
     vafEstadual: num(linhaIndice, 148, 163),
     creditoProprioAf: num(linhaIndice, 164, 178),
     creditoProprioSiare: num(linhaIndice, 179, 193),
-    creditosExternos,
-    creditosPorMunicipio: paraLista(creditosMapa),
-    debitosPorMunicipio: paraLista(debitosMapa),
-    contribuintesVaf,
-    simei,
-    totalDeclaracoes,
+    creditosExternos: d.creditosExternos,
+    creditosPorMunicipio: d.creditosPorMunicipio,
+    debitosPorMunicipio: d.debitosPorMunicipio,
+    contribuintesVaf: d.contribuintesVaf,
+    simei: d.simei,
+    totalDeclaracoes: d.totalDeclaracoes,
   };
 }
+
+export type OpcoesEstimativa = {
+  /** VAF estadual de referência (R$) usado quando o arquivo não traz o total do estado */
+  vafEstadualReferencia?: number;
+  /** fator aplicado ao VAF próprio (calibragem com o último índice definitivo) */
+  fatorCalibragem?: number;
+  /** código SEF do município (usado quando o arquivo não tem registro de índice) */
+  codigoMunicipio?: string;
+};
+
+/**
+ * Estimativa do índice PROVISÓRIO a partir do arquivo de retorno mensal
+ * (que não traz os registros 16/17 fechados pela SEF-MG).
+ *
+ * Exatos no arquivo mensal: crédito externo (11/35), crédito interno (12) e
+ * débito (13). Estimado: VAF próprio (soma do VAF declarado nos registros 10),
+ * que pode ser calibrado por um fator obtido do último índice definitivo.
+ */
+export function estimarIndiceProvisorio(
+  textoRetorno: string,
+  opcoes: OpcoesEstimativa = {},
+): ApuracaoIndice {
+  const linhas = separarLinhas(textoRetorno);
+  const d = coletarDetalhamento(linhas);
+
+  const linha99 = linhas.find((l) => l.startsWith("99"));
+  const codigoArquivo = linha99 ? texto(linha99, 3, 5) : (opcoes.codigoMunicipio ?? "");
+  const vafEstadualArquivo = linha99 ? num(linha99, 64, 79) : 0;
+  const vafEstadual = vafEstadualArquivo || (opcoes.vafEstadualReferencia ?? 0);
+
+  const fator = opcoes.fatorCalibragem && opcoes.fatorCalibragem > 0 ? opcoes.fatorCalibragem : 1;
+  const vafProprio = Math.round(d.somaVafDeclarado * fator);
+  const valorLiquido =
+    vafProprio + d.somaCreditosExternos + d.somaCreditosMunicipios - d.somaDebitosMunicipios;
+
+  return {
+    tipoIndice: "provisorio",
+    estimado: true,
+    origemVafEstadual: vafEstadualArquivo ? "arquivo" : "referencia",
+    fatorCalibragem: fator,
+    codigoMunicipio: codigoArquivo,
+    anoBase: d.exercicio,
+    periodoInicio: linha99 ? dataSefPonto(texto(linha99, 44, 53)) : null,
+    periodoFim: linha99 ? dataSefPonto(texto(linha99, 54, 63)) : null,
+    vafProprio,
+    creditoExterno: d.somaCreditosExternos,
+    creditoInterno: d.somaCreditosMunicipios,
+    creditoProprio: 0,
+    debito: d.somaDebitosMunicipios,
+    acertoCredito: 0,
+    acertoDebito: 0,
+    valorLiquido,
+    indice: vafEstadual > 0 ? (valorLiquido / vafEstadual) * 100 : 0,
+    vafEstadual,
+    creditoProprioAf: 0,
+    creditoProprioSiare: 0,
+    creditosExternos: d.creditosExternos,
+    creditosPorMunicipio: d.creditosPorMunicipio,
+    debitosPorMunicipio: d.debitosPorMunicipio,
+    contribuintesVaf: d.contribuintesVaf,
+    simei: d.simei,
+    totalDeclaracoes: d.totalDeclaracoes,
+  };
+}
+
 
 /** Conferência: líquido = próprio + créd. externo + créd. interno + créd. próprio − débito ± acertos */
 export function conferirLiquido(a: ApuracaoIndice): { calculado: number; diferenca: number } {
