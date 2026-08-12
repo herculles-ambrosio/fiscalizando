@@ -408,6 +408,63 @@ function NovaApuracao() {
               </div>
             </div>
 
+            {municipioDivergente && (
+              <Alert variant="destructive">
+                <Building2 className="h-4 w-4" />
+                <AlertTitle>Arquivos de outra prefeitura</AlertTitle>
+                <AlertDescription className="space-y-3">
+                  <p>
+                    Os arquivos enviados são de <strong>{rotuloArquivo}</strong>, mas a prefeitura
+                    ativa é <strong>{municipio?.nome}</strong>. A apuração não será gravada em{" "}
+                    {municipio?.nome}.
+                  </p>
+                  {municipioCadastrado ? (
+                    podeTrocar ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => trocar(municipioCadastrado.id)}
+                      >
+                        Trocar para {municipioCadastrado.nome}
+                      </Button>
+                    ) : (
+                      <p className="text-xs">
+                        Essa prefeitura já está cadastrada; peça à consultoria para processar o
+                        arquivo nela.
+                      </p>
+                    )
+                  ) : perfil?.ehSuperadmin ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setNovaPrefeituraNome(municipioArquivo.nome ?? "");
+                        setErroPrefeitura(null);
+                        setDialogoPrefeitura(true);
+                      }}
+                    >
+                      Cadastrar prefeitura {municipioArquivo.nome ?? `código ${codigoArquivo}`}
+                    </Button>
+                  ) : (
+                    <p className="text-xs">
+                      Essa prefeitura ainda não está cadastrada. Solicite o cadastro ao
+                      administrador.
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!municipioDivergente && codigoArquivo && municipio && (
+              <p className="text-xs text-muted-foreground">
+                Arquivos identificados como da prefeitura <strong>{municipio.nome}</strong> (código{" "}
+                {codigoArquivo}).
+              </p>
+            )}
+
+
             {(ativos || retorno) && (
               alertas.length === 0 ? (
                 <Alert>
