@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, FileUp, Printer, TrendingUp, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,11 +23,16 @@ import {
   apurarIndice,
   conferirLiquido,
   csvIndice,
+  estimarIndiceProvisorio,
   formatarIndice,
+  possuiIndice,
   type ApuracaoIndice,
   type LinhaContribuinte,
   type LinhaMunicipio,
 } from "@/lib/vaf/indice";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 
 export const Route = createFileRoute("/_authenticated/indice")({
   head: () => ({
@@ -206,14 +211,35 @@ function TabelaContribuintes({ linhas }: { linhas: LinhaContribuinte[] }) {
   );
 }
 
+const CHAVE_REF = "vaf_indice_referencia";
+
 function PaginaIndice() {
   const { municipio, municipios } = useMunicipioAtivo();
   const { data: config } = useConfiguracao();
   const [arquivo, setArquivo] = useState<File | null>(null);
-  const [apuracao, setApuracao] = useState<ApuracaoIndice | null>(null);
+  const [texto, setTexto] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [vafEstadualRef, setVafEstadualRef] = useState<string>("");
+  const [fator, setFator] = useState<string>("1");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try {
+      const salvo = JSON.parse(localStorage.getItem(CHAVE_REF) ?? "null") as {
+        vafEstadual?: string;
+        fator?: string;
+      } | null;
+      if (salvo?.vafEstadual) setVafEstadualRef(salvo.vafEstadual);
+      if (salvo?.fator) setFator(salvo.fator);
+    } catch {
+      /* ignora */
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(CHAVE_REF, JSON.stringify({ vafEstadual: vafEstadualRef, fator }));
+  }, [vafEstadualRef, fator]);
 
   const nomePorCodigo = useMemo(() => {
     const mapa = new Map(
@@ -222,15 +248,28 @@ function PaginaIndice() {
     return (codigo: string) => mapa.get(codigo.padStart(3, "0")) ?? "—";
   }, [municipios]);
 
+  const apuracao = useMemo<ApuracaoIndice | null>(() => {
+    if (!texto) return null;
+    try {
+      if (possuiIndice(texto)) return apurarIndice(texto);
+      return estimarIndiceProvisorio(texto, {
+        vafEstadualReferencia: Number(vafEstadualRef.replace(/[^0-9]/g, "")) || 0,
+        fatorCalibragem: Number(fator.replace(",", ".")) || 1,
+        codigoMunicipio: municipio?.codigo_sef ? String(municipio.codigo_sef).padStart(3, "0") : "",
+      });
+    } catch {
+      return null;
+    }
+  }, [texto, vafEstadualRef, fator, municipio?.codigo_sef]);
+
   async function selecionar(file: File | null) {
     setArquivo(file);
-    setApuracao(null);
+    setTexto(null);
     setErro(null);
     if (!file) return;
     setCarregando(true);
     try {
-      const texto = decodificarArquivo(await file.arrayBuffer());
-      setApuracao(apurarIndice(texto));
+      setTexto(decodificarArquivo(await file.arrayBuffer()));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     } finally {
@@ -245,17 +284,19 @@ function PaginaIndice() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `indice_${apuracao.tipoIndice}_${apuracao.codigoMunicipio}_${apuracao.anoBase ?? ""}.csv`;
+    a.download = `indice_${apuracao.estimado ? "provisorio_estimado" : apuracao.tipoIndice}_${apuracao.codigoMunicipio}_${apuracao.anoBase ?? ""}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  const conferencia = apuracao ? conferirLiquido(apuracao) : null;
+  const conferencia = apuracao && !apuracao.estimado ? conferirLiquido(apuracao) : null;
   const divergente =
     !!apuracao &&
     !!municipio?.codigo_sef &&
+    !!apuracao.codigoMunicipio &&
     String(municipio.codigo_sef).padStart(3, "0") !== apuracao.codigoMunicipio.padStart(3, "0");
   const mostrarRelatorio = !!apuracao && !divergente;
+
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -263,8 +304,9 @@ function PaginaIndice() {
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">Índice do VAF</h1>
           <p className="text-sm text-muted-foreground">
-            Envie o arquivo de índices da SEF-MG (provisório ou definitivo) para gerar o relatório
-            consolidado do município.
+            Envie o arquivo de índices da SEF-MG (provisório ou definitivo) ou um retorno mensal —
+            neste caso o sistema projeta o índice provisório para previsões.
+
           </p>
         </div>
         <div className="flex gap-2">
@@ -321,6 +363,55 @@ function PaginaIndice() {
         </Alert>
       )}
 
+      {apuracao?.estimado && (
+        <Card className="no-print border-amber-500/40 bg-amber-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Projeção do índice provisório</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Este arquivo de retorno mensal não traz o registro de índice fechado pela SEF-MG
+              (tipo 16/17). O sistema projeta o índice com os dados do próprio arquivo: créditos
+              externos (registros 11/35), créditos e débitos entre municípios (12/13) — exatos — e
+              VAF próprio somado das declarações (registro 10), que é a parte estimada. Use para
+              previsão e estratégia, não como valor oficial.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="vaf-estadual-ref">VAF estadual de referência (R$)</Label>
+                <Input
+                  id="vaf-estadual-ref"
+                  inputMode="numeric"
+                  placeholder="ex.: 925287575000"
+                  value={vafEstadualRef}
+                  onChange={(e) => setVafEstadualRef(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {apuracao.origemVafEstadual === "arquivo"
+                    ? "O arquivo já informa o VAF estadual; a referência é ignorada."
+                    : "Informe o VAF estadual do último índice definitivo para projetar o percentual."}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="fator-calibragem">Fator de calibragem do VAF próprio</Label>
+                <Input
+                  id="fator-calibragem"
+                  inputMode="decimal"
+                  placeholder="1"
+                  value={fator}
+                  onChange={(e) => setFator(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Razão entre o VAF próprio do último definitivo e a soma declarada daquele ano
+                  (ex.: 1,17). Mantenha 1 para não calibrar.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
       {mostrarRelatorio && apuracao && (
         <div id="relatorio-indice" className="space-y-6">
           {/* Cabeçalho institucional */}
@@ -347,8 +438,9 @@ function PaginaIndice() {
                   variant={apuracao.tipoIndice === "definitivo" ? "default" : "secondary"}
                   className="uppercase"
                 >
-                  Índice {apuracao.tipoIndice}
+                  {apuracao.estimado ? "Projeção · provisório" : `Índice ${apuracao.tipoIndice}`}
                 </Badge>
+
                 <p className="mt-2 text-xs text-muted-foreground">
                   Período: {formatarData(apuracao.periodoInicio)} a{" "}
                   {formatarData(apuracao.periodoFim)}
@@ -363,12 +455,20 @@ function PaginaIndice() {
           {/* KPIs */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Kpi
-              rotulo="Índice do município"
+              rotulo={apuracao.estimado ? "Índice projetado" : "Índice do município"}
               valor={formatarIndice(apuracao.indice)}
-              detalhe="Participação percentual no VAF estadual"
+              detalhe={
+                apuracao.estimado
+                  ? "Projeção com base no retorno mensal — não oficial"
+                  : "Participação percentual no VAF estadual"
+              }
               destaque
             />
-            <Kpi rotulo="Valor líquido (VAF municipal)" valor={formatarMoeda(apuracao.valorLiquido)} />
+            <Kpi
+              rotulo={apuracao.estimado ? "Valor líquido projetado" : "Valor líquido (VAF municipal)"}
+              valor={formatarMoeda(apuracao.valorLiquido)}
+            />
+
             <Kpi rotulo="VAF estadual" valor={formatarMoeda(apuracao.vafEstadual)} />
             <Kpi
               rotulo="Declarações no arquivo"
@@ -526,8 +626,10 @@ function PaginaIndice() {
           <CardContent className="py-14 text-center">
             <FileUp className="mx-auto h-8 w-8 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">
-              Selecione o arquivo de índices (ex.: <span className="font-mono">P443RT…​.txt</span>)
-              para apurar VAF A, VAF B, VAF C, valor líquido e índice.
+              Selecione o arquivo de índices ou o retorno mensal (ex.:{" "}
+              <span className="font-mono">P443RT…​.txt</span>) para apurar VAF A, VAF B, VAF C,
+              valor líquido e índice.
+
             </p>
           </CardContent>
         </Card>
