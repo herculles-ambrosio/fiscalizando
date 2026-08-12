@@ -22,6 +22,8 @@ export async function processarApuracao(params: {
   opcoes: OpcoesApuracao;
   tipoRetorno?: TipoRetorno;
   mesReferencia?: number | null;
+  competenciaMes?: number | null;
+  competenciaAno?: number | null;
   onProgresso?: (p: ProgressoEtapa) => void;
 }): Promise<string> {
   const {
@@ -32,9 +34,12 @@ export async function processarApuracao(params: {
     opcoes,
     tipoRetorno = "mensal",
     mesReferencia = null,
+    competenciaMes = null,
+    competenciaAno = null,
     onProgresso,
   } = params;
   const progresso = onProgresso ?? (() => {});
+
 
   progresso({ etapa: "Lendo arquivos", percentual: 5 });
   const [textoAtivos, textoRetorno] = await Promise.all([
