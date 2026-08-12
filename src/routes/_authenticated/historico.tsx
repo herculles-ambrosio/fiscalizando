@@ -31,6 +31,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ROTULO_TIPO_RETORNO_CURTO,
+  TIPOS_RETORNO,
+  rotuloTipoRetorno,
+  type TipoRetorno,
+} from "@/lib/vaf/tipoRetorno";
 import { formatarDataHora } from "@/lib/format";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 
@@ -69,6 +83,11 @@ function Historico() {
       return data;
     },
   });
+
+  const [filtroTipo, setFiltroTipo] = useState<"todos" | TipoRetorno>("todos");
+  const cargas = (data ?? []).filter(
+    (c) => filtroTipo === "todos" || (c.tipo_retorno ?? "mensal") === filtroTipo,
+  );
 
   const queryClient = useQueryClient();
   const [progresso, setProgresso] = useState<ProgressoReprocesso | null>(null);
@@ -146,6 +165,20 @@ function Historico() {
             Apurações processadas pelo município.
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Select value={filtroTipo} onValueChange={(v) => setFiltroTipo(v as typeof filtroTipo)}>
+            <SelectTrigger className="w-48" aria-label="Filtrar por tipo de retorno">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os tipos</SelectItem>
+              {TIPOS_RETORNO.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {ROTULO_TIPO_RETORNO_CURTO[t]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         <Button variant="outline" onClick={reprocessar} disabled={!municipioId || !!progresso}>
           {progresso ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -154,6 +187,7 @@ function Historico() {
           )}
           Atualizar regimes
         </Button>
+        </div>
       </div>
 
       {progresso ? (
@@ -176,7 +210,7 @@ function Historico() {
             <div className="flex h-40 items-center justify-center text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
-          ) : !data?.length ? (
+          ) : !cargas.length ? (
             <p className="p-10 text-center text-sm text-muted-foreground">
               Nenhuma apuração registrada.
             </p>
@@ -185,6 +219,7 @@ function Historico() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Exercício</TableHead>
+                  <TableHead>Tipo de retorno</TableHead>
                   <TableHead>Processada em</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ativos</TableHead>
@@ -196,7 +231,7 @@ function Historico() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((c) => (
+                {cargas.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">
                       <Link
@@ -206,6 +241,22 @@ function Historico() {
                       >
                         {c.exercicio}
                       </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          c.tipo_retorno === "indice_definitivo"
+                            ? "default"
+                            : c.tipo_retorno === "indice_provisorio"
+                              ? "secondary"
+                              : "outline"
+                        }
+                      >
+                        {rotuloTipoRetorno(c.tipo_retorno)}
+                        {c.tipo_retorno === "mensal" && c.mes_referencia
+                          ? ` ${String(c.mes_referencia).padStart(2, "0")}`
+                          : ""}
+                      </Badge>
                     </TableCell>
                     <TableCell>{formatarDataHora(c.criado_em)}</TableCell>
                     <TableCell className="capitalize">{c.status}</TableCell>
