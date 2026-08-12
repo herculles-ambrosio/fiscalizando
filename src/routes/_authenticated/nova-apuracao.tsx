@@ -42,6 +42,7 @@ import {
   MESES_CURTOS,
   anoDoArquivo,
 
+  rotuloMes,
   sugerirTipoRetorno,
   validarCompetencia,
   formatarCompetencia,
