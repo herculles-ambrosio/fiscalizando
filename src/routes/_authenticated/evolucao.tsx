@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, Loader2, Minus } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, HelpCircle, Loader2, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
