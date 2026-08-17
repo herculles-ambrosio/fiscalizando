@@ -242,16 +242,22 @@ export function compararDeclarantes(
     const a = mapaAtual.get(ie);
     const vafBase = b?.vaf ?? 0;
     const vafAtual = a?.vaf ?? 0;
+    const nome = a?.nome ?? b?.nome ?? null;
+    const cnpj = a?.cnpj ?? b?.cnpj ?? null;
     todos.push({
       inscricao_estadual: ie,
-      nome: a?.nome ?? b?.nome ?? null,
-      cnpj: a?.cnpj ?? b?.cnpj ?? null,
+      nome,
+      cnpj,
       vafBase,
       vafAtual,
       diferenca: vafAtual - vafBase,
       variacaoPct: pct(vafBase, vafAtual),
       situacao: !a ? "saiu" : !b ? "entrou" : "manteve",
+      origemNome: (a?.nome ? a.origemNome : b?.nome ? b.origemNome : null) ?? null,
+      origemCnpj: (a?.cnpj ? a.origemCnpj : b?.cnpj ? b.origemCnpj : null) ?? null,
+      cadastroIncompleto: !nome || !cnpj,
     });
+
   }
 
   const porImpacto = (x: MovimentoDeclarante, y: MovimentoDeclarante) =>
