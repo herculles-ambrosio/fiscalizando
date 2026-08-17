@@ -204,8 +204,12 @@ function PaginaEvolucao() {
     setCarregando(alvo);
     try {
       const texto = decodificarArquivo(await file.arrayBuffer());
-      const referencia = Number(vafReferencia.replace(/\./g, "").replace(",", ".")) || undefined;
-      const analise = analisarArquivo(file.name, texto, { vafEstadualReferencia: referencia });
+      const referencia = Number(vafReferencia.replace(/\./g, "").replace(",", "."));
+      const analise = analisarArquivo(
+        file.name,
+        texto,
+        referencia > 0 ? { vafEstadualReferencia: referencia } : {},
+      );
       if (alvo === "base") setBase(analise);
       else setAtual(analise);
     } catch (e) {
