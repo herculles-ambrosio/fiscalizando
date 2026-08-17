@@ -273,23 +273,30 @@ export function compararDeclarantes(
 
 export type MovimentoMunicipio = {
   codigo: string;
+  nome: string | undefined;
   base: number;
   atual: number;
   diferenca: number;
 };
 
 export function compararMunicipios(
-  base: Array<{ codigo: string; valor: number }>,
-  atual: Array<{ codigo: string; valor: number }>,
+  base: Array<{ codigo: string; nome: string | undefined; valor: number }>,
+  atual: Array<{ codigo: string; nome: string | undefined; valor: number }>,
 ): MovimentoMunicipio[] {
-  const mb = new Map(base.map((m) => [m.codigo, m.valor]));
-  const ma = new Map(atual.map((m) => [m.codigo, m.valor]));
+  const mb = new Map(base.map((m) => [m.codigo, m]));
+  const ma = new Map(atual.map((m) => [m.codigo, m]));
   const chaves = new Set([...mb.keys(), ...ma.keys()]);
   return [...chaves]
     .map((codigo) => {
-      const b = mb.get(codigo) ?? 0;
-      const a = ma.get(codigo) ?? 0;
-      return { codigo, base: b, atual: a, diferenca: a - b };
+      const b = mb.get(codigo);
+      const a = ma.get(codigo);
+      return {
+        codigo,
+        nome: a?.nome ?? b?.nome,
+        base: b?.valor ?? 0,
+        atual: a?.valor ?? 0,
+        diferenca: (a?.valor ?? 0) - (b?.valor ?? 0),
+      };
     })
     .sort((x, y) => Math.abs(y.diferenca) - Math.abs(x.diferenca));
 }

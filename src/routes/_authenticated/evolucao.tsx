@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { useMunicipioAtivo, useMunicipios } from "@/hooks/useMunicipio";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
 import { anoDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
@@ -254,10 +254,19 @@ function TabelaMovimentos({
 
 function PaginaEvolucao() {
   const { municipio } = useMunicipioAtivo();
+  const { data: municipios } = useMunicipios();
   const [base, setBase] = useState<ArquivoEvolucao | null>(null);
   const [atual, setAtual] = useState<ArquivoEvolucao | null>(null);
   const [carregando, setCarregando] = useState<"base" | "atual" | null>(null);
   const [vafReferencia, setVafReferencia] = useState("");
+
+  const mapaMunicipiosPorCodigo = useMemo(() => {
+    const mapa = new Map<string, string>();
+    for (const m of municipios ?? []) {
+      if (m.codigo_sef) mapa.set(m.codigo_sef, m.nome);
+    }
+    return mapa;
+  }, [municipios]);
 
   async function carregar(file: File, alvo: "base" | "atual") {
     setCarregando(alvo);
@@ -289,16 +298,34 @@ function PaginaEvolucao() {
   const creditosMunicipios = useMemo(
     () =>
       base && atual
-        ? compararMunicipios(base.apuracao.creditosPorMunicipio, atual.apuracao.creditosPorMunicipio)
+        ? compararMunicipios(
+            base.apuracao.creditosPorMunicipio.map((m) => ({
+              ...m,
+              nome: mapaMunicipiosPorCodigo.get(m.codigo),
+            })),
+            atual.apuracao.creditosPorMunicipio.map((m) => ({
+              ...m,
+              nome: mapaMunicipiosPorCodigo.get(m.codigo),
+            })),
+          )
         : [],
-    [base, atual],
+    [base, atual, mapaMunicipiosPorCodigo],
   );
   const debitosMunicipios = useMemo(
     () =>
       base && atual
-        ? compararMunicipios(base.apuracao.debitosPorMunicipio, atual.apuracao.debitosPorMunicipio)
+        ? compararMunicipios(
+            base.apuracao.debitosPorMunicipio.map((m) => ({
+              ...m,
+              nome: mapaMunicipiosPorCodigo.get(m.codigo),
+            })),
+            atual.apuracao.debitosPorMunicipio.map((m) => ({
+              ...m,
+              nome: mapaMunicipiosPorCodigo.get(m.codigo),
+            })),
+          )
         : [],
-    [base, atual],
+    [base, atual, mapaMunicipiosPorCodigo],
   );
 
   function baixarCsv() {
@@ -643,6 +670,7 @@ function PaginaEvolucao() {
                         <TableHeader>
                           <TableRow>
                             <TableHead className="w-20">Código</TableHead>
+                            <TableHead>Município</TableHead>
                             <TableHead className="text-right">Base</TableHead>
                             <TableHead className="text-right">Atual</TableHead>
                             <TableHead className="text-right">Diferença</TableHead>
@@ -652,6 +680,11 @@ function PaginaEvolucao() {
                           {bloco.linhas.slice(0, 100).map((m) => (
                             <TableRow key={m.codigo}>
                               <TableCell className="font-mono text-xs">{m.codigo}</TableCell>
+                              <TableCell className="max-w-[12rem] truncate text-sm">
+                                {m.nome ?? (
+                                  <span className="text-muted-foreground italic">Não cadastrado</span>
+                                )}
+                              </TableCell>
                               <TableCell className="text-right font-mono">
                                 {formatarMoeda(m.base)}
                               </TableCell>
@@ -667,7 +700,7 @@ function PaginaEvolucao() {
                           ))}
                           {bloco.linhas.length === 0 && (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center text-muted-foreground">
+                              <TableCell colSpan={5} className="text-center text-muted-foreground">
                                 Nenhum registro.
                               </TableCell>
                             </TableRow>
