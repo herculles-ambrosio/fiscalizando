@@ -11,6 +11,7 @@ import {
   LogOut,
   Percent,
   Settings,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
