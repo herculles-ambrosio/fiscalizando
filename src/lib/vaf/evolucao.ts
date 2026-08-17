@@ -40,42 +40,62 @@ export type Declarante = {
 /** Declarantes do arquivo (registro 10), com nome/CNPJ herdados dos registros 11/35/40. */
 export function extrairDeclarantes(textoRetorno: string): Declarante[] {
   const linhas = separarLinhas(textoRetorno);
+  const chave = (v: string) => v.replace(/[^0-9]/g, "").replace(/^0+/, "");
 
-  const nomes = new Map<string, { nome: string | null; cnpj: string | null }>();
+  const nomes = new Map<string, string>();
+  const cnpjs = new Map<string, string>();
+
   for (const l of linhas) {
     const tipo = l.slice(0, 2);
+    // Registro 01 (identificação da DAMEF): nome do contribuinte
+    if (tipo === "01") {
+      const ie = chave(txt(l, 6, 18));
+      const nome = txt(l, 23, 57);
+      if (ie && nome && !nomes.has(ie)) nomes.set(ie, nome);
+      continue;
+    }
+    // Registros de VAF por município / SIMEI: nome e CNPJ
     if (tipo === "11" || tipo === "35" || tipo === "40") {
-      const ie = txt(l, tipo === "40" ? 19 : 22, 34).replace(/^0+/, "");
+      const ie = chave(txt(l, tipo === "40" ? 19 : 22, 34));
       if (!ie) continue;
-      const nome = txt(l, 38, 72) || null;
-      const cnpj = txt(l, 96, 109).replace(/[^0-9]/g, "") || null;
-      if (!nomes.has(ie)) nomes.set(ie, { nome, cnpj });
+      const nome = txt(l, 38, 72);
+      const cnpj = txt(l, 96, 109).replace(/[^0-9]/g, "");
+      if (nome && !nomes.has(ie)) nomes.set(ie, nome);
+      if (cnpj && Number(cnpj) > 0 && !cnpjs.has(ie)) cnpjs.set(ie, cnpj.padStart(14, "0"));
     }
   }
 
   const mapa = new Map<string, Declarante>();
   for (const l of linhas) {
     if (l.slice(0, 2) !== "10") continue;
-    const ie = txt(l, 6, 18).replace(/^0+/, "");
+    const ie = chave(txt(l, 6, 18));
     if (!ie) continue;
     const sinal = l[114] === "-" ? -1 : 1;
     const vaf = sinal * num(l, 116, 129);
     const ex = num(l, 19, 22);
-    const extra = nomes.get(ie);
+    // Registro 10, campo 130-143: CNPJ/CPF do declarante
+    const doc = txt(l, 130, 143).replace(/[^0-9]/g, "");
+    if (doc && Number(doc) > 0 && !cnpjs.has(ie)) cnpjs.set(ie, doc.padStart(14, "0"));
     const existente = mapa.get(ie);
     if (existente) {
       existente.vaf += vaf;
     } else {
       mapa.set(ie, {
         inscricao_estadual: ie,
-        cnpj: extra?.cnpj ?? null,
-        nome: extra?.nome ?? null,
+        cnpj: null,
+        nome: null,
         exercicio: ex > 1990 ? ex : null,
         data_entrega: dataDdMmAaaa(txt(l, 23, 30)),
         vaf,
       });
     }
   }
+
+  for (const d of mapa.values()) {
+    d.nome = nomes.get(d.inscricao_estadual) ?? null;
+    d.cnpj = cnpjs.get(d.inscricao_estadual) ?? null;
+  }
+
 
   return [...mapa.values()].sort((a, b) => b.vaf - a.vaf);
 }
