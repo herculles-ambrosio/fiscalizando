@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, Loader2, Minus } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, HelpCircle, Loader2, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
@@ -413,9 +414,32 @@ function PaginaEvolucao() {
             </Card>
             <Card>
               <CardContent className="space-y-1 p-4">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Valor líquido do arquivo mensal comparado
-                </p>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground cursor-help">
+                        Valor líquido do arquivo mensal comparado
+                        <HelpCircle className="h-3 w-3" />
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <div className="space-y-1.5">
+                        <p>
+                          <strong>Valor líquido</strong> é o saldo apurado no arquivo atual.
+                        </p>
+                        <p>
+                          Para arquivos com índice fechado (registro 16/17), o valor vem diretamente do arquivo da SEF-MG.
+                        </p>
+                        <p>
+                          Para retornos mensais sem índice fechado, o sistema projeta: VAF próprio (soma dos registros 10 × fator de calibragem) + crédito externo (11/35) + crédito interno (12) − débito (13).
+                        </p>
+                        <p>
+                          <strong>Diferença</strong> = atual − base. <strong>Variação %</strong> = (atual − base) ÷ |base| × 100.
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <p className="break-words font-display text-lg font-semibold">
                   {formatarMoeda(atual.apuracao.valorLiquido)}
                 </p>
