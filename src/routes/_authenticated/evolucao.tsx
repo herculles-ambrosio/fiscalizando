@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
