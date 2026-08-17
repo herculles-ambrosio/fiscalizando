@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowDownRight, ArrowUpRight, Download, FileUp, Loader2, Minus } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, Loader2, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
   csvEvolucao,
   linhasEvolucao,
   memoriaCalculo,
+  rotuloOrigem,
   type ArquivoEvolucao,
   type LinhaEvolucao,
   type MovimentoDeclarante,
@@ -139,6 +140,27 @@ function CaixaArquivo({
   );
 }
 
+function MarcaCadastro({ d }: { d: MovimentoDeclarante }) {
+  if (!d.cadastroIncompleto) return null;
+  const faltas = [!d.nome ? "sem nome" : null, !d.cnpj ? "sem CNPJ" : null]
+    .filter(Boolean)
+    .join(" e ");
+  const detalhe = [
+    `Nome: ${d.nome ? rotuloOrigem(d.origemNome) : "não localizado em 01/11/35/40"}`,
+    `CNPJ: ${d.cnpj ? rotuloOrigem(d.origemCnpj) : "não localizado em 10/11/35/40"}`,
+  ].join(" · ");
+  return (
+    <Badge
+      variant="outline"
+      title={detalhe}
+      className="gap-1 border-amber-500/50 text-amber-600 dark:text-amber-400"
+    >
+      <AlertTriangle className="h-3 w-3" />
+      {faltas}
+    </Badge>
+  );
+}
+
 function TabelaMovimentos({
   linhas,
   colunaBase,
@@ -150,48 +172,84 @@ function TabelaMovimentos({
   colunaAtual: string;
   vazio: string;
 }) {
+  const [soIncompletos, setSoIncompletos] = useState(false);
+  const incompletos = useMemo(() => linhas.filter((d) => d.cadastroIncompleto).length, [linhas]);
+  const visiveis = soIncompletos ? linhas.filter((d) => d.cadastroIncompleto) : linhas;
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Inscrição estadual</TableHead>
-          <TableHead>CNPJ</TableHead>
-          <TableHead>Contribuinte</TableHead>
-          <TableHead className="text-right">{colunaBase}</TableHead>
-          <TableHead className="text-right">{colunaAtual}</TableHead>
-          <TableHead className="text-right">Diferença</TableHead>
-          <TableHead className="w-28 text-right">Variação</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {linhas.map((d) => (
-          <TableRow key={d.inscricao_estadual}>
-            <TableCell className="font-mono text-xs">{d.inscricao_estadual}</TableCell>
-            <TableCell className="font-mono text-xs">{formatarCnpj(d.cnpj)}</TableCell>
-            <TableCell className="max-w-[20rem] truncate">{d.nome ?? "—"}</TableCell>
-            <TableCell className="text-right font-mono">{formatarMoeda(d.vafBase)}</TableCell>
-            <TableCell className="text-right font-mono">{formatarMoeda(d.vafAtual)}</TableCell>
-            <TableCell
-              className={`text-right font-mono ${d.diferenca < 0 ? "text-destructive" : d.diferenca > 0 ? "text-emerald-600" : ""}`}
-            >
-              {formatarMoeda(d.diferenca)}
-            </TableCell>
-            <TableCell className="text-right">
-              <Variacao pct={d.variacaoPct} />
-            </TableCell>
-          </TableRow>
-        ))}
-        {linhas.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={7} className="text-center text-muted-foreground">
-              {vazio}
-            </TableCell>
-          </TableRow>
+    <div>
+      <div className="flex flex-wrap items-center gap-2 border-b border-border p-3">
+        <Button
+          size="sm"
+          variant={soIncompletos ? "default" : "outline"}
+          onClick={() => setSoIncompletos((v) => !v)}
+          disabled={incompletos === 0}
+        >
+          <AlertTriangle className="h-3.5 w-3.5" />
+          Sem CNPJ ou sem nome
+          <Badge variant="secondary" className="ml-1">
+            {incompletos}
+          </Badge>
+        </Button>
+        {soIncompletos && (
+          <span className="text-xs text-muted-foreground">
+            Exibindo apenas contribuintes cujo nome/CNPJ não foi localizado nos registros do arquivo.
+          </span>
         )}
-      </TableBody>
-    </Table>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Inscrição estadual</TableHead>
+            <TableHead>CNPJ</TableHead>
+            <TableHead>Contribuinte</TableHead>
+            <TableHead>Origem do cadastro</TableHead>
+            <TableHead className="text-right">{colunaBase}</TableHead>
+            <TableHead className="text-right">{colunaAtual}</TableHead>
+            <TableHead className="text-right">Diferença</TableHead>
+            <TableHead className="w-28 text-right">Variação</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {visiveis.map((d) => (
+            <TableRow key={d.inscricao_estadual} className={d.cadastroIncompleto ? "bg-amber-500/5" : undefined}>
+              <TableCell className="font-mono text-xs">{d.inscricao_estadual}</TableCell>
+              <TableCell className="font-mono text-xs">{formatarCnpj(d.cnpj)}</TableCell>
+              <TableCell className="max-w-[20rem] truncate">{d.nome ?? "—"}</TableCell>
+              <TableCell className="text-xs text-muted-foreground">
+                {d.cadastroIncompleto ? (
+                  <MarcaCadastro d={d} />
+                ) : (
+                  <span title={`Nome: ${rotuloOrigem(d.origemNome)} · CNPJ: ${rotuloOrigem(d.origemCnpj)}`}>
+                    {d.origemNome ?? "—"}/{d.origemCnpj ?? "—"}
+                  </span>
+                )}
+              </TableCell>
+              <TableCell className="text-right font-mono">{formatarMoeda(d.vafBase)}</TableCell>
+              <TableCell className="text-right font-mono">{formatarMoeda(d.vafAtual)}</TableCell>
+              <TableCell
+                className={`text-right font-mono ${d.diferenca < 0 ? "text-destructive" : d.diferenca > 0 ? "text-emerald-600" : ""}`}
+              >
+                {formatarMoeda(d.diferenca)}
+              </TableCell>
+              <TableCell className="text-right">
+                <Variacao pct={d.variacaoPct} />
+              </TableCell>
+            </TableRow>
+          ))}
+          {visiveis.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center text-muted-foreground">
+                {soIncompletos ? "Nenhum contribuinte com cadastro incompleto." : vazio}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
+
 
 function PaginaEvolucao() {
   const { municipio } = useMunicipioAtivo();
