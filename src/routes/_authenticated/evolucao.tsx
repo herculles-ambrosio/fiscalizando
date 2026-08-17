@@ -254,10 +254,19 @@ function TabelaMovimentos({
 
 function PaginaEvolucao() {
   const { municipio } = useMunicipioAtivo();
+  const { data: municipios } = useMunicipios();
   const [base, setBase] = useState<ArquivoEvolucao | null>(null);
   const [atual, setAtual] = useState<ArquivoEvolucao | null>(null);
   const [carregando, setCarregando] = useState<"base" | "atual" | null>(null);
   const [vafReferencia, setVafReferencia] = useState("");
+
+  const mapaMunicipiosPorCodigo = useMemo(() => {
+    const mapa = new Map<string, string>();
+    for (const m of municipios ?? []) {
+      if (m.codigo_sef) mapa.set(m.codigo_sef, m.nome);
+    }
+    return mapa;
+  }, [municipios]);
 
   async function carregar(file: File, alvo: "base" | "atual") {
     setCarregando(alvo);
@@ -289,16 +298,34 @@ function PaginaEvolucao() {
   const creditosMunicipios = useMemo(
     () =>
       base && atual
-        ? compararMunicipios(base.apuracao.creditosPorMunicipio, atual.apuracao.creditosPorMunicipio)
+        ? compararMunicipios(
+            base.apuracao.creditosPorMunicipio.map((m) => ({
+              ...m,
+              nome: mapaMunicipiosPorCodigo.get(m.codigo),
+            })),
+            atual.apuracao.creditosPorMunicipio.map((m) => ({
+              ...m,
+              nome: mapaMunicipiosPorCodigo.get(m.codigo),
+            })),
+          )
         : [],
-    [base, atual],
+    [base, atual, mapaMunicipiosPorCodigo],
   );
   const debitosMunicipios = useMemo(
     () =>
       base && atual
-        ? compararMunicipios(base.apuracao.debitosPorMunicipio, atual.apuracao.debitosPorMunicipio)
+        ? compararMunicipios(
+            base.apuracao.debitosPorMunicipio.map((m) => ({
+              ...m,
+              nome: mapaMunicipiosPorCodigo.get(m.codigo),
+            })),
+            atual.apuracao.debitosPorMunicipio.map((m) => ({
+              ...m,
+              nome: mapaMunicipiosPorCodigo.get(m.codigo),
+            })),
+          )
         : [],
-    [base, atual],
+    [base, atual, mapaMunicipiosPorCodigo],
   );
 
   function baixarCsv() {
