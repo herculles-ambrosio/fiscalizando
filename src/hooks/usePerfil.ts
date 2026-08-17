@@ -38,9 +38,15 @@ export function usePerfil() {
   return useQuery({
     queryKey: ["perfil"],
     queryFn: async (): Promise<PerfilCompleto | null> => {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: erroUsuario } = await supabase.auth.getUser();
+      if (erroUsuario) {
+        // sessão inválida/expirada: limpa para forçar novo login
+        await supabase.auth.signOut();
+        return null;
+      }
       const user = userData.user;
       if (!user) return null;
+
       const { data, error } = await supabase
         .from("perfis")
         .select("id, nome, papel, municipio_id, precisa_trocar_senha")
