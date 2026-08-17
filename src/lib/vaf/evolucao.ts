@@ -212,7 +212,14 @@ export type MovimentoDeclarante = {
   diferenca: number;
   variacaoPct: number | null;
   situacao: "saiu" | "entrou" | "manteve";
+  /** registro de onde o nome foi aproveitado */
+  origemNome: OrigemDado;
+  /** registro de onde o CNPJ foi aproveitado */
+  origemCnpj: OrigemDado;
+  /** true quando faltou nome e/ou CNPJ em todos os registros do arquivo */
+  cadastroIncompleto: boolean;
 };
+
 
 export type ComparacaoDeclarantes = {
   sairam: MovimentoDeclarante[];
