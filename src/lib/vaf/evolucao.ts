@@ -27,6 +27,26 @@ function dataDdMmAaaa(valor: string): string | null {
   return `${d.slice(4, 8)}-${d.slice(2, 4)}-${d.slice(0, 2)}`;
 }
 
+/** Registro do arquivo de onde o dado foi aproveitado. */
+export type OrigemDado = "01" | "11" | "35" | "40" | "10" | null;
+
+export const rotuloOrigem = (o: OrigemDado): string => {
+  switch (o) {
+    case "01":
+      return "Registro 01 (identificação DAMEF)";
+    case "10":
+      return "Registro 10 (declaração de VAF)";
+    case "11":
+      return "Registro 11 (VAF por município)";
+    case "35":
+      return "Registro 35 (acertos/complemento)";
+    case "40":
+      return "Registro 40 (Simples Nacional / SIMEI)";
+    default:
+      return "Não encontrado no arquivo";
+  }
+};
+
 export type Declarante = {
   inscricao_estadual: string;
   cnpj: string | null;
@@ -35,15 +55,19 @@ export type Declarante = {
   data_entrega: string | null;
   /** VAF declarado (registro 10, com sinal) */
   vaf: number;
+  /** registro usado para o nome (null = não localizado) */
+  origemNome: OrigemDado;
+  /** registro usado para o CNPJ (null = não localizado) */
+  origemCnpj: OrigemDado;
 };
 
-/** Declarantes do arquivo (registro 10), com nome/CNPJ herdados dos registros 11/35/40. */
+/** Declarantes do arquivo (registro 10), com nome/CNPJ herdados dos registros 01/10/11/35/40. */
 export function extrairDeclarantes(textoRetorno: string): Declarante[] {
   const linhas = separarLinhas(textoRetorno);
   const chave = (v: string) => v.replace(/[^0-9]/g, "").replace(/^0+/, "");
 
-  const nomes = new Map<string, string>();
-  const cnpjs = new Map<string, string>();
+  const nomes = new Map<string, { valor: string; origem: OrigemDado }>();
+  const cnpjs = new Map<string, { valor: string; origem: OrigemDado }>();
 
   for (const l of linhas) {
     const tipo = l.slice(0, 2);
@@ -51,7 +75,7 @@ export function extrairDeclarantes(textoRetorno: string): Declarante[] {
     if (tipo === "01") {
       const ie = chave(txt(l, 6, 18));
       const nome = txt(l, 23, 57);
-      if (ie && nome && !nomes.has(ie)) nomes.set(ie, nome);
+      if (ie && nome && !nomes.has(ie)) nomes.set(ie, { valor: nome, origem: "01" });
       continue;
     }
     // Registros de VAF por município / SIMEI: nome e CNPJ
@@ -60,8 +84,9 @@ export function extrairDeclarantes(textoRetorno: string): Declarante[] {
       if (!ie) continue;
       const nome = txt(l, 38, 72);
       const cnpj = txt(l, 96, 109).replace(/[^0-9]/g, "");
-      if (nome && !nomes.has(ie)) nomes.set(ie, nome);
-      if (cnpj && Number(cnpj) > 0 && !cnpjs.has(ie)) cnpjs.set(ie, cnpj.padStart(14, "0"));
+      if (nome && !nomes.has(ie)) nomes.set(ie, { valor: nome, origem: tipo as OrigemDado });
+      if (cnpj && Number(cnpj) > 0 && !cnpjs.has(ie))
+        cnpjs.set(ie, { valor: cnpj.padStart(14, "0"), origem: tipo as OrigemDado });
     }
   }
 
@@ -75,7 +100,8 @@ export function extrairDeclarantes(textoRetorno: string): Declarante[] {
     const ex = num(l, 19, 22);
     // Registro 10, campo 130-143: CNPJ/CPF do declarante
     const doc = txt(l, 130, 143).replace(/[^0-9]/g, "");
-    if (doc && Number(doc) > 0 && !cnpjs.has(ie)) cnpjs.set(ie, doc.padStart(14, "0"));
+    if (doc && Number(doc) > 0 && !cnpjs.has(ie))
+      cnpjs.set(ie, { valor: doc.padStart(14, "0"), origem: "10" });
     const existente = mapa.get(ie);
     if (existente) {
       existente.vaf += vaf;
@@ -87,18 +113,24 @@ export function extrairDeclarantes(textoRetorno: string): Declarante[] {
         exercicio: ex > 1990 ? ex : null,
         data_entrega: dataDdMmAaaa(txt(l, 23, 30)),
         vaf,
+        origemNome: null,
+        origemCnpj: null,
       });
     }
   }
 
   for (const d of mapa.values()) {
-    d.nome = nomes.get(d.inscricao_estadual) ?? null;
-    d.cnpj = cnpjs.get(d.inscricao_estadual) ?? null;
+    const n = nomes.get(d.inscricao_estadual);
+    const c = cnpjs.get(d.inscricao_estadual);
+    d.nome = n?.valor ?? null;
+    d.origemNome = n?.origem ?? null;
+    d.cnpj = c?.valor ?? null;
+    d.origemCnpj = c?.origem ?? null;
   }
-
 
   return [...mapa.values()].sort((a, b) => b.vaf - a.vaf);
 }
+
 
 export type ArquivoEvolucao = {
   nome: string;
