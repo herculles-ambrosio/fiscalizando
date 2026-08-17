@@ -331,7 +331,7 @@ export function csvEvolucao(
       l.variacaoPct === null ? "" : br(l.variacaoPct),
     ]),
     [],
-    ["Situacao", "IE", "CNPJ", "Contribuinte", "VAF base", "VAF atual", "Diferenca"],
+    ["Situacao", "IE", "CNPJ", "Contribuinte", "VAF base", "VAF atual", "Diferenca", "Cadastro", "Origem nome", "Origem CNPJ"],
     ...declarantes.todos.map((d) => [
       d.situacao === "saiu" ? "Deixou de declarar" : d.situacao === "entrou" ? "Novo declarante" : "Manteve",
       d.inscricao_estadual,
@@ -340,7 +340,13 @@ export function csvEvolucao(
       br(d.vafBase),
       br(d.vafAtual),
       br(d.diferenca),
+      d.cadastroIncompleto
+        ? [!d.nome ? "sem nome" : null, !d.cnpj ? "sem CNPJ" : null].filter(Boolean).join(" e ")
+        : "completo",
+      rotuloOrigem(d.origemNome),
+      rotuloOrigem(d.origemCnpj),
     ]),
+
   ];
   return out.map((linha) => linha.map((c) => esc(String(c))).join(";")).join("\n");
 }
