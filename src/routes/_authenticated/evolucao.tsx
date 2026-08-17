@@ -667,9 +667,10 @@ function PaginaEvolucao() {
                     </CardHeader>
                     <CardContent className="p-0">
                       <Table>
-                        <TableHeader>
+                      <TableHeader>
                           <TableRow>
                             <TableHead className="w-20">Código</TableHead>
+                            <TableHead>Município</TableHead>
                             <TableHead className="text-right">Base</TableHead>
                             <TableHead className="text-right">Atual</TableHead>
                             <TableHead className="text-right">Diferença</TableHead>
@@ -679,6 +680,11 @@ function PaginaEvolucao() {
                           {bloco.linhas.slice(0, 100).map((m) => (
                             <TableRow key={m.codigo}>
                               <TableCell className="font-mono text-xs">{m.codigo}</TableCell>
+                              <TableCell className="max-w-[12rem] truncate text-sm">
+                                {m.nome ?? (
+                                  <span className="text-muted-foreground italic">Não cadastrado</span>
+                                )}
+                              </TableCell>
                               <TableCell className="text-right font-mono">
                                 {formatarMoeda(m.base)}
                               </TableCell>
@@ -694,7 +700,7 @@ function PaginaEvolucao() {
                           ))}
                           {bloco.linhas.length === 0 && (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center text-muted-foreground">
+                              <TableCell colSpan={5} className="text-center text-muted-foreground">
                                 Nenhum registro.
                               </TableCell>
                             </TableRow>
