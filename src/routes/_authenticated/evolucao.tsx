@@ -384,7 +384,7 @@ function PaginaEvolucao() {
 
       {base && atual && declarantes && (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <Card>
               <CardContent className="space-y-1 p-4">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -408,6 +408,32 @@ function PaginaEvolucao() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   VAF que entrou: {formatarMoeda(ganhoEntradas)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="space-y-1 p-4">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Valor líquido do arquivo mensal comparado
+                </p>
+                <p className="break-words font-display text-lg font-semibold">
+                  {formatarMoeda(atual.apuracao.valorLiquido)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Base: {formatarMoeda(base.apuracao.valorLiquido)}
+                </p>
+                <p className="text-xs">
+                  <span className="mr-2">
+                    Diferença: {formatarMoeda(
+                      (indicadores.find((l) => l.chave === "valorLiquido")?.atual ?? 0) -
+                      (indicadores.find((l) => l.chave === "valorLiquido")?.base ?? 0)
+                    )}
+                  </span>
+                  <Variacao
+                    pct={
+                      indicadores.find((l) => l.chave === "valorLiquido")?.variacaoPct ?? null
+                    }
+                  />
                 </p>
               </CardContent>
             </Card>
