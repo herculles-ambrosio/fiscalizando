@@ -445,14 +445,14 @@ function PaginaEvolucao() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground cursor-help">
-                        Valor líquido do arquivo mensal comparado
+                        Valor líquido · base
                         <HelpCircle className="h-3 w-3" />
                       </p>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs">
                       <div className="space-y-1.5">
                         <p>
-                          <strong>Valor líquido</strong> é o saldo apurado no arquivo atual.
+                          <strong>Valor líquido</strong> é o saldo apurado no arquivo base ({rotuloArquivo(base)}).
                         </p>
                         <p>
                           Para arquivos com índice fechado (registro 16/17), o valor vem diretamente do arquivo da SEF-MG.
@@ -460,8 +460,35 @@ function PaginaEvolucao() {
                         <p>
                           Para retornos mensais sem índice fechado, o sistema projeta: VAF próprio (soma dos registros 10 × fator de calibragem) + crédito externo (11/35) + crédito interno (12) − débito (13).
                         </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <p className="break-words font-display text-lg font-semibold">
+                  {formatarMoeda(base.apuracao.valorLiquido)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Arquivo: {rotuloArquivo(base)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="space-y-1 p-4">
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground cursor-help">
+                        Valor líquido · comparado
+                        <HelpCircle className="h-3 w-3" />
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <div className="space-y-1.5">
                         <p>
-                          <strong>Diferença</strong> = atual − base. <strong>Variação %</strong> = (atual − base) ÷ |base| × 100.
+                          <strong>Valor líquido</strong> do arquivo comparado ({rotuloArquivo(atual)}).
+                        </p>
+                        <p>
+                          <strong>Diferença</strong> = comparado − base. <strong>Variação %</strong> = (comparado − base) ÷ |base| × 100.
                         </p>
                       </div>
                     </TooltipContent>
@@ -471,13 +498,12 @@ function PaginaEvolucao() {
                   {formatarMoeda(atual.apuracao.valorLiquido)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Base: {formatarMoeda(base.apuracao.valorLiquido)}
+                  Arquivo: {rotuloArquivo(atual)}
                 </p>
                 <p className="text-xs">
                   <span className="mr-2">
                     Diferença: {formatarMoeda(
-                      (indicadores.find((l) => l.chave === "valorLiquido")?.atual ?? 0) -
-                      (indicadores.find((l) => l.chave === "valorLiquido")?.base ?? 0)
+                      atual.apuracao.valorLiquido - base.apuracao.valorLiquido
                     )}
                   </span>
                   <Variacao
@@ -488,23 +514,7 @@ function PaginaEvolucao() {
                 </p>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="space-y-1 p-4">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Valor líquido
-                </p>
-                <p className="break-words font-display text-lg font-semibold">
-                  {formatarMoeda(atual.apuracao.valorLiquido)}
-                </p>
-                <p className="text-xs">
-                  <Variacao
-                    pct={
-                      indicadores.find((l) => l.chave === "valorLiquido")?.variacaoPct ?? null
-                    }
-                  />
-                </p>
-              </CardContent>
-            </Card>
+
             <Card>
               <CardContent className="space-y-1 p-4">
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
