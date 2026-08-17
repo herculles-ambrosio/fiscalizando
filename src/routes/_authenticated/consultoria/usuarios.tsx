@@ -37,13 +37,13 @@ import {
 export const Route = createFileRoute("/_authenticated/consultoria/usuarios")({
   head: () => ({
     meta: [
-      { title: "Usuários e acessos | Apuração VAF" },
+      { title: "Usuários e acessos | Apura VAF 2.0" },
       {
         name: "description",
         content:
           "Crie contas da consultoria e das prefeituras, defina senhas provisórias e controle quem acessa cada município.",
       },
-      { property: "og:title", content: "Usuários e acessos | Apuração VAF" },
+      { property: "og:title", content: "Usuários e acessos | Apura VAF 2.0" },
       {
         property: "og:description",
         content: "Gestão de contas da consultoria e das prefeituras atendidas.",

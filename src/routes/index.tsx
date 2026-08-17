@@ -9,13 +9,13 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Apuração VAF | Acesso das prefeituras" },
+      { title: "Apura VAF 2.0 | Acesso das prefeituras" },
       {
         name: "description",
         content:
           "Sistema de apuração do Valor Adicionado Fiscal (VAF) para prefeituras de Minas Gerais: omissos, zerados, fora do prazo e discrepantes.",
       },
-      { property: "og:title", content: "Apuração VAF | Acesso das prefeituras" },
+      { property: "og:title", content: "Apura VAF 2.0 | Acesso das prefeituras" },
       {
         property: "og:description",
         content:
@@ -59,7 +59,7 @@ function Login() {
       <div className="hidden flex-col justify-between bg-sidebar p-12 text-sidebar-foreground lg:flex">
         <div className="flex items-center gap-2">
           <Landmark className="h-5 w-5 text-sidebar-primary" />
-          <span className="font-display text-sm font-semibold">Apuração VAF</span>
+          <span className="font-display text-sm font-semibold">Apura VAF 2.0</span>
         </div>
         <div className="max-w-md">
           <h1 className="font-display text-4xl leading-tight font-semibold">

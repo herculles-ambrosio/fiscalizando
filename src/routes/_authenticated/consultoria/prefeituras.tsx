@@ -30,13 +30,13 @@ import {
 export const Route = createFileRoute("/_authenticated/consultoria/prefeituras")({
   head: () => ({
     meta: [
-      { title: "Carteira de prefeituras | Apuração VAF" },
+      { title: "Carteira de prefeituras | Apura VAF 2.0" },
       {
         name: "description",
         content:
           "Carteira de prefeituras atendidas pela consultoria, com a situação da última apuração VAF de cada município.",
       },
-      { property: "og:title", content: "Carteira de prefeituras | Apuração VAF" },
+      { property: "og:title", content: "Carteira de prefeituras | Apura VAF 2.0" },
       {
         property: "og:description",
         content: "Acompanhe todas as prefeituras atendidas e a última apuração VAF de cada uma.",
