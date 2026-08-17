@@ -12,12 +12,12 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/_authenticated/trocar-senha")({
   head: () => ({
     meta: [
-      { title: "Trocar senha | Apuração VAF" },
+      { title: "Trocar senha | Apura VAF 2.0" },
       {
         name: "description",
         content: "Defina uma nova senha pessoal para acessar o sistema de apuração VAF.",
       },
-      { property: "og:title", content: "Trocar senha | Apuração VAF" },
+      { property: "og:title", content: "Trocar senha | Apura VAF 2.0" },
       { property: "og:description", content: "Defina sua senha pessoal de acesso ao sistema." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
