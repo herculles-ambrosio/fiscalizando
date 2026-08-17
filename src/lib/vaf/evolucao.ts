@@ -273,7 +273,7 @@ export function compararDeclarantes(
 
 export type MovimentoMunicipio = {
   codigo: string;
-  nome?: string;
+  nome: string | undefined;
   base: number;
   atual: number;
   diferenca: number;
