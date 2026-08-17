@@ -11,6 +11,7 @@ import {
   LogOut,
   Percent,
   Settings,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ const NAV_BASE = [
   { to: "/nova-apuracao", rotulo: "Nova apuração", icone: FileUp },
   { to: "/historico", rotulo: "Apurações Realizadas", icone: History },
   { to: "/comparacao", rotulo: "Comparar apurações", icone: GitCompareArrows },
+  { to: "/evolucao", rotulo: "Evolução do VAF", icone: TrendingUp },
   { to: "/indice", rotulo: "Índice do VAF", icone: Percent },
   { to: "/modelos", rotulo: "Modelos de ofício", icone: FileSignature },
   { to: "/emissoes", rotulo: "Ofícios emitidos", icone: FileClock },
