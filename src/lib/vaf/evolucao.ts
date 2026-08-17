@@ -280,8 +280,8 @@ export type MovimentoMunicipio = {
 };
 
 export function compararMunicipios(
-  base: Array<{ codigo: string; nome?: string; valor: number }>,
-  atual: Array<{ codigo: string; nome?: string; valor: number }>,
+  base: Array<{ codigo: string; nome: string | undefined; valor: number }>,
+  atual: Array<{ codigo: string; nome: string | undefined; valor: number }>,
 ): MovimentoMunicipio[] {
   const mb = new Map(base.map((m) => [m.codigo, m]));
   const ma = new Map(atual.map((m) => [m.codigo, m]));
