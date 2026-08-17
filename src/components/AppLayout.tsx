@@ -73,7 +73,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-2 px-2">
           <Landmark className="h-5 w-5 text-sidebar-primary" />
           <div>
-            <p className="font-display text-sm font-semibold tracking-tight">Apuração VAF</p>
+            <p className="font-display text-sm font-semibold tracking-tight">Apura VAF 2.0</p>
             <p className="text-xs text-sidebar-foreground/60">
               {perfil?.ehConsultoria ? "Consultoria" : (municipio ? `${municipio.nome}/${municipio.uf}` : "—")}
             </p>
@@ -135,7 +135,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-5 py-3 md:hidden">
-          <span className="font-display text-sm font-semibold">Apuração VAF</span>
+          <span className="font-display text-sm font-semibold">Apura VAF 2.0</span>
           <nav className="flex flex-wrap justify-end gap-3">
             {nav.map((item) => (
               <Link key={item.to} to={item.to} className="text-xs text-muted-foreground">

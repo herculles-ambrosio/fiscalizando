@@ -78,12 +78,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Apuração VAF" },
+      { title: "Apura VAF 2.0" },
       {
         name: "description",
         content: "Sistema de apuração do Valor Adicionado Fiscal para prefeituras de Minas Gerais.",
       },
-      { property: "og:title", content: "Apuração VAF" },
+      { property: "og:title", content: "Apura VAF 2.0" },
       {
         property: "og:description",
         content: "Sistema de apuração do Valor Adicionado Fiscal para prefeituras de Minas Gerais.",
