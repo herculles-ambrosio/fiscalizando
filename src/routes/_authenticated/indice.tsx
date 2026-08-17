@@ -518,7 +518,7 @@ function PaginaIndice() {
           </div>
 
           {/* KPIs */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
             <Kpi
               rotulo={apuracao.estimado ? "Índice projetado" : "Índice do município"}
               valor={formatarIndice(apuracao.indice)}
