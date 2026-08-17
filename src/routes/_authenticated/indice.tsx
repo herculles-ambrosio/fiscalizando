@@ -75,23 +75,26 @@ function Kpi({
     <div
       className={
         destaque
-          ? "rounded-xl border border-primary/40 bg-primary/5 p-4"
-          : "rounded-xl border border-border bg-card p-4"
+          ? "min-w-0 rounded-xl border border-primary/40 bg-primary/5 p-3"
+          : "min-w-0 rounded-xl border border-border bg-card p-3"
       }
     >
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{rotulo}</p>
+      <p className="text-[10px] uppercase leading-tight tracking-wide text-muted-foreground">
+        {rotulo}
+      </p>
       <p
         className={
           destaque
-            ? "mt-1 font-display text-2xl font-semibold text-primary"
-            : "mt-1 font-display text-xl font-semibold"
+            ? "mt-1 break-words font-display text-lg font-semibold leading-tight text-primary sm:text-xl"
+            : "mt-1 break-words font-display text-base font-semibold leading-tight sm:text-lg"
         }
       >
         {valor}
       </p>
-      {detalhe && <p className="mt-1 text-xs text-muted-foreground">{detalhe}</p>}
+      {detalhe && <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{detalhe}</p>}
     </div>
   );
+
 }
 
 function LinhaValor({
