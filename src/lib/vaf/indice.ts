@@ -112,8 +112,20 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
   const creditosExternos: LinhaContribuinte[] = [];
   const contribuintesVaf: LinhaContribuinte[] = [];
   const simei: LinhaContribuinte[] = [];
-  const creditosMapa = new Map<string, number>();
-  const debitosMapa = new Map<string, number>();
+  const creditosMapa = new Map<string, LinhaMunicipio>();
+  const debitosMapa = new Map<string, LinhaMunicipio>();
+
+  // Registros 12/13: 22-36 AF, 37-51 NFA, 52-66 NFE, 67-81 NFF, 82-96 total.
+  const acumularMunicipio = (mapa: Map<string, LinhaMunicipio>, l: string) => {
+    const codigo = texto(l, 19, 21);
+    const atual = mapa.get(codigo) ?? { codigo, valor: 0, af: 0, nfa: 0, nfe: 0, nff: 0 };
+    atual.af += num(l, 22, 36);
+    atual.nfa += num(l, 37, 51);
+    atual.nfe += num(l, 52, 66);
+    atual.nff += num(l, 67, 81);
+    atual.valor += num(l, 82, 96);
+    mapa.set(codigo, atual);
+  };
   const exercicios = new Map<number, number>();
   let totalDeclaracoes = 0;
   let somaCreditosExternos = 0;
