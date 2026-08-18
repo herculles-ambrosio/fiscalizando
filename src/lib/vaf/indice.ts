@@ -362,11 +362,25 @@ export function csvIndice(a: ApuracaoIndice, nomeMunicipio: string): string {
     ["Creditos externos - IE", "Nome", "Municipio", "Valor (R$)"],
     ...a.creditosExternos.map((c) => [c.inscricao_estadual, c.nome ?? "", c.municipio, br(c.valor)]),
     [],
-    ["Creditos por municipio", "Valor (R$)"],
-    ...a.creditosPorMunicipio.map((m) => [m.codigo, br(m.valor)]),
+    ["Creditos por municipio", "Valor AF", "Valor NFA", "Valor NFE", "Valor NFF", "Valor (R$)"],
+    ...a.creditosPorMunicipio.map((m) => [
+      m.codigo,
+      br(m.af),
+      br(m.nfa),
+      br(m.nfe),
+      br(m.nff),
+      br(m.valor),
+    ]),
     [],
-    ["Debitos por municipio", "Valor (R$)"],
-    ...a.debitosPorMunicipio.map((m) => [m.codigo, br(m.valor)]),
+    ["Debitos por municipio", "Valor AF", "Valor NFA", "Valor NFE", "Valor NFF", "Valor (R$)"],
+    ...a.debitosPorMunicipio.map((m) => [
+      m.codigo,
+      br(m.af),
+      br(m.nfa),
+      br(m.nfe),
+      br(m.nff),
+      br(m.valor),
+    ]),
   ];
   return linhas.map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");
 }
