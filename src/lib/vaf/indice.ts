@@ -186,10 +186,8 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
   contribuintesVaf.sort(ordenar);
   simei.sort(ordenar);
 
-  const paraLista = (mapa: Map<string, number>): LinhaMunicipio[] =>
-    [...mapa.entries()]
-      .map(([codigo, valor]) => ({ codigo, valor }))
-      .sort((a, b) => b.valor - a.valor);
+  const paraLista = (mapa: Map<string, LinhaMunicipio>): LinhaMunicipio[] =>
+    [...mapa.values()].sort((a, b) => b.valor - a.valor);
 
   const creditosPorMunicipio = paraLista(creditosMapa);
   const debitosPorMunicipio = paraLista(debitosMapa);
