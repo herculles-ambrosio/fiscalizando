@@ -133,17 +133,22 @@ function TabelaMunicipios({
   titulo: string;
   nomePorCodigo: (c: string) => string;
 }) {
-  const total = linhas.reduce((s, l) => s + l.valor, 0);
+  const soma = (f: (l: LinhaMunicipio) => number) => linhas.reduce((s, l) => s + f(l), 0);
+  const total = soma((l) => l.valor);
   return (
     <div>
       <p className="mb-2 text-sm font-medium">{titulo}</p>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-24">Código</TableHead>
+            <TableHead className="w-20">Código</TableHead>
             <TableHead>Município</TableHead>
+            <TableHead className="text-right">Valor AF</TableHead>
+            <TableHead className="text-right">Valor NFA</TableHead>
+            <TableHead className="text-right">Valor NFE</TableHead>
+            <TableHead className="text-right">Valor NFF</TableHead>
             <TableHead className="text-right">Valor</TableHead>
-            <TableHead className="w-24 text-right">%</TableHead>
+            <TableHead className="w-20 text-right">%</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -151,6 +156,10 @@ function TabelaMunicipios({
             <TableRow key={l.codigo}>
               <TableCell className="font-mono text-xs">{l.codigo}</TableCell>
               <TableCell>{nomePorCodigo(l.codigo)}</TableCell>
+              <TableCell className="text-right font-mono text-xs">{formatarMoeda(l.af)}</TableCell>
+              <TableCell className="text-right font-mono text-xs">{formatarMoeda(l.nfa)}</TableCell>
+              <TableCell className="text-right font-mono text-xs">{formatarMoeda(l.nfe)}</TableCell>
+              <TableCell className="text-right font-mono text-xs">{formatarMoeda(l.nff)}</TableCell>
               <TableCell className="text-right font-mono">{formatarMoeda(l.valor)}</TableCell>
               <TableCell className="text-right text-muted-foreground">
                 {(total ? (l.valor / total) * 100 : 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
@@ -159,7 +168,7 @@ function TabelaMunicipios({
           ))}
           {linhas.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground">
+              <TableCell colSpan={8} className="text-center text-muted-foreground">
                 Nenhum registro.
               </TableCell>
             </TableRow>
@@ -168,6 +177,10 @@ function TabelaMunicipios({
         <TableFooter>
           <TableRow>
             <TableCell colSpan={2}>Total</TableCell>
+            <TableCell className="text-right font-mono text-xs">{formatarMoeda(soma((l) => l.af))}</TableCell>
+            <TableCell className="text-right font-mono text-xs">{formatarMoeda(soma((l) => l.nfa))}</TableCell>
+            <TableCell className="text-right font-mono text-xs">{formatarMoeda(soma((l) => l.nfe))}</TableCell>
+            <TableCell className="text-right font-mono text-xs">{formatarMoeda(soma((l) => l.nff))}</TableCell>
             <TableCell className="text-right font-mono">{formatarMoeda(total)}</TableCell>
             <TableCell />
           </TableRow>
