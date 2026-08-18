@@ -17,7 +17,13 @@ const texto = (linha: string, inicio: number, fim: number): string =>
 
 export type LinhaMunicipio = {
   codigo: string;
+  /** total do registro (coluna "Valor" do relatório da SEF-MG) */
   valor: number;
+  /** parcelas que compõem o total */
+  af: number;
+  nfa: number;
+  nfe: number;
+  nff: number;
 };
 
 export type LinhaContribuinte = {
@@ -106,8 +112,20 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
   const creditosExternos: LinhaContribuinte[] = [];
   const contribuintesVaf: LinhaContribuinte[] = [];
   const simei: LinhaContribuinte[] = [];
-  const creditosMapa = new Map<string, number>();
-  const debitosMapa = new Map<string, number>();
+  const creditosMapa = new Map<string, LinhaMunicipio>();
+  const debitosMapa = new Map<string, LinhaMunicipio>();
+
+  // Registros 12/13: 22-36 AF, 37-51 NFA, 52-66 NFE, 67-81 NFF, 82-96 total.
+  const acumularMunicipio = (mapa: Map<string, LinhaMunicipio>, l: string) => {
+    const codigo = texto(l, 19, 21);
+    const atual = mapa.get(codigo) ?? { codigo, valor: 0, af: 0, nfa: 0, nfe: 0, nff: 0 };
+    atual.af += num(l, 22, 36);
+    atual.nfa += num(l, 37, 51);
+    atual.nfe += num(l, 52, 66);
+    atual.nff += num(l, 67, 81);
+    atual.valor += num(l, 82, 96);
+    mapa.set(codigo, atual);
+  };
   const exercicios = new Map<number, number>();
   let totalDeclaracoes = 0;
   let somaCreditosExternos = 0;
@@ -127,11 +145,9 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
         valor,
       });
     } else if (tipo === "12") {
-      const cod = texto(l, 19, 21);
-      creditosMapa.set(cod, (creditosMapa.get(cod) ?? 0) + num(l, 52, 66));
+      acumularMunicipio(creditosMapa, l);
     } else if (tipo === "13") {
-      const cod = texto(l, 19, 21);
-      debitosMapa.set(cod, (debitosMapa.get(cod) ?? 0) + num(l, 52, 66));
+      acumularMunicipio(debitosMapa, l);
     } else if (tipo === "23") {
       contribuintesVaf.push({
         inscricao_estadual: texto(l, 6, 18),
@@ -170,10 +186,8 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
   contribuintesVaf.sort(ordenar);
   simei.sort(ordenar);
 
-  const paraLista = (mapa: Map<string, number>): LinhaMunicipio[] =>
-    [...mapa.entries()]
-      .map(([codigo, valor]) => ({ codigo, valor }))
-      .sort((a, b) => b.valor - a.valor);
+  const paraLista = (mapa: Map<string, LinhaMunicipio>): LinhaMunicipio[] =>
+    [...mapa.values()].sort((a, b) => b.valor - a.valor);
 
   const creditosPorMunicipio = paraLista(creditosMapa);
   const debitosPorMunicipio = paraLista(debitosMapa);
@@ -348,11 +362,25 @@ export function csvIndice(a: ApuracaoIndice, nomeMunicipio: string): string {
     ["Creditos externos - IE", "Nome", "Municipio", "Valor (R$)"],
     ...a.creditosExternos.map((c) => [c.inscricao_estadual, c.nome ?? "", c.municipio, br(c.valor)]),
     [],
-    ["Creditos por municipio", "Valor (R$)"],
-    ...a.creditosPorMunicipio.map((m) => [m.codigo, br(m.valor)]),
+    ["Creditos por municipio", "Valor AF", "Valor NFA", "Valor NFE", "Valor NFF", "Valor (R$)"],
+    ...a.creditosPorMunicipio.map((m) => [
+      m.codigo,
+      br(m.af),
+      br(m.nfa),
+      br(m.nfe),
+      br(m.nff),
+      br(m.valor),
+    ]),
     [],
-    ["Debitos por municipio", "Valor (R$)"],
-    ...a.debitosPorMunicipio.map((m) => [m.codigo, br(m.valor)]),
+    ["Debitos por municipio", "Valor AF", "Valor NFA", "Valor NFE", "Valor NFF", "Valor (R$)"],
+    ...a.debitosPorMunicipio.map((m) => [
+      m.codigo,
+      br(m.af),
+      br(m.nfa),
+      br(m.nfe),
+      br(m.nff),
+      br(m.valor),
+    ]),
   ];
   return linhas.map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");
 }
