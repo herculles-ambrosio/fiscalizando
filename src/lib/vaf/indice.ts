@@ -145,11 +145,9 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
         valor,
       });
     } else if (tipo === "12") {
-      const cod = texto(l, 19, 21);
-      creditosMapa.set(cod, (creditosMapa.get(cod) ?? 0) + num(l, 52, 66));
+      acumularMunicipio(creditosMapa, l);
     } else if (tipo === "13") {
-      const cod = texto(l, 19, 21);
-      debitosMapa.set(cod, (debitosMapa.get(cod) ?? 0) + num(l, 52, 66));
+      acumularMunicipio(debitosMapa, l);
     } else if (tipo === "23") {
       contribuintesVaf.push({
         inscricao_estadual: texto(l, 6, 18),
