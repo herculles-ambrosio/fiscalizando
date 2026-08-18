@@ -17,7 +17,13 @@ const texto = (linha: string, inicio: number, fim: number): string =>
 
 export type LinhaMunicipio = {
   codigo: string;
+  /** total do registro (coluna "Valor" do relatório da SEF-MG) */
   valor: number;
+  /** parcelas que compõem o total */
+  af: number;
+  nfa: number;
+  nfe: number;
+  nff: number;
 };
 
 export type LinhaContribuinte = {
