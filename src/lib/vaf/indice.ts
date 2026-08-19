@@ -195,7 +195,10 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
         data: dataDdMmAaaa(texto(l, 73, 80)),
         valor: sinal * num(l, 82, 95),
       };
-      if (tipo === "40") simei.push(registro);
+      if (tipo === "40") {
+        simei.push(registro);
+        somaVafProprioSimei += registro.valor;
+      }
       else {
         somaCreditosExternos += registro.valor;
         creditosExternos.push(registro);
