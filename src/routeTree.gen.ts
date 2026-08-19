@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedAnalisesRouteImport } from './routes/_authenticated/analises'
+import { Route as AuthenticatedComparacaoRouteImport } from './routes/_authenticated/comparacao'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_authenticated/consultoria/route'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -36,6 +37,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthenticatedAnalisesRoute = AuthenticatedAnalisesRouteImport.update({
   id: '/analises',
   path: '/analises',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedComparacaoRoute = AuthenticatedComparacaoRouteImport.update({
+  id: '/comparacao',
+  path: '/comparacao',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConfiguracoesRoute =
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/analises': typeof AuthenticatedAnalisesRoute
+  '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/analises': typeof AuthenticatedAnalisesRoute
+  '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/_authenticated/analises': typeof AuthenticatedAnalisesRoute
+  '/_authenticated/comparacao': typeof AuthenticatedComparacaoRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/evolucao': typeof AuthenticatedEvolucaoRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/'
     | '/consultoria'
     | '/analises'
+    | '/comparacao'
     | '/configuracoes'
     | '/dashboard'
     | '/evolucao'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/'
     | '/consultoria'
     | '/analises'
+    | '/comparacao'
     | '/configuracoes'
     | '/dashboard'
     | '/evolucao'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_authenticated/consultoria'
     | '/_authenticated/analises'
+    | '/_authenticated/comparacao'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/evolucao'
@@ -223,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/analises'
       fullPath: '/analises'
       preLoaderRoute: typeof AuthenticatedAnalisesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comparacao': {
+      id: '/_authenticated/comparacao'
+      path: '/comparacao'
+      fullPath: '/comparacao'
+      preLoaderRoute: typeof AuthenticatedComparacaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/configuracoes': {
@@ -326,6 +345,7 @@ const AuthenticatedConsultoriaRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedConsultoriaRouteRoute: typeof AuthenticatedConsultoriaRouteRouteWithChildren
   AuthenticatedAnalisesRoute: typeof AuthenticatedAnalisesRoute
+  AuthenticatedComparacaoRoute: typeof AuthenticatedComparacaoRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEvolucaoRoute: typeof AuthenticatedEvolucaoRoute
@@ -340,6 +360,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConsultoriaRouteRoute:
     AuthenticatedConsultoriaRouteRouteWithChildren,
   AuthenticatedAnalisesRoute: AuthenticatedAnalisesRoute,
+  AuthenticatedComparacaoRoute: AuthenticatedComparacaoRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEvolucaoRoute: AuthenticatedEvolucaoRoute,
