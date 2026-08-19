@@ -50,13 +50,14 @@ function PaginaAnalises() {
         <TabsTrigger value="indice">Índice do VAF</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="evolucao">
+      {/* forceMount mantém arquivos, buscas e filtros de cada aba ao alternar */}
+      <TabsContent value="evolucao" forceMount className="data-[state=inactive]:hidden">
         <EvolucaoView />
       </TabsContent>
-      <TabsContent value="comparacao">
+      <TabsContent value="comparacao" forceMount className="data-[state=inactive]:hidden">
         <ComparacaoView />
       </TabsContent>
-      <TabsContent value="indice">
+      <TabsContent value="indice" forceMount className="data-[state=inactive]:hidden">
         <IndiceView />
       </TabsContent>
     </Tabs>
