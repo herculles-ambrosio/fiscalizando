@@ -49,6 +49,11 @@ export type ApuracaoIndice = {
   periodoFim: string | null;
   /** VAF A */
   vafProprio: number;
+  /** Composição do VAF próprio (apenas na projeção do arquivo mensal) */
+  vafProprioNormal?: number;
+  vafProprioSn?: number;
+  vafProprioSimei?: number;
+  vafProprioNaoCompoe?: number;
   creditoExterno: number;
   /** VAF B */
   creditoInterno: number;
