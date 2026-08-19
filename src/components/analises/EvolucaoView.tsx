@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, HelpCircle, Loader2, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,28 +34,6 @@ import {
   type LinhaEvolucao,
   type MovimentoDeclarante,
 } from "@/lib/vaf/evolucao";
-
-export const Route = createFileRoute("/_authenticated/evolucao")({
-  head: () => ({
-    meta: [
-      { title: "Evolução do VAF — comparar competências" },
-      {
-        name: "description",
-        content:
-          "Compare dois arquivos de retorno da SEF-MG (mensal, provisório ou definitivo) e analise a evolução do VAF, do índice e dos declarantes.",
-      },
-      { property: "og:title", content: "Evolução do VAF" },
-      {
-        property: "og:description",
-        content:
-          "Quem deixou de declarar, quem entrou, variação do líquido, VAF A, VAF B, VAF C e memória de cálculo lado a lado.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: PaginaEvolucao,
-});
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
@@ -252,7 +229,7 @@ function TabelaMovimentos({
 }
 
 
-function PaginaEvolucao() {
+export default function PaginaEvolucao() {
   const { municipio } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
   const [base, setBase] = useState<ArquivoEvolucao | null>(null);

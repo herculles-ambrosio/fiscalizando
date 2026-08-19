@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,27 +22,6 @@ import {
   formatarCompetencia,
   rotuloTipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
-
-export const Route = createFileRoute("/_authenticated/comparacao")({
-  head: () => ({
-    meta: [
-      { title: "Comparar apurações VAF" },
-      {
-        name: "description",
-        content:
-          "Compare duas ou mais apurações VAF do município: totais, situações, participação por CNAE e contribuinte a contribuinte.",
-      },
-      { property: "og:title", content: "Comparar apurações VAF" },
-      {
-        property: "og:description",
-        content: "Analise a evolução do VAF entre exercícios e entre índice provisório e definitivo.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: Comparacao,
-});
 
 type Linha = {
   inscricao_estadual: string;
@@ -86,7 +64,7 @@ function variacao(atual: number | null, base: number | null): number | null {
   return ((atual - base) / Math.abs(base)) * 100;
 }
 
-function Comparacao() {
+export default function Comparacao() {
   const { municipioId } = useMunicipioAtivo();
   const [selecionadas, setSelecionadas] = useState<string[]>([]);
   const [busca, setBusca] = useState("");

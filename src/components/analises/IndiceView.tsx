@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { Download, FileUp, Printer, Save, TrendingUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,27 +37,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 
-
-export const Route = createFileRoute("/_authenticated/indice")({
-  head: () => ({
-    meta: [
-      { title: "Índice definitivo do VAF — apuração e relatório" },
-      {
-        name: "description",
-        content:
-          "Apure o índice provisório ou definitivo do VAF a partir do arquivo da SEF-MG e emita o relatório consolidado do município.",
-      },
-      { property: "og:title", content: "Índice definitivo do VAF" },
-      {
-        property: "og:description",
-        content: "Relatório consolidado de VAF A, VAF B, VAF C, valor líquido e índice do município.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: PaginaIndice,
-});
 
 function Kpi({
   rotulo,
@@ -235,7 +213,7 @@ function TabelaContribuintes({ linhas }: { linhas: LinhaContribuinte[] }) {
 
 const CHAVE_REF = "vaf_indice_referencia";
 
-function PaginaIndice() {
+export default function PaginaIndice() {
   const { municipio, municipioId, municipios } = useMunicipioAtivo();
   const salvarIndice = useSalvarIndice();
 

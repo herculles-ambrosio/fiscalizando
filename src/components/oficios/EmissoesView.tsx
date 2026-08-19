@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { FileDown, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,28 +28,7 @@ import { useReemitirOficio } from "@/hooks/useReemitirOficio";
 import type { EmissaoRegistro } from "@/lib/oficios/registro";
 import { formatarCnpj, formatarDataHora } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/emissoes")({
-  head: () => ({
-    meta: [
-      { title: "Histórico de ofícios emitidos" },
-      {
-        name: "description",
-        content:
-          "Consulte todos os ofícios VAF emitidos: data, usuário, município, exercício, modelo e status do download.",
-      },
-      { property: "og:title", content: "Histórico de ofícios emitidos" },
-      {
-        property: "og:description",
-        content: "Rastreie a emissão de ofícios VAF por contribuinte, modelo e status do download.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: Emissoes,
-});
-
-function Emissoes() {
+export default function Emissoes() {
   const { municipio } = useMunicipioAtivo();
   const { data: modelos } = useModelos();
   const [busca, setBusca] = useState("");

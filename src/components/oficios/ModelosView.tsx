@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Eye, FileText, Loader2, Plus, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -36,27 +35,6 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/modelos")({
-  head: () => ({
-    meta: [
-      { title: "Modelos de ofício — VAF" },
-      {
-        name: "description",
-        content:
-          "Edite os textos padrão dos ofícios de zerados, omissos, fora do prazo e discrepantes emitidos na apuração do VAF.",
-      },
-      { property: "og:title", content: "Modelos de ofício — VAF" },
-      {
-        property: "og:description",
-        content: "Personalize título e corpo dos ofícios emitidos pela prefeitura.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: Modelos,
-});
-
 const CONTRIBUINTE_EXEMPLO = {
   nome: "EMPRESA EXEMPLO LTDA",
   cnpj: "12345678000199",
@@ -64,7 +42,7 @@ const CONTRIBUINTE_EXEMPLO = {
   endereco: "RUA EXEMPLO, 100 - CENTRO",
 };
 
-function Modelos() {
+export default function Modelos() {
   const { data: perfil } = usePerfil();
   const { data: config } = useConfiguracao();
   const { data: modelos, isLoading } = useModelos();
