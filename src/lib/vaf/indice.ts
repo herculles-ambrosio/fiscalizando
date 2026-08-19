@@ -49,6 +49,11 @@ export type ApuracaoIndice = {
   periodoFim: string | null;
   /** VAF A */
   vafProprio: number;
+  /** Composição do VAF próprio (apenas na projeção do arquivo mensal) */
+  vafProprioNormal?: number;
+  vafProprioSn?: number;
+  vafProprioSimei?: number;
+  vafProprioNaoCompoe?: number;
   creditoExterno: number;
   /** VAF B */
   creditoInterno: number;
@@ -102,8 +107,16 @@ type Detalhamento = {
   somaCreditosExternos: number;
   somaCreditosMunicipios: number;
   somaDebitosMunicipios: number;
-  /** soma do VAF declarado (registro 10, com sinal) — base do VAF próprio estimado */
+  /** soma do VAF declarado (registro 10, com sinal) — apenas informativa */
   somaVafDeclarado: number;
+  /** VAF A - 1: registro 07, somente os contribuintes com VAF positivo */
+  somaVafProprioNormal: number;
+  /** registro 07 com VAF negativo (não compõe o índice), em módulo */
+  somaVafProprioNaoCompoe: number;
+  /** VAF A - SN: registro 23 com marca 58 (Simples Nacional) */
+  somaVafProprioSn: number;
+  /** SIMEI: registro 40 */
+  somaVafProprioSimei: number;
   /** exercício mais frequente nos registros 10 */
   exercicio: number | null;
 };
@@ -130,6 +143,10 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
   let totalDeclaracoes = 0;
   let somaCreditosExternos = 0;
   let somaVafDeclarado = 0;
+  let somaVafProprioNormal = 0;
+  let somaVafProprioNaoCompoe = 0;
+  let somaVafProprioSn = 0;
+  let somaVafProprioSimei = 0;
 
   for (const l of linhas) {
     const tipo = l.slice(0, 2);
@@ -148,15 +165,26 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
       acumularMunicipio(creditosMapa, l);
     } else if (tipo === "13") {
       acumularMunicipio(debitosMapa, l);
+    } else if (tipo === "07") {
+      // VAF A - 1 (regime normal): 19-33 saídas, 34-48 entradas, 49-63 outras
+      // entradas, 64 sinal, 65-78 VAF próprio. VAF negativo não compõe o índice.
+      const valor = num(l, 65, 78);
+      if (l[63] === "-") somaVafProprioNaoCompoe += valor;
+      else somaVafProprioNormal += valor;
     } else if (tipo === "23") {
+      // 69-70: marca 58 = Simples Nacional (VAF A - SN), 59 = SIMEI
+      const marca = texto(l, 69, 70);
+      const valor = num(l, 37, 51);
+      if (marca === "58") somaVafProprioSn += valor;
       contribuintesVaf.push({
         inscricao_estadual: texto(l, 6, 18),
         cnpj: null,
         nome: null,
         municipio: texto(l, 19, 21),
         data: null,
-        valor: num(l, 37, 51),
+        valor,
       });
+
     } else if (tipo === "40" || tipo === "35") {
       const sinal = l[80] === "-" ? -1 : 1;
       const registro: LinhaContribuinte = {
@@ -167,7 +195,10 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
         data: dataDdMmAaaa(texto(l, 73, 80)),
         valor: sinal * num(l, 82, 95),
       };
-      if (tipo === "40") simei.push(registro);
+      if (tipo === "40") {
+        simei.push(registro);
+        somaVafProprioSimei += registro.valor;
+      }
       else {
         somaCreditosExternos += registro.valor;
         creditosExternos.push(registro);
@@ -205,6 +236,10 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
     somaCreditosMunicipios: creditosPorMunicipio.reduce((s, m) => s + m.valor, 0),
     somaDebitosMunicipios: debitosPorMunicipio.reduce((s, m) => s + m.valor, 0),
     somaVafDeclarado,
+    somaVafProprioNormal,
+    somaVafProprioNaoCompoe,
+    somaVafProprioSn,
+    somaVafProprioSimei,
     exercicio,
   };
 }
@@ -272,8 +307,11 @@ export type OpcoesEstimativa = {
  * (que não traz os registros 16/17 fechados pela SEF-MG).
  *
  * Exatos no arquivo mensal: crédito externo (11/35), crédito interno (12) e
- * débito (13). Estimado: VAF próprio (soma do VAF declarado nos registros 10),
- * que pode ser calibrado por um fator obtido do último índice definitivo.
+ * débito (13). VAF próprio = VAF A - 1 (registro 07, apenas os contribuintes
+ * com VAF positivo; os negativos não compõem o índice) + VAF A - SN
+ * (registro 23, marca 58) + SIMEI (registro 40) — mesma composição dos
+ * demonstrativos da SEF-MG. Pode ser calibrado por um fator obtido do último
+ * índice definitivo.
  */
 export function estimarIndiceProvisorio(
   textoRetorno: string,
@@ -288,7 +326,10 @@ export function estimarIndiceProvisorio(
   const vafEstadual = vafEstadualArquivo || (opcoes.vafEstadualReferencia ?? 0);
 
   const fator = opcoes.fatorCalibragem && opcoes.fatorCalibragem > 0 ? opcoes.fatorCalibragem : 1;
-  const vafProprio = Math.round(d.somaVafDeclarado * fator);
+  const baseVafProprio =
+    d.somaVafProprioNormal + d.somaVafProprioSn + d.somaVafProprioSimei ||
+    d.somaVafDeclarado;
+  const vafProprio = Math.round(baseVafProprio * fator);
   const valorLiquido =
     vafProprio + d.somaCreditosExternos + d.somaCreditosMunicipios - d.somaDebitosMunicipios;
 
@@ -302,6 +343,10 @@ export function estimarIndiceProvisorio(
     periodoInicio: linha99 ? dataSefPonto(texto(linha99, 44, 53)) : null,
     periodoFim: linha99 ? dataSefPonto(texto(linha99, 54, 63)) : null,
     vafProprio,
+    vafProprioNormal: d.somaVafProprioNormal,
+    vafProprioSn: d.somaVafProprioSn,
+    vafProprioSimei: d.somaVafProprioSimei,
+    vafProprioNaoCompoe: d.somaVafProprioNaoCompoe,
     creditoExterno: d.somaCreditosExternos,
     creditoInterno: d.somaCreditosMunicipios,
     creditoProprio: 0,

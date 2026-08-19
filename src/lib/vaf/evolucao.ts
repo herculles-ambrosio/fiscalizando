@@ -304,7 +304,7 @@ export function compararMunicipios(
 /** Memória de cálculo do valor líquido de uma apuração. */
 export function memoriaCalculo(a: ApuracaoIndice): Array<{ rotulo: string; valor: number; operador: string }> {
   return [
-    { operador: "", rotulo: "VAF próprio (registros 10)", valor: a.vafProprio },
+    { operador: "", rotulo: "VAF próprio (VAF A-1 + SN + SIMEI)", valor: a.vafProprio },
     { operador: "+", rotulo: "Crédito externo (11/35)", valor: a.creditoExterno },
     { operador: "+", rotulo: "Crédito interno (12)", valor: a.creditoInterno },
     { operador: "+", rotulo: "Crédito próprio (AF/SIARE)", valor: a.creditoProprio },
