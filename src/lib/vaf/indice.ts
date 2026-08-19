@@ -165,15 +165,26 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
       acumularMunicipio(creditosMapa, l);
     } else if (tipo === "13") {
       acumularMunicipio(debitosMapa, l);
+    } else if (tipo === "07") {
+      // VAF A - 1 (regime normal): 19-33 saídas, 34-48 entradas, 49-63 outras
+      // entradas, 64 sinal, 65-79 VAF próprio. VAF negativo não compõe o índice.
+      const valor = num(l, 65, 79);
+      if (l[63] === "-") somaVafProprioNaoCompoe += valor;
+      else somaVafProprioNormal += valor;
     } else if (tipo === "23") {
+      // 69-70: marca 58 = Simples Nacional (VAF A - SN), 59 = SIMEI
+      const marca = texto(l, 69, 70);
+      const valor = num(l, 37, 51);
+      if (marca === "58") somaVafProprioSn += valor;
       contribuintesVaf.push({
         inscricao_estadual: texto(l, 6, 18),
         cnpj: null,
         nome: null,
         municipio: texto(l, 19, 21),
         data: null,
-        valor: num(l, 37, 51),
+        valor,
       });
+
     } else if (tipo === "40" || tipo === "35") {
       const sinal = l[80] === "-" ? -1 : 1;
       const registro: LinhaContribuinte = {
