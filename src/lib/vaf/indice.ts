@@ -236,6 +236,10 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
     somaCreditosMunicipios: creditosPorMunicipio.reduce((s, m) => s + m.valor, 0),
     somaDebitosMunicipios: debitosPorMunicipio.reduce((s, m) => s + m.valor, 0),
     somaVafDeclarado,
+    somaVafProprioNormal,
+    somaVafProprioNaoCompoe,
+    somaVafProprioSn,
+    somaVafProprioSimei,
     exercicio,
   };
 }
