@@ -11,15 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthenticatedComparacaoRouteImport } from './routes/_authenticated/comparacao'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_authenticated/consultoria/route'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedEmissoesRouteImport } from './routes/_authenticated/emissoes'
-import { Route as AuthenticatedEvolucaoRouteImport } from './routes/_authenticated/evolucao'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
-import { Route as AuthenticatedIndiceRouteImport } from './routes/_authenticated/indice'
-import { Route as AuthenticatedModelosRouteImport } from './routes/_authenticated/modelos'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
@@ -34,11 +29,6 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedComparacaoRoute = AuthenticatedComparacaoRouteImport.update({
-  id: '/comparacao',
-  path: '/comparacao',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
@@ -57,29 +47,9 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedEmissoesRoute = AuthenticatedEmissoesRouteImport.update({
-  id: '/emissoes',
-  path: '/emissoes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEvolucaoRoute = AuthenticatedEvolucaoRouteImport.update({
-  id: '/evolucao',
-  path: '/evolucao',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedIndiceRoute = AuthenticatedIndiceRouteImport.update({
-  id: '/indice',
-  path: '/indice',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedModelosRoute = AuthenticatedModelosRouteImport.update({
-  id: '/modelos',
-  path: '/modelos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNovaApuracaoRoute =
@@ -116,14 +86,9 @@ const AuthenticatedConsultoriaUsuariosRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
-  '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/emissoes': typeof AuthenticatedEmissoesRoute
-  '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
-  '/indice': typeof AuthenticatedIndiceRoute
-  '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
@@ -133,14 +98,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
-  '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/emissoes': typeof AuthenticatedEmissoesRoute
-  '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
-  '/indice': typeof AuthenticatedIndiceRoute
-  '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
@@ -152,14 +112,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
-  '/_authenticated/comparacao': typeof AuthenticatedComparacaoRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/emissoes': typeof AuthenticatedEmissoesRoute
-  '/_authenticated/evolucao': typeof AuthenticatedEvolucaoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
-  '/_authenticated/indice': typeof AuthenticatedIndiceRoute
-  '/_authenticated/modelos': typeof AuthenticatedModelosRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
@@ -171,14 +126,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/consultoria'
-    | '/comparacao'
     | '/configuracoes'
     | '/dashboard'
-    | '/emissoes'
-    | '/evolucao'
     | '/historico'
-    | '/indice'
-    | '/modelos'
     | '/nova-apuracao'
     | '/trocar-senha'
     | '/cargas/$cargaId'
@@ -188,14 +138,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/consultoria'
-    | '/comparacao'
     | '/configuracoes'
     | '/dashboard'
-    | '/emissoes'
-    | '/evolucao'
     | '/historico'
-    | '/indice'
-    | '/modelos'
     | '/nova-apuracao'
     | '/trocar-senha'
     | '/cargas/$cargaId'
@@ -206,14 +151,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_authenticated/consultoria'
-    | '/_authenticated/comparacao'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
-    | '/_authenticated/emissoes'
-    | '/_authenticated/evolucao'
     | '/_authenticated/historico'
-    | '/_authenticated/indice'
-    | '/_authenticated/modelos'
     | '/_authenticated/nova-apuracao'
     | '/_authenticated/trocar-senha'
     | '/_authenticated/cargas/$cargaId'
@@ -242,13 +182,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/comparacao': {
-      id: '/_authenticated/comparacao'
-      path: '/comparacao'
-      fullPath: '/comparacao'
-      preLoaderRoute: typeof AuthenticatedComparacaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/configuracoes': {
       id: '/_authenticated/configuracoes'
       path: '/configuracoes'
@@ -270,39 +203,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/emissoes': {
-      id: '/_authenticated/emissoes'
-      path: '/emissoes'
-      fullPath: '/emissoes'
-      preLoaderRoute: typeof AuthenticatedEmissoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/evolucao': {
-      id: '/_authenticated/evolucao'
-      path: '/evolucao'
-      fullPath: '/evolucao'
-      preLoaderRoute: typeof AuthenticatedEvolucaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/historico': {
       id: '/_authenticated/historico'
       path: '/historico'
       fullPath: '/historico'
       preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/indice': {
-      id: '/_authenticated/indice'
-      path: '/indice'
-      fullPath: '/indice'
-      preLoaderRoute: typeof AuthenticatedIndiceRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/modelos': {
-      id: '/_authenticated/modelos'
-      path: '/modelos'
-      fullPath: '/modelos'
-      preLoaderRoute: typeof AuthenticatedModelosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/nova-apuracao': {
@@ -363,14 +268,9 @@ const AuthenticatedConsultoriaRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedConsultoriaRouteRoute: typeof AuthenticatedConsultoriaRouteRouteWithChildren
-  AuthenticatedComparacaoRoute: typeof AuthenticatedComparacaoRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedEmissoesRoute: typeof AuthenticatedEmissoesRoute
-  AuthenticatedEvolucaoRoute: typeof AuthenticatedEvolucaoRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
-  AuthenticatedIndiceRoute: typeof AuthenticatedIndiceRoute
-  AuthenticatedModelosRoute: typeof AuthenticatedModelosRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
   AuthenticatedCargasCargaIdRoute: typeof AuthenticatedCargasCargaIdRoute
@@ -379,14 +279,9 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConsultoriaRouteRoute:
     AuthenticatedConsultoriaRouteRouteWithChildren,
-  AuthenticatedComparacaoRoute: AuthenticatedComparacaoRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedEmissoesRoute: AuthenticatedEmissoesRoute,
-  AuthenticatedEvolucaoRoute: AuthenticatedEvolucaoRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
-  AuthenticatedIndiceRoute: AuthenticatedIndiceRoute,
-  AuthenticatedModelosRoute: AuthenticatedModelosRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
   AuthenticatedCargasCargaIdRoute: AuthenticatedCargasCargaIdRoute,
