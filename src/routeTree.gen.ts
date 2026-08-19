@@ -17,6 +17,7 @@ import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_aut
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
+import { Route as AuthenticatedOficiosRouteImport } from './routes/_authenticated/oficios'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
 import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './routes/_authenticated/consultoria/prefeituras'
@@ -64,6 +65,11 @@ const AuthenticatedNovaApuracaoRoute =
     path: '/nova-apuracao',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOficiosRoute = AuthenticatedOficiosRouteImport.update({
+  id: '/oficios',
+  path: '/oficios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTrocarSenhaRoute =
   AuthenticatedTrocarSenhaRouteImport.update({
     id: '/trocar-senha',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/oficios': typeof AuthenticatedOficiosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/oficios': typeof AuthenticatedOficiosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/_authenticated/oficios': typeof AuthenticatedOficiosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/_authenticated/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/historico'
     | '/nova-apuracao'
+    | '/oficios'
     | '/trocar-senha'
     | '/cargas/$cargaId'
     | '/consultoria/prefeituras'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/historico'
     | '/nova-apuracao'
+    | '/oficios'
     | '/trocar-senha'
     | '/cargas/$cargaId'
     | '/consultoria/prefeituras'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/historico'
     | '/_authenticated/nova-apuracao'
+    | '/_authenticated/oficios'
     | '/_authenticated/trocar-senha'
     | '/_authenticated/cargas/$cargaId'
     | '/_authenticated/consultoria/prefeituras'
@@ -236,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNovaApuracaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/oficios': {
+      id: '/_authenticated/oficios'
+      path: '/oficios'
+      fullPath: '/oficios'
+      preLoaderRoute: typeof AuthenticatedOficiosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/trocar-senha': {
       id: '/_authenticated/trocar-senha'
       path: '/trocar-senha'
@@ -292,6 +311,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
+  AuthenticatedOficiosRoute: typeof AuthenticatedOficiosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
   AuthenticatedCargasCargaIdRoute: typeof AuthenticatedCargasCargaIdRoute
 }
@@ -304,6 +324,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
+  AuthenticatedOficiosRoute: AuthenticatedOficiosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
   AuthenticatedCargasCargaIdRoute: AuthenticatedCargasCargaIdRoute,
 }
