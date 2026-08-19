@@ -143,6 +143,10 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
   let totalDeclaracoes = 0;
   let somaCreditosExternos = 0;
   let somaVafDeclarado = 0;
+  let somaVafProprioNormal = 0;
+  let somaVafProprioNaoCompoe = 0;
+  let somaVafProprioSn = 0;
+  let somaVafProprioSimei = 0;
 
   for (const l of linhas) {
     const tipo = l.slice(0, 2);
