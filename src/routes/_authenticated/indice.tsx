@@ -563,7 +563,36 @@ function PaginaIndice() {
               </CardHeader>
               <CardContent>
                 <LinhaValor rotulo="VAF próprio" valor={apuracao.vafProprio} />
+                {apuracao.vafProprioNormal !== undefined && (
+                  <div className="mb-2 space-y-1 border-l-2 border-border pl-3 text-xs text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>VAF A - 1 (regime normal)</span>
+                      <span className="font-mono">
+                        {formatarMoeda(apuracao.vafProprioNormal ?? 0)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>VAF A - SN (Simples Nacional)</span>
+                      <span className="font-mono">{formatarMoeda(apuracao.vafProprioSn ?? 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>SIMEI</span>
+                      <span className="font-mono">
+                        {formatarMoeda(apuracao.vafProprioSimei ?? 0)}
+                      </span>
+                    </div>
+                    {(apuracao.vafProprioNaoCompoe ?? 0) > 0 && (
+                      <div className="flex justify-between">
+                        <span>VAF negativo (não compõe o índice)</span>
+                        <span className="font-mono">
+                          −{formatarMoeda(apuracao.vafProprioNaoCompoe ?? 0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <LinhaValor rotulo="Crédito externo" valor={apuracao.creditoExterno} />
+
                 <div className="mt-3 flex justify-between border-t border-border pt-2 text-sm font-semibold">
                   <span>Subtotal</span>
                   <span className="font-mono">
