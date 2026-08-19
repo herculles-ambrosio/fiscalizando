@@ -16,6 +16,7 @@ import { Route as AuthenticatedComparacaoRouteImport } from './routes/_authentic
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_authenticated/consultoria/route'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEmissoesRouteImport } from './routes/_authenticated/emissoes'
 import { Route as AuthenticatedEvolucaoRouteImport } from './routes/_authenticated/evolucao'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedIndiceRouteImport } from './routes/_authenticated/indice'
@@ -61,6 +62,11 @@ const AuthenticatedConsultoriaRouteRoute =
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEmissoesRoute = AuthenticatedEmissoesRouteImport.update({
+  id: '/emissoes',
+  path: '/emissoes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEvolucaoRoute = AuthenticatedEvolucaoRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/emissoes': typeof AuthenticatedEmissoesRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/indice': typeof AuthenticatedIndiceRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/emissoes': typeof AuthenticatedEmissoesRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/indice': typeof AuthenticatedIndiceRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/_authenticated/comparacao': typeof AuthenticatedComparacaoRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/emissoes': typeof AuthenticatedEmissoesRoute
   '/_authenticated/evolucao': typeof AuthenticatedEvolucaoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/indice': typeof AuthenticatedIndiceRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/comparacao'
     | '/configuracoes'
     | '/dashboard'
+    | '/emissoes'
     | '/evolucao'
     | '/historico'
     | '/indice'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/comparacao'
     | '/configuracoes'
     | '/dashboard'
+    | '/emissoes'
     | '/evolucao'
     | '/historico'
     | '/indice'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/_authenticated/comparacao'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/emissoes'
     | '/_authenticated/evolucao'
     | '/_authenticated/historico'
     | '/_authenticated/indice'
@@ -287,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/emissoes': {
+      id: '/_authenticated/emissoes'
+      path: '/emissoes'
+      fullPath: '/emissoes'
+      preLoaderRoute: typeof AuthenticatedEmissoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/evolucao': {
@@ -386,6 +405,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedComparacaoRoute: typeof AuthenticatedComparacaoRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEmissoesRoute: typeof AuthenticatedEmissoesRoute
   AuthenticatedEvolucaoRoute: typeof AuthenticatedEvolucaoRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedIndiceRoute: typeof AuthenticatedIndiceRoute
@@ -403,6 +423,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedComparacaoRoute: AuthenticatedComparacaoRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEmissoesRoute: AuthenticatedEmissoesRoute,
   AuthenticatedEvolucaoRoute: AuthenticatedEvolucaoRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedIndiceRoute: AuthenticatedIndiceRoute,
