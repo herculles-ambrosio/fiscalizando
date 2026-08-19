@@ -9,8 +9,8 @@ type Aba = (typeof ABAS)[number];
 
 export const Route = createFileRoute("/_authenticated/analises")({
   validateSearch: (search: Record<string, unknown>) => ({
-    aba: (ABAS as readonly string[]).includes(String(search.aba))
-      ? (search.aba as Aba)
+    aba: (ABAS as readonly string[]).includes(String(search["aba"]))
+      ? (search["aba"] as Aba)
       : ("evolucao" as Aba),
   }),
   head: () => ({
