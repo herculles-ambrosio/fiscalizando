@@ -167,8 +167,8 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
       acumularMunicipio(debitosMapa, l);
     } else if (tipo === "07") {
       // VAF A - 1 (regime normal): 19-33 saídas, 34-48 entradas, 49-63 outras
-      // entradas, 64 sinal, 65-79 VAF próprio. VAF negativo não compõe o índice.
-      const valor = num(l, 65, 79);
+      // entradas, 64 sinal, 65-78 VAF próprio. VAF negativo não compõe o índice.
+      const valor = num(l, 65, 78);
       if (l[63] === "-") somaVafProprioNaoCompoe += valor;
       else somaVafProprioNormal += valor;
     } else if (tipo === "23") {
