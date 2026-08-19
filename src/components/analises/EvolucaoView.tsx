@@ -236,6 +236,10 @@ export default function PaginaEvolucao() {
   const [atual, setAtual] = useState<ArquivoEvolucao | null>(null);
   const [carregando, setCarregando] = useState<"base" | "atual" | null>(null);
   const [vafReferencia, setVafReferencia] = useState("");
+  const [nomeGravar, setNomeGravar] = useState("");
+  const { data: salvas } = useEvolucoesSalvas(municipio?.id ?? null);
+  const salvarEvolucao = useSalvarEvolucao();
+  const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
 
   const mapaMunicipiosPorCodigo = useMemo(() => {
     const mapa = new Map<string, string>();
