@@ -4,12 +4,9 @@ import {
   Building2,
   FileUp,
   History,
-  GitCompareArrows,
   FileSignature,
-  FileClock,
   Landmark,
   LogOut,
-  Percent,
   Settings,
   TrendingUp,
   Users,
@@ -32,13 +29,12 @@ const NAV_BASE = [
   { to: "/dashboard", rotulo: "Painel", icone: BarChart3 },
   { to: "/nova-apuracao", rotulo: "Nova apuração", icone: FileUp },
   { to: "/historico", rotulo: "Apurações Realizadas", icone: History },
-  { to: "/comparacao", rotulo: "Comparar apurações", icone: GitCompareArrows },
-  { to: "/evolucao", rotulo: "Evolução do VAF", icone: TrendingUp },
-  { to: "/indice", rotulo: "Índice do VAF", icone: Percent },
-  { to: "/modelos", rotulo: "Modelos de ofício", icone: FileSignature },
-  { to: "/emissoes", rotulo: "Ofícios emitidos", icone: FileClock },
+  { to: "/contribuintes", rotulo: "Contribuintes", icone: Users },
+  { to: "/analises", rotulo: "Análises do VAF", icone: TrendingUp },
+  { to: "/oficios", rotulo: "Ofícios", icone: FileSignature },
   { to: "/configuracoes", rotulo: "Configurações", icone: Settings },
 ];
+
 
 const NAV_CONSULTORIA = [{ to: "/consultoria/prefeituras", rotulo: "Prefeituras", icone: Building2 }];
 const NAV_SUPERADMIN = [{ to: "/consultoria/usuarios", rotulo: "Usuários", icone: Users }];

@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedAnalisesRouteImport } from './routes/_authenticated/analises'
 import { Route as AuthenticatedComparacaoRouteImport } from './routes/_authenticated/comparacao'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_authenticated/consultoria/route'
+import { Route as AuthenticatedContribuintesRouteImport } from './routes/_authenticated/contribuintes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEmissoesRouteImport } from './routes/_authenticated/emissoes'
 import { Route as AuthenticatedEvolucaoRouteImport } from './routes/_authenticated/evolucao'
@@ -21,6 +23,7 @@ import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authentica
 import { Route as AuthenticatedIndiceRouteImport } from './routes/_authenticated/indice'
 import { Route as AuthenticatedModelosRouteImport } from './routes/_authenticated/modelos'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
+import { Route as AuthenticatedOficiosRouteImport } from './routes/_authenticated/oficios'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
 import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './routes/_authenticated/consultoria/prefeituras'
@@ -34,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAnalisesRoute = AuthenticatedAnalisesRouteImport.update({
+  id: '/analises',
+  path: '/analises',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedComparacaoRoute = AuthenticatedComparacaoRouteImport.update({
   id: '/comparacao',
@@ -50,6 +58,12 @@ const AuthenticatedConsultoriaRouteRoute =
   AuthenticatedConsultoriaRouteRouteImport.update({
     id: '/consultoria',
     path: '/consultoria',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedContribuintesRoute =
+  AuthenticatedContribuintesRouteImport.update({
+    id: '/contribuintes',
+    path: '/contribuintes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -88,6 +102,11 @@ const AuthenticatedNovaApuracaoRoute =
     path: '/nova-apuracao',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOficiosRoute = AuthenticatedOficiosRouteImport.update({
+  id: '/oficios',
+  path: '/oficios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTrocarSenhaRoute =
   AuthenticatedTrocarSenhaRouteImport.update({
     id: '/trocar-senha',
@@ -116,8 +135,10 @@ const AuthenticatedConsultoriaUsuariosRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
+  '/analises': typeof AuthenticatedAnalisesRoute
   '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/contribuintes': typeof AuthenticatedContribuintesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/emissoes': typeof AuthenticatedEmissoesRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
@@ -125,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/indice': typeof AuthenticatedIndiceRoute
   '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/oficios': typeof AuthenticatedOficiosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -133,8 +155,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
+  '/analises': typeof AuthenticatedAnalisesRoute
   '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/contribuintes': typeof AuthenticatedContribuintesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/emissoes': typeof AuthenticatedEmissoesRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
@@ -142,6 +166,7 @@ export interface FileRoutesByTo {
   '/indice': typeof AuthenticatedIndiceRoute
   '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/oficios': typeof AuthenticatedOficiosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -152,8 +177,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
+  '/_authenticated/analises': typeof AuthenticatedAnalisesRoute
   '/_authenticated/comparacao': typeof AuthenticatedComparacaoRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/contribuintes': typeof AuthenticatedContribuintesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/emissoes': typeof AuthenticatedEmissoesRoute
   '/_authenticated/evolucao': typeof AuthenticatedEvolucaoRoute
@@ -161,6 +188,7 @@ export interface FileRoutesById {
   '/_authenticated/indice': typeof AuthenticatedIndiceRoute
   '/_authenticated/modelos': typeof AuthenticatedModelosRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
+  '/_authenticated/oficios': typeof AuthenticatedOficiosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/_authenticated/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -171,8 +199,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/consultoria'
+    | '/analises'
     | '/comparacao'
     | '/configuracoes'
+    | '/contribuintes'
     | '/dashboard'
     | '/emissoes'
     | '/evolucao'
@@ -180,6 +210,7 @@ export interface FileRouteTypes {
     | '/indice'
     | '/modelos'
     | '/nova-apuracao'
+    | '/oficios'
     | '/trocar-senha'
     | '/cargas/$cargaId'
     | '/consultoria/prefeituras'
@@ -188,8 +219,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/consultoria'
+    | '/analises'
     | '/comparacao'
     | '/configuracoes'
+    | '/contribuintes'
     | '/dashboard'
     | '/emissoes'
     | '/evolucao'
@@ -197,6 +230,7 @@ export interface FileRouteTypes {
     | '/indice'
     | '/modelos'
     | '/nova-apuracao'
+    | '/oficios'
     | '/trocar-senha'
     | '/cargas/$cargaId'
     | '/consultoria/prefeituras'
@@ -206,8 +240,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_authenticated/consultoria'
+    | '/_authenticated/analises'
     | '/_authenticated/comparacao'
     | '/_authenticated/configuracoes'
+    | '/_authenticated/contribuintes'
     | '/_authenticated/dashboard'
     | '/_authenticated/emissoes'
     | '/_authenticated/evolucao'
@@ -215,6 +251,7 @@ export interface FileRouteTypes {
     | '/_authenticated/indice'
     | '/_authenticated/modelos'
     | '/_authenticated/nova-apuracao'
+    | '/_authenticated/oficios'
     | '/_authenticated/trocar-senha'
     | '/_authenticated/cargas/$cargaId'
     | '/_authenticated/consultoria/prefeituras'
@@ -242,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/analises': {
+      id: '/_authenticated/analises'
+      path: '/analises'
+      fullPath: '/analises'
+      preLoaderRoute: typeof AuthenticatedAnalisesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/comparacao': {
       id: '/_authenticated/comparacao'
       path: '/comparacao'
@@ -261,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/consultoria'
       fullPath: '/consultoria'
       preLoaderRoute: typeof AuthenticatedConsultoriaRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/contribuintes': {
+      id: '/_authenticated/contribuintes'
+      path: '/contribuintes'
+      fullPath: '/contribuintes'
+      preLoaderRoute: typeof AuthenticatedContribuintesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -310,6 +361,13 @@ declare module '@tanstack/react-router' {
       path: '/nova-apuracao'
       fullPath: '/nova-apuracao'
       preLoaderRoute: typeof AuthenticatedNovaApuracaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/oficios': {
+      id: '/_authenticated/oficios'
+      path: '/oficios'
+      fullPath: '/oficios'
+      preLoaderRoute: typeof AuthenticatedOficiosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/trocar-senha': {
@@ -363,8 +421,10 @@ const AuthenticatedConsultoriaRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedConsultoriaRouteRoute: typeof AuthenticatedConsultoriaRouteRouteWithChildren
+  AuthenticatedAnalisesRoute: typeof AuthenticatedAnalisesRoute
   AuthenticatedComparacaoRoute: typeof AuthenticatedComparacaoRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedContribuintesRoute: typeof AuthenticatedContribuintesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEmissoesRoute: typeof AuthenticatedEmissoesRoute
   AuthenticatedEvolucaoRoute: typeof AuthenticatedEvolucaoRoute
@@ -372,6 +432,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndiceRoute: typeof AuthenticatedIndiceRoute
   AuthenticatedModelosRoute: typeof AuthenticatedModelosRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
+  AuthenticatedOficiosRoute: typeof AuthenticatedOficiosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
   AuthenticatedCargasCargaIdRoute: typeof AuthenticatedCargasCargaIdRoute
 }
@@ -379,8 +440,10 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConsultoriaRouteRoute:
     AuthenticatedConsultoriaRouteRouteWithChildren,
+  AuthenticatedAnalisesRoute: AuthenticatedAnalisesRoute,
   AuthenticatedComparacaoRoute: AuthenticatedComparacaoRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedContribuintesRoute: AuthenticatedContribuintesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEmissoesRoute: AuthenticatedEmissoesRoute,
   AuthenticatedEvolucaoRoute: AuthenticatedEvolucaoRoute,
@@ -388,6 +451,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndiceRoute: AuthenticatedIndiceRoute,
   AuthenticatedModelosRoute: AuthenticatedModelosRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
+  AuthenticatedOficiosRoute: AuthenticatedOficiosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
   AuthenticatedCargasCargaIdRoute: AuthenticatedCargasCargaIdRoute,
 }
