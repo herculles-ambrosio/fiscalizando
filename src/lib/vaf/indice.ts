@@ -107,8 +107,16 @@ type Detalhamento = {
   somaCreditosExternos: number;
   somaCreditosMunicipios: number;
   somaDebitosMunicipios: number;
-  /** soma do VAF declarado (registro 10, com sinal) — base do VAF próprio estimado */
+  /** soma do VAF declarado (registro 10, com sinal) — apenas informativa */
   somaVafDeclarado: number;
+  /** VAF A - 1: registro 07, somente os contribuintes com VAF positivo */
+  somaVafProprioNormal: number;
+  /** registro 07 com VAF negativo (não compõe o índice), em módulo */
+  somaVafProprioNaoCompoe: number;
+  /** VAF A - SN: registro 23 com marca 58 (Simples Nacional) */
+  somaVafProprioSn: number;
+  /** SIMEI: registro 40 */
+  somaVafProprioSimei: number;
   /** exercício mais frequente nos registros 10 */
   exercicio: number | null;
 };
