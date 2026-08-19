@@ -307,8 +307,11 @@ export type OpcoesEstimativa = {
  * (que não traz os registros 16/17 fechados pela SEF-MG).
  *
  * Exatos no arquivo mensal: crédito externo (11/35), crédito interno (12) e
- * débito (13). Estimado: VAF próprio (soma do VAF declarado nos registros 10),
- * que pode ser calibrado por um fator obtido do último índice definitivo.
+ * débito (13). VAF próprio = VAF A - 1 (registro 07, apenas os contribuintes
+ * com VAF positivo; os negativos não compõem o índice) + VAF A - SN
+ * (registro 23, marca 58) + SIMEI (registro 40) — mesma composição dos
+ * demonstrativos da SEF-MG. Pode ser calibrado por um fator obtido do último
+ * índice definitivo.
  */
 export function estimarIndiceProvisorio(
   textoRetorno: string,
@@ -323,7 +326,10 @@ export function estimarIndiceProvisorio(
   const vafEstadual = vafEstadualArquivo || (opcoes.vafEstadualReferencia ?? 0);
 
   const fator = opcoes.fatorCalibragem && opcoes.fatorCalibragem > 0 ? opcoes.fatorCalibragem : 1;
-  const vafProprio = Math.round(d.somaVafDeclarado * fator);
+  const baseVafProprio =
+    d.somaVafProprioNormal + d.somaVafProprioSn + d.somaVafProprioSimei ||
+    d.somaVafDeclarado;
+  const vafProprio = Math.round(baseVafProprio * fator);
   const valorLiquido =
     vafProprio + d.somaCreditosExternos + d.somaCreditosMunicipios - d.somaDebitosMunicipios;
 
@@ -337,6 +343,10 @@ export function estimarIndiceProvisorio(
     periodoInicio: linha99 ? dataSefPonto(texto(linha99, 44, 53)) : null,
     periodoFim: linha99 ? dataSefPonto(texto(linha99, 54, 63)) : null,
     vafProprio,
+    vafProprioNormal: d.somaVafProprioNormal,
+    vafProprioSn: d.somaVafProprioSn,
+    vafProprioSimei: d.somaVafProprioSimei,
+    vafProprioNaoCompoe: d.somaVafProprioNaoCompoe,
     creditoExterno: d.somaCreditosExternos,
     creditoInterno: d.somaCreditosMunicipios,
     creditoProprio: 0,
