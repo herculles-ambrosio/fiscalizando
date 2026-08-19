@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, HelpCircle, Loader2, Minus } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, FolderOpen, HelpCircle, Loader2, Minus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo, useMunicipios } from "@/hooks/useMunicipio";
+import {
+  useEvolucoesSalvas,
+  useExcluirEvolucao,
+  useSalvarEvolucao,
+} from "@/hooks/useEvolucoesSalvas";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
 import { anoDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
@@ -236,6 +241,10 @@ export default function PaginaEvolucao() {
   const [atual, setAtual] = useState<ArquivoEvolucao | null>(null);
   const [carregando, setCarregando] = useState<"base" | "atual" | null>(null);
   const [vafReferencia, setVafReferencia] = useState("");
+  const [nomeGravar, setNomeGravar] = useState("");
+  const { data: salvas } = useEvolucoesSalvas(municipio?.id ?? null);
+  const salvarEvolucao = useSalvarEvolucao();
+  const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
 
   const mapaMunicipiosPorCodigo = useMemo(() => {
     const mapa = new Map<string, string>();
@@ -376,6 +385,94 @@ export default function PaginaEvolucao() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Evoluções gravadas</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Grave o comparativo atual para recarregá-lo depois sem precisar dos arquivos.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              placeholder="Nome da análise (ex.: Definitivo 2024 x Mensal 07/2025)"
+              value={nomeGravar}
+              onChange={(e) => setNomeGravar(e.target.value)}
+            />
+            <Button
+              disabled={!base || !atual || !municipio || salvarEvolucao.isPending}
+              onClick={() => {
+                if (!base || !atual || !municipio) return;
+                const nome =
+                  nomeGravar.trim() || `${rotuloArquivo(base)} x ${rotuloArquivo(atual)}`;
+                salvarEvolucao.mutate(
+                  { municipioId: municipio.id, nome, vafReferencia, base, atual },
+                  {
+                    onSuccess: () => {
+                      setNomeGravar("");
+                      toast.success("Evolução gravada.");
+                    },
+                    onError: (e) =>
+                      toast.error(e instanceof Error ? e.message : "Não foi possível gravar."),
+                  },
+                );
+              }}
+            >
+              {salvarEvolucao.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Gravar evolução
+            </Button>
+          </div>
+
+          {(salvas?.length ?? 0) === 0 ? (
+            <p className="text-xs text-muted-foreground">Nenhuma evolução gravada ainda.</p>
+          ) : (
+            <div className="divide-y divide-border rounded-md border border-border">
+              {salvas!.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{s.nome}</p>
+                    <p className="truncate font-mono text-xs text-muted-foreground">
+                      {s.arquivo_base_nome} → {s.arquivo_atual_nome} ·{" "}
+                      {new Date(s.criado_em).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setBase(s.base);
+                        setAtual(s.atual);
+                        setVafReferencia(s.vaf_referencia ?? "");
+                        toast.success("Evolução carregada.");
+                      }}
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      Carregar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => excluirEvolucao.mutate(s.id)}
+                      disabled={excluirEvolucao.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {(!base || !atual) && (
         <Alert>

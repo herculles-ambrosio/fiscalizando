@@ -255,6 +255,59 @@ export type Database = {
           },
         ]
       }
+      evolucoes_salvas: {
+        Row: {
+          arquivo_atual_nome: string
+          arquivo_base_nome: string
+          atual: Json
+          atualizado_em: string
+          base: Json
+          criado_em: string
+          criado_por: string | null
+          id: string
+          municipio_id: string
+          nome: string
+          observacao: string | null
+          vaf_referencia: string | null
+        }
+        Insert: {
+          arquivo_atual_nome: string
+          arquivo_base_nome: string
+          atual: Json
+          atualizado_em?: string
+          base: Json
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          municipio_id: string
+          nome: string
+          observacao?: string | null
+          vaf_referencia?: string | null
+        }
+        Update: {
+          arquivo_atual_nome?: string
+          arquivo_base_nome?: string
+          atual?: Json
+          atualizado_em?: string
+          base?: Json
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          municipio_id?: string
+          nome?: string
+          observacao?: string | null
+          vaf_referencia?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolucoes_salvas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       indices_apurados: {
         Row: {
           acerto_credito: number
