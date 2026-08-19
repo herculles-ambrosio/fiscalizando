@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, HelpCircle, Loader2, Minus } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, FolderOpen, HelpCircle, Loader2, Minus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo, useMunicipios } from "@/hooks/useMunicipio";
+import {
+  useEvolucoesSalvas,
+  useExcluirEvolucao,
+  useSalvarEvolucao,
+} from "@/hooks/useEvolucoesSalvas";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
 import { anoDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
