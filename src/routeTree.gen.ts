@@ -19,6 +19,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedEvolucaoRouteImport } from './routes/_authenticated/evolucao'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedIndiceRouteImport } from './routes/_authenticated/indice'
+import { Route as AuthenticatedModelosRouteImport } from './routes/_authenticated/modelos'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
 import { Route as AuthenticatedOficiosRouteImport } from './routes/_authenticated/oficios'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
@@ -77,6 +78,11 @@ const AuthenticatedIndiceRoute = AuthenticatedIndiceRouteImport.update({
   path: '/indice',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedModelosRoute = AuthenticatedModelosRouteImport.update({
+  id: '/modelos',
+  path: '/modelos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNovaApuracaoRoute =
   AuthenticatedNovaApuracaoRouteImport.update({
     id: '/nova-apuracao',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/indice': typeof AuthenticatedIndiceRoute
+  '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/oficios': typeof AuthenticatedOficiosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/indice': typeof AuthenticatedIndiceRoute
+  '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/oficios': typeof AuthenticatedOficiosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/_authenticated/evolucao': typeof AuthenticatedEvolucaoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/indice': typeof AuthenticatedIndiceRoute
+  '/_authenticated/modelos': typeof AuthenticatedModelosRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/_authenticated/oficios': typeof AuthenticatedOficiosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/evolucao'
     | '/historico'
     | '/indice'
+    | '/modelos'
     | '/nova-apuracao'
     | '/oficios'
     | '/trocar-senha'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/evolucao'
     | '/historico'
     | '/indice'
+    | '/modelos'
     | '/nova-apuracao'
     | '/oficios'
     | '/trocar-senha'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/_authenticated/evolucao'
     | '/_authenticated/historico'
     | '/_authenticated/indice'
+    | '/_authenticated/modelos'
     | '/_authenticated/nova-apuracao'
     | '/_authenticated/oficios'
     | '/_authenticated/trocar-senha'
@@ -298,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndiceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/modelos': {
+      id: '/_authenticated/modelos'
+      path: '/modelos'
+      fullPath: '/modelos'
+      preLoaderRoute: typeof AuthenticatedModelosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/nova-apuracao': {
       id: '/_authenticated/nova-apuracao'
       path: '/nova-apuracao'
@@ -370,6 +389,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEvolucaoRoute: typeof AuthenticatedEvolucaoRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedIndiceRoute: typeof AuthenticatedIndiceRoute
+  AuthenticatedModelosRoute: typeof AuthenticatedModelosRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
   AuthenticatedOficiosRoute: typeof AuthenticatedOficiosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
@@ -386,6 +406,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEvolucaoRoute: AuthenticatedEvolucaoRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedIndiceRoute: AuthenticatedIndiceRoute,
+  AuthenticatedModelosRoute: AuthenticatedModelosRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
   AuthenticatedOficiosRoute: AuthenticatedOficiosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
