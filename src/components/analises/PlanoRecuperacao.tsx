@@ -83,6 +83,8 @@ type Props = {
   /** Identificador estável da análise (arquivos comparados) para gravar o acompanhamento. */
   referencia?: string | null;
   cargaId?: string | null;
+  /** situação cadastral por IE — cancelados/baixados/bloqueados saem das ações */
+  situacoesCadastrais?: MapaSituacoesCadastrais | null;
 };
 
 export type SalvarStatus = (entradas: EntradaStatus | EntradaStatus[]) => void;
@@ -93,11 +95,21 @@ export default function PlanoRecuperacao({
   exercicio,
   referencia,
   cargaId,
+  situacoesCadastrais,
 }: Props) {
   const acoes = useMemo(
-    () => montarPlanoRecuperacao(diagnostico, declarantes, { exercicio: exercicio ?? null }),
-    [diagnostico, declarantes, exercicio],
+    () =>
+      montarPlanoRecuperacao(diagnostico, declarantes, {
+        exercicio: exercicio ?? null,
+        situacoesCadastrais: situacoesCadastrais ?? null,
+      }),
+    [diagnostico, declarantes, exercicio, situacoesCadastrais],
   );
+  const totalIgnorados = useMemo(() => {
+    const ies = new Set<string>();
+    for (const a of acoes) for (const c of a.ignorados) ies.add(c.inscricao_estadual);
+    return ies.size;
+  }, [acoes]);
   const [acaoEmissao, setAcaoEmissao] = useState<AcaoRecuperacao | null>(null);
 
   const ref = referencia ?? null;

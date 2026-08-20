@@ -54,6 +54,7 @@ import { diagnosticarEvolucao, textoDiagnostico } from "@/lib/vaf/diagnostico";
 import DiagnosticoVariacao from "@/components/analises/DiagnosticoVariacao";
 import PlanoRecuperacao from "@/components/analises/PlanoRecuperacao";
 import { montarPlanoRecuperacao, textoPlanoRecuperacao } from "@/lib/vaf/recuperacao";
+import { useSituacoesCadastrais } from "@/hooks/useSituacoesCadastrais";
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
@@ -329,6 +330,7 @@ export default function PaginaEvolucao() {
   const [pendente, setPendente] = useState<ArquivoPendente | null>(null);
   const [bloqueio, setBloqueio] = useState<ArquivoPendente | null>(null);
   const { data: salvas } = useEvolucoesSalvas(municipio?.id ?? null);
+  const { data: situacoesCadastrais } = useSituacoesCadastrais(municipio?.id ?? null);
   const salvarEvolucao = useSalvarEvolucao();
   const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
 
@@ -445,7 +447,10 @@ export default function PaginaEvolucao() {
     const diag = diagnosticarEvolucao(base, atual);
     const analise = textoDiagnostico(diag, rotuloArquivo(base), rotuloArquivo(atual));
     const plano = textoPlanoRecuperacao(
-      montarPlanoRecuperacao(diag, declarantes, { exercicio: atual.apuracao.anoBase }),
+      montarPlanoRecuperacao(diag, declarantes, {
+        exercicio: atual.apuracao.anoBase,
+        situacoesCadastrais,
+      }),
     );
     const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise, plano);
     const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
@@ -796,6 +801,7 @@ export default function PaginaEvolucao() {
             declarantes={declarantes}
             exercicio={atual.apuracao.anoBase}
             referencia={`${base.nome}::${atual.nome}`}
+            situacoesCadastrais={situacoesCadastrais ?? null}
           />
 
 
