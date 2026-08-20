@@ -5,6 +5,7 @@ import { FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
+import { SituacaoCadastralBadge } from "@/components/SituacaoCadastralBadge";
 import { REGIME_SIMEI, REGIME_SIMPLES_NACIONAL } from "@/lib/vaf/apurar";
 import { formatarCnae } from "@/lib/vaf/cnae";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,10 @@ export type ContribuinteLinha = {
   data_entrega: string | null;
   regime_recolhimento?: string | null;
   situacoes: string[];
+  situacao_cadastral?: string | null;
+  situacao_cadastral_data?: string | null;
+  mes_inicio_atividade?: number | null;
+  mes_fim_atividade?: number | null;
 };
 
 function rotuloRegime(regime: string | null): string {
@@ -191,6 +196,7 @@ export function ContribuinteDetalhe({
         {contribuinte && (
           <div className="mt-6 space-y-6">
             <div className="flex flex-wrap gap-1">
+              <SituacaoCadastralBadge situacao={contribuinte.situacao_cadastral} />
               {contribuinte.situacoes.map((s) => (
                 <SituacaoBadge key={s} situacao={s} />
               ))}
@@ -233,6 +239,27 @@ export function ContribuinteDetalhe({
 
             <div className="grid grid-cols-2 gap-4">
               <Campo rotulo="CNAE" valor={formatarCnae(contribuinte.cnae)} />
+              <Campo
+                rotulo="Situação cadastral"
+                valor={
+                  <>
+                    {ROTULO_SITUACAO_CADASTRAL[
+                      (contribuinte.situacao_cadastral as SituacaoCadastral) ?? "DESCONHECIDA"
+                    ] ?? "—"}
+                    {contribuinte.situacao_cadastral_data
+                      ? ` · desde ${formatarData(contribuinte.situacao_cadastral_data)}`
+                      : ""}
+                  </>
+                }
+              />
+              <Campo
+                rotulo="Período de atividade"
+                valor={
+                  contribuinte.mes_inicio_atividade || contribuinte.mes_fim_atividade
+                    ? `mês ${contribuinte.mes_inicio_atividade ?? 1} a ${contribuinte.mes_fim_atividade ?? 12}`
+                    : "ano inteiro"
+                }
+              />
               <Campo
                 rotulo="Regime"
                 valor={rotuloRegime(contribuinte.regime_recolhimento ?? null)}
