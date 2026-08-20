@@ -66,6 +66,9 @@ import {
   type EntradaStatus,
   type StatusAcao,
 } from "@/hooks/useAcoesRecuperacao";
+import { useAnexosAcao } from "@/hooks/useAnexosAcao";
+import AnotacoesAcao from "./AnotacoesAcao";
+
 
 const CORES_PRIORIDADE: Record<AcaoRecuperacao["prioridade"], string> = {
   alta: "border-destructive/40 bg-destructive/10 text-destructive",
