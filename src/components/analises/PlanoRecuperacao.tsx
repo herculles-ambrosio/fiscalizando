@@ -205,8 +205,11 @@ export default function PlanoRecuperacao({
                 cargaId={cargaId ?? null}
                 exercicio={exercicio ?? null}
                 statusPorChave={statusPorChave}
+                obsPorChave={obsPorChave}
+                anexosPorChave={anexosPorChave}
                 salvarStatus={salvarStatus}
               />
+
             ))}
           </div>
         </CardContent>
