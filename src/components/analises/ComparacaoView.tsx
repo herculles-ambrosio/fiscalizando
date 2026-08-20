@@ -17,6 +17,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda, formatarPercentual } from "@/lib/format";
+import { baixarCsv, montarCsv } from "@/lib/csv";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import {
   competenciaOrdenavel,
   formatarCompetencia,
