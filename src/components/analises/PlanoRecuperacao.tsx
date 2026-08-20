@@ -54,6 +54,16 @@ import {
 } from "@/lib/vaf/recuperacao";
 import type { DiagnosticoEvolucao } from "@/lib/vaf/diagnostico";
 import type { ComparacaoDeclarantes } from "@/lib/vaf/evolucao";
+import {
+  chaveStatus,
+  useAcoesRecuperacao,
+  useSalvarStatusAcao,
+  CORES_STATUS_ACAO,
+  ROTULO_STATUS_ACAO,
+  STATUS_ACAO,
+  type EntradaStatus,
+  type StatusAcao,
+} from "@/hooks/useAcoesRecuperacao";
 
 const CORES_PRIORIDADE: Record<AcaoRecuperacao["prioridade"], string> = {
   alta: "border-destructive/40 bg-destructive/10 text-destructive",
@@ -65,16 +75,55 @@ type Props = {
   diagnostico: DiagnosticoEvolucao;
   declarantes: ComparacaoDeclarantes;
   exercicio?: number | null;
+  /** Identificador estável da análise (arquivos comparados) para gravar o acompanhamento. */
+  referencia?: string | null;
+  cargaId?: string | null;
 };
 
-export default function PlanoRecuperacao({ diagnostico, declarantes, exercicio }: Props) {
+export type SalvarStatus = (entradas: EntradaStatus | EntradaStatus[]) => void;
+
+export default function PlanoRecuperacao({
+  diagnostico,
+  declarantes,
+  exercicio,
+  referencia,
+  cargaId,
+}: Props) {
   const acoes = useMemo(
     () => montarPlanoRecuperacao(diagnostico, declarantes, { exercicio: exercicio ?? null }),
     [diagnostico, declarantes, exercicio],
   );
   const [acaoEmissao, setAcaoEmissao] = useState<AcaoRecuperacao | null>(null);
 
+  const ref = referencia ?? null;
+  const { data: registros } = useAcoesRecuperacao(ref);
+  const salvar = useSalvarStatusAcao();
+
+  const statusPorChave = useMemo(() => {
+    const m = new Map<string, StatusAcao>();
+    for (const r of registros ?? []) m.set(chaveStatus(r.acao_chave, r.inscricao_estadual), r.status);
+    return m;
+  }, [registros]);
+
+  const salvarStatus: SalvarStatus = (entradas) => {
+    if (!ref) {
+      toast.error("Análise sem referência para gravar o acompanhamento.");
+      return;
+    }
+    salvar.mutate(entradas, {
+      onSuccess: () => toast.success("Status atualizado."),
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o status."),
+    });
+  };
+
   const totalPotencial = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const concluidas = acoes.filter(
+    (a) => statusPorChave.get(chaveStatus(a.chave)) === "concluida",
+  ).length;
+  const emAndamento = acoes.filter((a) => {
+    const s = statusPorChave.get(chaveStatus(a.chave));
+    return s === "oficio_enviado" || s === "resposta_recebida";
+  }).length;
 
   function copiar() {
     void navigator.clipboard
