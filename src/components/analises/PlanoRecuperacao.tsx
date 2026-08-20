@@ -357,6 +357,13 @@ function ItemAcao({
         {acao.fundamento ? ` · ${acao.fundamento}` : ""}
       </p>
 
+      {obsPorChave.get(chaveStatus(acao.chave)) && (
+        <p className="mt-2 rounded-lg bg-muted/60 p-2 text-xs">
+          <span className="font-medium">Observação: </span>
+          <span className="text-muted-foreground">{obsPorChave.get(chaveStatus(acao.chave))}</span>
+        </p>
+      )}
+
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {acao.situacaoOficio && temLista ? (
           <Button size="sm" variant="secondary" className="h-7 gap-1 px-2 text-xs" onClick={onEmitir}>
@@ -370,6 +377,20 @@ function ItemAcao({
               : "Ação sem documento automático (diligência/procedimento)."}
           </span>
         )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 gap-1 px-2 text-xs"
+          onClick={() => setAnotando("")}
+        >
+          <Paperclip className="h-3.5 w-3.5" />
+          Observações e anexos
+          {anexosPorChave.get(chaveStatus(acao.chave))
+            ? ` (${anexosPorChave.get(chaveStatus(acao.chave))})`
+            : ""}
+        </Button>
+
 
         {temLista && (
           <Collapsible open={aberto} onOpenChange={setAberto}>
