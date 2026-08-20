@@ -6,8 +6,10 @@ import {
   ClipboardCopy,
   FileText,
   Loader2,
+  Paperclip,
   Target,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,6 +66,9 @@ import {
   type EntradaStatus,
   type StatusAcao,
 } from "@/hooks/useAcoesRecuperacao";
+import { useAnexosAcao } from "@/hooks/useAnexosAcao";
+import AnotacoesAcao from "./AnotacoesAcao";
+
 
 const CORES_PRIORIDADE: Record<AcaoRecuperacao["prioridade"], string> = {
   alta: "border-destructive/40 bg-destructive/10 text-destructive",
@@ -105,16 +110,34 @@ export default function PlanoRecuperacao({
     return m;
   }, [registros]);
 
+  const obsPorChave = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const r of registros ?? [])
+      m.set(chaveStatus(r.acao_chave, r.inscricao_estadual), r.observacao);
+    return m;
+  }, [registros]);
+
+  const { data: anexos } = useAnexosAcao(ref);
+  const anexosPorChave = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const a of anexos ?? []) {
+      const k = chaveStatus(a.acao_chave, a.inscricao_estadual);
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return m;
+  }, [anexos]);
+
   const salvarStatus: SalvarStatus = (entradas) => {
     if (!ref) {
       toast.error("Análise sem referência para gravar o acompanhamento.");
       return;
     }
     salvar.mutate(entradas, {
-      onSuccess: () => toast.success("Status atualizado."),
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o status."),
+      onSuccess: () => toast.success("Acompanhamento atualizado."),
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar."),
     });
   };
+
 
   const totalPotencial = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
   const concluidas = acoes.filter(
@@ -187,8 +210,11 @@ export default function PlanoRecuperacao({
                 cargaId={cargaId ?? null}
                 exercicio={exercicio ?? null}
                 statusPorChave={statusPorChave}
+                obsPorChave={obsPorChave}
+                anexosPorChave={anexosPorChave}
                 salvarStatus={salvarStatus}
               />
+
             ))}
           </div>
         </CardContent>
@@ -257,6 +283,8 @@ function ItemAcao({
   cargaId,
   exercicio,
   statusPorChave,
+  obsPorChave,
+  anexosPorChave,
   salvarStatus,
 }: {
   acao: AcaoRecuperacao;
@@ -266,11 +294,18 @@ function ItemAcao({
   cargaId: string | null;
   exercicio: number | null;
   statusPorChave: Map<string, StatusAcao>;
+  obsPorChave: Map<string, string | null>;
+  anexosPorChave: Map<string, number>;
   salvarStatus: SalvarStatus;
 }) {
   const [aberto, setAberto] = useState(false);
+  /** null = fechado; "" = anotação da ação; IE = anotação do contribuinte */
+  const [anotando, setAnotando] = useState<string | null>(null);
   const temLista = acao.contribuintes.length > 0;
   const statusAcao = statusPorChave.get(chaveStatus(acao.chave)) ?? "prevista";
+  const contribuinteAnotado =
+    anotando ? acao.contribuintes.find((c) => c.inscricao_estadual === anotando) ?? null : null;
+
 
   const baseEntrada = {
     referencia: referencia ?? "",
@@ -301,9 +336,15 @@ function ItemAcao({
           <SeletorStatus
             valor={statusAcao}
             onChange={(status) =>
-              salvarStatus({ ...baseEntrada, valorRecuperavel: acao.valorRecuperavel, status })
+              salvarStatus({
+                ...baseEntrada,
+                valorRecuperavel: acao.valorRecuperavel,
+                observacao: obsPorChave.get(chaveStatus(acao.chave)) ?? null,
+                status,
+              })
             }
           />
+
           {acao.valorRecuperavel > 0 && (
             <span className="font-mono text-sm tabular-nums">
               {formatarMoeda(acao.valorRecuperavel)}
@@ -321,6 +362,13 @@ function ItemAcao({
         {acao.fundamento ? ` · ${acao.fundamento}` : ""}
       </p>
 
+      {obsPorChave.get(chaveStatus(acao.chave)) && (
+        <p className="mt-2 rounded-lg bg-muted/60 p-2 text-xs">
+          <span className="font-medium">Observação: </span>
+          <span className="text-muted-foreground">{obsPorChave.get(chaveStatus(acao.chave))}</span>
+        </p>
+      )}
+
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {acao.situacaoOficio && temLista ? (
           <Button size="sm" variant="secondary" className="h-7 gap-1 px-2 text-xs" onClick={onEmitir}>
@@ -334,6 +382,20 @@ function ItemAcao({
               : "Ação sem documento automático (diligência/procedimento)."}
           </span>
         )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 gap-1 px-2 text-xs"
+          onClick={() => setAnotando("")}
+        >
+          <Paperclip className="h-3.5 w-3.5" />
+          Observações e anexos
+          {anexosPorChave.get(chaveStatus(acao.chave))
+            ? ` (${anexosPorChave.get(chaveStatus(acao.chave))})`
+            : ""}
+        </Button>
+
 
         {temLista && (
           <Collapsible open={aberto} onOpenChange={setAberto}>
@@ -354,6 +416,7 @@ function ItemAcao({
                     <TableHead className="text-right">Comparado/estimado</TableHead>
                     <TableHead className="text-right">Impacto</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Notas</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -365,6 +428,11 @@ function ItemAcao({
                           IE {c.inscricao_estadual}
                           {c.cnpj ? ` · ${formatarCnpj(c.cnpj)}` : ""}
                         </p>
+                        {obsPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) && (
+                          <p className="mt-1 text-muted-foreground italic">
+                            {obsPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual))}
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
                         {formatarMoeda(c.vafBase)}
@@ -388,10 +456,24 @@ function ItemAcao({
                               nomeContribuinte: c.nome,
                               cnpj: c.cnpj,
                               valorRecuperavel: Math.abs(c.diferenca),
+                              observacao:
+                                obsPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) ??
+                                null,
                               status,
                             })
                           }
                         />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs"
+                          onClick={() => setAnotando(c.inscricao_estadual)}
+                        >
+                          <Paperclip className="h-3.5 w-3.5" />
+                          {anexosPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) ?? ""}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -407,7 +489,39 @@ function ItemAcao({
           </Collapsible>
         )}
       </div>
+
+      <AnotacoesAcao
+        aberto={anotando !== null}
+        onFechar={() => setAnotando(null)}
+        titulo={acao.titulo}
+        subtitulo={
+          contribuinteAnotado
+            ? `${contribuinteAnotado.nome ?? "(sem nome)"} — IE ${contribuinteAnotado.inscricao_estadual}`
+            : undefined
+        }
+        referencia={referencia}
+        acaoChave={acao.chave}
+        inscricaoEstadual={anotando ?? ""}
+        observacaoAtual={obsPorChave.get(chaveStatus(acao.chave, anotando ?? "")) ?? null}
+        onSalvarObservacao={(texto) =>
+          salvarStatus({
+            ...baseEntrada,
+            ...(contribuinteAnotado
+              ? {
+                  inscricaoEstadual: contribuinteAnotado.inscricao_estadual,
+                  nomeContribuinte: contribuinteAnotado.nome,
+                  cnpj: contribuinteAnotado.cnpj,
+                  valorRecuperavel: Math.abs(contribuinteAnotado.diferenca),
+                }
+              : { valorRecuperavel: acao.valorRecuperavel }),
+            observacao: texto,
+            status:
+              statusPorChave.get(chaveStatus(acao.chave, anotando ?? "")) ?? "prevista",
+          })
+        }
+      />
     </div>
+
   );
 }
 
