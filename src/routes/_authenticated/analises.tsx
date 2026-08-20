@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EvolucaoView from "@/components/analises/EvolucaoView";
 import ComparacaoView from "@/components/analises/ComparacaoView";
 import IndiceView from "@/components/analises/IndiceView";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 
 const ABAS = ["evolucao", "comparacao", "indice"] as const;
 type Aba = (typeof ABAS)[number];
@@ -37,6 +38,9 @@ export const Route = createFileRoute("/_authenticated/analises")({
 function PaginaAnalises() {
   const { aba } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  // trocar de prefeitura remonta as abas, limpando arquivos/filtros da anterior
+  const { municipioId } = useMunicipioAtivo();
+  const chave = municipioId ?? "sem-municipio";
 
   return (
     <Tabs
@@ -52,13 +56,13 @@ function PaginaAnalises() {
 
       {/* forceMount mantém arquivos, buscas e filtros de cada aba ao alternar */}
       <TabsContent value="evolucao" forceMount className="data-[state=inactive]:hidden">
-        <EvolucaoView />
+        <EvolucaoView key={chave} />
       </TabsContent>
       <TabsContent value="comparacao" forceMount className="data-[state=inactive]:hidden">
-        <ComparacaoView />
+        <ComparacaoView key={chave} />
       </TabsContent>
       <TabsContent value="indice" forceMount className="data-[state=inactive]:hidden">
-        <IndiceView />
+        <IndiceView key={chave} />
       </TabsContent>
     </Tabs>
   );
