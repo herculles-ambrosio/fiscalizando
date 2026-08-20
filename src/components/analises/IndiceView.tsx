@@ -311,7 +311,14 @@ export default function PaginaIndice() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `indice_${apuracao.estimado ? "provisorio_estimado" : apuracao.tipoIndice}_${apuracao.codigoMunicipio}_${apuracao.anoBase ?? ""}.csv`;
+    // inclui a prefeitura ativa no nome para não confundir downloads após trocar de município
+    const slug = (municipio?.nome ?? "municipio")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    a.download = `indice_${apuracao.estimado ? "provisorio_estimado" : apuracao.tipoIndice}_${slug}_${apuracao.codigoMunicipio}_${apuracao.anoBase ?? ""}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
