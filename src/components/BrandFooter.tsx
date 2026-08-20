@@ -3,10 +3,11 @@ import { cn } from "@/lib/utils";
 
 interface BrandFooterProps {
   variante?: "escuro" | "claro";
+  tamanho?: "sm" | "md";
   className?: string;
 }
 
-export function BrandFooter({ variante = "claro", className }: BrandFooterProps) {
+export function BrandFooter({ variante = "claro", tamanho = "sm", className }: BrandFooterProps) {
   const escuro = variante === "escuro";
 
   return (
@@ -14,7 +15,11 @@ export function BrandFooter({ variante = "claro", className }: BrandFooterProps)
       <img
         src={logoAsset.url}
         alt="H-Tech Minas"
-        className={cn("h-8 w-auto object-contain", escuro && "brightness-110")}
+        className={cn(
+          "w-auto object-contain",
+          tamanho === "sm" ? "h-8" : "h-14",
+          escuro && "brightness-110",
+        )}
       />
       <div className={cn("text-[10px] leading-tight", escuro ? "text-sidebar-foreground/50" : "text-muted-foreground/70")}>
         <p>© {new Date().getFullYear()} H-Tech Minas.</p>
@@ -23,3 +28,4 @@ export function BrandFooter({ variante = "claro", className }: BrandFooterProps)
     </div>
   );
 }
+
