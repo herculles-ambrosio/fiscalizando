@@ -24,7 +24,7 @@ type Props = {
   aberto: boolean;
   onFechar: () => void;
   titulo: string;
-  subtitulo?: string;
+  subtitulo?: string | undefined;
   referencia: string | null;
   acaoChave: string;
   inscricaoEstadual?: string;
