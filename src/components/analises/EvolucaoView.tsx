@@ -66,6 +66,26 @@ function Variacao({ pct }: { pct: number | null }) {
   );
 }
 
+/** Rótulo padronizado dos cards de KPI: "TÍTULO - QUALIFICADOR" + tooltip explicativo. */
+function RotuloKpi({ titulo, ajuda }: { titulo: string; ajuda: React.ReactNode }) {
+  return (
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <p className="flex cursor-help items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+            {titulo}
+            <HelpCircle className="h-3 w-3" />
+          </p>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          <div className="space-y-1.5">{ajuda}</div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+
 function CaixaArquivo({
   titulo,
   descricao,
