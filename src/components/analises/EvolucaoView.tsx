@@ -786,7 +786,9 @@ export default function PaginaEvolucao() {
             atual={atual}
             rotuloBase={rotuloArquivo(base)}
             rotuloAtual={rotuloArquivo(atual)}
+            municipio={municipio?.nome ?? null}
           />
+
 
 
           <Tabs defaultValue="indicadores">
