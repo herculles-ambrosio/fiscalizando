@@ -916,6 +916,53 @@ export default function PaginaEvolucao() {
           </Tabs>
         </>
       )}
+      <AlertDialog open={!!pendente} onOpenChange={(o) => !o && setPendente(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arquivo de outra prefeitura</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  O arquivo <span className="font-mono">{pendente?.file.name}</span> é da prefeitura{" "}
+                  <strong>
+                    {pendente?.destinoNome ?? pendente?.nome ?? `código ${pendente?.codigo}`}
+                  </strong>{" "}
+                  (código {pendente?.codigo}), mas a prefeitura ativa é{" "}
+                  <strong>{municipio?.nome ?? "—"}</strong>.
+                </p>
+                {pendente?.destinoId ? (
+                  podeTrocar ? (
+                    <p>
+                      Deseja trocar a prefeitura ativa para{" "}
+                      <strong>{pendente.destinoNome}</strong> e carregar este arquivo? A comparação
+                      atual será limpa.
+                    </p>
+                  ) : (
+                    <p>
+                      Você não tem permissão para trocar de prefeitura. Só é possível carregar
+                      arquivos da prefeitura ativa.
+                    </p>
+                  )
+                ) : (
+                  <p>
+                    Essa prefeitura não está cadastrada ou não está disponível para o seu usuário.
+                    Só é possível carregar arquivos da prefeitura ativa.
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            {pendente?.destinoId && podeTrocar && (
+              <AlertDialogAction onClick={confirmarTroca}>
+                Trocar para {pendente.destinoNome} e analisar
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }
