@@ -463,6 +463,7 @@ function DialogEmissao({
       });
       baixarBlob(blob, nomeZip(modelo.chave, config.cidade_data, exercicioNum));
       toast.success(`${acao.contribuintes.length} ofício(s) gerados.`);
+      onEmitido(acao, exercicioNum);
       onFechar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar os ofícios.");
