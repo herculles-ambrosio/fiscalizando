@@ -8,6 +8,7 @@ import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatarDataHora } from "@/lib/format";
+import { formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
