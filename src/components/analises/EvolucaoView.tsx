@@ -16,6 +16,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo, useMunicipios } from "@/hooks/useMunicipio";
 import {
@@ -25,7 +35,8 @@ import {
 } from "@/hooks/useEvolucoesSalvas";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
-import { anoDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
+import { anoDoArquivo, codigoMunicipioDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
+import { detectarMunicipioRetorno, normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
 import { formatarIndice } from "@/lib/vaf/indice";
 import {
   analisarArquivo,
@@ -255,14 +266,24 @@ function TabelaMovimentos({
 }
 
 
+type ArquivoPendente = {
+  file: File;
+  alvo: "base" | "atual";
+  codigo: string;
+  nome: string | null;
+  destinoId: string | null;
+  destinoNome: string | null;
+};
+
 export default function PaginaEvolucao() {
-  const { municipio } = useMunicipioAtivo();
+  const { municipio, municipios: municipiosPermitidos, podeTrocar, trocar } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
   const [base, setBase] = useState<ArquivoEvolucao | null>(null);
   const [atual, setAtual] = useState<ArquivoEvolucao | null>(null);
   const [carregando, setCarregando] = useState<"base" | "atual" | null>(null);
   const [vafReferencia, setVafReferencia] = useState("");
   const [nomeGravar, setNomeGravar] = useState("");
+  const [pendente, setPendente] = useState<ArquivoPendente | null>(null);
   const { data: salvas } = useEvolucoesSalvas(municipio?.id ?? null);
   const salvarEvolucao = useSalvarEvolucao();
   const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
@@ -275,10 +296,32 @@ export default function PaginaEvolucao() {
     return mapa;
   }, [municipios]);
 
-  async function carregar(file: File, alvo: "base" | "atual") {
+  async function carregar(file: File, alvo: "base" | "atual", forcar = false) {
     setCarregando(alvo);
     try {
       const texto = decodificarArquivo(await file.arrayBuffer());
+
+      // Consistência: o arquivo precisa ser da prefeitura ativa.
+      const codigoArquivo =
+        detectarMunicipioRetorno(texto).codigo ??
+        normalizarCodigoSef(codigoMunicipioDoArquivo(file.name));
+      const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
+      if (!forcar && codigoArquivo && codigoAtivo && codigoArquivo !== codigoAtivo) {
+        const destino =
+          municipiosPermitidos.find(
+            (m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo,
+          ) ?? null;
+        setPendente({
+          file,
+          alvo,
+          codigo: codigoArquivo,
+          nome: detectarMunicipioRetorno(texto).nome ?? mapaMunicipiosPorCodigo.get(codigoArquivo) ?? null,
+          destinoId: destino?.id ?? null,
+          destinoNome: destino?.nome ?? null,
+        });
+        return;
+      }
+
       const referencia = Number(vafReferencia.replace(/\./g, "").replace(",", "."));
       const analise = analisarArquivo(
         file.name,
@@ -293,6 +336,19 @@ export default function PaginaEvolucao() {
       setCarregando(null);
     }
   }
+
+  async function confirmarTroca() {
+    if (!pendente?.destinoId) return;
+    const { file, alvo, destinoId, destinoNome } = pendente;
+    setPendente(null);
+    trocar(destinoId);
+    toast.success(`Prefeitura ativa alterada para ${destinoNome}.`);
+    // limpa a comparação anterior: os arquivos eram de outra prefeitura
+    setBase(null);
+    setAtual(null);
+    await carregar(file, alvo, true);
+  }
+
 
   const indicadores = useMemo(
     () => (base && atual ? linhasEvolucao(base.apuracao, atual.apuracao) : []),
@@ -860,6 +916,53 @@ export default function PaginaEvolucao() {
           </Tabs>
         </>
       )}
+      <AlertDialog open={!!pendente} onOpenChange={(o) => !o && setPendente(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arquivo de outra prefeitura</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  O arquivo <span className="font-mono">{pendente?.file.name}</span> é da prefeitura{" "}
+                  <strong>
+                    {pendente?.destinoNome ?? pendente?.nome ?? `código ${pendente?.codigo}`}
+                  </strong>{" "}
+                  (código {pendente?.codigo}), mas a prefeitura ativa é{" "}
+                  <strong>{municipio?.nome ?? "—"}</strong>.
+                </p>
+                {pendente?.destinoId ? (
+                  podeTrocar ? (
+                    <p>
+                      Deseja trocar a prefeitura ativa para{" "}
+                      <strong>{pendente.destinoNome}</strong> e carregar este arquivo? A comparação
+                      atual será limpa.
+                    </p>
+                  ) : (
+                    <p>
+                      Você não tem permissão para trocar de prefeitura. Só é possível carregar
+                      arquivos da prefeitura ativa.
+                    </p>
+                  )
+                ) : (
+                  <p>
+                    Essa prefeitura não está cadastrada ou não está disponível para o seu usuário.
+                    Só é possível carregar arquivos da prefeitura ativa.
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            {pendente?.destinoId && podeTrocar && (
+              <AlertDialogAction onClick={confirmarTroca}>
+                Trocar para {pendente.destinoNome} e analisar
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }
