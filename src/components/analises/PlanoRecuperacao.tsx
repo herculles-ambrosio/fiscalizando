@@ -612,32 +612,43 @@ function ItemAcao({
           </Collapsible>
         )}
         {acao.ignorados.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span>
-              {acao.ignorados.length} contribuinte(s) desta ação foram ignorados por situação
-              cadastral (cancelado/baixado/bloqueado):{" "}
-              {acao.ignorados
-                .slice(0, 5)
-                .map((c) => c.nome ?? c.inscricao_estadual)
-                .join(", ")}
-              {acao.ignorados.length > 5 ? "…" : ""}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 px-2 text-xs"
-              onClick={() =>
-                baixarCsvIgnorados(
-                  csvIgnorados(acao, situacoesCadastrais),
-                  `ignorados-${acao.chave}.csv`,
-                )
-              }
-            >
-              <Download className="h-3.5 w-3.5" />
-              CSV dos ignorados ({acao.ignorados.length})
-            </Button>
+          <div className="space-y-1.5 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2">
+              <span>
+                {acao.ignorados.length} contribuinte(s) desta ação foram ignorados por situação
+                cadastral (cancelado/baixado/bloqueado) — clique em um nome para ver o motivo
+                completo:
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs"
+                onClick={() =>
+                  baixarCsvIgnorados(
+                    csvIgnorados(acao, situacoesCadastrais),
+                    `ignorados-${acao.chave}.csv`,
+                  )
+                }
+              >
+                <Download className="h-3.5 w-3.5" />
+                CSV dos ignorados ({acao.ignorados.length})
+              </Button>
+            </div>
+            <div className="flex max-h-32 flex-wrap gap-1.5 overflow-y-auto">
+              {acao.ignorados.map((c) => (
+                <button
+                  key={c.inscricao_estadual}
+                  type="button"
+                  onClick={() => setIgnoradoAberto(c)}
+                  className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-xs transition-colors hover:border-primary/50 hover:text-foreground"
+                >
+                  {c.nome ?? c.inscricao_estadual}
+                </button>
+              ))}
+            </div>
           </div>
         )}
+
 
       </div>
 
