@@ -278,6 +278,8 @@ function ItemAcao({
   cargaId,
   exercicio,
   statusPorChave,
+  obsPorChave,
+  anexosPorChave,
   salvarStatus,
 }: {
   acao: AcaoRecuperacao;
@@ -287,11 +289,18 @@ function ItemAcao({
   cargaId: string | null;
   exercicio: number | null;
   statusPorChave: Map<string, StatusAcao>;
+  obsPorChave: Map<string, string | null>;
+  anexosPorChave: Map<string, number>;
   salvarStatus: SalvarStatus;
 }) {
   const [aberto, setAberto] = useState(false);
+  /** null = fechado; "" = anotação da ação; IE = anotação do contribuinte */
+  const [anotando, setAnotando] = useState<string | null>(null);
   const temLista = acao.contribuintes.length > 0;
   const statusAcao = statusPorChave.get(chaveStatus(acao.chave)) ?? "prevista";
+  const contribuinteAnotado =
+    anotando ? acao.contribuintes.find((c) => c.inscricao_estadual === anotando) ?? null : null;
+
 
   const baseEntrada = {
     referencia: referencia ?? "",
