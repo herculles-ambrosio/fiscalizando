@@ -163,6 +163,11 @@ function limparNumero(txt: string): string {
   return (txt || "").replace(/[^0-9]/g, "").replace(/^0+/, "");
 }
 
+function numeroMes(valor: unknown): number | null {
+  const n = Number(String(valor ?? "").replace(/[^0-9]/g, ""));
+  return Number.isFinite(n) && n >= 1 && n <= 13 ? n : null;
+}
+
 function sinalAplicado(valor: number | null, sinal: string | undefined): number | null {
   if (valor == null) return null;
   return (sinal || "").trim() === "-" ? -valor : valor;
@@ -389,7 +394,7 @@ export function apurar(
     const regime = regSimei?.regime_recolhimento ?? (regimeDecl === "00" ? null : regimeDecl);
     if (!regSimei) situacoes.push(...situacoesDoRegime(regime));
 
-    const cnpjDecl = limparNumero(String(declaracao?.["cnpj"] ?? ""));
+    const cnpjDecl = limparNumero(String(historico?.["numero_documento"] ?? ""));
 
     totais.ativos += 1;
     for (const s of situacoes) totais[s.toLowerCase() as keyof typeof totais] += 1;
