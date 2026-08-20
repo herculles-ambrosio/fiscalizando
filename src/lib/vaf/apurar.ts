@@ -322,6 +322,13 @@ export function apurar(
 
     const cnpj = limparNumero(String(ativo["cnpj_contribuinte"] ?? ""));
 
+    const mesInicio = numeroMes(declaracao?.["mes_inicio"]);
+    const mesFim = numeroMes(declaracao?.["mes_fim"]);
+    let situacaoCadastral = situacaoCadastralDoCodigo(ativo["codigo_situacao_contribuinte"]);
+    if (situacaoCadastral === "NORMAL" && mesFim != null && mesFim < 12) {
+      situacaoCadastral = "ENCERROU_ATIVIDADE";
+    }
+
     contribuintes.push({
       inscricao_estadual: ie,
       cnpj: cnpj ? cnpj.padStart(14, "0") : null,
@@ -335,30 +342,80 @@ export function apurar(
       data_entrega: dataEntregaISO,
       regime_recolhimento: regimeNormalizado,
       situacoes,
+      situacao_cadastral: situacaoCadastral,
+      situacao_cadastral_data: dataSefParaISO(String(ativo["data_situacao_contribuinte"] ?? "")),
+      mes_inicio_atividade: mesInicio,
+      mes_fim_atividade: mesFim,
     });
   }
 
-  // ---- SIMEI presentes no retorno que não constam no arquivo de ativos ----
-  for (const [ie, reg] of registrosSimei) {
+  // ---- Declarantes do retorno que não constam no arquivo de ativos ----
+  // Indicam baixa/cancelamento/transferência ocorrida durante o exercício.
+  const iesSomenteRetorno = new Set<string>([
+    ...registrosSimei.keys(),
+    ...[...reg01.keys()].filter((ie) =>
+      (reg01.get(ie) ?? []).some((r) => Number(String(r["exercicio"]).trim()) === exercicio),
+    ),
+  ]);
+
+  for (const ie of iesSomenteRetorno) {
     if (ativos.has(ie)) continue;
-    const situacoes: Situacao[] = ["SIMEI", "SOMENTE_RETORNO"];
+    const regSimei = registrosSimei.get(ie);
+    const declaracao = (reg01.get(ie) ?? [])
+      .filter((r) => Number(String(r["exercicio"]).trim()) === exercicio)
+      .sort((a, b) => chaveData(b["data_processamento"]) - chaveData(a["data_processamento"]))[0];
+    const historico = (reg10.get(ie) ?? [])
+      .filter((r) => Number(String(r["exercicio"]).trim()) === exercicio)
+      .sort((a, b) => chaveData(b["data_processamento"]) - chaveData(a["data_processamento"]))[0];
+
+    let vafAtual: number | null = historico
+      ? (sinalAplicado(historico["valor_vaf_num"] ?? 0, historico["sinal_valor_vaf"]) ?? 0)
+      : 0;
+    if (regSimei && (vafAtual == null || vafAtual === 0)) vafAtual = regSimei.vaf;
+
+    const anterior = reg02.get(ie);
+    const vafAnterior = anterior
+      ? sinalAplicado(
+          anterior["valor_adicionado_anterior_num"] ?? 0,
+          anterior["sinal_valor_adicionado_anterior"],
+        )
+      : null;
+
+    const situacoes: Situacao[] = ["SOMENTE_RETORNO"];
+    if (regSimei) situacoes.unshift("SIMEI");
+    const regimeDecl = String(declaracao?.["regime_recolhimento_final"] ?? "")
+      .trim()
+      .padStart(2, "0");
+    const regime = regSimei?.regime_recolhimento ?? (regimeDecl === "00" ? null : regimeDecl);
+    if (!regSimei) situacoes.push(...situacoesDoRegime(regime));
+
+    const cnpjDecl = limparNumero(String(declaracao?.["cnpj"] ?? ""));
+
     totais.ativos += 1;
     for (const s of situacoes) totais[s.toLowerCase() as keyof typeof totais] += 1;
+
     contribuintes.push({
       inscricao_estadual: ie,
-      cnpj: reg.cnpj,
-      nome: reg.nome,
+      cnpj: regSimei?.cnpj ?? (cnpjDecl ? cnpjDecl.padStart(14, "0") : null),
+      nome: regSimei?.nome ?? (String(declaracao?.["nome_contribuinte"] ?? "").trim() || null),
       endereco: null,
-      cnae: null,
+      cnae: String(declaracao?.["codigo_cnaef"] ?? "").trim() || null,
       entregou_declaracao: true,
-      vaf_atual: reg.vaf,
-      vaf_anterior: null,
+      vaf_atual: vafAtual,
+      vaf_anterior: vafAnterior,
       variacao_pct: null,
-      data_entrega: reg.data_entrada,
-      regime_recolhimento: reg.regime_recolhimento,
+      data_entrega: declaracao
+        ? dataSefParaISO(declaracao["data_entrega"])
+        : (regSimei?.data_entrada ?? null),
+      regime_recolhimento: regime,
       situacoes,
+      situacao_cadastral: "AUSENTE_ATIVOS",
+      situacao_cadastral_data: null,
+      mes_inicio_atividade: numeroMes(declaracao?.["mes_inicio"]),
+      mes_fim_atividade: numeroMes(declaracao?.["mes_fim"]),
     });
   }
+
 
   return { exercicio, contribuintes, totais };
 
