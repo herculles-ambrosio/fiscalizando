@@ -13,6 +13,7 @@ import {
   WidthType,
 } from "docx";
 import type { DiagnosticoEvolucao, FatorVariacao } from "./diagnostico";
+import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
 
 const FONTE = "Arial";
 const LARGURA = 9026; // A4 com margens de 1"
@@ -112,6 +113,7 @@ export function construirDocDiagnostico(
   baseNome: string,
   atualNome: string,
   municipio?: string | null,
+  acoes?: AcaoRecuperacao[],
 ): Document {
   const filhos: Array<Paragraph | Table> = [
     new Paragraph({
@@ -199,7 +201,33 @@ export function construirDocDiagnostico(
   }
 
   filhos.push(paragrafo("Conclusão", { bold: true, size: 24 }));
-  filhos.push(paragrafo(d.conclusao));
+  filhos.push(paragrafo(d.conclusao, { after: 200 }));
+
+  if (acoes && acoes.length) {
+    const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+    filhos.push(paragrafo("Plano de recuperação", { bold: true, size: 24 }));
+    filhos.push(paragrafo(`Potencial total mapeado: ${moeda(total)}`, { after: 140 }));
+    acoes.forEach((a, i) => {
+      filhos.push(
+        paragrafo(
+          `${i + 1}. ${a.titulo} — ${ROTULO_PRIORIDADE[a.prioridade]}${
+            a.valorRecuperavel > 0 ? ` · ${moeda(a.valorRecuperavel)}` : ""
+          }`,
+          { bold: true, after: 40 },
+        ),
+      );
+      filhos.push(paragrafo(`Motivo: ${a.motivo}`, { after: 30 }));
+      filhos.push(paragrafo(`Como fazer: ${a.comoFazer}`, { after: 30 }));
+      filhos.push(
+        paragrafo(
+          `Prazo: ${a.prazoSugerido}` +
+            (a.contribuintes.length ? ` · Contribuintes: ${a.contribuintes.length}` : "") +
+            (a.fundamento ? ` · ${a.fundamento}` : ""),
+          { after: 120 },
+        ),
+      );
+    });
+  }
 
   return new Document({
     styles: { default: { document: { run: { font: FONTE, size: 20 } } } },
@@ -219,8 +247,9 @@ export async function baixarDocDiagnostico(
   baseNome: string,
   atualNome: string,
   municipio?: string | null,
+  acoes?: AcaoRecuperacao[],
 ): Promise<void> {
-  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio);
+  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes);
   const blob = await Packer.toBlob(doc);
   const limpo = (s: string) => s.replace(/[^\w.-]+/g, "_").slice(0, 40);
   const url = URL.createObjectURL(blob);

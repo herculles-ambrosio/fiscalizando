@@ -146,7 +146,14 @@ export default function DiagnosticoVariacao({
     setBaixando(true);
     try {
       const { baixarDocDiagnostico } = await import("@/lib/vaf/diagnosticoDocx");
-      await baixarDocDiagnostico(d, rotuloBase, rotuloAtual, municipio ?? null);
+      const { compararDeclarantes } = await import("@/lib/vaf/evolucao");
+      const { montarPlanoRecuperacao } = await import("@/lib/vaf/recuperacao");
+      const acoes = montarPlanoRecuperacao(
+        d,
+        compararDeclarantes(base.declarantes, atual.declarantes),
+        { exercicio: atual.apuracao.anoBase },
+      );
+      await baixarDocDiagnostico(d, rotuloBase, rotuloAtual, municipio ?? null, acoes);
       toast.success("Análise baixada em .docx (abre no Word e exporta em PDF).");
     } catch {
       toast.error("Não foi possível gerar o documento da análise.");
