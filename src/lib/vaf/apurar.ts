@@ -185,15 +185,15 @@ export function apurar(
 ): ResultadoApuracao {
   const limiar = opcoes.limiarDiscrepancia ?? 0.3;
 
-  // ---- Universo de ativos (somente situação normal) ----
+  // ---- Universo de ativos (com a situação cadastral declarada pela SEF) ----
   const ativos = new Map<string, Record<string, any>>();
   for (const linha of separarLinhas(textoAtivos)) {
     const reg = parseLinha(linha, LAYOUT_ATIVOS);
-    if (String(reg["codigo_situacao_contribuinte"]).trim() !== "1") continue;
     const ie = String(reg["inscricao_estadual"]).trim();
     if (!ie) continue;
     ativos.set(ie, reg);
   }
+
 
   // ---- Retorno ----
   const reg01 = new Map<string, Record<string, any>[]>();
