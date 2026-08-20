@@ -513,6 +513,17 @@ function ItemAcao({
             </CollapsibleContent>
           </Collapsible>
         )}
+        {acao.ignorados.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {acao.ignorados.length} contribuinte(s) desta ação foram ignorados por situação
+            cadastral (cancelado/baixado/bloqueado):{" "}
+            {acao.ignorados
+              .slice(0, 5)
+              .map((c) => c.nome ?? c.inscricao_estadual)
+              .join(", ")}
+            {acao.ignorados.length > 5 ? "…" : ""}
+          </p>
+        )}
       </div>
 
       <AnotacoesAcao
