@@ -63,18 +63,40 @@ const sentidoDe = (v: number): SentidoFator =>
   Math.abs(v) < 0.005 ? "neutro" : v > 0 ? "aumentou" : "reduziu";
 
 function montarFatores(
-  itens: Array<{ chave: string; rotulo: string; detalhe: string; impacto: number }>,
+  itens: Array<{
+    chave: string;
+    rotulo: string;
+    detalhe: string;
+    impacto: number;
+    itens?: ItemDetalhe[];
+    totalItens?: number;
+  }>,
 ): FatorVariacao[] {
   const totalAbs = itens.reduce((s, i) => s + Math.abs(i.impacto), 0);
   return itens
     .filter((i) => Math.abs(i.impacto) >= 0.005)
     .map((i) => ({
       ...i,
+      itens: i.itens ?? [],
+      totalItens: i.totalItens ?? i.itens?.length ?? 0,
       peso: totalAbs === 0 ? 0 : (Math.abs(i.impacto) / totalAbs) * 100,
       sentido: sentidoDe(i.impacto),
     }))
     .sort((a, b) => Math.abs(b.impacto) - Math.abs(a.impacto));
 }
+
+const LIMITE_ITENS = 25;
+
+const itensDeclarantes = (lista: MovimentoDeclarante[]): ItemDetalhe[] =>
+  lista.slice(0, LIMITE_ITENS).map((d) => ({
+    chave: d.inscricao_estadual,
+    rotulo: d.nome ?? "(sem nome)",
+    sub: `IE ${d.inscricao_estadual}`,
+    valorBase: d.vafBase,
+    valorAtual: d.vafAtual,
+    impacto: d.diferenca,
+  }));
+
 
 export function diagnosticarEvolucao(
   base: ArquivoEvolucao,
