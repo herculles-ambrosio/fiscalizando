@@ -50,6 +50,8 @@ import {
   type LinhaEvolucao,
   type MovimentoDeclarante,
 } from "@/lib/vaf/evolucao";
+import { diagnosticarEvolucao, textoDiagnostico } from "@/lib/vaf/diagnostico";
+import DiagnosticoVariacao from "@/components/analises/DiagnosticoVariacao";
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
