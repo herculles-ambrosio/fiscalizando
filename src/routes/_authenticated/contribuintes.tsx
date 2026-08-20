@@ -208,12 +208,13 @@ function DeixaramDeDeclarar({
 
   function baixarCsv() {
     const linhas = [
-      ["IE", "CNPJ", "Contribuinte", "CNAE", "VAF na competência anterior"],
+      ["IE", "CNPJ", "Contribuinte", "CNAE", "Descrição do CNAE", "VAF na competência anterior"],
       ...(data ?? []).map((l) => [
         l.inscricao_estadual,
         l.cnpj ?? "",
         l.nome ?? "",
-        l.cnae ?? "",
+        formatarCodigoCnae(l.cnae),
+        descricaoCnae(l.cnae) ?? "",
         String(l.vaf_anterior ?? 0),
       ]),
     ];
