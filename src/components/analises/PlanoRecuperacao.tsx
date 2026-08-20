@@ -54,6 +54,16 @@ import {
 } from "@/lib/vaf/recuperacao";
 import type { DiagnosticoEvolucao } from "@/lib/vaf/diagnostico";
 import type { ComparacaoDeclarantes } from "@/lib/vaf/evolucao";
+import {
+  chaveStatus,
+  useAcoesRecuperacao,
+  useSalvarStatusAcao,
+  CORES_STATUS_ACAO,
+  ROTULO_STATUS_ACAO,
+  STATUS_ACAO,
+  type EntradaStatus,
+  type StatusAcao,
+} from "@/hooks/useAcoesRecuperacao";
 
 const CORES_PRIORIDADE: Record<AcaoRecuperacao["prioridade"], string> = {
   alta: "border-destructive/40 bg-destructive/10 text-destructive",
@@ -65,16 +75,55 @@ type Props = {
   diagnostico: DiagnosticoEvolucao;
   declarantes: ComparacaoDeclarantes;
   exercicio?: number | null;
+  /** Identificador estável da análise (arquivos comparados) para gravar o acompanhamento. */
+  referencia?: string | null;
+  cargaId?: string | null;
 };
 
-export default function PlanoRecuperacao({ diagnostico, declarantes, exercicio }: Props) {
+export type SalvarStatus = (entradas: EntradaStatus | EntradaStatus[]) => void;
+
+export default function PlanoRecuperacao({
+  diagnostico,
+  declarantes,
+  exercicio,
+  referencia,
+  cargaId,
+}: Props) {
   const acoes = useMemo(
     () => montarPlanoRecuperacao(diagnostico, declarantes, { exercicio: exercicio ?? null }),
     [diagnostico, declarantes, exercicio],
   );
   const [acaoEmissao, setAcaoEmissao] = useState<AcaoRecuperacao | null>(null);
 
+  const ref = referencia ?? null;
+  const { data: registros } = useAcoesRecuperacao(ref);
+  const salvar = useSalvarStatusAcao();
+
+  const statusPorChave = useMemo(() => {
+    const m = new Map<string, StatusAcao>();
+    for (const r of registros ?? []) m.set(chaveStatus(r.acao_chave, r.inscricao_estadual), r.status);
+    return m;
+  }, [registros]);
+
+  const salvarStatus: SalvarStatus = (entradas) => {
+    if (!ref) {
+      toast.error("Análise sem referência para gravar o acompanhamento.");
+      return;
+    }
+    salvar.mutate(entradas, {
+      onSuccess: () => toast.success("Status atualizado."),
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o status."),
+    });
+  };
+
   const totalPotencial = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const concluidas = acoes.filter(
+    (a) => statusPorChave.get(chaveStatus(a.chave)) === "concluida",
+  ).length;
+  const emAndamento = acoes.filter((a) => {
+    const s = statusPorChave.get(chaveStatus(a.chave));
+    return s === "oficio_enviado" || s === "resposta_recebida";
+  }).length;
 
   function copiar() {
     void navigator.clipboard
@@ -113,6 +162,20 @@ export default function PlanoRecuperacao({ diagnostico, declarantes, exercicio }
             </AlertDescription>
           </Alert>
 
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>Acompanhamento:</span>
+            <Badge variant="outline" className={CORES_STATUS_ACAO.concluida}>
+              {concluidas} concluída(s)
+            </Badge>
+            <Badge variant="outline" className={CORES_STATUS_ACAO.oficio_enviado}>
+              {emAndamento} em andamento
+            </Badge>
+            <Badge variant="outline" className={CORES_STATUS_ACAO.prevista}>
+              {acoes.length - concluidas - emAndamento} prevista(s)
+            </Badge>
+            {!ref && <span>· salve/carregue a evolução para gravar o status.</span>}
+          </div>
+
           <div className="space-y-3">
             {acoes.map((acao, i) => (
               <ItemAcao
@@ -120,6 +183,11 @@ export default function PlanoRecuperacao({ diagnostico, declarantes, exercicio }
                 acao={acao}
                 ordem={i + 1}
                 onEmitir={() => setAcaoEmissao(acao)}
+                referencia={ref}
+                cargaId={cargaId ?? null}
+                exercicio={exercicio ?? null}
+                statusPorChave={statusPorChave}
+                salvarStatus={salvarStatus}
               />
             ))}
           </div>
@@ -130,8 +198,54 @@ export default function PlanoRecuperacao({ diagnostico, declarantes, exercicio }
         acao={acaoEmissao}
         exercicio={exercicio ?? null}
         onFechar={() => setAcaoEmissao(null)}
+        onEmitido={(acao, exercicioNum) => {
+          if (!ref) return;
+          const base = {
+            referencia: ref,
+            cargaId: cargaId ?? null,
+            exercicio: exercicioNum,
+            acaoChave: acao.chave,
+            acaoTitulo: acao.titulo,
+            status: "oficio_enviado" as StatusAcao,
+          };
+          salvarStatus([
+            { ...base, valorRecuperavel: acao.valorRecuperavel },
+            ...acao.contribuintes.map((c) => ({
+              ...base,
+              inscricaoEstadual: c.inscricao_estadual,
+              nomeContribuinte: c.nome,
+              cnpj: c.cnpj,
+              valorRecuperavel: Math.abs(c.diferenca),
+            })),
+          ]);
+        }}
       />
     </>
+  );
+}
+
+function SeletorStatus({
+  valor,
+  onChange,
+  className,
+}: {
+  valor: StatusAcao;
+  onChange: (s: StatusAcao) => void;
+  className?: string;
+}) {
+  return (
+    <Select value={valor} onValueChange={(v) => onChange(v as StatusAcao)}>
+      <SelectTrigger className={`h-7 w-[170px] text-xs ${className ?? ""}`}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {STATUS_ACAO.map((s) => (
+          <SelectItem key={s} value={s} className="text-xs">
+            {ROTULO_STATUS_ACAO[s]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -139,13 +253,32 @@ function ItemAcao({
   acao,
   ordem,
   onEmitir,
+  referencia,
+  cargaId,
+  exercicio,
+  statusPorChave,
+  salvarStatus,
 }: {
   acao: AcaoRecuperacao;
   ordem: number;
   onEmitir: () => void;
+  referencia: string | null;
+  cargaId: string | null;
+  exercicio: number | null;
+  statusPorChave: Map<string, StatusAcao>;
+  salvarStatus: SalvarStatus;
 }) {
   const [aberto, setAberto] = useState(false);
   const temLista = acao.contribuintes.length > 0;
+  const statusAcao = statusPorChave.get(chaveStatus(acao.chave)) ?? "prevista";
+
+  const baseEntrada = {
+    referencia: referencia ?? "",
+    cargaId,
+    exercicio,
+    acaoChave: acao.chave,
+    acaoTitulo: acao.titulo,
+  };
 
   return (
     <div className="rounded-xl border p-3">
@@ -157,9 +290,20 @@ function ItemAcao({
           <p className="mt-1 text-xs text-muted-foreground">{acao.motivo}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <Badge variant="outline" className={CORES_PRIORIDADE[acao.prioridade]}>
-            {ROTULO_PRIORIDADE[acao.prioridade]}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className={CORES_STATUS_ACAO[statusAcao]}>
+              {ROTULO_STATUS_ACAO[statusAcao]}
+            </Badge>
+            <Badge variant="outline" className={CORES_PRIORIDADE[acao.prioridade]}>
+              {ROTULO_PRIORIDADE[acao.prioridade]}
+            </Badge>
+          </div>
+          <SeletorStatus
+            valor={statusAcao}
+            onChange={(status) =>
+              salvarStatus({ ...baseEntrada, valorRecuperavel: acao.valorRecuperavel, status })
+            }
+          />
           {acao.valorRecuperavel > 0 && (
             <span className="font-mono text-sm tabular-nums">
               {formatarMoeda(acao.valorRecuperavel)}
@@ -209,6 +353,7 @@ function ItemAcao({
                     <TableHead className="text-right">VAF base</TableHead>
                     <TableHead className="text-right">Comparado/estimado</TableHead>
                     <TableHead className="text-right">Impacto</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -229,6 +374,24 @@ function ItemAcao({
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
                         {formatarMoeda(c.diferenca)}
+                      </TableCell>
+                      <TableCell>
+                        <SeletorStatus
+                          valor={
+                            statusPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) ??
+                            "prevista"
+                          }
+                          onChange={(status) =>
+                            salvarStatus({
+                              ...baseEntrada,
+                              inscricaoEstadual: c.inscricao_estadual,
+                              nomeContribuinte: c.nome,
+                              cnpj: c.cnpj,
+                              valorRecuperavel: Math.abs(c.diferenca),
+                              status,
+                            })
+                          }
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -252,10 +415,12 @@ function DialogEmissao({
   acao,
   exercicio,
   onFechar,
+  onEmitido,
 }: {
   acao: AcaoRecuperacao | null;
   exercicio: number | null;
   onFechar: () => void;
+  onEmitido: (acao: AcaoRecuperacao, exercicio: number) => void;
 }) {
   const { data: config } = useConfiguracao();
   const { data: modelos } = useModelos();
@@ -298,6 +463,7 @@ function DialogEmissao({
       });
       baixarBlob(blob, nomeZip(modelo.chave, config.cidade_data, exercicioNum));
       toast.success(`${acao.contribuintes.length} ofício(s) gerados.`);
+      onEmitido(acao, exercicioNum);
       onFechar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar os ofícios.");

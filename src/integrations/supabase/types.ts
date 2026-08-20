@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      acoes_recuperacao: {
+        Row: {
+          acao_chave: string
+          acao_titulo: string
+          atualizado_em: string
+          atualizado_por: string | null
+          carga_id: string | null
+          cnpj: string | null
+          concluida_em: string | null
+          criado_em: string
+          exercicio: number | null
+          id: string
+          inscricao_estadual: string
+          municipio_id: string
+          nome_contribuinte: string | null
+          observacao: string | null
+          oficio_enviado_em: string | null
+          referencia: string
+          resposta_em: string | null
+          status: string
+          valor_recuperavel: number
+        }
+        Insert: {
+          acao_chave: string
+          acao_titulo?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+          carga_id?: string | null
+          cnpj?: string | null
+          concluida_em?: string | null
+          criado_em?: string
+          exercicio?: number | null
+          id?: string
+          inscricao_estadual?: string
+          municipio_id: string
+          nome_contribuinte?: string | null
+          observacao?: string | null
+          oficio_enviado_em?: string | null
+          referencia?: string
+          resposta_em?: string | null
+          status?: string
+          valor_recuperavel?: number
+        }
+        Update: {
+          acao_chave?: string
+          acao_titulo?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+          carga_id?: string | null
+          cnpj?: string | null
+          concluida_em?: string | null
+          criado_em?: string
+          exercicio?: number | null
+          id?: string
+          inscricao_estadual?: string
+          municipio_id?: string
+          nome_contribuinte?: string | null
+          observacao?: string | null
+          oficio_enviado_em?: string | null
+          referencia?: string
+          resposta_em?: string | null
+          status?: string
+          valor_recuperavel?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acoes_recuperacao_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acoes_recuperacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cargas: {
         Row: {
           arquivo_ativos_path: string | null
