@@ -140,7 +140,12 @@ export type ContribuinteApurado = {
   data_entrega: string | null;
   regime_recolhimento: string | null;
   situacoes: Situacao[];
+  situacao_cadastral: SituacaoCadastral;
+  situacao_cadastral_data: string | null;
+  mes_inicio_atividade: number | null;
+  mes_fim_atividade: number | null;
 };
+
 
 export type ResultadoApuracao = {
   exercicio: number;
