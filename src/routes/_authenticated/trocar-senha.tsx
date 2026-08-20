@@ -47,6 +47,8 @@ function TrocarSenha() {
   const queryClient = useQueryClient();
   const [senha, setSenha] = useState("");
   const [confirmacao, setConfirmacao] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   async function submeter(e: React.FormEvent) {
@@ -63,7 +65,9 @@ function TrocarSenha() {
     const { error } = await supabase.auth.updateUser({ password: senha });
     if (error) {
       setSalvando(false);
-      toast.error("Não foi possível alterar a senha.", { description: error.message });
+      toast.error(traduzirErroSupabase(error.message), {
+        description: "Tente uma senha mais forte, com letras, números e símbolos.",
+      });
       return;
     }
     const { data: userData } = await supabase.auth.getUser();
@@ -86,27 +90,49 @@ function TrocarSenha() {
           <form onSubmit={submeter} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="senha">Nova senha</Label>
-              <Input
-                id="senha"
-                type="password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                minLength={10}
-                maxLength={72}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="senha"
+                  type={mostrarSenha ? "text" : "password"}
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  minLength={10}
+                  maxLength={72}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenha((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmacao">Confirmar senha</Label>
-              <Input
-                id="confirmacao"
-                type="password"
-                value={confirmacao}
-                onChange={(e) => setConfirmacao(e.target.value)}
-                minLength={10}
-                maxLength={72}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="confirmacao"
+                  type={mostrarConfirmacao ? "text" : "password"}
+                  value={confirmacao}
+                  onChange={(e) => setConfirmacao(e.target.value)}
+                  minLength={10}
+                  maxLength={72}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarConfirmacao((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={mostrarConfirmacao ? "Ocultar confirmação" : "Mostrar confirmação"}
+                >
+                  {mostrarConfirmacao ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={salvando}>
               {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
