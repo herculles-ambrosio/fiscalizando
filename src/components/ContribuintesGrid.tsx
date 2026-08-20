@@ -10,6 +10,13 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
 import { SituacaoCadastralBadge } from "@/components/SituacaoCadastralBadge";
@@ -190,6 +197,24 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     },
   });
 
+  const { data: contagensCadastrais } = useQuery({
+    queryKey: ["contribuintes-cadastrais", cargaId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contribuintes_apurados")
+        .select("situacao_cadastral")
+        .eq("carga_id", cargaId)
+        .limit(20000);
+      if (error) throw error;
+      const mapa: Record<string, number> = {};
+      for (const linha of data ?? []) {
+        const chave = (linha as any).situacao_cadastral ?? "DESCONHECIDA";
+        mapa[chave] = (mapa[chave] ?? 0) + 1;
+      }
+      return mapa;
+    },
+  });
+
   const { data: contagens } = useQuery({
     queryKey: ["contribuintes-contagens", cargaId, cnae, termo],
     placeholderData: keepPreviousData,
@@ -361,6 +386,28 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
             </Command>
           </PopoverContent>
         </Popover>
+
+        <Select
+          value={cadastral}
+          onValueChange={(v) => {
+            setCadastral(v as SituacaoCadastral | "TODOS");
+            setPagina(0);
+          }}
+        >
+          <SelectTrigger className="h-8 w-64" aria-label="Filtrar por situação cadastral">
+            <SelectValue placeholder="Situação cadastral" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Situação cadastral: todas</SelectItem>
+            {SITUACOES_CADASTRAIS.map((sc) => (
+              <SelectItem key={sc} value={sc}>
+                {ROTULO_SITUACAO_CADASTRAL[sc]}
+                {contagensCadastrais?.[sc] ? ` (${contagensCadastrais[sc]})` : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
 
 
         <form
