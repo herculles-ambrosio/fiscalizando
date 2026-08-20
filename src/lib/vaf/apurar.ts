@@ -28,11 +28,61 @@ export const ROTULO_SITUACAO: Record<Situacao, string> = {
 export const REGIME_SIMPLES_NACIONAL = "58";
 export const REGIME_SIMEI = "74";
 
+/**
+ * Situação cadastral estadual (SEF/MG).
+ * Origem: campo "Código Situação Contribuinte" (pos. 531) do arquivo de ativos.
+ * Os valores derivados vêm do cruzamento ativos x retorno.
+ */
+export const SITUACOES_CADASTRAIS = [
+  "NORMAL",
+  "CANCELADO",
+  "BAIXADO",
+  "BLOQUEADO",
+  "ENDERECO_DIVERGENTE",
+  "ENCERROU_ATIVIDADE",
+  "AUSENTE_ATIVOS",
+  "DESCONHECIDA",
+] as const;
+export type SituacaoCadastral = (typeof SITUACOES_CADASTRAIS)[number];
+
+export const ROTULO_SITUACAO_CADASTRAL: Record<SituacaoCadastral, string> = {
+  NORMAL: "Ativo (normal)",
+  CANCELADO: "Cancelado",
+  BAIXADO: "Baixado",
+  BLOQUEADO: "Bloqueado no exercício",
+  ENDERECO_DIVERGENTE: "Endereço divergente",
+  ENCERROU_ATIVIDADE: "Encerrou atividade no exercício",
+  AUSENTE_ATIVOS: "Provável baixa (só no retorno)",
+  DESCONHECIDA: "Não informada",
+};
+
+/** Situações que indicam que a empresa não está mais ativa na SEF/MG. */
+export const SITUACOES_CADASTRAIS_INATIVAS: SituacaoCadastral[] = [
+  "CANCELADO",
+  "BAIXADO",
+  "ENCERROU_ATIVIDADE",
+  "AUSENTE_ATIVOS",
+];
+
+const CODIGO_PARA_SITUACAO_CADASTRAL: Record<string, SituacaoCadastral> = {
+  "1": "NORMAL",
+  "2": "CANCELADO",
+  "3": "BAIXADO",
+  "4": "BLOQUEADO",
+  "5": "ENDERECO_DIVERGENTE",
+};
+
+export function situacaoCadastralDoCodigo(codigo: string | null | undefined): SituacaoCadastral {
+  const c = String(codigo ?? "").trim();
+  return CODIGO_PARA_SITUACAO_CADASTRAL[c] ?? (c ? "DESCONHECIDA" : "DESCONHECIDA");
+}
+
 export function situacoesDoRegime(regime: string | null, simei = false): Situacao[] {
   if (simei || regime === REGIME_SIMEI) return ["SIMEI"];
   if (regime === REGIME_SIMPLES_NACIONAL) return ["SIMPLES_NACIONAL"];
   return [];
 }
+
 
 export type RegistroSimei = {
   inscricao_estadual: string;
