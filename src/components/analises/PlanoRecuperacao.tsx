@@ -290,9 +290,20 @@ function ItemAcao({
           <p className="mt-1 text-xs text-muted-foreground">{acao.motivo}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <Badge variant="outline" className={CORES_PRIORIDADE[acao.prioridade]}>
-            {ROTULO_PRIORIDADE[acao.prioridade]}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className={CORES_STATUS_ACAO[statusAcao]}>
+              {ROTULO_STATUS_ACAO[statusAcao]}
+            </Badge>
+            <Badge variant="outline" className={CORES_PRIORIDADE[acao.prioridade]}>
+              {ROTULO_PRIORIDADE[acao.prioridade]}
+            </Badge>
+          </div>
+          <SeletorStatus
+            valor={statusAcao}
+            onChange={(status) =>
+              salvarStatus({ ...baseEntrada, valorRecuperavel: acao.valorRecuperavel, status })
+            }
+          />
           {acao.valorRecuperavel > 0 && (
             <span className="font-mono text-sm tabular-nums">
               {formatarMoeda(acao.valorRecuperavel)}
