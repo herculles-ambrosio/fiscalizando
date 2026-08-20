@@ -323,6 +323,7 @@ export function csvEvolucao(
   linhas: LinhaEvolucao[],
   declarantes: ComparacaoDeclarantes,
   analise?: string,
+  plano?: string,
 ): string {
   const br = (v: number) => v.toFixed(2).replace(".", ",");
   const out: string[][] = [
@@ -336,6 +337,9 @@ export function csvEvolucao(
           ...analise.split("\n").map((l) => [l]),
           [],
         ]
+      : []),
+    ...(plano
+      ? [["Plano de recuperacao"], ...plano.split("\n").map((l) => [l]), []]
       : []),
     ["Indicador", "Base", "Atual", "Diferenca", "Variacao %"],
 
