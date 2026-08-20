@@ -5,7 +5,6 @@ import {
   FileUp,
   History,
   FileSignature,
-  Landmark,
   LogOut,
   Settings,
   TrendingUp,
@@ -17,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
 import {
   Select,
   SelectContent,
@@ -25,19 +25,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const NAV_BASE = [
+const NAV_OPERACAO = [
   { to: "/dashboard", rotulo: "Painel", icone: BarChart3 },
   { to: "/nova-apuracao", rotulo: "Nova apuração", icone: FileUp },
   { to: "/historico", rotulo: "Apurações Realizadas", icone: History },
+];
+
+const NAV_ANALISE = [
   { to: "/contribuintes", rotulo: "Contribuintes", icone: Users },
   { to: "/analises", rotulo: "Análises do VAF", icone: TrendingUp },
   { to: "/oficios", rotulo: "Ofícios", icone: FileSignature },
-  { to: "/configuracoes", rotulo: "Configurações", icone: Settings },
 ];
 
+const NAV_ADMIN = [{ to: "/configuracoes", rotulo: "Configurações", icone: Settings }];
 
 const NAV_CONSULTORIA = [{ to: "/consultoria/prefeituras", rotulo: "Prefeituras", icone: Building2 }];
 const NAV_SUPERADMIN = [{ to: "/consultoria/usuarios", rotulo: "Usuários", icone: Users }];
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: perfil } = usePerfil();
