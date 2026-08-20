@@ -332,6 +332,7 @@ function ItemAcao({
   obsPorChave,
   anexosPorChave,
   salvarStatus,
+  situacoesCadastrais,
 }: {
   acao: AcaoRecuperacao;
   ordem: number;
@@ -343,6 +344,7 @@ function ItemAcao({
   obsPorChave: Map<string, string | null>;
   anexosPorChave: Map<string, number>;
   salvarStatus: SalvarStatus;
+  situacoesCadastrais: MapaSituacoesCadastrais | null;
 }) {
   const [aberto, setAberto] = useState(false);
   /** null = fechado; "" = anotação da ação; IE = anotação do contribuinte */
