@@ -162,6 +162,20 @@ export default function PlanoRecuperacao({
             </AlertDescription>
           </Alert>
 
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>Acompanhamento:</span>
+            <Badge variant="outline" className={CORES_STATUS_ACAO.concluida}>
+              {concluidas} concluída(s)
+            </Badge>
+            <Badge variant="outline" className={CORES_STATUS_ACAO.oficio_enviado}>
+              {emAndamento} em andamento
+            </Badge>
+            <Badge variant="outline" className={CORES_STATUS_ACAO.prevista}>
+              {acoes.length - concluidas - emAndamento} prevista(s)
+            </Badge>
+            {!ref && <span>· salve/carregue a evolução para gravar o status.</span>}
+          </div>
+
           <div className="space-y-3">
             {acoes.map((acao, i) => (
               <ItemAcao
@@ -169,6 +183,11 @@ export default function PlanoRecuperacao({
                 acao={acao}
                 ordem={i + 1}
                 onEmitir={() => setAcaoEmissao(acao)}
+                referencia={ref}
+                cargaId={cargaId ?? null}
+                exercicio={exercicio ?? null}
+                statusPorChave={statusPorChave}
+                salvarStatus={salvarStatus}
               />
             ))}
           </div>
@@ -179,8 +198,54 @@ export default function PlanoRecuperacao({
         acao={acaoEmissao}
         exercicio={exercicio ?? null}
         onFechar={() => setAcaoEmissao(null)}
+        onEmitido={(acao, exercicioNum) => {
+          if (!ref) return;
+          const base = {
+            referencia: ref,
+            cargaId: cargaId ?? null,
+            exercicio: exercicioNum,
+            acaoChave: acao.chave,
+            acaoTitulo: acao.titulo,
+            status: "oficio_enviado" as StatusAcao,
+          };
+          salvarStatus([
+            { ...base, valorRecuperavel: acao.valorRecuperavel },
+            ...acao.contribuintes.map((c) => ({
+              ...base,
+              inscricaoEstadual: c.inscricao_estadual,
+              nomeContribuinte: c.nome,
+              cnpj: c.cnpj,
+              valorRecuperavel: Math.abs(c.diferenca),
+            })),
+          ]);
+        }}
       />
     </>
+  );
+}
+
+function SeletorStatus({
+  valor,
+  onChange,
+  className,
+}: {
+  valor: StatusAcao;
+  onChange: (s: StatusAcao) => void;
+  className?: string;
+}) {
+  return (
+    <Select value={valor} onValueChange={(v) => onChange(v as StatusAcao)}>
+      <SelectTrigger className={`h-7 w-[170px] text-xs ${className ?? ""}`}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {STATUS_ACAO.map((s) => (
+          <SelectItem key={s} value={s} className="text-xs">
+            {ROTULO_STATUS_ACAO[s]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -188,13 +253,32 @@ function ItemAcao({
   acao,
   ordem,
   onEmitir,
+  referencia,
+  cargaId,
+  exercicio,
+  statusPorChave,
+  salvarStatus,
 }: {
   acao: AcaoRecuperacao;
   ordem: number;
   onEmitir: () => void;
+  referencia: string | null;
+  cargaId: string | null;
+  exercicio: number | null;
+  statusPorChave: Map<string, StatusAcao>;
+  salvarStatus: SalvarStatus;
 }) {
   const [aberto, setAberto] = useState(false);
   const temLista = acao.contribuintes.length > 0;
+  const statusAcao = statusPorChave.get(chaveStatus(acao.chave)) ?? "prevista";
+
+  const baseEntrada = {
+    referencia: referencia ?? "",
+    cargaId,
+    exercicio,
+    acaoChave: acao.chave,
+    acaoTitulo: acao.titulo,
+  };
 
   return (
     <div className="rounded-xl border p-3">
