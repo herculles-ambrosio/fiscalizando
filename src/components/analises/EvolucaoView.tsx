@@ -789,6 +789,12 @@ export default function PaginaEvolucao() {
             municipio={municipio?.nome ?? null}
           />
 
+          <PlanoRecuperacao
+            diagnostico={diagnosticarEvolucao(base, atual)}
+            declarantes={declarantes}
+            exercicio={atual.apuracao.anoBase}
+          />
+
 
 
           <Tabs defaultValue="indicadores">
