@@ -275,6 +275,45 @@ type ArquivoPendente = {
   destinoNome: string | null;
 };
 
+function BannerBloqueio({
+  bloqueio,
+  municipioAtivo,
+  onResolver,
+}: {
+  bloqueio: ArquivoPendente;
+  municipioAtivo: { nome?: string | null } | null | undefined;
+  onResolver: () => void;
+}) {
+  const nomeDestino = bloqueio.destinoNome ?? bloqueio.nome ?? `código ${bloqueio.codigo}`;
+  const podeResolver = bloqueio.destinoId;
+  return (
+    <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-100">
+      <AlertTriangle className="h-4 w-4 text-amber-600" />
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <AlertTitle className="text-sm">Arquivo de outra prefeitura — carga bloqueada</AlertTitle>
+          <AlertDescription className="text-xs">
+            O arquivo <span className="font-mono font-medium">{bloqueio.file.name}</span> pertence à
+            prefeitura <strong>{nomeDestino}</strong> (código {bloqueio.codigo}), mas a prefeitura ativa
+            é <strong>{municipioAtivo?.nome ?? "—"}</strong>. Para evitar comparar dados de municípios
+            diferentes, a carga só é liberada quando o arquivo for da prefeitura ativa.
+          </AlertDescription>
+        </div>
+        {podeResolver ? (
+          <Button size="sm" variant="outline" className="mt-2 shrink-0 sm:mt-0" onClick={onResolver}>
+            Trocar para {nomeDestino} e analisar
+          </Button>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground sm:mt-0 sm:max-w-[40%]">
+            Prefeitura não cadastrada ou indisponível para o seu usuário. Selecione um arquivo da
+            prefeitura ativa.
+          </p>
+        )}
+      </div>
+    </Alert>
+  );
+}
+
 export default function PaginaEvolucao() {
   const { municipio, municipios: municipiosPermitidos, podeTrocar, trocar } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
@@ -284,6 +323,7 @@ export default function PaginaEvolucao() {
   const [vafReferencia, setVafReferencia] = useState("");
   const [nomeGravar, setNomeGravar] = useState("");
   const [pendente, setPendente] = useState<ArquivoPendente | null>(null);
+  const [bloqueio, setBloqueio] = useState<ArquivoPendente | null>(null);
   const { data: salvas } = useEvolucoesSalvas(municipio?.id ?? null);
   const salvarEvolucao = useSalvarEvolucao();
   const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
@@ -311,14 +351,16 @@ export default function PaginaEvolucao() {
           municipiosPermitidos.find(
             (m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo,
           ) ?? null;
-        setPendente({
+        const estado = {
           file,
           alvo,
           codigo: codigoArquivo,
           nome: detectarMunicipioRetorno(texto).nome ?? mapaMunicipiosPorCodigo.get(codigoArquivo) ?? null,
           destinoId: destino?.id ?? null,
           destinoNome: destino?.nome ?? null,
-        });
+        };
+        setPendente(estado);
+        setBloqueio(estado);
         return;
       }
 
@@ -330,6 +372,8 @@ export default function PaginaEvolucao() {
       );
       if (alvo === "base") setBase(analise);
       else setAtual(analise);
+      // Limpa bloqueio quando um arquivo da prefeitura ativa é carregado com sucesso.
+      setBloqueio(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     } finally {
@@ -341,6 +385,7 @@ export default function PaginaEvolucao() {
     if (!pendente?.destinoId) return;
     const { file, alvo, destinoId, destinoNome } = pendente;
     setPendente(null);
+    setBloqueio(null);
     trocar(destinoId);
     toast.success(`Prefeitura ativa alterada para ${destinoNome}.`);
     // limpa a comparação anterior: os arquivos eram de outra prefeitura
@@ -414,6 +459,14 @@ export default function PaginaEvolucao() {
           líquido, dos componentes VAF A/B/C, das declarações e dos contribuintes declarantes.
         </p>
       </div>
+
+      {bloqueio && (
+        <BannerBloqueio
+          bloqueio={bloqueio}
+          municipioAtivo={municipio}
+          onResolver={() => setPendente(bloqueio)}
+        />
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <CaixaArquivo
