@@ -13,6 +13,7 @@ import {
   WidthType,
 } from "docx";
 import type { DiagnosticoEvolucao, FatorVariacao } from "./diagnostico";
+import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
 
 const FONTE = "Arial";
 const LARGURA = 9026; // A4 com margens de 1"
