@@ -351,14 +351,16 @@ export default function PaginaEvolucao() {
           municipiosPermitidos.find(
             (m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo,
           ) ?? null;
-        setPendente({
+        const estado = {
           file,
           alvo,
           codigo: codigoArquivo,
           nome: detectarMunicipioRetorno(texto).nome ?? mapaMunicipiosPorCodigo.get(codigoArquivo) ?? null,
           destinoId: destino?.id ?? null,
           destinoNome: destino?.nome ?? null,
-        });
+        };
+        setPendente(estado);
+        setBloqueio(estado);
         return;
       }
 
@@ -370,6 +372,8 @@ export default function PaginaEvolucao() {
       );
       if (alvo === "base") setBase(analise);
       else setAtual(analise);
+      // Limpa bloqueio quando um arquivo da prefeitura ativa é carregado com sucesso.
+      setBloqueio(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     } finally {
