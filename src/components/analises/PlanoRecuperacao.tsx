@@ -53,6 +53,7 @@ import {
   textoPlanoRecuperacao,
   ROTULO_PRIORIDADE,
   type AcaoRecuperacao,
+  type MapaSituacoesCadastrais,
 } from "@/lib/vaf/recuperacao";
 import type { DiagnosticoEvolucao } from "@/lib/vaf/diagnostico";
 import type { ComparacaoDeclarantes } from "@/lib/vaf/evolucao";
@@ -83,6 +84,8 @@ type Props = {
   /** Identificador estável da análise (arquivos comparados) para gravar o acompanhamento. */
   referencia?: string | null;
   cargaId?: string | null;
+  /** situação cadastral por IE — cancelados/baixados/bloqueados saem das ações */
+  situacoesCadastrais?: MapaSituacoesCadastrais | null;
 };
 
 export type SalvarStatus = (entradas: EntradaStatus | EntradaStatus[]) => void;
@@ -93,11 +96,21 @@ export default function PlanoRecuperacao({
   exercicio,
   referencia,
   cargaId,
+  situacoesCadastrais,
 }: Props) {
   const acoes = useMemo(
-    () => montarPlanoRecuperacao(diagnostico, declarantes, { exercicio: exercicio ?? null }),
-    [diagnostico, declarantes, exercicio],
+    () =>
+      montarPlanoRecuperacao(diagnostico, declarantes, {
+        exercicio: exercicio ?? null,
+        situacoesCadastrais: situacoesCadastrais ?? null,
+      }),
+    [diagnostico, declarantes, exercicio, situacoesCadastrais],
   );
+  const totalIgnorados = useMemo(() => {
+    const ies = new Set<string>();
+    for (const a of acoes) for (const c of a.ignorados) ies.add(c.inscricao_estadual);
+    return ies.size;
+  }, [acoes]);
   const [acaoEmissao, setAcaoEmissao] = useState<AcaoRecuperacao | null>(null);
 
   const ref = referencia ?? null;
@@ -197,6 +210,18 @@ export default function PlanoRecuperacao({
               {acoes.length - concluidas - emAndamento} prevista(s)
             </Badge>
             {!ref && <span>· salve/carregue a evolução para gravar o status.</span>}
+          </div>
+
+          <div className="text-xs text-muted-foreground">
+            {totalIgnorados > 0 ? (
+              <>
+                {totalIgnorados} contribuinte(s) foram retirados automaticamente das ações por
+                estarem <strong>cancelados, baixados ou bloqueados</strong> na SEF/MG — não recebem
+                ofício nem entram no valor recuperável.
+              </>
+            ) : (
+              <>Nenhum contribuinte cancelado, baixado ou bloqueado nas ações desta análise.</>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -487,6 +512,17 @@ function ItemAcao({
               )}
             </CollapsibleContent>
           </Collapsible>
+        )}
+        {acao.ignorados.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {acao.ignorados.length} contribuinte(s) desta ação foram ignorados por situação
+            cadastral (cancelado/baixado/bloqueado):{" "}
+            {acao.ignorados
+              .slice(0, 5)
+              .map((c) => c.nome ?? c.inscricao_estadual)
+              .join(", ")}
+            {acao.ignorados.length > 5 ? "…" : ""}
+          </p>
         )}
       </div>
 
