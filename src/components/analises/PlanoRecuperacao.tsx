@@ -53,6 +53,7 @@ import {
   textoPlanoRecuperacao,
   ROTULO_PRIORIDADE,
   type AcaoRecuperacao,
+  type MapaSituacoesCadastrais,
 } from "@/lib/vaf/recuperacao";
 import type { DiagnosticoEvolucao } from "@/lib/vaf/diagnostico";
 import type { ComparacaoDeclarantes } from "@/lib/vaf/evolucao";
