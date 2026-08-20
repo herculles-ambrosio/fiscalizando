@@ -43,11 +43,13 @@ function Kpi({
   valor,
   detalhe,
   destaque,
+  ajuda,
 }: {
   rotulo: string;
   valor: string;
   detalhe?: string;
   destaque?: boolean;
+  ajuda?: React.ReactNode;
 }) {
   return (
     <div
@@ -57,9 +59,25 @@ function Kpi({
           : "flex min-w-0 flex-col justify-between gap-1 rounded-xl border border-border bg-card p-3"
       }
     >
-      <p className="text-[10px] uppercase leading-tight tracking-wide text-muted-foreground">
-        {rotulo}
-      </p>
+      {ajuda ? (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="flex cursor-help items-center gap-1 text-[10px] uppercase leading-tight tracking-wide text-muted-foreground">
+                {rotulo}
+                <HelpCircle className="h-3 w-3 shrink-0" />
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <div className="space-y-1.5">{ajuda}</div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <p className="text-[10px] uppercase leading-tight tracking-wide text-muted-foreground">
+          {rotulo}
+        </p>
+      )}
       <p
         className={
           destaque
@@ -75,6 +93,7 @@ function Kpi({
     </div>
   );
 }
+
 
 function LinhaValor({
   rotulo,
