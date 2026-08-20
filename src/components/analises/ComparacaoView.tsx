@@ -182,6 +182,73 @@ export default function Comparacao() {
   }, [dados, escolhidas, busca]);
 
   const base = escolhidas[0];
+  const ultimaId = escolhidas[escolhidas.length - 1]?.id ?? "";
+
+  const colunas = escolhidas.map(
+    (c) =>
+      `${formatarCompetencia(c.competencia_mes, c.competencia_ano)} · ${rotuloTipoRetorno(c.tipo_retorno)}`,
+  );
+
+  // cada exportação leva exatamente as linhas visíveis na aba (mesma busca e mesmo limite)
+  const visiveisCnae = porCnae.slice(0, 100);
+  const visiveisIndice = porContribuinte.slice(0, 50);
+  const visiveisContribuintes = porContribuinte.slice(0, 300);
+
+  function exportarCnae() {
+    baixarCsv(
+      "comparacao-por-cnae.csv",
+      montarCsv(
+        ["CNAE", ...colunas, "Variação (%)"],
+        visiveisCnae.map((l) => [
+          l.cnae,
+          ...escolhidas.map((c) => l.valores[c.id] ?? 0),
+          variacao(l.valores[ultimaId] ?? null, l.valores[base!.id] ?? null) ?? "",
+        ]),
+      ),
+    );
+  }
+
+  function exportarIndice() {
+    const parte = (id: string, valores: Record<string, number | null>) => {
+      const total = totaisVaf[id] ?? 0;
+      const v = valores[id];
+      if (v == null || total === 0) return null;
+      return (v / total) * 100;
+    };
+    baixarCsv(
+      "comparacao-participacao.csv",
+      montarCsv(
+        ["Contribuinte", "Inscrição estadual", ...colunas, "Δ p.p."],
+        visiveisIndice.map((l) => {
+          const inicio = parte(base!.id, l.valores);
+          const fim = parte(ultimaId, l.valores);
+          return [
+            l.nome ?? l.ie,
+            l.ie,
+            ...escolhidas.map((c) => parte(c.id, l.valores) ?? ""),
+            inicio == null || fim == null ? "" : fim - inicio,
+          ];
+        }),
+      ),
+    );
+  }
+
+  function exportarContribuintes() {
+    baixarCsv(
+      "comparacao-contribuintes.csv",
+      montarCsv(
+        ["Contribuinte", "CNPJ", "Inscrição estadual", ...colunas, "Variação (%)", "Cadastro"],
+        visiveisContribuintes.map((l) => [
+          l.nome ?? "",
+          l.cnpj ?? "",
+          l.ie,
+          ...escolhidas.map((c) => l.valores[c.id] ?? ""),
+          l.variacao ?? "",
+          l.entrou ? "Novo" : l.saiu ? "Saiu" : "Mantido",
+        ]),
+      ),
+    );
+  }
 
   return (
     <div className="space-y-6">
