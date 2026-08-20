@@ -247,8 +247,9 @@ export async function baixarDocDiagnostico(
   baseNome: string,
   atualNome: string,
   municipio?: string | null,
+  acoes?: AcaoRecuperacao[],
 ): Promise<void> {
-  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio);
+  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes);
   const blob = await Packer.toBlob(doc);
   const limpo = (s: string) => s.replace(/[^\w.-]+/g, "_").slice(0, 40);
   const url = URL.createObjectURL(blob);
