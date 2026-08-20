@@ -52,6 +52,8 @@ import {
 } from "@/lib/vaf/evolucao";
 import { diagnosticarEvolucao, textoDiagnostico } from "@/lib/vaf/diagnostico";
 import DiagnosticoVariacao from "@/components/analises/DiagnosticoVariacao";
+import PlanoRecuperacao from "@/components/analises/PlanoRecuperacao";
+import { montarPlanoRecuperacao, textoPlanoRecuperacao } from "@/lib/vaf/recuperacao";
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
