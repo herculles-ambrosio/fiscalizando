@@ -104,11 +104,11 @@ function Dashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Painel</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="font-display text-3xl font-bold tracking-tight">Painel</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
             {carga
               ? `Exercício ${carga.exercicio} · apurado em ${formatarDataHora(carga.concluida_em)}`
               : "Nenhuma apuração concluída ainda."}
@@ -122,30 +122,30 @@ function Dashboard() {
 
       {!carga ? (
         <Card>
-          <CardContent className="py-14 text-center">
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="py-16 text-center">
+            <p className="mx-auto max-w-md text-sm text-muted-foreground">
               Envie o arquivo de contribuintes ativos e o arquivo de retorno VAF/DAMEF para começar.
             </p>
-            <Button className="mt-4" onClick={() => navigate({ to: "/nova-apuracao" })}>
+            <Button className="mt-5" onClick={() => navigate({ to: "/nova-apuracao" })}>
               Iniciar primeira apuração
             </Button>
           </CardContent>
         </Card>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {CARDS.map((c) => (
-              <Card key={c.chave}>
-                <CardContent className="p-5">
+              <Card key={c.chave} className="transition-shadow hover:shadow-elevated">
+                <CardContent className="p-6">
                   <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${c.cor}`}
+                    className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ${c.cor}`}
                   >
                     {c.rotulo}
                   </span>
-                  <p className="mt-3 font-display text-3xl font-semibold">
+                  <p className="mt-4 font-display text-4xl font-extrabold tracking-tight tabular-nums">
                     {carga[c.chave] ?? 0}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1.5 text-xs text-muted-foreground/80">
                     de {carga.total_ativos ?? 0} ativos
                   </p>
                 </CardContent>
@@ -154,22 +154,32 @@ function Dashboard() {
           </div>
 
           <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="text-base">
+            <CardHeader className="flex-row items-center justify-between gap-4 p-6 pb-2">
+              <CardTitle className="font-display text-base font-semibold">
                 CNAEs com mais contribuintes em situação irregular
               </CardTitle>
               <Link
                 to="/cargas/$cargaId"
                 params={{ cargaId: carga.id }}
-                className="text-sm text-primary underline-offset-4 hover:underline"
+                className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline"
               >
                 Ver contribuintes
               </Link>
             </CardHeader>
-            <CardContent className="h-80">
+            <CardContent className="h-80 p-6 pt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={grafico} margin={{ left: -16, bottom: 24 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <defs>
+                    <linearGradient id="grad-irregulares" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--gold)" stopOpacity={0.95} />
+                      <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.85} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="2 6"
+                    stroke="var(--border)"
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="cnae"
                     fontSize={11}
@@ -177,19 +187,29 @@ function Dashboard() {
                     textAnchor="end"
                     interval={0}
                     height={60}
+                    tickLine={false}
+                    axisLine={false}
                     stroke="var(--muted-foreground)"
                   />
-                  <YAxis fontSize={11} stroke="var(--muted-foreground)" allowDecimals={false} />
+                  <YAxis
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={false}
+                    stroke="var(--muted-foreground)"
+                    allowDecimals={false}
+                  />
                   <Tooltip
+                    cursor={{ fill: "var(--muted)", opacity: 0.5 }}
                     contentStyle={{
                       background: "var(--popover)",
                       border: "1px solid var(--border)",
-                      borderRadius: 8,
+                      borderRadius: 12,
+                      boxShadow: "var(--shadow-elevated)",
                       fontSize: 12,
                     }}
                     formatter={(v: number) => [v, "Irregulares"]}
                   />
-                  <Bar dataKey="irregulares" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="irregulares" fill="url(#grad-irregulares)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>

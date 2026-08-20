@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Landmark, Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Lock } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,37 +57,77 @@ function Login() {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="hidden flex-col justify-between bg-sidebar p-12 text-sidebar-foreground lg:flex">
-        <div className="flex items-center gap-2">
-          <Landmark className="h-5 w-5 text-sidebar-primary" />
-          <span className="font-display text-sm font-semibold">Apura VAF 2.0</span>
+    <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+      <div className="bg-brand-gradient relative hidden flex-col justify-between overflow-hidden p-12 text-sidebar-foreground lg:flex">
+        <div className="bg-grid-pattern pointer-events-none absolute inset-0" />
+        <div className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-gold/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
+
+        <div className="relative">
+          <Logo tomEscuro />
         </div>
-        <div className="max-w-md">
-          <h1 className="font-display text-4xl leading-tight font-semibold">
-            Controle do Valor Adicionado Fiscal do seu município
+
+        <div className="relative max-w-lg">
+          <h1 className="font-display text-[2.75rem] leading-[1.08] font-bold">
+            Controle do{" "}
+            <span className="text-gold">Valor Adicionado Fiscal</span>
+            <br />
+            do seu município
           </h1>
-          <p className="mt-4 text-sm text-sidebar-foreground/70">
+          <p className="mt-5 max-w-md text-sm leading-relaxed text-sidebar-foreground/70">
             Envie os arquivos da SEF-MG e identifique em minutos os contribuintes omissos, zerados,
             fora do prazo e com variação atípica de VAF.
           </p>
+
+          <div className="mt-10 w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { r: "Omissos", v: "128" },
+                { r: "Zerados", v: "64" },
+                { r: "Discrepantes", v: "37" },
+              ].map((k) => (
+                <div key={k.r} className="rounded-xl bg-white/8 px-3 py-2.5">
+                  <p className="text-[10px] tracking-wide text-sidebar-foreground/60 uppercase">
+                    {k.r}
+                  </p>
+                  <p className="font-display text-xl font-bold">{k.v}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex h-20 items-end gap-2">
+              {[38, 62, 45, 88, 54, 72, 30, 66].map((h, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t-md bg-gold/70"
+                  style={{ height: `${h}%`, opacity: 0.35 + i * 0.07 }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-        <p className="text-xs text-sidebar-foreground/50">
+
+        <p className="relative flex items-center gap-1.5 text-xs text-sidebar-foreground/45">
+          <Lock className="h-3.5 w-3.5" />
           Acesso restrito às prefeituras cadastradas.
         </p>
       </div>
 
       <div className="flex items-center justify-center px-6 py-16">
-        <form onSubmit={entrar} className="w-full max-w-sm space-y-5">
+        <form onSubmit={entrar} className="w-full max-w-sm space-y-6">
+          <div className="lg:hidden">
+            <Logo />
+          </div>
           <div>
-            <h2 className="font-display text-2xl font-semibold">Entrar</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h2 className="font-display text-3xl font-bold">Entrar</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
               Use as credenciais fornecidas pelo administrador do sistema.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email" className="font-medium">
+              E-mail
+            </Label>
             <Input
               id="email"
               type="email"
@@ -97,8 +138,11 @@ function Login() {
             />
           </div>
 
+
           <div className="space-y-2">
-            <Label htmlFor="senha">Senha</Label>
+            <Label htmlFor="senha" className="font-medium">
+              Senha
+            </Label>
             <div className="relative">
               <Input
                 id="senha"
@@ -112,24 +156,34 @@ function Login() {
               <button
                 type="button"
                 onClick={() => setMostrarSenha((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
                 aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
               >
-                {mostrarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {mostrarSenha ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
               </button>
             </div>
           </div>
 
-          {erro && <p className="text-sm text-destructive">{erro}</p>}
+          {erro && (
+            <p className="rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-2 text-sm text-destructive">
+              {erro}
+            </p>
+          )}
 
-          <Button type="submit" className="w-full" disabled={enviando}>
+          <Button type="submit" className="h-11 w-full text-sm" disabled={enviando}>
             {enviando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Entrar
           </Button>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Não possui acesso? Solicite ao responsável pela Secretaria Municipal de Fazenda.
           </p>
+
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground/70 lg:hidden">
+            <Lock className="h-3.5 w-3.5" />
+            Acesso restrito às prefeituras cadastradas.
+          </p>
+
         </form>
       </div>
     </div>
