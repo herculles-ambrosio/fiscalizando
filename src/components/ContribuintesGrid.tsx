@@ -440,7 +440,18 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
                         <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
                         <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
-                        <TableCell>{c.cnae ?? "—"}</TableCell>
+                        <TableCell className="max-w-56">
+                          {c.cnae ? (
+                            <span
+                              className="block truncate"
+                              title={formatarCnae(c.cnae)}
+                            >
+                              {descricaoCnae(c.cnae) ?? formatarCodigoCnae(c.cnae)}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
+                        </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
                           {formatarMoeda(c.vaf_atual)}
                         </TableCell>
