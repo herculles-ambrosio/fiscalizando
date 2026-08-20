@@ -1,13 +1,29 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+function traduzirErroSupabase(mensagem: string | null | undefined): string {
+  if (!mensagem) return "Não foi possível alterar a senha.";
+  const lower = mensagem.toLowerCase();
+  if (lower.includes("password is known to be weak") || lower.includes("weak and easy to guess")) {
+    return "Senha muito fraca ou fácil de adivinhar. Escolha uma senha mais forte.";
+  }
+  if (lower.includes("password should be at least")) {
+    return "A senha deve ter pelo menos 10 caracteres.";
+  }
+  if (lower.includes("new password should be different")) {
+    return "A nova senha deve ser diferente da senha atual.";
+  }
+  return mensagem;
+}
+
 
 export const Route = createFileRoute("/_authenticated/trocar-senha")({
   head: () => ({
