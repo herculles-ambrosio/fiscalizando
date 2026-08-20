@@ -510,9 +510,22 @@ export default function PaginaEvolucao() {
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <Card>
               <CardContent className="space-y-1 p-4">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Deixaram de declarar
-                </p>
+                <RotuloKpi
+                  titulo="Declarantes - deixaram de declarar"
+                  ajuda={
+                    <>
+                      <p>
+                        Contribuintes com <strong>declaração no arquivo base</strong> (
+                        {rotuloArquivo(base)}) e <strong>sem declaração</strong> no arquivo
+                        comparado/estimado ({rotuloArquivo(atual)}).
+                      </p>
+                      <p>
+                        <strong>VAF que saiu</strong> = soma do VAF que esses contribuintes tinham
+                        na base.
+                      </p>
+                    </>
+                  }
+                />
                 <p className="font-display text-2xl font-semibold text-destructive">
                   {declarantes.sairam.length}
                 </p>
@@ -523,9 +536,22 @@ export default function PaginaEvolucao() {
             </Card>
             <Card>
               <CardContent className="space-y-1 p-4">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Novos declarantes
-                </p>
+                <RotuloKpi
+                  titulo="Declarantes - novos"
+                  ajuda={
+                    <>
+                      <p>
+                        Contribuintes presentes apenas no arquivo comparado/estimado (
+                        {rotuloArquivo(atual)}), sem declaração no arquivo base (
+                        {rotuloArquivo(base)}).
+                      </p>
+                      <p>
+                        <strong>VAF que entrou</strong> = soma do VAF declarado por eles no arquivo
+                        comparado/estimado.
+                      </p>
+                    </>
+                  }
+                />
                 <p className="font-display text-2xl font-semibold text-emerald-600">
                   {declarantes.entraram.length}
                 </p>
@@ -536,29 +562,26 @@ export default function PaginaEvolucao() {
             </Card>
             <Card>
               <CardContent className="space-y-1 p-4">
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground cursor-help">
-                        Valor líquido · base
-                        <HelpCircle className="h-3 w-3" />
+                <RotuloKpi
+                  titulo="Valor líquido - base"
+                  ajuda={
+                    <>
+                      <p>
+                        <strong>Valor líquido</strong> é o saldo apurado no arquivo base (
+                        {rotuloArquivo(base)}).
                       </p>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs">
-                      <div className="space-y-1.5">
-                        <p>
-                          <strong>Valor líquido</strong> é o saldo apurado no arquivo base ({rotuloArquivo(base)}).
-                        </p>
-                        <p>
-                          Para arquivos com índice fechado (registro 16/17), o valor vem diretamente do arquivo da SEF-MG.
-                        </p>
-                        <p>
-                          Para retornos mensais sem índice fechado, o sistema projeta: VAF próprio (soma dos registros 10 × fator de calibragem) + crédito externo (11/35) + crédito interno (12) − débito (13).
-                        </p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                      <p>
+                        Para arquivos com índice fechado (registro 16/17), o valor vem diretamente
+                        do arquivo da SEF-MG.
+                      </p>
+                      <p>
+                        Para retornos mensais sem índice fechado, o sistema projeta: VAF próprio
+                        (soma dos registros 10 × fator de calibragem) + crédito externo (11/35) +
+                        crédito interno (12) − débito (13).
+                      </p>
+                    </>
+                  }
+                />
                 <p className="break-words font-display text-lg font-semibold">
                   {formatarMoeda(base.apuracao.valorLiquido)}
                 </p>
@@ -569,26 +592,26 @@ export default function PaginaEvolucao() {
             </Card>
             <Card>
               <CardContent className="space-y-1 p-4">
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground cursor-help">
-                        Valor líquido · comparado/estimado
-                        <HelpCircle className="h-3 w-3" />
+                <RotuloKpi
+                  titulo="Valor líquido - comparado/estimado"
+                  ajuda={
+                    <>
+                      <p>
+                        <strong>Valor líquido</strong> do arquivo comparado/estimado (
+                        {rotuloArquivo(atual)}).
                       </p>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs">
-                      <div className="space-y-1.5">
-                        <p>
-                          <strong>Valor líquido</strong> do arquivo comparado/estimado ({rotuloArquivo(atual)}).
-                        </p>
-                        <p>
-                          <strong>Diferença</strong> = comparado/estimado − base. <strong>Variação %</strong> = (comparado/estimado − base) ÷ |base| × 100.
-                        </p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                      <p>
+                        Índice fechado (registro 16/17): valor da SEF-MG. Retorno mensal: projeção
+                        VAF próprio (registros 10 × fator de calibragem) + crédito externo (11/35) +
+                        crédito interno (12) − débito (13).
+                      </p>
+                      <p>
+                        <strong>Diferença</strong> = comparado/estimado − base.{" "}
+                        <strong>Variação %</strong> = (comparado/estimado − base) ÷ |base| × 100.
+                      </p>
+                    </>
+                  }
+                />
                 <p className="break-words font-display text-lg font-semibold">
                   {formatarMoeda(atual.apuracao.valorLiquido)}
                 </p>
@@ -612,9 +635,25 @@ export default function PaginaEvolucao() {
 
             <Card>
               <CardContent className="space-y-1 p-4">
-                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Índice de participação
-                </p>
+                <RotuloKpi
+                  titulo="Índice de participação - comparado/estimado"
+                  ajuda={
+                    <>
+                      <p>
+                        Participação do município no VAF estadual apurada no arquivo
+                        comparado/estimado ({rotuloArquivo(atual)}).
+                      </p>
+                      <p>
+                        <strong>Índice</strong> = valor líquido do município ÷ VAF estadual × 100.
+                        Em retornos mensais o resultado é uma projeção, não o índice oficial.
+                      </p>
+                      <p>
+                        <strong>Variação %</strong> comparada ao índice do arquivo base (
+                        {rotuloArquivo(base)}).
+                      </p>
+                    </>
+                  }
+                />
                 <p className="break-words font-display text-lg font-semibold text-primary">
                   {formatarIndice(atual.apuracao.indice)}%
                 </p>
@@ -623,6 +662,7 @@ export default function PaginaEvolucao() {
                 </p>
               </CardContent>
             </Card>
+
           </div>
 
           <Tabs defaultValue="indicadores">
