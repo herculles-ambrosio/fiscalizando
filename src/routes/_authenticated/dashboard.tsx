@@ -190,6 +190,7 @@ function Dashboard() {
                     tickLine={false}
                     axisLine={false}
                     stroke="var(--muted-foreground)"
+                    tickFormatter={(c: string) => formatarCodigoCnae(c)}
                   />
                   <YAxis
                     fontSize={11}
