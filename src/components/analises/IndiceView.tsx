@@ -531,7 +531,11 @@ export default function PaginaIndice() {
           {/* KPIs */}
           <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
             <Kpi
-              rotulo={apuracao.estimado ? "Índice projetado" : "Índice do município"}
+              rotulo={
+                apuracao.estimado
+                  ? "Índice de participação - projetado"
+                  : `Índice de participação - ${apuracao.tipoIndice}`
+              }
               valor={formatarIndice(apuracao.indice)}
               detalhe={
                 apuracao.estimado
@@ -539,18 +543,64 @@ export default function PaginaIndice() {
                   : "Participação percentual no VAF estadual"
               }
               destaque
+              ajuda={
+                <>
+                  <p>
+                    <strong>Índice</strong> = valor líquido do município ÷ VAF estadual × 100.
+                  </p>
+                  <p>
+                    {apuracao.estimado
+                      ? "Projeção estimada a partir do retorno mensal (registros 10/11/12/13/35/40); não substitui o índice oficial da SEF-MG."
+                      : "Índice fechado pela SEF-MG (registro 16/17) presente no arquivo."}
+                  </p>
+                </>
+              }
             />
             <Kpi
-              rotulo={apuracao.estimado ? "Valor líquido projetado" : "Valor líquido (VAF municipal)"}
+              rotulo={
+                apuracao.estimado
+                  ? "Valor líquido - projetado"
+                  : "Valor líquido - apurado (VAF municipal)"
+              }
               valor={formatarMoeda(apuracao.valorLiquido)}
+              ajuda={
+                <>
+                  <p>
+                    <strong>Valor líquido</strong> = VAF próprio + crédito externo (11/35) + crédito
+                    interno (12) + crédito próprio − débito (13) + acerto de crédito − acerto de
+                    débito.
+                  </p>
+                  <p>
+                    {apuracao.estimado
+                      ? "Estimado a partir do retorno mensal, com fator de calibragem aplicado ao VAF próprio."
+                      : "Valor fechado no arquivo de índice da SEF-MG."}
+                  </p>
+                </>
+              }
             />
 
-            <Kpi rotulo="VAF estadual" valor={formatarMoeda(apuracao.vafEstadual)} />
             <Kpi
-              rotulo="Declarações no arquivo"
+              rotulo="VAF estadual - referência"
+              valor={formatarMoeda(apuracao.vafEstadual)}
+              ajuda={
+                <p>
+                  Total do VAF do Estado usado como denominador do índice. Vem do arquivo quando há
+                  índice fechado; na projeção usa a referência informada nos parâmetros.
+                </p>
+              }
+            />
+            <Kpi
+              rotulo="Declarações - arquivo processado"
               valor={apuracao.totalDeclaracoes.toLocaleString("pt-BR")}
               detalhe={`${apuracao.creditosExternos.length} créditos externos · ${apuracao.simei.length} SIMEI`}
+              ajuda={
+                <p>
+                  Quantidade de declarações de VAF lidas no arquivo, com o detalhe de créditos
+                  externos (registros 11/35) e contribuintes SIMEI (registro 40).
+                </p>
+              }
             />
+
           </div>
 
           {/* Blocos VAF A / B / C */}
