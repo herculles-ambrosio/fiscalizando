@@ -255,14 +255,24 @@ function TabelaMovimentos({
 }
 
 
+type ArquivoPendente = {
+  file: File;
+  alvo: "base" | "atual";
+  codigo: string;
+  nome: string | null;
+  destinoId: string | null;
+  destinoNome: string | null;
+};
+
 export default function PaginaEvolucao() {
-  const { municipio } = useMunicipioAtivo();
+  const { municipio, municipios: municipiosPermitidos, podeTrocar, trocar } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
   const [base, setBase] = useState<ArquivoEvolucao | null>(null);
   const [atual, setAtual] = useState<ArquivoEvolucao | null>(null);
   const [carregando, setCarregando] = useState<"base" | "atual" | null>(null);
   const [vafReferencia, setVafReferencia] = useState("");
   const [nomeGravar, setNomeGravar] = useState("");
+  const [pendente, setPendente] = useState<ArquivoPendente | null>(null);
   const { data: salvas } = useEvolucoesSalvas(municipio?.id ?? null);
   const salvarEvolucao = useSalvarEvolucao();
   const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
@@ -275,10 +285,32 @@ export default function PaginaEvolucao() {
     return mapa;
   }, [municipios]);
 
-  async function carregar(file: File, alvo: "base" | "atual") {
+  async function carregar(file: File, alvo: "base" | "atual", forcar = false) {
     setCarregando(alvo);
     try {
       const texto = decodificarArquivo(await file.arrayBuffer());
+
+      // Consistência: o arquivo precisa ser da prefeitura ativa.
+      const codigoArquivo =
+        detectarMunicipioRetorno(texto).codigo ??
+        normalizarCodigoSef(codigoMunicipioDoArquivo(file.name));
+      const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
+      if (!forcar && codigoArquivo && codigoAtivo && codigoArquivo !== codigoAtivo) {
+        const destino =
+          municipiosPermitidos.find(
+            (m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo,
+          ) ?? null;
+        setPendente({
+          file,
+          alvo,
+          codigo: codigoArquivo,
+          nome: detectarMunicipioRetorno(texto).nome ?? mapaMunicipiosPorCodigo.get(codigoArquivo) ?? null,
+          destinoId: destino?.id ?? null,
+          destinoNome: destino?.nome ?? null,
+        });
+        return;
+      }
+
       const referencia = Number(vafReferencia.replace(/\./g, "").replace(",", "."));
       const analise = analisarArquivo(
         file.name,
@@ -293,6 +325,19 @@ export default function PaginaEvolucao() {
       setCarregando(null);
     }
   }
+
+  async function confirmarTroca() {
+    if (!pendente?.destinoId) return;
+    const { file, alvo, destinoId, destinoNome } = pendente;
+    setPendente(null);
+    trocar(destinoId);
+    toast.success(`Prefeitura ativa alterada para ${destinoNome}.`);
+    // limpa a comparação anterior: os arquivos eram de outra prefeitura
+    setBase(null);
+    setAtual(null);
+    await carregar(file, alvo, true);
+  }
+
 
   const indicadores = useMemo(
     () => (base && atual ? linhasEvolucao(base.apuracao, atual.apuracao) : []),
