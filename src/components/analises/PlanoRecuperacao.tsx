@@ -109,12 +109,43 @@ export default function PlanoRecuperacao({
       }),
     [diagnostico, declarantes, exercicio, situacoesCadastrais],
   );
+  const [filtroMotivo, setFiltroMotivo] = useState<string>("todos");
+
+  const motivoDe = (c: { inscricao_estadual: string }) =>
+    (situacoesCadastrais?.[chaveIe(c.inscricao_estadual)] || "NAO_INFORMADA").toUpperCase();
+
+  /** contagem por motivo de exclusão (IEs distintas), recalculada a cada mudança do plano */
+  const contagemMotivos = useMemo(() => {
+    const porMotivo = new Map<string, Set<string>>();
+    const todas = new Set<string>();
+    for (const a of acoes)
+      for (const c of a.ignorados) {
+        const m = motivoDe(c);
+        if (!porMotivo.has(m)) porMotivo.set(m, new Set());
+        porMotivo.get(m)!.add(c.inscricao_estadual);
+        todas.add(c.inscricao_estadual);
+      }
+    return { porMotivo, total: todas.size };
+  }, [acoes, situacoesCadastrais]);
+
+  /** ações com a lista de ignorados já filtrada pelo motivo escolhido */
+  const acoesFiltradas = useMemo(
+    () =>
+      acoes.map((a) => ({
+        ...a,
+        ignorados:
+          filtroMotivo === "todos" ? a.ignorados : a.ignorados.filter((c) => motivoDe(c) === filtroMotivo),
+      })),
+    [acoes, filtroMotivo, situacoesCadastrais],
+  );
+
   const totalIgnorados = useMemo(() => {
     const ies = new Set<string>();
-    for (const a of acoes) for (const c of a.ignorados) ies.add(c.inscricao_estadual);
+    for (const a of acoesFiltradas) for (const c of a.ignorados) ies.add(c.inscricao_estadual);
     return ies.size;
-  }, [acoes]);
+  }, [acoesFiltradas]);
   const [acaoEmissao, setAcaoEmissao] = useState<AcaoRecuperacao | null>(null);
+
 
   const ref = referencia ?? null;
   const { data: registros } = useAcoesRecuperacao(ref);
