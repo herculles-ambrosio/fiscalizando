@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Eye, EyeOff, Lock } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { BrandFooter } from "@/components/BrandFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
