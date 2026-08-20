@@ -200,7 +200,33 @@ export function construirDocDiagnostico(
   }
 
   filhos.push(paragrafo("Conclusão", { bold: true, size: 24 }));
-  filhos.push(paragrafo(d.conclusao));
+  filhos.push(paragrafo(d.conclusao, { after: 200 }));
+
+  if (acoes && acoes.length) {
+    const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+    filhos.push(paragrafo("Plano de recuperação", { bold: true, size: 24 }));
+    filhos.push(paragrafo(`Potencial total mapeado: ${moeda(total)}`, { after: 140 }));
+    acoes.forEach((a, i) => {
+      filhos.push(
+        paragrafo(
+          `${i + 1}. ${a.titulo} — ${ROTULO_PRIORIDADE[a.prioridade]}${
+            a.valorRecuperavel > 0 ? ` · ${moeda(a.valorRecuperavel)}` : ""
+          }`,
+          { bold: true, after: 40 },
+        ),
+      );
+      filhos.push(paragrafo(`Motivo: ${a.motivo}`, { after: 30 }));
+      filhos.push(paragrafo(`Como fazer: ${a.comoFazer}`, { after: 30 }));
+      filhos.push(
+        paragrafo(
+          `Prazo: ${a.prazoSugerido}` +
+            (a.contribuintes.length ? ` · Contribuintes: ${a.contribuintes.length}` : "") +
+            (a.fundamento ? ` · ${a.fundamento}` : ""),
+          { after: 120 },
+        ),
+      );
+    });
+  }
 
   return new Document({
     styles: { default: { document: { run: { font: FONTE, size: 20 } } } },
