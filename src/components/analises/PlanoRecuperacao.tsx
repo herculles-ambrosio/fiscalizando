@@ -353,6 +353,7 @@ function ItemAcao({
                     <TableHead className="text-right">VAF base</TableHead>
                     <TableHead className="text-right">Comparado/estimado</TableHead>
                     <TableHead className="text-right">Impacto</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -373,6 +374,24 @@ function ItemAcao({
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
                         {formatarMoeda(c.diferenca)}
+                      </TableCell>
+                      <TableCell>
+                        <SeletorStatus
+                          valor={
+                            statusPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) ??
+                            "prevista"
+                          }
+                          onChange={(status) =>
+                            salvarStatus({
+                              ...baseEntrada,
+                              inscricaoEstadual: c.inscricao_estadual,
+                              nomeContribuinte: c.nome,
+                              cnpj: c.cnpj,
+                              valorRecuperavel: Math.abs(c.diferenca),
+                              status,
+                            })
+                          }
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
