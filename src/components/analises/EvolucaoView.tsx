@@ -34,6 +34,7 @@ import {
   useSalvarEvolucao,
 } from "@/hooks/useEvolucoesSalvas";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
+import { baixarCsv, montarCsv } from "@/lib/csv";
 import { decodificarArquivo } from "@/lib/vaf/parser";
 import { anoDoArquivo, codigoMunicipioDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
 import { detectarMunicipioRetorno, normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
@@ -186,15 +187,48 @@ function TabelaMovimentos({
   colunaBase,
   colunaAtual,
   vazio,
+  nomeArquivo,
 }: {
   linhas: MovimentoDeclarante[];
   colunaBase: string;
   colunaAtual: string;
   vazio: string;
+  nomeArquivo: string;
 }) {
   const [soIncompletos, setSoIncompletos] = useState(false);
   const incompletos = useMemo(() => linhas.filter((d) => d.cadastroIncompleto).length, [linhas]);
   const visiveis = soIncompletos ? linhas.filter((d) => d.cadastroIncompleto) : linhas;
+
+  // exporta exatamente as linhas visíveis (mesmo filtro e mesmo limite da tabela)
+  function exportar() {
+    baixarCsv(
+      nomeArquivo,
+      montarCsv(
+        [
+          "Inscrição estadual",
+          "CNPJ",
+          "Contribuinte",
+          "Origem do cadastro",
+          colunaBase,
+          colunaAtual,
+          "Diferença",
+          "Variação (%)",
+        ],
+        visiveis.map((d) => [
+          d.inscricao_estadual,
+          d.cnpj ?? "",
+          d.nome ?? "",
+          d.cadastroIncompleto
+            ? "Cadastro incompleto"
+            : `${d.origemNome ?? "—"}/${d.origemCnpj ?? "—"}`,
+          d.vafBase,
+          d.vafAtual,
+          d.diferenca,
+          d.variacaoPct ?? "",
+        ]),
+      ),
+    );
+  }
 
   return (
     <div>
@@ -211,8 +245,18 @@ function TabelaMovimentos({
             {incompletos}
           </Badge>
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={exportar}
+          disabled={visiveis.length === 0}
+          className="ml-auto"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Exportar visíveis ({visiveis.length})
+        </Button>
         {soIncompletos && (
-          <span className="text-xs text-muted-foreground">
+          <span className="w-full text-xs text-muted-foreground">
             Exibindo apenas contribuintes cujo nome/CNPJ não foi localizado nos registros do arquivo.
           </span>
         )}
