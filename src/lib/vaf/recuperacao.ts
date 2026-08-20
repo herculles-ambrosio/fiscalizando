@@ -311,3 +311,61 @@ export function textoPlanoRecuperacao(acoes: AcaoRecuperacao[]): string {
   });
   return linhas.join("\n");
 }
+
+const escCsv = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+
+/**
+ * CSV dos contribuintes ignorados por situação cadastral.
+ * Passe uma única ação (exportação por ação) ou todas (exportação do plano).
+ */
+export function csvIgnorados(
+  acoes: AcaoRecuperacao | AcaoRecuperacao[],
+  situacoes?: MapaSituacoesCadastrais | null,
+): string {
+  const lista = Array.isArray(acoes) ? acoes : [acoes];
+  const br = (v: number) => v.toFixed(2).replace(".", ",");
+  const linhas: string[][] = [
+    [
+      "Acao",
+      "Prioridade",
+      "IE",
+      "CNPJ",
+      "Contribuinte",
+      "Situacao cadastral",
+      "VAF base",
+      "VAF atual",
+      "Diferenca",
+      "Motivo da exclusao",
+    ],
+  ];
+  for (const a of lista) {
+    for (const c of a.ignorados) {
+      const situacao = situacoes?.[chaveIe(c.inscricao_estadual)] ?? "";
+      linhas.push([
+        a.titulo,
+        ROTULO_PRIORIDADE[a.prioridade],
+        c.inscricao_estadual,
+        c.cnpj ?? "",
+        c.nome ?? "",
+        situacao || "Nao informada",
+        br(c.vafBase),
+        br(c.vafAtual),
+        br(c.diferenca),
+        "Inscricao cancelada/baixada/bloqueada na SEF-MG — nao deve ser notificada",
+      ]);
+    }
+  }
+  return linhas.map((l) => l.map((c) => escCsv(String(c))).join(";")).join("\n");
+}
+
+/** Dispara o download de um CSV (com BOM para abrir certo no Excel). */
+export function baixarCsvIgnorados(conteudo: string, nomeArquivo: string): void {
+  const url = URL.createObjectURL(
+    new Blob(["\uFEFF" + conteudo], { type: "text/csv;charset=utf-8" }),
+  );
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nomeArquivo;
+  a.click();
+  URL.revokeObjectURL(url);
+}
