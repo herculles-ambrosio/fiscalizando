@@ -34,6 +34,7 @@ import {
   useSalvarEvolucao,
 } from "@/hooks/useEvolucoesSalvas";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
+import { baixarCsv, montarCsv } from "@/lib/csv";
 import { decodificarArquivo } from "@/lib/vaf/parser";
 import { anoDoArquivo, codigoMunicipioDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
 import { detectarMunicipioRetorno, normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
@@ -186,15 +187,48 @@ function TabelaMovimentos({
   colunaBase,
   colunaAtual,
   vazio,
+  nomeArquivo,
 }: {
   linhas: MovimentoDeclarante[];
   colunaBase: string;
   colunaAtual: string;
   vazio: string;
+  nomeArquivo: string;
 }) {
   const [soIncompletos, setSoIncompletos] = useState(false);
   const incompletos = useMemo(() => linhas.filter((d) => d.cadastroIncompleto).length, [linhas]);
   const visiveis = soIncompletos ? linhas.filter((d) => d.cadastroIncompleto) : linhas;
+
+  // exporta exatamente as linhas visíveis (mesmo filtro e mesmo limite da tabela)
+  function exportar() {
+    baixarCsv(
+      nomeArquivo,
+      montarCsv(
+        [
+          "Inscrição estadual",
+          "CNPJ",
+          "Contribuinte",
+          "Origem do cadastro",
+          colunaBase,
+          colunaAtual,
+          "Diferença",
+          "Variação (%)",
+        ],
+        visiveis.map((d) => [
+          d.inscricao_estadual,
+          d.cnpj ?? "",
+          d.nome ?? "",
+          d.cadastroIncompleto
+            ? "Cadastro incompleto"
+            : `${d.origemNome ?? "—"}/${d.origemCnpj ?? "—"}`,
+          d.vafBase,
+          d.vafAtual,
+          d.diferenca,
+          d.variacaoPct ?? "",
+        ]),
+      ),
+    );
+  }
 
   return (
     <div>
@@ -211,8 +245,18 @@ function TabelaMovimentos({
             {incompletos}
           </Badge>
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={exportar}
+          disabled={visiveis.length === 0}
+          className="ml-auto"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Exportar visíveis ({visiveis.length})
+        </Button>
         {soIncompletos && (
-          <span className="text-xs text-muted-foreground">
+          <span className="w-full text-xs text-muted-foreground">
             Exibindo apenas contribuintes cujo nome/CNPJ não foi localizado nos registros do arquivo.
           </span>
         )}
@@ -442,7 +486,15 @@ export default function PaginaEvolucao() {
     [base, atual, mapaMunicipiosPorCodigo],
   );
 
-  function baixarCsv() {
+  // prefixo com a prefeitura ativa: arquivos baixados nunca se confundem entre municípios
+  const prefixoArquivo = `evolucao-vaf-${(municipio?.nome ?? "municipio")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")}`;
+
+  function baixarComparativoCsv() {
     if (!base || !atual || !declarantes) return;
     const diag = diagnosticarEvolucao(base, atual);
     const analise = textoDiagnostico(diag, rotuloArquivo(base), rotuloArquivo(atual));
@@ -453,12 +505,7 @@ export default function PaginaEvolucao() {
       }),
     );
     const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise, plano);
-    const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `evolucao-vaf-${municipio?.nome ?? "municipio"}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    baixarCsv(`${prefixoArquivo}-comparativo.csv`, csv);
   }
 
   const perdaSaidas = declarantes?.sairam.reduce((s, d) => s + d.vafBase, 0) ?? 0;
@@ -521,7 +568,7 @@ export default function PaginaEvolucao() {
               variant="secondary"
               className="w-full"
               disabled={!base || !atual}
-              onClick={baixarCsv}
+              onClick={baixarComparativoCsv}
             >
               <Download className="h-4 w-4" />
               Exportar comparativo (CSV)
@@ -910,6 +957,7 @@ export default function PaginaEvolucao() {
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
                     vazio="Todos os contribuintes da competência base declararam também na atual."
+                    nomeArquivo={`${prefixoArquivo}-deixaram-de-declarar.csv`}
                   />
                 </CardContent>
               </Card>
@@ -923,6 +971,7 @@ export default function PaginaEvolucao() {
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
                     vazio="Nenhum declarante novo nesta competência."
+                    nomeArquivo={`${prefixoArquivo}-novos-declarantes.csv`}
                   />
                 </CardContent>
               </Card>
@@ -936,6 +985,7 @@ export default function PaginaEvolucao() {
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
                     vazio="Sem contribuintes para comparar."
+                    nomeArquivo={`${prefixoArquivo}-variacao-contribuintes.csv`}
                   />
                 </CardContent>
               </Card>

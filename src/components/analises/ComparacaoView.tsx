@@ -17,6 +17,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda, formatarPercentual } from "@/lib/format";
+import { baixarCsv, montarCsv } from "@/lib/csv";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import {
   competenciaOrdenavel,
   formatarCompetencia,
@@ -179,6 +182,73 @@ export default function Comparacao() {
   }, [dados, escolhidas, busca]);
 
   const base = escolhidas[0];
+  const ultimaId = escolhidas[escolhidas.length - 1]?.id ?? "";
+
+  const colunas = escolhidas.map(
+    (c) =>
+      `${formatarCompetencia(c.competencia_mes, c.competencia_ano)} · ${rotuloTipoRetorno(c.tipo_retorno)}`,
+  );
+
+  // cada exportação leva exatamente as linhas visíveis na aba (mesma busca e mesmo limite)
+  const visiveisCnae = porCnae.slice(0, 100);
+  const visiveisIndice = porContribuinte.slice(0, 50);
+  const visiveisContribuintes = porContribuinte.slice(0, 300);
+
+  function exportarCnae() {
+    baixarCsv(
+      "comparacao-por-cnae.csv",
+      montarCsv(
+        ["CNAE", ...colunas, "Variação (%)"],
+        visiveisCnae.map((l) => [
+          l.cnae,
+          ...escolhidas.map((c) => l.valores[c.id] ?? 0),
+          variacao(l.valores[ultimaId] ?? null, l.valores[base!.id] ?? null) ?? "",
+        ]),
+      ),
+    );
+  }
+
+  function exportarIndice() {
+    const parte = (id: string, valores: Record<string, number | null>) => {
+      const total = totaisVaf[id] ?? 0;
+      const v = valores[id];
+      if (v == null || total === 0) return null;
+      return (v / total) * 100;
+    };
+    baixarCsv(
+      "comparacao-participacao.csv",
+      montarCsv(
+        ["Contribuinte", "Inscrição estadual", ...colunas, "Δ p.p."],
+        visiveisIndice.map((l) => {
+          const inicio = parte(base!.id, l.valores);
+          const fim = parte(ultimaId, l.valores);
+          return [
+            l.nome ?? l.ie,
+            l.ie,
+            ...escolhidas.map((c) => parte(c.id, l.valores) ?? ""),
+            inicio == null || fim == null ? "" : fim - inicio,
+          ];
+        }),
+      ),
+    );
+  }
+
+  function exportarContribuintes() {
+    baixarCsv(
+      "comparacao-contribuintes.csv",
+      montarCsv(
+        ["Contribuinte", "CNPJ", "Inscrição estadual", ...colunas, "Variação (%)", "Cadastro"],
+        visiveisContribuintes.map((l) => [
+          l.nome ?? "",
+          l.cnpj ?? "",
+          l.ie,
+          ...escolhidas.map((c) => l.valores[c.id] ?? ""),
+          l.variacao ?? "",
+          l.entrou ? "Novo" : l.saiu ? "Saiu" : "Mantido",
+        ]),
+      ),
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -305,7 +375,18 @@ export default function Comparacao() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="indice">
+          <TabsContent value="indice" className="space-y-3">
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportarIndice}
+                disabled={visiveisIndice.length === 0}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Exportar visíveis ({visiveisIndice.length})
+              </Button>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -322,7 +403,7 @@ export default function Comparacao() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {porContribuinte.slice(0, 50).map((l) => {
+                    {visiveisIndice.map((l) => {
                       const parte = (id: string) => {
                         const total = totaisVaf[id] ?? 0;
                         const v = l.valores[id];
@@ -362,7 +443,18 @@ export default function Comparacao() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="cnae">
+          <TabsContent value="cnae" className="space-y-3">
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportarCnae}
+                disabled={visiveisCnae.length === 0}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Exportar visíveis ({visiveisCnae.length})
+              </Button>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -379,7 +471,7 @@ export default function Comparacao() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {porCnae.slice(0, 100).map((l) => (
+                    {visiveisCnae.map((l) => (
                       <TableRow key={l.cnae}>
                         <TableCell className="font-medium">{l.cnae}</TableCell>
                         {escolhidas.map((c) => (
@@ -404,12 +496,24 @@ export default function Comparacao() {
           </TabsContent>
 
           <TabsContent value="contribuintes" className="space-y-3">
-            <Input
-              placeholder="Buscar por nome, CNPJ ou inscrição estadual"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="max-w-sm"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                placeholder="Buscar por nome, CNPJ ou inscrição estadual"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="max-w-sm"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportarContribuintes}
+                disabled={visiveisContribuintes.length === 0}
+                className="sm:ml-auto"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Exportar visíveis ({visiveisContribuintes.length})
+              </Button>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -428,7 +532,7 @@ export default function Comparacao() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {porContribuinte.slice(0, 300).map((l) => (
+                    {visiveisContribuintes.map((l) => (
                       <TableRow key={l.ie}>
                         <TableCell className="max-w-[16rem] truncate">{l.nome ?? "—"}</TableCell>
                         <TableCell>{formatarCnpj(l.cnpj)}</TableCell>
