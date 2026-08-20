@@ -139,7 +139,9 @@ function Login() {
 
 
           <div className="space-y-2">
-            <Label htmlFor="senha">Senha</Label>
+            <Label htmlFor="senha" className="font-medium">
+              Senha
+            </Label>
             <div className="relative">
               <Input
                 id="senha"
@@ -153,24 +155,34 @@ function Login() {
               <button
                 type="button"
                 onClick={() => setMostrarSenha((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground focus:outline-none"
                 aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
               >
-                {mostrarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {mostrarSenha ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
               </button>
             </div>
           </div>
 
-          {erro && <p className="text-sm text-destructive">{erro}</p>}
+          {erro && (
+            <p className="rounded-lg border border-destructive/20 bg-destructive/8 px-3 py-2 text-sm text-destructive">
+              {erro}
+            </p>
+          )}
 
-          <Button type="submit" className="w-full" disabled={enviando}>
+          <Button type="submit" className="h-11 w-full text-sm" disabled={enviando}>
             {enviando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Entrar
           </Button>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Não possui acesso? Solicite ao responsável pela Secretaria Municipal de Fazenda.
           </p>
+
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground/70 lg:hidden">
+            <Lock className="h-3.5 w-3.5" />
+            Acesso restrito às prefeituras cadastradas.
+          </p>
+
         </form>
       </div>
     </div>
