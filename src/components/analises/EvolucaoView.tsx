@@ -795,6 +795,7 @@ export default function PaginaEvolucao() {
             diagnostico={diagnosticarEvolucao(base, atual)}
             declarantes={declarantes}
             exercicio={atual.apuracao.anoBase}
+            referencia={`${base.nome}::${atual.nome}`}
           />
 
 
