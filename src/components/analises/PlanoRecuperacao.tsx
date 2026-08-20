@@ -331,9 +331,15 @@ function ItemAcao({
           <SeletorStatus
             valor={statusAcao}
             onChange={(status) =>
-              salvarStatus({ ...baseEntrada, valorRecuperavel: acao.valorRecuperavel, status })
+              salvarStatus({
+                ...baseEntrada,
+                valorRecuperavel: acao.valorRecuperavel,
+                observacao: obsPorChave.get(chaveStatus(acao.chave)) ?? null,
+                status,
+              })
             }
           />
+
           {acao.valorRecuperavel > 0 && (
             <span className="font-mono text-sm tabular-nums">
               {formatarMoeda(acao.valorRecuperavel)}
