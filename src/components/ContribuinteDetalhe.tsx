@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
 import { REGIME_SIMEI, REGIME_SIMPLES_NACIONAL } from "@/lib/vaf/apurar";
+import { formatarCnae } from "@/lib/vaf/cnae";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
