@@ -212,6 +212,18 @@ export default function PlanoRecuperacao({
             {!ref && <span>· salve/carregue a evolução para gravar o status.</span>}
           </div>
 
+          <div className="text-xs text-muted-foreground">
+            {totalIgnorados > 0 ? (
+              <>
+                {totalIgnorados} contribuinte(s) foram retirados automaticamente das ações por
+                estarem <strong>cancelados, baixados ou bloqueados</strong> na SEF/MG — não recebem
+                ofício nem entram no valor recuperável.
+              </>
+            ) : (
+              <>Nenhum contribuinte cancelado, baixado ou bloqueado nas ações desta análise.</>
+            )}
+          </div>
+
           <div className="space-y-3">
             {acoes.map((acao, i) => (
               <ItemAcao
