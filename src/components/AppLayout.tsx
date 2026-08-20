@@ -188,7 +188,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </Select>
           </div>
         )}
-        <main className="min-w-0 flex-1 px-5 py-6 md:px-8 md:py-8">{children}</main>
+        <main className="min-w-0 flex-1 px-5 py-7 md:px-9 md:py-10">{children}</main>
       </div>
     </div>
   );
