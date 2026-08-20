@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Eye, EyeOff, Lock } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { BrandFooter } from "@/components/BrandFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,10 +107,13 @@ function Login() {
           </div>
         </div>
 
-        <p className="relative flex items-center gap-1.5 text-xs text-sidebar-foreground/45">
-          <Lock className="h-3.5 w-3.5" />
-          Acesso restrito às prefeituras cadastradas.
-        </p>
+        <div className="relative flex items-end justify-between gap-4">
+          <p className="flex items-center gap-1.5 text-xs text-sidebar-foreground/45">
+            <Lock className="h-3.5 w-3.5" />
+            Acesso restrito às prefeituras cadastradas.
+          </p>
+          <BrandFooter variante="escuro" tamanho="md" />
+        </div>
       </div>
 
       <div className="flex items-center justify-center px-6 py-16">
@@ -183,6 +187,10 @@ function Login() {
             <Lock className="h-3.5 w-3.5" />
             Acesso restrito às prefeituras cadastradas.
           </p>
+
+          <div className="pt-4 border-t border-border/60">
+            <BrandFooter />
+          </div>
 
         </form>
       </div>
