@@ -385,6 +385,7 @@ export default function PaginaEvolucao() {
     if (!pendente?.destinoId) return;
     const { file, alvo, destinoId, destinoNome } = pendente;
     setPendente(null);
+    setBloqueio(null);
     trocar(destinoId);
     toast.success(`Prefeitura ativa alterada para ${destinoNome}.`);
     // limpa a comparação anterior: os arquivos eram de outra prefeitura
