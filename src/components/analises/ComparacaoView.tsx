@@ -496,12 +496,24 @@ export default function Comparacao() {
           </TabsContent>
 
           <TabsContent value="contribuintes" className="space-y-3">
-            <Input
-              placeholder="Buscar por nome, CNPJ ou inscrição estadual"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="max-w-sm"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                placeholder="Buscar por nome, CNPJ ou inscrição estadual"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="max-w-sm"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportarContribuintes}
+                disabled={visiveisContribuintes.length === 0}
+                className="sm:ml-auto"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Exportar visíveis ({visiveisContribuintes.length})
+              </Button>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <Table>
