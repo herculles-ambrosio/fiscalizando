@@ -231,7 +231,7 @@ export function ContribuinteDetalhe({
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <Campo rotulo="CNAE" valor={contribuinte.cnae ?? "—"} />
+              <Campo rotulo="CNAE" valor={formatarCnae(contribuinte.cnae)} />
               <Campo
                 rotulo="Regime"
                 valor={rotuloRegime(contribuinte.regime_recolhimento ?? null)}
