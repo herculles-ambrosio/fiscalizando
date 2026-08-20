@@ -12,6 +12,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
+import { SituacaoCadastralBadge } from "@/components/SituacaoCadastralBadge";
 import { OficiosDialog } from "@/components/OficiosDialog";
 import { AtualizarRegimes } from "@/components/AtualizarRegimes";
 import { ContribuinteDetalhe, type ContribuinteLinha } from "@/components/ContribuinteDetalhe";
@@ -30,7 +31,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
-import { ROTULO_SITUACAO, type Situacao } from "@/lib/vaf/apurar";
+import {
+  ROTULO_SITUACAO,
+  ROTULO_SITUACAO_CADASTRAL,
+  SITUACOES_CADASTRAIS,
+  type Situacao,
+  type SituacaoCadastral,
+} from "@/lib/vaf/apurar";
 import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 
 const SITUACOES: Situacao[] = [
@@ -102,6 +109,7 @@ type ColunaOrdenavel =
 export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo?: string }) {
   const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
   const [cnae, setCnae] = useState<string>("TODOS");
+  const [cadastral, setCadastral] = useState<SituacaoCadastral | "TODOS">("TODOS");
   const [cnaeAberto, setCnaeAberto] = useState(false);
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
@@ -137,7 +145,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   });
 
   const { data, isFetching } = useQuery({
-    queryKey: ["contribuintes", cargaId, filtro, cnae, termo, pagina, ordem.coluna, ordem.asc],
+    queryKey: ["contribuintes", cargaId, filtro, cnae, cadastral, termo, pagina, ordem.coluna, ordem.asc],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
@@ -150,6 +158,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
       if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
       if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+      if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
       if (termo) q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
 
       const { data, error, count } = await q;
@@ -408,6 +417,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
                     <ColunaHead coluna="data_entrega" ordem={ordem} onSort={ordenarPor}>Entrega</ColunaHead>
 
+                    <TableHead>Situação cadastral</TableHead>
                     <TableHead>Situação</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -473,6 +483,15 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                           {formatarData(c.data_entrega)}
                         </TableCell>
                         <TableCell>
+                          <SituacaoCadastralBadge situacao={(c as any).situacao_cadastral} />
+                          {(c as any).mes_fim_atividade &&
+                          (c as any).mes_fim_atividade < 12 ? (
+                            <span className="mt-1 block text-xs text-muted-foreground">
+                              atividade até o mês {(c as any).mes_fim_atividade}
+                            </span>
+                          ) : null}
+                        </TableCell>
+                        <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {(c.situacoes as string[]).map((s) => (
                               <SituacaoBadge key={s} situacao={s} />
@@ -484,7 +503,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                   })}
                   {!data?.linhas.length && (
                     <TableRow>
-                      <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
                         Nenhum contribuinte encontrado com esses filtros.
                       </TableCell>
                     </TableRow>
@@ -502,7 +521,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       <TableCell className="text-right font-medium whitespace-nowrap">
                         {formatarMoeda(totalVafAnterior)}
                       </TableCell>
-                      <TableCell colSpan={3} />
+                      <TableCell colSpan={4} />
                     </TableRow>
                   </TableFooter>
                 )}
