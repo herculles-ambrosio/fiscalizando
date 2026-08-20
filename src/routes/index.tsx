@@ -112,7 +112,7 @@ function Login() {
             <Lock className="h-3.5 w-3.5" />
             Acesso restrito às prefeituras cadastradas.
           </p>
-          <BrandFooter variante="escuro" />
+          <BrandFooter variante="escuro" tamanho="md" />
         </div>
       </div>
 
