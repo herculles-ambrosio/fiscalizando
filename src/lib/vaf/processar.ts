@@ -115,6 +115,10 @@ export async function processarApuracao(params: {
       data_entrega: c.data_entrega,
       regime_recolhimento: c.regime_recolhimento,
       situacoes: c.situacoes,
+      situacao_cadastral: c.situacao_cadastral,
+      situacao_cadastral_data: c.situacao_cadastral_data,
+      mes_inicio_atividade: c.mes_inicio_atividade,
+      mes_fim_atividade: c.mes_fim_atividade,
     }));
 
     for (let i = 0; i < linhas.length; i += TAMANHO_LOTE) {
