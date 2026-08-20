@@ -49,6 +49,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-soft: var(--gold-soft);
   --color-omisso: var(--omisso);
   --color-omisso-foreground: var(--omisso-foreground);
   --color-zerado: var(--zerado);
@@ -59,6 +62,9 @@
   --color-discrepante-foreground: var(--discrepante-foreground);
   --color-normal: var(--normal);
   --color-normal-foreground: var(--normal-foreground);
+  --shadow-soft: var(--shadow-soft);
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
