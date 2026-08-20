@@ -8,6 +8,7 @@ import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatarDataHora } from "@/lib/format";
+import { formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -190,6 +191,7 @@ function Dashboard() {
                     tickLine={false}
                     axisLine={false}
                     stroke="var(--muted-foreground)"
+                    tickFormatter={(c: string) => formatarCodigoCnae(c)}
                   />
                   <YAxis
                     fontSize={11}
@@ -206,7 +208,10 @@ function Dashboard() {
                       borderRadius: 12,
                       boxShadow: "var(--shadow-elevated)",
                       fontSize: 12,
+                      maxWidth: 320,
+                      whiteSpace: "normal",
                     }}
+                    labelFormatter={(c: string) => formatarCnae(c)}
                     formatter={(v: number) => [v, "Irregulares"]}
                   />
                   <Bar dataKey="irregulares" fill="url(#grad-irregulares)" radius={[6, 6, 0, 0]} />

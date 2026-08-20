@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { formatarCompetencia, rotuloTipoRetorno, type TipoRetorno } from "@/lib/vaf/tipoRetorno";
+import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 
 export const Route = createFileRoute("/_authenticated/contribuintes")({
   head: () => ({
@@ -208,12 +209,13 @@ function DeixaramDeDeclarar({
 
   function baixarCsv() {
     const linhas = [
-      ["IE", "CNPJ", "Contribuinte", "CNAE", "VAF na competência anterior"],
+      ["IE", "CNPJ", "Contribuinte", "CNAE", "Descrição do CNAE", "VAF na competência anterior"],
       ...(data ?? []).map((l) => [
         l.inscricao_estadual,
         l.cnpj ?? "",
         l.nome ?? "",
-        l.cnae ?? "",
+        formatarCodigoCnae(l.cnae),
+        descricaoCnae(l.cnae) ?? "",
         String(l.vaf_anterior ?? 0),
       ]),
     ];
@@ -278,7 +280,11 @@ function DeixaramDeDeclarar({
                       </TableCell>
                       <TableCell className="whitespace-nowrap">{formatarCnpj(l.cnpj)}</TableCell>
                       <TableCell className="whitespace-nowrap">{l.inscricao_estadual}</TableCell>
-                      <TableCell>{l.cnae ?? "—"}</TableCell>
+                      <TableCell className="max-w-56">
+                        <span className="block truncate" title={formatarCnae(l.cnae)}>
+                          {formatarCnae(l.cnae)}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
                         {formatarMoeda(l.vaf_anterior)}
                       </TableCell>
