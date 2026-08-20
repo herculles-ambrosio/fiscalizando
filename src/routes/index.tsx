@@ -188,6 +188,10 @@ function Login() {
             Acesso restrito às prefeituras cadastradas.
           </p>
 
+          <div className="pt-4 border-t border-border/60">
+            <BrandFooter />
+          </div>
+
         </form>
       </div>
     </div>
