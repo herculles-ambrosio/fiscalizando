@@ -246,9 +246,14 @@ export default function PaginaIndice() {
   const [fator, setFator] = useState<string>("1");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // calibração é guardada por prefeitura, para não misturar referências ao trocar
+  const chaveRef = `${CHAVE_REF}:${municipioId ?? "sem-municipio"}`;
+
   useEffect(() => {
+    setVafEstadualRef("");
+    setFator("1");
     try {
-      const salvo = JSON.parse(localStorage.getItem(CHAVE_REF) ?? "null") as {
+      const salvo = JSON.parse(localStorage.getItem(chaveRef) ?? "null") as {
         vafEstadual?: string;
         fator?: string;
       } | null;
@@ -257,11 +262,11 @@ export default function PaginaIndice() {
     } catch {
       /* ignora */
     }
-  }, []);
+  }, [chaveRef]);
 
   useEffect(() => {
-    localStorage.setItem(CHAVE_REF, JSON.stringify({ vafEstadual: vafEstadualRef, fator }));
-  }, [vafEstadualRef, fator]);
+    localStorage.setItem(chaveRef, JSON.stringify({ vafEstadual: vafEstadualRef, fator }));
+  }, [chaveRef, vafEstadualRef, fator]);
 
   const nomePorCodigo = useMemo(() => {
     const mapa = new Map(
