@@ -415,10 +415,12 @@ function DialogEmissao({
   acao,
   exercicio,
   onFechar,
+  onEmitido,
 }: {
   acao: AcaoRecuperacao | null;
   exercicio: number | null;
   onFechar: () => void;
+  onEmitido: (acao: AcaoRecuperacao, exercicio: number) => void;
 }) {
   const { data: config } = useConfiguracao();
   const { data: modelos } = useModelos();
