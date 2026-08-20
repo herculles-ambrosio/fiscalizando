@@ -449,7 +449,7 @@ export default function PaginaEvolucao() {
     const plano = textoPlanoRecuperacao(
       montarPlanoRecuperacao(diag, declarantes, {
         exercicio: atual.apuracao.anoBase,
-        situacoesCadastrais,
+        situacoesCadastrais: situacoesCadastrais ?? null,
       }),
     );
     const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise, plano);
