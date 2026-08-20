@@ -325,10 +325,14 @@ export type Database = {
           entregou_declaracao: boolean
           id: string
           inscricao_estadual: string
+          mes_fim_atividade: number | null
+          mes_inicio_atividade: number | null
           municipio_id: string
           nome: string | null
           oficio_path: string | null
           regime_recolhimento: string | null
+          situacao_cadastral: string | null
+          situacao_cadastral_data: string | null
           situacoes: string[]
           vaf_anterior: number | null
           vaf_atual: number | null
@@ -344,10 +348,14 @@ export type Database = {
           entregou_declaracao?: boolean
           id?: string
           inscricao_estadual: string
+          mes_fim_atividade?: number | null
+          mes_inicio_atividade?: number | null
           municipio_id: string
           nome?: string | null
           oficio_path?: string | null
           regime_recolhimento?: string | null
+          situacao_cadastral?: string | null
+          situacao_cadastral_data?: string | null
           situacoes?: string[]
           vaf_anterior?: number | null
           vaf_atual?: number | null
@@ -363,10 +371,14 @@ export type Database = {
           entregou_declaracao?: boolean
           id?: string
           inscricao_estadual?: string
+          mes_fim_atividade?: number | null
+          mes_inicio_atividade?: number | null
           municipio_id?: string
           nome?: string | null
           oficio_path?: string | null
           regime_recolhimento?: string | null
+          situacao_cadastral?: string | null
+          situacao_cadastral_data?: string | null
           situacoes?: string[]
           vaf_anterior?: number | null
           vaf_atual?: number | null

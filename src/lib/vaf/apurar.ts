@@ -28,11 +28,61 @@ export const ROTULO_SITUACAO: Record<Situacao, string> = {
 export const REGIME_SIMPLES_NACIONAL = "58";
 export const REGIME_SIMEI = "74";
 
+/**
+ * Situação cadastral estadual (SEF/MG).
+ * Origem: campo "Código Situação Contribuinte" (pos. 531) do arquivo de ativos.
+ * Os valores derivados vêm do cruzamento ativos x retorno.
+ */
+export const SITUACOES_CADASTRAIS = [
+  "NORMAL",
+  "CANCELADO",
+  "BAIXADO",
+  "BLOQUEADO",
+  "ENDERECO_DIVERGENTE",
+  "ENCERROU_ATIVIDADE",
+  "AUSENTE_ATIVOS",
+  "DESCONHECIDA",
+] as const;
+export type SituacaoCadastral = (typeof SITUACOES_CADASTRAIS)[number];
+
+export const ROTULO_SITUACAO_CADASTRAL: Record<SituacaoCadastral, string> = {
+  NORMAL: "Ativo (normal)",
+  CANCELADO: "Cancelado",
+  BAIXADO: "Baixado",
+  BLOQUEADO: "Bloqueado no exercício",
+  ENDERECO_DIVERGENTE: "Endereço divergente",
+  ENCERROU_ATIVIDADE: "Encerrou atividade no exercício",
+  AUSENTE_ATIVOS: "Provável baixa (só no retorno)",
+  DESCONHECIDA: "Não informada",
+};
+
+/** Situações que indicam que a empresa não está mais ativa na SEF/MG. */
+export const SITUACOES_CADASTRAIS_INATIVAS: SituacaoCadastral[] = [
+  "CANCELADO",
+  "BAIXADO",
+  "ENCERROU_ATIVIDADE",
+  "AUSENTE_ATIVOS",
+];
+
+const CODIGO_PARA_SITUACAO_CADASTRAL: Record<string, SituacaoCadastral> = {
+  "1": "NORMAL",
+  "2": "CANCELADO",
+  "3": "BAIXADO",
+  "4": "BLOQUEADO",
+  "5": "ENDERECO_DIVERGENTE",
+};
+
+export function situacaoCadastralDoCodigo(codigo: string | null | undefined): SituacaoCadastral {
+  const c = String(codigo ?? "").trim();
+  return CODIGO_PARA_SITUACAO_CADASTRAL[c] ?? (c ? "DESCONHECIDA" : "DESCONHECIDA");
+}
+
 export function situacoesDoRegime(regime: string | null, simei = false): Situacao[] {
   if (simei || regime === REGIME_SIMEI) return ["SIMEI"];
   if (regime === REGIME_SIMPLES_NACIONAL) return ["SIMPLES_NACIONAL"];
   return [];
 }
+
 
 export type RegistroSimei = {
   inscricao_estadual: string;
@@ -90,7 +140,12 @@ export type ContribuinteApurado = {
   data_entrega: string | null;
   regime_recolhimento: string | null;
   situacoes: Situacao[];
+  situacao_cadastral: SituacaoCadastral;
+  situacao_cadastral_data: string | null;
+  mes_inicio_atividade: number | null;
+  mes_fim_atividade: number | null;
 };
+
 
 export type ResultadoApuracao = {
   exercicio: number;
@@ -106,6 +161,11 @@ export type OpcoesApuracao = {
 
 function limparNumero(txt: string): string {
   return (txt || "").replace(/[^0-9]/g, "").replace(/^0+/, "");
+}
+
+function numeroMes(valor: unknown): number | null {
+  const n = Number(String(valor ?? "").replace(/[^0-9]/g, ""));
+  return Number.isFinite(n) && n >= 1 && n <= 13 ? n : null;
 }
 
 function sinalAplicado(valor: number | null, sinal: string | undefined): number | null {
@@ -130,15 +190,15 @@ export function apurar(
 ): ResultadoApuracao {
   const limiar = opcoes.limiarDiscrepancia ?? 0.3;
 
-  // ---- Universo de ativos (somente situação normal) ----
+  // ---- Universo de ativos (com a situação cadastral declarada pela SEF) ----
   const ativos = new Map<string, Record<string, any>>();
   for (const linha of separarLinhas(textoAtivos)) {
     const reg = parseLinha(linha, LAYOUT_ATIVOS);
-    if (String(reg["codigo_situacao_contribuinte"]).trim() !== "1") continue;
     const ie = String(reg["inscricao_estadual"]).trim();
     if (!ie) continue;
     ativos.set(ie, reg);
   }
+
 
   // ---- Retorno ----
   const reg01 = new Map<string, Record<string, any>[]>();
@@ -267,6 +327,13 @@ export function apurar(
 
     const cnpj = limparNumero(String(ativo["cnpj_contribuinte"] ?? ""));
 
+    const mesInicio = numeroMes(declaracao?.["mes_inicio"]);
+    const mesFim = numeroMes(declaracao?.["mes_fim"]);
+    let situacaoCadastral = situacaoCadastralDoCodigo(ativo["codigo_situacao_contribuinte"]);
+    if (situacaoCadastral === "NORMAL" && mesFim != null && mesFim < 12) {
+      situacaoCadastral = "ENCERROU_ATIVIDADE";
+    }
+
     contribuintes.push({
       inscricao_estadual: ie,
       cnpj: cnpj ? cnpj.padStart(14, "0") : null,
@@ -280,30 +347,80 @@ export function apurar(
       data_entrega: dataEntregaISO,
       regime_recolhimento: regimeNormalizado,
       situacoes,
+      situacao_cadastral: situacaoCadastral,
+      situacao_cadastral_data: dataSefParaISO(String(ativo["data_situacao_contribuinte"] ?? "")),
+      mes_inicio_atividade: mesInicio,
+      mes_fim_atividade: mesFim,
     });
   }
 
-  // ---- SIMEI presentes no retorno que não constam no arquivo de ativos ----
-  for (const [ie, reg] of registrosSimei) {
+  // ---- Declarantes do retorno que não constam no arquivo de ativos ----
+  // Indicam baixa/cancelamento/transferência ocorrida durante o exercício.
+  const iesSomenteRetorno = new Set<string>([
+    ...registrosSimei.keys(),
+    ...[...reg01.keys()].filter((ie) =>
+      (reg01.get(ie) ?? []).some((r) => Number(String(r["exercicio"]).trim()) === exercicio),
+    ),
+  ]);
+
+  for (const ie of iesSomenteRetorno) {
     if (ativos.has(ie)) continue;
-    const situacoes: Situacao[] = ["SIMEI", "SOMENTE_RETORNO"];
+    const regSimei = registrosSimei.get(ie);
+    const declaracao = (reg01.get(ie) ?? [])
+      .filter((r) => Number(String(r["exercicio"]).trim()) === exercicio)
+      .sort((a, b) => chaveData(b["data_processamento"]) - chaveData(a["data_processamento"]))[0];
+    const historico = (reg10.get(ie) ?? [])
+      .filter((r) => Number(String(r["exercicio"]).trim()) === exercicio)
+      .sort((a, b) => chaveData(b["data_processamento"]) - chaveData(a["data_processamento"]))[0];
+
+    let vafAtual: number | null = historico
+      ? (sinalAplicado(historico["valor_vaf_num"] ?? 0, historico["sinal_valor_vaf"]) ?? 0)
+      : 0;
+    if (regSimei && (vafAtual == null || vafAtual === 0)) vafAtual = regSimei.vaf;
+
+    const anterior = reg02.get(ie);
+    const vafAnterior = anterior
+      ? sinalAplicado(
+          anterior["valor_adicionado_anterior_num"] ?? 0,
+          anterior["sinal_valor_adicionado_anterior"],
+        )
+      : null;
+
+    const situacoes: Situacao[] = ["SOMENTE_RETORNO"];
+    if (regSimei) situacoes.unshift("SIMEI");
+    const regimeDecl = String(declaracao?.["regime_recolhimento_final"] ?? "")
+      .trim()
+      .padStart(2, "0");
+    const regime = regSimei?.regime_recolhimento ?? (regimeDecl === "00" ? null : regimeDecl);
+    if (!regSimei) situacoes.push(...situacoesDoRegime(regime));
+
+    const cnpjDecl = limparNumero(String(historico?.["numero_documento"] ?? ""));
+
     totais.ativos += 1;
     for (const s of situacoes) totais[s.toLowerCase() as keyof typeof totais] += 1;
+
     contribuintes.push({
       inscricao_estadual: ie,
-      cnpj: reg.cnpj,
-      nome: reg.nome,
+      cnpj: regSimei?.cnpj ?? (cnpjDecl ? cnpjDecl.padStart(14, "0") : null),
+      nome: regSimei?.nome ?? (String(declaracao?.["nome_contribuinte"] ?? "").trim() || null),
       endereco: null,
-      cnae: null,
+      cnae: String(declaracao?.["codigo_cnaef"] ?? "").trim() || null,
       entregou_declaracao: true,
-      vaf_atual: reg.vaf,
-      vaf_anterior: null,
+      vaf_atual: vafAtual,
+      vaf_anterior: vafAnterior,
       variacao_pct: null,
-      data_entrega: reg.data_entrada,
-      regime_recolhimento: reg.regime_recolhimento,
+      data_entrega: declaracao
+        ? dataSefParaISO(declaracao["data_entrega"])
+        : (regSimei?.data_entrada ?? null),
+      regime_recolhimento: regime,
       situacoes,
+      situacao_cadastral: "AUSENTE_ATIVOS",
+      situacao_cadastral_data: null,
+      mes_inicio_atividade: numeroMes(declaracao?.["mes_inicio"]),
+      mes_fim_atividade: numeroMes(declaracao?.["mes_fim"]),
     });
   }
+
 
   return { exercicio, contribuintes, totais };
 
