@@ -323,6 +323,7 @@ export default function PaginaEvolucao() {
   const [vafReferencia, setVafReferencia] = useState("");
   const [nomeGravar, setNomeGravar] = useState("");
   const [pendente, setPendente] = useState<ArquivoPendente | null>(null);
+  const [bloqueio, setBloqueio] = useState<ArquivoPendente | null>(null);
   const { data: salvas } = useEvolucoesSalvas(municipio?.id ?? null);
   const salvarEvolucao = useSalvarEvolucao();
   const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
