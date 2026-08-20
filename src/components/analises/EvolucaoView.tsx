@@ -275,6 +275,45 @@ type ArquivoPendente = {
   destinoNome: string | null;
 };
 
+function BannerBloqueio({
+  bloqueio,
+  municipioAtivo,
+  onResolver,
+}: {
+  bloqueio: ArquivoPendente;
+  municipioAtivo: { nome?: string | null } | null | undefined;
+  onResolver: () => void;
+}) {
+  const nomeDestino = bloqueio.destinoNome ?? bloqueio.nome ?? `código ${bloqueio.codigo}`;
+  const podeResolver = bloqueio.destinoId;
+  return (
+    <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-100">
+      <AlertTriangle className="h-4 w-4 text-amber-600" />
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <AlertTitle className="text-sm">Arquivo de outra prefeitura — carga bloqueada</AlertTitle>
+          <AlertDescription className="text-xs">
+            O arquivo <span className="font-mono font-medium">{bloqueio.file.name}</span> pertence à
+            prefeitura <strong>{nomeDestino}</strong> (código {bloqueio.codigo}), mas a prefeitura ativa
+            é <strong>{municipioAtivo?.nome ?? "—"}</strong>. Para evitar comparar dados de municípios
+            diferentes, a carga só é liberada quando o arquivo for da prefeitura ativa.
+          </AlertDescription>
+        </div>
+        {podeResolver ? (
+          <Button size="sm" variant="outline" className="mt-2 shrink-0 sm:mt-0" onClick={onResolver}>
+            Trocar para {nomeDestino} e analisar
+          </Button>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground sm:mt-0 sm:max-w-[40%]">
+            Prefeitura não cadastrada ou indisponível para o seu usuário. Selecione um arquivo da
+            prefeitura ativa.
+          </p>
+        )}
+      </div>
+    </Alert>
+  );
+}
+
 export default function PaginaEvolucao() {
   const { municipio, municipios: municipiosPermitidos, podeTrocar, trocar } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
