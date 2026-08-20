@@ -552,17 +552,17 @@ export default function PaginaEvolucao() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground cursor-help">
-                        Valor líquido · comparado
+                        Valor líquido · comparado/estimado
                         <HelpCircle className="h-3 w-3" />
                       </p>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs">
                       <div className="space-y-1.5">
                         <p>
-                          <strong>Valor líquido</strong> do arquivo comparado ({rotuloArquivo(atual)}).
+                          <strong>Valor líquido</strong> do arquivo comparado/estimado ({rotuloArquivo(atual)}).
                         </p>
                         <p>
-                          <strong>Diferença</strong> = comparado − base. <strong>Variação %</strong> = (comparado − base) ÷ |base| × 100.
+                          <strong>Diferença</strong> = comparado/estimado − base. <strong>Variação %</strong> = (comparado/estimado − base) ÷ |base| × 100.
                         </p>
                       </div>
                     </TooltipContent>
