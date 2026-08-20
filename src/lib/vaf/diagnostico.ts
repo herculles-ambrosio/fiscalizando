@@ -130,8 +130,20 @@ export function diagnosticarEvolucao(
       rotulo,
       detalhe,
       impacto: sinal * (va - vb),
+      itens: [
+        {
+          chave: `${chave}-valores`,
+          rotulo: sinal < 0 ? `${rotulo} (entra negativo)` : rotulo,
+          sub: detalhe,
+          valorBase: vb,
+          valorAtual: va,
+          impacto: sinal * (va - vb),
+        },
+      ],
+      totalItens: 1,
     })),
   );
+
 
   // ---- Visão 2: movimentação de declarantes --------------------------------
   const cmp = compararDeclarantes(base.declarantes, atual.declarantes);
