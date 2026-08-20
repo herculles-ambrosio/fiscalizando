@@ -51,6 +51,8 @@ import { hojeIso } from "@/lib/oficios/texto";
 import {
   montarPlanoRecuperacao,
   textoPlanoRecuperacao,
+  csvIgnorados,
+  baixarCsvIgnorados,
   ROTULO_PRIORIDADE,
   type AcaoRecuperacao,
   type MapaSituacoesCadastrais,
