@@ -107,10 +107,13 @@ function Login() {
           </div>
         </div>
 
-        <p className="relative flex items-center gap-1.5 text-xs text-sidebar-foreground/45">
-          <Lock className="h-3.5 w-3.5" />
-          Acesso restrito às prefeituras cadastradas.
-        </p>
+        <div className="relative flex items-end justify-between gap-4">
+          <p className="flex items-center gap-1.5 text-xs text-sidebar-foreground/45">
+            <Lock className="h-3.5 w-3.5" />
+            Acesso restrito às prefeituras cadastradas.
+          </p>
+          <BrandFooter variante="escuro" />
+        </div>
       </div>
 
       <div className="flex items-center justify-center px-6 py-16">
