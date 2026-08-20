@@ -73,8 +73,7 @@ export function montarPlanoRecuperacao(
   declarantes: ComparacaoDeclarantes,
   opts?: { exercicio?: number | null; situacoesCadastrais?: MapaSituacoesCadastrais | null },
 ): AcaoRecuperacao[] {
-  const acoesBrutas: AcaoRecuperacao[] = [];
-  const acoes = acoesBrutas;
+  const acoes: AcaoRecuperacao[] = [];
   const exercicio = opts?.exercicio ?? null;
   const mapa = opts?.situacoesCadastrais ?? null;
   /** separa quem ainda pode ser notificado de quem já está cancelado/baixado/bloqueado */
@@ -214,13 +213,12 @@ export function montarPlanoRecuperacao(
 
   // 7. Diligência nas maiores quedas -------------------------------------------
   if (d.topQuedas.length) {
+    // (a diligência só é sugerida se sobrar alguém notificável)
     const topTodos = d.topQuedas.slice(0, 8);
     const topIgnorados = bloqueados(topTodos);
     const top = elegiveis(topTodos).slice(0, 5);
     const valor = soma(top, "diferenca");
-    if (!top.length) {
-      // todas as maiores quedas são de inscrições baixadas/canceladas
-    }
+    if (top.length)
     acoes.push({
       chave: "diligencia",
       titulo: "Diligência in loco nos maiores impactos",
