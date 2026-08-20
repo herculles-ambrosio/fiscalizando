@@ -375,7 +375,18 @@ export default function Comparacao() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="indice">
+          <TabsContent value="indice" className="space-y-3">
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportarIndice}
+                disabled={visiveisIndice.length === 0}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Exportar visíveis ({visiveisIndice.length})
+              </Button>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -392,7 +403,7 @@ export default function Comparacao() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {porContribuinte.slice(0, 50).map((l) => {
+                    {visiveisIndice.map((l) => {
                       const parte = (id: string) => {
                         const total = totaisVaf[id] ?? 0;
                         const v = l.valores[id];
@@ -432,7 +443,18 @@ export default function Comparacao() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="cnae">
+          <TabsContent value="cnae" className="space-y-3">
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportarCnae}
+                disabled={visiveisCnae.length === 0}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Exportar visíveis ({visiveisCnae.length})
+              </Button>
+            </div>
             <Card>
               <CardContent className="p-0">
                 <Table>
@@ -449,7 +471,7 @@ export default function Comparacao() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {porCnae.slice(0, 100).map((l) => (
+                    {visiveisCnae.map((l) => (
                       <TableRow key={l.cnae}>
                         <TableCell className="font-medium">{l.cnae}</TableCell>
                         {escolhidas.map((c) => (
@@ -498,7 +520,7 @@ export default function Comparacao() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {porContribuinte.slice(0, 300).map((l) => (
+                    {visiveisContribuintes.map((l) => (
                       <TableRow key={l.ie}>
                         <TableCell className="max-w-[16rem] truncate">{l.nome ?? "—"}</TableCell>
                         <TableCell>{formatarCnpj(l.cnpj)}</TableCell>
