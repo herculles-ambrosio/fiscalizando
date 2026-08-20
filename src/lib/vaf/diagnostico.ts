@@ -163,24 +163,32 @@ export function diagnosticarEvolucao(
       rotulo: `Deixaram de declarar (${cmp.sairam.length})`,
       detalhe: "VAF que esses contribuintes tinham no arquivo base e não aparece no comparado",
       impacto: -perdaSaidas,
+      itens: itensDeclarantes(cmp.sairam),
+      totalItens: cmp.sairam.length,
     },
     {
       chave: "entraram",
       rotulo: `Novos declarantes (${cmp.entraram.length})`,
       detalhe: "VAF declarado por quem não constava no arquivo base",
       impacto: ganhoEntradas,
+      itens: itensDeclarantes(cmp.entraram),
+      totalItens: cmp.entraram.length,
     },
     {
       chave: "quedas",
       rotulo: `Permaneceram e reduziram (${quedas.length})`,
       detalhe: "Mesmos contribuintes declarando menos VAF",
       impacto: somaQuedas,
+      itens: itensDeclarantes([...quedas].sort((x, y) => x.diferenca - y.diferenca)),
+      totalItens: quedas.length,
     },
     {
       chave: "altas",
       rotulo: `Permaneceram e aumentaram (${altas.length})`,
       detalhe: "Mesmos contribuintes declarando mais VAF",
       impacto: somaAltas,
+      itens: itensDeclarantes([...altas].sort((x, y) => y.diferenca - x.diferenca)),
+      totalItens: altas.length,
     },
     {
       chave: "residual",
@@ -188,8 +196,21 @@ export function diagnosticarEvolucao(
       detalhe:
         "Diferença entre a variação do VAF declarado (registro 10) e a variação do valor líquido",
       impacto: residual,
+      itens: comp
+        .filter(([chave]) => chave !== "vafProprio")
+        .map(([chave, rotulo, detalhe, vb, va, sinal]) => ({
+          chave,
+          rotulo,
+          sub: detalhe,
+          valorBase: vb,
+          valorAtual: va,
+          impacto: sinal * (va - vb),
+        }))
+        .filter((i) => Math.abs(i.impacto) >= 0.005)
+        .sort((x, y) => Math.abs(y.impacto) - Math.abs(x.impacto)),
     },
   ]);
+
 
   const topQuedas = [...cmp.todos]
     .filter((d) => d.diferenca < 0)
