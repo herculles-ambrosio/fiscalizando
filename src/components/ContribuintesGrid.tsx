@@ -299,13 +299,15 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               aria-expanded={cnaeAberto}
               className="justify-between gap-2"
             >
-              {cnae === "TODOS" ? "CNAE: todos" : `CNAE ${cnae}`}
+              <span className="max-w-72 truncate">
+                {cnae === "TODOS" ? "CNAE: todos" : formatarCnae(cnae)}
+              </span>
               <ChevronsUpDown className="h-4 w-4 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-0" align="start">
+          <PopoverContent className="w-[28rem] p-0" align="start">
             <Command>
-              <CommandInput placeholder="Buscar CNAE…" />
+              <CommandInput placeholder="Buscar CNAE por código ou descrição…" />
               <CommandList>
                 <CommandEmpty>Nenhum CNAE encontrado.</CommandEmpty>
                 <CommandGroup>
@@ -325,7 +327,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                   {(cnaes ?? []).map((c) => (
                     <CommandItem
                       key={c.codigo}
-                      value={c.codigo}
+                      value={`${c.codigo} ${descricaoCnae(c.codigo) ?? ""}`}
                       onSelect={() => {
                         setCnae(c.codigo);
                         setPagina(0);
@@ -333,9 +335,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       }}
                     >
                       <Check
-                        className={`mr-2 h-4 w-4 ${cnae === c.codigo ? "opacity-100" : "opacity-0"}`}
+                        className={`mr-2 h-4 w-4 shrink-0 ${cnae === c.codigo ? "opacity-100" : "opacity-0"}`}
                       />
-                      <span className="flex-1">{c.codigo}</span>
+                      <span className="flex-1 truncate">
+                        {descricaoCnae(c.codigo) ?? "Sem descrição"}
+                        <span className="ml-1 text-xs text-muted-foreground tabular-nums">
+                          {formatarCodigoCnae(c.codigo)}
+                        </span>
+                      </span>
                       <span className="text-xs text-muted-foreground tabular-nums">{c.total}</span>
                     </CommandItem>
                   ))}
