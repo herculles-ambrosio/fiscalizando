@@ -411,6 +411,7 @@ function ItemAcao({
                     <TableHead className="text-right">Comparado/estimado</TableHead>
                     <TableHead className="text-right">Impacto</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Notas</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -422,6 +423,11 @@ function ItemAcao({
                           IE {c.inscricao_estadual}
                           {c.cnpj ? ` · ${formatarCnpj(c.cnpj)}` : ""}
                         </p>
+                        {obsPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) && (
+                          <p className="mt-1 text-muted-foreground italic">
+                            {obsPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual))}
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
                         {formatarMoeda(c.vafBase)}
@@ -445,10 +451,24 @@ function ItemAcao({
                               nomeContribuinte: c.nome,
                               cnpj: c.cnpj,
                               valorRecuperavel: Math.abs(c.diferenca),
+                              observacao:
+                                obsPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) ??
+                                null,
                               status,
                             })
                           }
                         />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs"
+                          onClick={() => setAnotando(c.inscricao_estadual)}
+                        >
+                          <Paperclip className="h-3.5 w-3.5" />
+                          {anexosPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) ?? ""}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -464,7 +484,39 @@ function ItemAcao({
           </Collapsible>
         )}
       </div>
+
+      <AnotacoesAcao
+        aberto={anotando !== null}
+        onFechar={() => setAnotando(null)}
+        titulo={acao.titulo}
+        subtitulo={
+          contribuinteAnotado
+            ? `${contribuinteAnotado.nome ?? "(sem nome)"} — IE ${contribuinteAnotado.inscricao_estadual}`
+            : undefined
+        }
+        referencia={referencia}
+        acaoChave={acao.chave}
+        inscricaoEstadual={anotando ?? ""}
+        observacaoAtual={obsPorChave.get(chaveStatus(acao.chave, anotando ?? "")) ?? null}
+        onSalvarObservacao={(texto) =>
+          salvarStatus({
+            ...baseEntrada,
+            ...(contribuinteAnotado
+              ? {
+                  inscricaoEstadual: contribuinteAnotado.inscricao_estadual,
+                  nomeContribuinte: contribuinteAnotado.nome,
+                  cnpj: contribuinteAnotado.cnpj,
+                  valorRecuperavel: Math.abs(contribuinteAnotado.diferenca),
+                }
+              : { valorRecuperavel: acao.valorRecuperavel }),
+            observacao: texto,
+            status:
+              statusPorChave.get(chaveStatus(acao.chave, anotando ?? "")) ?? "prevista",
+          })
+        }
+      />
     </div>
+
   );
 }
 
