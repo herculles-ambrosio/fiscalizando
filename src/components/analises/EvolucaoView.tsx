@@ -50,6 +50,8 @@ import {
   type LinhaEvolucao,
   type MovimentoDeclarante,
 } from "@/lib/vaf/evolucao";
+import { diagnosticarEvolucao, textoDiagnostico } from "@/lib/vaf/diagnostico";
+import DiagnosticoVariacao from "@/components/analises/DiagnosticoVariacao";
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
@@ -438,7 +440,12 @@ export default function PaginaEvolucao() {
 
   function baixarCsv() {
     if (!base || !atual || !declarantes) return;
-    const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes);
+    const analise = textoDiagnostico(
+      diagnosticarEvolucao(base, atual),
+      rotuloArquivo(base),
+      rotuloArquivo(atual),
+    );
+    const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise);
     const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
@@ -773,6 +780,14 @@ export default function PaginaEvolucao() {
             </Card>
 
           </div>
+
+          <DiagnosticoVariacao
+            base={base}
+            atual={atual}
+            rotuloBase={rotuloArquivo(base)}
+            rotuloAtual={rotuloArquivo(atual)}
+          />
+
 
           <Tabs defaultValue="indicadores">
             <TabsList className="flex-wrap">
