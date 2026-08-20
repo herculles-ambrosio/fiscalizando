@@ -95,6 +95,59 @@ export type Database = {
           },
         ]
       }
+      acoes_recuperacao_anexos: {
+        Row: {
+          acao_chave: string
+          arquivo_nome: string
+          arquivo_path: string
+          criado_em: string
+          criado_por: string | null
+          descricao: string | null
+          id: string
+          inscricao_estadual: string
+          municipio_id: string
+          referencia: string
+          tamanho: number | null
+          tipo_mime: string | null
+        }
+        Insert: {
+          acao_chave: string
+          arquivo_nome: string
+          arquivo_path: string
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          inscricao_estadual?: string
+          municipio_id: string
+          referencia?: string
+          tamanho?: number | null
+          tipo_mime?: string | null
+        }
+        Update: {
+          acao_chave?: string
+          arquivo_nome?: string
+          arquivo_path?: string
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          inscricao_estadual?: string
+          municipio_id?: string
+          referencia?: string
+          tamanho?: number | null
+          tipo_mime?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acoes_recuperacao_anexos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cargas: {
         Row: {
           arquivo_ativos_path: string | null
