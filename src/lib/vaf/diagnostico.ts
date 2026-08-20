@@ -11,6 +11,15 @@ import { compararDeclarantes, type ArquivoEvolucao, type MovimentoDeclarante } f
 
 export type SentidoFator = "aumentou" | "reduziu" | "neutro";
 
+export type ItemDetalhe = {
+  chave: string;
+  rotulo: string;
+  sub?: string;
+  valorBase: number;
+  valorAtual: number;
+  impacto: number;
+};
+
 export type FatorVariacao = {
   chave: string;
   rotulo: string;
@@ -20,7 +29,12 @@ export type FatorVariacao = {
   /** participação no total da variação, em % (0-100) */
   peso: number;
   sentido: SentidoFator;
+  /** linhas que compõem o fator (contribuintes ou valores base × comparado) */
+  itens: ItemDetalhe[];
+  /** total de itens antes do corte de exibição */
+  totalItens: number;
 };
+
 
 export type DiagnosticoEvolucao = {
   valorBase: number;
