@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { formatarCompetencia, rotuloTipoRetorno, type TipoRetorno } from "@/lib/vaf/tipoRetorno";
+import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 
 export const Route = createFileRoute("/_authenticated/contribuintes")({
   head: () => ({
