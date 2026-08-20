@@ -17,6 +17,7 @@ import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
+import { BrandFooter } from "@/components/BrandFooter";
 import {
   Select,
   SelectContent,
