@@ -4,6 +4,8 @@ import {
   ArrowUpRight,
   ChevronDown,
   ClipboardCopy,
+  Download,
+
   Info,
   Lightbulb,
   Minus,
