@@ -24,9 +24,31 @@ export type AcaoRecuperacao = {
   /** modelo de ofício correspondente, quando a ação gera documento */
   situacaoOficio?: SituacaoOficio;
   contribuintes: MovimentoDeclarante[];
+  /** contribuintes retirados da ação por estarem cancelados/baixados/bloqueados */
+  ignorados: MovimentoDeclarante[];
   /** base legal / fonte da prática */
   fundamento?: string;
 };
+
+/**
+ * Situações cadastrais (SEF/MG) em que não faz sentido notificar o contribuinte:
+ * a inscrição não está mais apta e o ofício voltaria sem efeito.
+ */
+export const SITUACOES_NAO_NOTIFICAR = ["CANCELADO", "BAIXADO", "BLOQUEADO"] as const;
+
+export type MapaSituacoesCadastrais = Record<string, string | null | undefined>;
+
+export const chaveIe = (ie: string | null | undefined): string =>
+  String(ie ?? "").replace(/\D/g, "");
+
+export function naoNotificavel(
+  c: MovimentoDeclarante,
+  mapa?: MapaSituacoesCadastrais | null,
+): boolean {
+  if (!mapa) return false;
+  const situacao = mapa[chaveIe(c.inscricao_estadual)];
+  return !!situacao && (SITUACOES_NAO_NOTIFICAR as readonly string[]).includes(situacao);
+}
 
 /** Limites que classificam uma queda como discrepância a notificar. */
 export const LIMITES = {
@@ -49,13 +71,22 @@ const porImpacto = (a: MovimentoDeclarante, b: MovimentoDeclarante) =>
 export function montarPlanoRecuperacao(
   d: DiagnosticoEvolucao,
   declarantes: ComparacaoDeclarantes,
-  opts?: { exercicio?: number | null },
+  opts?: { exercicio?: number | null; situacoesCadastrais?: MapaSituacoesCadastrais | null },
 ): AcaoRecuperacao[] {
-  const acoes: AcaoRecuperacao[] = [];
+  const acoesBrutas: AcaoRecuperacao[] = [];
+  const acoes = acoesBrutas;
   const exercicio = opts?.exercicio ?? null;
+  const mapa = opts?.situacoesCadastrais ?? null;
+  /** separa quem ainda pode ser notificado de quem já está cancelado/baixado/bloqueado */
+  const elegiveis = (lista: MovimentoDeclarante[]) =>
+    lista.filter((c) => !naoNotificavel(c, mapa));
+  const bloqueados = (lista: MovimentoDeclarante[]) =>
+    lista.filter((c) => naoNotificavel(c, mapa));
 
   // 1. Deixaram de declarar (omissos) -----------------------------------------
-  const omissos = declarantes.sairam.filter((c) => c.vafBase > 0);
+  const omissosTodos = declarantes.sairam.filter((c) => c.vafBase > 0);
+  const omissos = elegiveis(omissosTodos);
+  const omissosIgnorados = bloqueados(omissosTodos);
   if (omissos.length) {
     const valor = soma(omissos, "vafBase");
     acoes.push({
@@ -69,12 +100,15 @@ export function montarPlanoRecuperacao(
       prazoSugerido: "Imediato — antes do encerramento do prazo de retificação da SEFAZ",
       situacaoOficio: "OMISSO",
       contribuintes: omissos,
+      ignorados: omissosIgnorados,
       fundamento: "Lei Complementar 63/1990 e Resolução SEF/MG que disciplina a apuração do VAF",
     });
   }
 
   // 2. Declararam com VAF zerado ----------------------------------------------
-  const zerados = declarantes.permaneceram.filter((c) => c.vafBase > 0 && c.vafAtual === 0);
+  const zeradosTodos = declarantes.permaneceram.filter((c) => c.vafBase > 0 && c.vafAtual === 0);
+  const zerados = elegiveis(zeradosTodos);
+  const zeradosIgnorados = bloqueados(zeradosTodos);
   if (zerados.length) {
     const valor = soma(zerados, "vafBase");
     acoes.push({
@@ -88,11 +122,12 @@ export function montarPlanoRecuperacao(
       prazoSugerido: "Até 30 dias, dentro da janela de retificação",
       situacaoOficio: "ZERADO",
       contribuintes: zerados,
+      ignorados: zeradosIgnorados,
     });
   }
 
   // 3. Quedas relevantes (discrepância) ---------------------------------------
-  const discrepantes = declarantes.permaneceram
+  const discrepantesTodos = declarantes.permaneceram
     .filter(
       (c) =>
         c.vafAtual > 0 &&
@@ -101,6 +136,8 @@ export function montarPlanoRecuperacao(
         (c.variacaoPct === null || c.variacaoPct <= -LIMITES.quedaPct),
     )
     .sort(porImpacto);
+  const discrepantes = elegiveis(discrepantesTodos);
+  const discrepantesIgnorados = bloqueados(discrepantesTodos);
   if (discrepantes.length) {
     const valor = soma(discrepantes, "diferenca");
     acoes.push({
@@ -114,13 +151,16 @@ export function montarPlanoRecuperacao(
       prazoSugerido: "15 dias para resposta",
       situacaoOficio: "DISCREPANTE",
       contribuintes: discrepantes.slice(0, 200),
+      ignorados: discrepantesIgnorados,
     });
   }
 
   // 4. Cadastro incompleto / conferência cadastral ----------------------------
-  const cadastro = [...declarantes.sairam, ...declarantes.permaneceram]
+  const cadastroTodos = [...declarantes.sairam, ...declarantes.permaneceram]
     .filter((c) => c.cadastroIncompleto && (c.vafBase > 0 || c.vafAtual > 0))
     .sort(porImpacto);
+  const cadastro = elegiveis(cadastroTodos);
+  const cadastroIgnorados = bloqueados(cadastroTodos);
   if (cadastro.length) {
     const valor = soma(cadastro, "vafBase");
     acoes.push({
@@ -134,6 +174,7 @@ export function montarPlanoRecuperacao(
       prazoSugerido: "Antes do fechamento do exercício",
       situacaoOficio: "GERAL",
       contribuintes: cadastro.slice(0, 200),
+      ignorados: cadastroIgnorados,
     });
   }
 
@@ -150,6 +191,7 @@ export function montarPlanoRecuperacao(
       valorRecuperavel: Math.abs(externo.impacto),
       prazoSugerido: "Antes da publicação do índice provisório",
       contribuintes: [],
+      ignorados: [],
     });
   }
 
@@ -165,14 +207,20 @@ export function montarPlanoRecuperacao(
       valorRecuperavel: Math.abs(d.diferenca),
       prazoSugerido: "Dentro do prazo de impugnação publicado pela SEFAZ",
       contribuintes: [],
+      ignorados: [],
       fundamento: "Lei Complementar 63/1990, art. 3º, §7º",
     });
   }
 
   // 7. Diligência nas maiores quedas -------------------------------------------
   if (d.topQuedas.length) {
-    const top = d.topQuedas.slice(0, 5);
+    const topTodos = d.topQuedas.slice(0, 8);
+    const topIgnorados = bloqueados(topTodos);
+    const top = elegiveis(topTodos).slice(0, 5);
     const valor = soma(top, "diferenca");
+    if (!top.length) {
+      // todas as maiores quedas são de inscrições baixadas/canceladas
+    }
     acoes.push({
       chave: "diligencia",
       titulo: "Diligência in loco nos maiores impactos",
@@ -183,6 +231,7 @@ export function montarPlanoRecuperacao(
       valorRecuperavel: valor,
       prazoSugerido: "Até 45 dias",
       contribuintes: top,
+      ignorados: topIgnorados,
     });
   }
 
@@ -198,6 +247,7 @@ export function montarPlanoRecuperacao(
     valorRecuperavel: 0,
     prazoSugerido: "Rotina trimestral",
     contribuintes: [],
+    ignorados: [],
   });
 
   // 9. Novos estabelecimentos / conscientização --------------------------------
@@ -213,6 +263,7 @@ export function montarPlanoRecuperacao(
     prazoSugerido: "Antes da entrega da declaração anual (DAPI de dezembro)",
     situacaoOficio: "GERAL",
     contribuintes: [],
+    ignorados: [],
   });
 
   return acoes.sort((a, b) => {
@@ -253,6 +304,10 @@ export function textoPlanoRecuperacao(acoes: AcaoRecuperacao[]): string {
     linhas.push(`   Como fazer: ${a.comoFazer}`);
     linhas.push(`   Prazo: ${a.prazoSugerido}`);
     if (a.contribuintes.length) linhas.push(`   Contribuintes envolvidos: ${a.contribuintes.length}`);
+    if (a.ignorados.length)
+      linhas.push(
+        `   Ignorados por situação cadastral (cancelado/baixado/bloqueado): ${a.ignorados.length}`,
+      );
     if (a.fundamento) linhas.push(`   Fundamento: ${a.fundamento}`);
     linhas.push("");
   });
