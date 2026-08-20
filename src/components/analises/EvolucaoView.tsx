@@ -16,6 +16,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo, useMunicipios } from "@/hooks/useMunicipio";
 import {
@@ -25,7 +35,8 @@ import {
 } from "@/hooks/useEvolucoesSalvas";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
-import { anoDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
+import { anoDoArquivo, codigoMunicipioDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
+import { detectarMunicipioRetorno, normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
 import { formatarIndice } from "@/lib/vaf/indice";
 import {
   analisarArquivo,
