@@ -278,7 +278,11 @@ function DeixaramDeDeclarar({
                       </TableCell>
                       <TableCell className="whitespace-nowrap">{formatarCnpj(l.cnpj)}</TableCell>
                       <TableCell className="whitespace-nowrap">{l.inscricao_estadual}</TableCell>
-                      <TableCell>{l.cnae ?? "—"}</TableCell>
+                      <TableCell className="max-w-56">
+                        <span className="block truncate" title={formatarCnae(l.cnae)}>
+                          {formatarCnae(l.cnae)}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
                         {formatarMoeda(l.vaf_anterior)}
                       </TableCell>
