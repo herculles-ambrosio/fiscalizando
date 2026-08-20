@@ -774,6 +774,14 @@ export default function PaginaEvolucao() {
 
           </div>
 
+          <DiagnosticoVariacao
+            base={base}
+            atual={atual}
+            rotuloBase={rotuloArquivo(base)}
+            rotuloAtual={rotuloArquivo(atual)}
+          />
+
+
           <Tabs defaultValue="indicadores">
             <TabsList className="flex-wrap">
               <TabsTrigger value="indicadores">Indicadores</TabsTrigger>
