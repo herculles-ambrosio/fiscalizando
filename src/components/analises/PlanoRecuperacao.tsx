@@ -246,13 +246,48 @@ export default function PlanoRecuperacao({
             {!ref && <span>· salve/carregue a evolução para gravar o status.</span>}
           </div>
 
+          {contagemMotivos.total > 0 && (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-muted-foreground">Ignorados por motivo:</span>
+              <Select value={filtroMotivo} onValueChange={setFiltroMotivo}>
+                <SelectTrigger className="h-7 w-[260px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">
+                    Todos os motivos ({contagemMotivos.total})
+                  </SelectItem>
+                  {[...contagemMotivos.porMotivo.entries()]
+                    .sort((a, b) => b[1].size - a[1].size)
+                    .map(([motivo, ies]) => (
+                      <SelectItem key={motivo} value={motivo}>
+                        {ROTULO_MOTIVO_IGNORADO[motivo] ?? motivo} ({ies.size})
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              {filtroMotivo !== "todos" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setFiltroMotivo("todos")}
+                >
+                  Limpar filtro
+                </Button>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {totalIgnorados > 0 ? (
               <>
                 <span>
-                  {totalIgnorados} contribuinte(s) foram retirados automaticamente das ações por
-                  estarem <strong>cancelados, baixados ou bloqueados</strong> na SEF/MG — não
-                  recebem ofício nem entram no valor recuperável.
+                  {totalIgnorados} contribuinte(s)
+                  {filtroMotivo === "todos"
+                    ? " foram retirados automaticamente das ações por estarem cancelados, baixados ou bloqueados na SEF/MG"
+                    : ` no filtro "${ROTULO_MOTIVO_IGNORADO[filtroMotivo] ?? filtroMotivo}"`}{" "}
+                  — não recebem ofício nem entram no valor recuperável.
                 </span>
                 <Button
                   variant="outline"
@@ -260,7 +295,7 @@ export default function PlanoRecuperacao({
                   className="h-7 gap-1 px-2 text-xs"
                   onClick={() =>
                     baixarCsvIgnorados(
-                      csvIgnorados(acoes, situacoesCadastrais ?? null),
+                      csvIgnorados(acoesFiltradas, situacoesCadastrais ?? null),
                       "contribuintes-ignorados-plano.csv",
                     )
                   }
@@ -270,12 +305,13 @@ export default function PlanoRecuperacao({
                 </Button>
               </>
             ) : (
-              <>Nenhum contribuinte cancelado, baixado ou bloqueado nas ações desta análise.</>
+              <>Nenhum contribuinte ignorado com o motivo selecionado.</>
             )}
           </div>
 
           <div className="space-y-3">
-            {acoes.map((acao, i) => (
+            {acoesFiltradas.map((acao, i) => (
+
               <ItemAcao
                 key={acao.chave}
                 acao={acao}
