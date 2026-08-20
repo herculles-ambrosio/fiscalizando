@@ -442,12 +442,12 @@ export default function PaginaEvolucao() {
 
   function baixarCsv() {
     if (!base || !atual || !declarantes) return;
-    const analise = textoDiagnostico(
-      diagnosticarEvolucao(base, atual),
-      rotuloArquivo(base),
-      rotuloArquivo(atual),
+    const diag = diagnosticarEvolucao(base, atual);
+    const analise = textoDiagnostico(diag, rotuloArquivo(base), rotuloArquivo(atual));
+    const plano = textoPlanoRecuperacao(
+      montarPlanoRecuperacao(diag, declarantes, { exercicio: atual.apuracao.anoBase }),
     );
-    const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise);
+    const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise, plano);
     const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
