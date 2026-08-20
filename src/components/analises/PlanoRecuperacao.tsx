@@ -60,7 +60,7 @@ import {
   type MapaSituacoesCadastrais,
 } from "@/lib/vaf/recuperacao";
 import type { DiagnosticoEvolucao } from "@/lib/vaf/diagnostico";
-import type { ComparacaoDeclarantes } from "@/lib/vaf/evolucao";
+import { rotuloOrigem, type ComparacaoDeclarantes, type MovimentoDeclarante } from "@/lib/vaf/evolucao";
 import {
   chaveStatus,
   useAcoesRecuperacao,
@@ -424,6 +424,7 @@ function ItemAcao({
   const [aberto, setAberto] = useState(false);
   /** null = fechado; "" = anotação da ação; IE = anotação do contribuinte */
   const [anotando, setAnotando] = useState<string | null>(null);
+  const [ignoradoAberto, setIgnoradoAberto] = useState<MovimentoDeclarante | null>(null);
   const temLista = acao.contribuintes.length > 0;
   const statusAcao = statusPorChave.get(chaveStatus(acao.chave)) ?? "prevista";
   const contribuinteAnotado =
@@ -682,8 +683,114 @@ function ItemAcao({
           })
         }
       />
+
+      <DetalheIgnorado
+        contribuinte={ignoradoAberto}
+        onFechar={() => setIgnoradoAberto(null)}
+        acao={acao}
+        exercicio={exercicio}
+        cargaId={cargaId}
+        referencia={referencia}
+        situacaoCadastral={
+          ignoradoAberto
+            ? situacoesCadastrais?.[chaveIe(ignoradoAberto.inscricao_estadual)] ?? null
+            : null
+        }
+      />
     </div>
 
+  );
+}
+
+/** Modal com o motivo completo da exclusão e as evidências do contribuinte ignorado. */
+function DetalheIgnorado({
+  contribuinte,
+  onFechar,
+  acao,
+  exercicio,
+  cargaId,
+  referencia,
+  situacaoCadastral,
+}: {
+  contribuinte: MovimentoDeclarante | null;
+  onFechar: () => void;
+  acao: AcaoRecuperacao;
+  exercicio: number | null;
+  cargaId: string | null;
+  referencia: string | null;
+  situacaoCadastral: string | null;
+}) {
+  const c = contribuinte;
+  const motivoRotulo = c
+    ? ROTULO_MOTIVO_IGNORADO[(situacaoCadastral || "NAO_INFORMADA").toUpperCase()] ??
+      situacaoCadastral ??
+      "Não informada"
+    : "";
+  const origem =
+    c?.situacao === "saiu"
+      ? "Deixou de declarar (constava na base, sumiu no arquivo atual)"
+      : c?.situacao === "entrou"
+        ? "Novo declarante no arquivo atual"
+        : "Declarou nos dois arquivos comparados";
+
+  const linhas: Array<[string, string]> = c
+    ? [
+        ["Inscrição estadual", c.inscricao_estadual],
+        ["CNPJ", c.cnpj ? formatarCnpj(c.cnpj) : "não informado"],
+        ["Situação cadastral (SEF/MG)", motivoRotulo],
+        ["Origem na apuração", origem],
+        ["Origem do nome", rotuloOrigem(c.origemNome)],
+        ["Origem do CNPJ", rotuloOrigem(c.origemCnpj)],
+        ["Exercício", exercicio ? String(exercicio) : "não informado"],
+        ["Carga", cargaId ?? "não vinculada"],
+        ["Referência da análise", referencia ?? "análise não salva"],
+        ["VAF base", formatarMoeda(c.vafBase)],
+        ["VAF atual", formatarMoeda(c.vafAtual)],
+        ["Diferença", formatarMoeda(c.diferenca)],
+        [
+          "Variação",
+          c.variacaoPct === null ? "—" : `${c.variacaoPct.toFixed(1).replace(".", ",")}%`,
+        ],
+        ["Ação do plano", acao.titulo],
+      ]
+    : [];
+
+  return (
+    <Dialog open={!!c} onOpenChange={(o) => !o && onFechar()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{c?.nome ?? c?.inscricao_estadual ?? ""}</DialogTitle>
+          <DialogDescription>
+            Contribuinte retirado desta ação do plano de recuperação.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Motivo da exclusão: {motivoRotulo}</AlertTitle>
+          <AlertDescription className="text-xs">
+            A inscrição está {motivoRotulo.toLowerCase()} na SEF/MG, portanto não recebe ofício nem
+            notificação e o valor não entra no potencial recuperável desta ação. Se a situação
+            estiver desatualizada, reprocesse a apuração com o arquivo de ativos mais recente.
+          </AlertDescription>
+        </Alert>
+
+        <dl className="max-h-72 space-y-1 overflow-y-auto text-xs">
+          {linhas.map(([rotulo, valor]) => (
+            <div key={rotulo} className="flex justify-between gap-3 border-b py-1 last:border-0">
+              <dt className="text-muted-foreground">{rotulo}</dt>
+              <dd className="text-right font-medium tabular-nums">{valor}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
