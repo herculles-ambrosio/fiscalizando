@@ -206,7 +206,10 @@ function Dashboard() {
                       borderRadius: 12,
                       boxShadow: "var(--shadow-elevated)",
                       fontSize: 12,
+                      maxWidth: 320,
+                      whiteSpace: "normal",
                     }}
+                    labelFormatter={(c: string) => formatarCnae(c)}
                     formatter={(v: number) => [v, "Irregulares"]}
                   />
                   <Bar dataKey="irregulares" fill="url(#grad-irregulares)" radius={[6, 6, 0, 0]} />
