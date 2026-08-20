@@ -505,12 +505,7 @@ export default function PaginaEvolucao() {
       }),
     );
     const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise, plano);
-    const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `evolucao-vaf-${municipio?.nome ?? "municipio"}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    baixarCsv(`${prefixoArquivo}-comparativo.csv`, csv);
   }
 
   const perdaSaidas = declarantes?.sairam.reduce((s, d) => s + d.vafBase, 0) ?? 0;
@@ -573,7 +568,7 @@ export default function PaginaEvolucao() {
               variant="secondary"
               className="w-full"
               disabled={!base || !atual}
-              onClick={baixarCsv}
+              onClick={baixarComparativoCsv}
             >
               <Download className="h-4 w-4" />
               Exportar comparativo (CSV)
