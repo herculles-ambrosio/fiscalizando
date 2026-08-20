@@ -156,7 +156,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             Sair
           </button>
           <div className="mt-4 px-3">
-            <BrandFooter variante="escuro" />
+            <BrandFooter variante="escuro" tamanho="md" />
           </div>
         </div>
       </aside>
