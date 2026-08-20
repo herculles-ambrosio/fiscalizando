@@ -113,6 +113,7 @@ export function construirDocDiagnostico(
   baseNome: string,
   atualNome: string,
   municipio?: string | null,
+  acoes?: AcaoRecuperacao[],
 ): Document {
   const filhos: Array<Paragraph | Table> = [
     new Paragraph({
