@@ -460,6 +460,14 @@ export default function PaginaEvolucao() {
         </p>
       </div>
 
+      {bloqueio && (
+        <BannerBloqueio
+          bloqueio={bloqueio}
+          municipioAtivo={municipio}
+          onResolver={() => setPendente(bloqueio)}
+        />
+      )}
+
       <div className="grid gap-4 lg:grid-cols-3">
         <CaixaArquivo
           titulo="Arquivo base (competência anterior)"
