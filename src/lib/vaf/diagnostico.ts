@@ -11,6 +11,15 @@ import { compararDeclarantes, type ArquivoEvolucao, type MovimentoDeclarante } f
 
 export type SentidoFator = "aumentou" | "reduziu" | "neutro";
 
+export type ItemDetalhe = {
+  chave: string;
+  rotulo: string;
+  sub?: string;
+  valorBase: number;
+  valorAtual: number;
+  impacto: number;
+};
+
 export type FatorVariacao = {
   chave: string;
   rotulo: string;
@@ -20,7 +29,12 @@ export type FatorVariacao = {
   /** participação no total da variação, em % (0-100) */
   peso: number;
   sentido: SentidoFator;
+  /** linhas que compõem o fator (contribuintes ou valores base × comparado) */
+  itens: ItemDetalhe[];
+  /** total de itens antes do corte de exibição */
+  totalItens: number;
 };
+
 
 export type DiagnosticoEvolucao = {
   valorBase: number;
@@ -49,18 +63,40 @@ const sentidoDe = (v: number): SentidoFator =>
   Math.abs(v) < 0.005 ? "neutro" : v > 0 ? "aumentou" : "reduziu";
 
 function montarFatores(
-  itens: Array<{ chave: string; rotulo: string; detalhe: string; impacto: number }>,
+  itens: Array<{
+    chave: string;
+    rotulo: string;
+    detalhe: string;
+    impacto: number;
+    itens?: ItemDetalhe[];
+    totalItens?: number;
+  }>,
 ): FatorVariacao[] {
   const totalAbs = itens.reduce((s, i) => s + Math.abs(i.impacto), 0);
   return itens
     .filter((i) => Math.abs(i.impacto) >= 0.005)
     .map((i) => ({
       ...i,
+      itens: i.itens ?? [],
+      totalItens: i.totalItens ?? i.itens?.length ?? 0,
       peso: totalAbs === 0 ? 0 : (Math.abs(i.impacto) / totalAbs) * 100,
       sentido: sentidoDe(i.impacto),
     }))
     .sort((a, b) => Math.abs(b.impacto) - Math.abs(a.impacto));
 }
+
+const LIMITE_ITENS = 25;
+
+const itensDeclarantes = (lista: MovimentoDeclarante[]): ItemDetalhe[] =>
+  lista.slice(0, LIMITE_ITENS).map((d) => ({
+    chave: d.inscricao_estadual,
+    rotulo: d.nome ?? "(sem nome)",
+    sub: `IE ${d.inscricao_estadual}`,
+    valorBase: d.vafBase,
+    valorAtual: d.vafAtual,
+    impacto: d.diferenca,
+  }));
+
 
 export function diagnosticarEvolucao(
   base: ArquivoEvolucao,
@@ -94,8 +130,20 @@ export function diagnosticarEvolucao(
       rotulo,
       detalhe,
       impacto: sinal * (va - vb),
+      itens: [
+        {
+          chave: `${chave}-valores`,
+          rotulo: sinal < 0 ? `${rotulo} (entra negativo)` : rotulo,
+          sub: detalhe,
+          valorBase: vb,
+          valorAtual: va,
+          impacto: sinal * (va - vb),
+        },
+      ],
+      totalItens: 1,
     })),
   );
+
 
   // ---- Visão 2: movimentação de declarantes --------------------------------
   const cmp = compararDeclarantes(base.declarantes, atual.declarantes);
@@ -115,24 +163,32 @@ export function diagnosticarEvolucao(
       rotulo: `Deixaram de declarar (${cmp.sairam.length})`,
       detalhe: "VAF que esses contribuintes tinham no arquivo base e não aparece no comparado",
       impacto: -perdaSaidas,
+      itens: itensDeclarantes(cmp.sairam),
+      totalItens: cmp.sairam.length,
     },
     {
       chave: "entraram",
       rotulo: `Novos declarantes (${cmp.entraram.length})`,
       detalhe: "VAF declarado por quem não constava no arquivo base",
       impacto: ganhoEntradas,
+      itens: itensDeclarantes(cmp.entraram),
+      totalItens: cmp.entraram.length,
     },
     {
       chave: "quedas",
       rotulo: `Permaneceram e reduziram (${quedas.length})`,
       detalhe: "Mesmos contribuintes declarando menos VAF",
       impacto: somaQuedas,
+      itens: itensDeclarantes([...quedas].sort((x, y) => x.diferenca - y.diferenca)),
+      totalItens: quedas.length,
     },
     {
       chave: "altas",
       rotulo: `Permaneceram e aumentaram (${altas.length})`,
       detalhe: "Mesmos contribuintes declarando mais VAF",
       impacto: somaAltas,
+      itens: itensDeclarantes([...altas].sort((x, y) => y.diferenca - x.diferenca)),
+      totalItens: altas.length,
     },
     {
       chave: "residual",
@@ -140,8 +196,21 @@ export function diagnosticarEvolucao(
       detalhe:
         "Diferença entre a variação do VAF declarado (registro 10) e a variação do valor líquido",
       impacto: residual,
+      itens: comp
+        .filter(([chave]) => chave !== "vafProprio")
+        .map(([chave, rotulo, detalhe, vb, va, sinal]) => ({
+          chave,
+          rotulo,
+          sub: detalhe,
+          valorBase: vb,
+          valorAtual: va,
+          impacto: sinal * (va - vb),
+        }))
+        .filter((i) => Math.abs(i.impacto) >= 0.005)
+        .sort((x, y) => Math.abs(y.impacto) - Math.abs(x.impacto)),
     },
   ]);
+
 
   const topQuedas = [...cmp.todos]
     .filter((d) => d.diferenca < 0)

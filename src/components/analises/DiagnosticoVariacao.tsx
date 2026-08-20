@@ -1,11 +1,20 @@
 import { useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, ClipboardCopy, Info, Lightbulb, Minus } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  ChevronDown,
+  ClipboardCopy,
+  Info,
+  Lightbulb,
+  Minus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatarMoeda } from "@/lib/format";
 import type { ArquivoEvolucao } from "@/lib/vaf/evolucao";
 import {
@@ -15,6 +24,7 @@ import {
 } from "@/lib/vaf/diagnostico";
 
 function Barra({ fator }: { fator: FatorVariacao }) {
+  const [aberto, setAberto] = useState(false);
   const positivo = fator.sentido === "aumentou";
   const Icone = fator.sentido === "neutro" ? Minus : positivo ? ArrowUpRight : ArrowDownRight;
   const cor = fator.sentido === "neutro"
@@ -23,8 +33,11 @@ function Barra({ fator }: { fator: FatorVariacao }) {
       ? "text-emerald-600"
       : "text-destructive";
   const fundo = positivo ? "bg-emerald-500/70" : "bg-destructive/70";
+  const temDetalhe = fator.itens.length > 0;
+  const ocultos = Math.max(0, fator.totalItens - fator.itens.length);
+
   return (
-    <div className="space-y-1">
+    <Collapsible open={aberto} onOpenChange={setAberto} className="space-y-1">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <p className="text-sm font-medium">{fator.rotulo}</p>
         <p className={`inline-flex items-center gap-1 font-mono text-sm ${cor}`}>
@@ -38,10 +51,66 @@ function Barra({ fator }: { fator: FatorVariacao }) {
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
         <div className={`h-full rounded-full ${fundo}`} style={{ width: `${Math.min(100, fator.peso)}%` }} />
       </div>
-      <p className="text-xs text-muted-foreground">{fator.detalhe}</p>
-    </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">{fator.detalhe}</p>
+        {temDetalhe && (
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs">
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${aberto ? "rotate-180" : ""}`}
+              />
+              {aberto ? "Ocultar detalhamento" : "Ver detalhamento"}
+            </Button>
+          </CollapsibleTrigger>
+        )}
+      </div>
+      <CollapsibleContent>
+        <div className="mt-1 overflow-hidden rounded-md border border-border">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/60">
+              <tr className="text-muted-foreground">
+                <th className="px-2 py-1.5 text-left font-medium">Item</th>
+                <th className="px-2 py-1.5 text-right font-medium">Base</th>
+                <th className="px-2 py-1.5 text-right font-medium">Comparado/estimado</th>
+                <th className="px-2 py-1.5 text-right font-medium">Impacto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fator.itens.map((i) => (
+                <tr key={i.chave} className="border-t border-border">
+                  <td className="px-2 py-1.5">
+                    <p className="truncate">{i.rotulo}</p>
+                    {i.sub && <p className="font-mono text-[11px] text-muted-foreground">{i.sub}</p>}
+                  </td>
+                  <td className="px-2 py-1.5 text-right font-mono tabular-nums">
+                    {formatarMoeda(i.valorBase)}
+                  </td>
+                  <td className="px-2 py-1.5 text-right font-mono tabular-nums">
+                    {formatarMoeda(i.valorAtual)}
+                  </td>
+                  <td
+                    className={`px-2 py-1.5 text-right font-mono tabular-nums ${
+                      i.impacto < 0 ? "text-destructive" : i.impacto > 0 ? "text-emerald-600" : ""
+                    }`}
+                  >
+                    {formatarMoeda(i.impacto)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {ocultos > 0 && (
+            <p className="border-t border-border bg-muted/40 px-2 py-1.5 text-[11px] text-muted-foreground">
+              Exibindo os {fator.itens.length} maiores impactos de {fator.totalItens} itens —
+              outros {ocultos} estão no CSV completo.
+            </p>
+          )}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
+
 
 export default function DiagnosticoVariacao({
   base,
