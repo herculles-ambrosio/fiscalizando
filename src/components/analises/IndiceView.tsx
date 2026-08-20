@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, FileUp, Printer, Save, TrendingUp, Loader2 } from "lucide-react";
+import { Download, FileUp, HelpCircle, Printer, Save, TrendingUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import { useSalvarIndice } from "@/hooks/useIndicesHistorico";
