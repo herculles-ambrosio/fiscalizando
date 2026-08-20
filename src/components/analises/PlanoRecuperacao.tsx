@@ -105,16 +105,34 @@ export default function PlanoRecuperacao({
     return m;
   }, [registros]);
 
+  const obsPorChave = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const r of registros ?? [])
+      m.set(chaveStatus(r.acao_chave, r.inscricao_estadual), r.observacao);
+    return m;
+  }, [registros]);
+
+  const { data: anexos } = useAnexosAcao(ref);
+  const anexosPorChave = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const a of anexos ?? []) {
+      const k = chaveStatus(a.acao_chave, a.inscricao_estadual);
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return m;
+  }, [anexos]);
+
   const salvarStatus: SalvarStatus = (entradas) => {
     if (!ref) {
       toast.error("Análise sem referência para gravar o acompanhamento.");
       return;
     }
     salvar.mutate(entradas, {
-      onSuccess: () => toast.success("Status atualizado."),
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar o status."),
+      onSuccess: () => toast.success("Acompanhamento atualizado."),
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar."),
     });
   };
+
 
   const totalPotencial = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
   const concluidas = acoes.filter(
