@@ -4,6 +4,8 @@ import {
   ArrowUpRight,
   ChevronDown,
   ClipboardCopy,
+  Download,
+
   Info,
   Lightbulb,
   Minus,
@@ -117,13 +119,16 @@ export default function DiagnosticoVariacao({
   atual,
   rotuloBase,
   rotuloAtual,
+  municipio,
 }: {
   base: ArquivoEvolucao;
   atual: ArquivoEvolucao;
   rotuloBase: string;
   rotuloAtual: string;
+  municipio?: string | null;
 }) {
   const [copiado, setCopiado] = useState(false);
+  const [baixando, setBaixando] = useState(false);
   const d = useMemo(() => diagnosticarEvolucao(base, atual), [base, atual]);
 
   const copiar = async () => {
@@ -134,6 +139,19 @@ export default function DiagnosticoVariacao({
       setTimeout(() => setCopiado(false), 2500);
     } catch {
       toast.error("Não foi possível copiar a análise.");
+    }
+  };
+
+  const baixar = async () => {
+    setBaixando(true);
+    try {
+      const { baixarDocDiagnostico } = await import("@/lib/vaf/diagnosticoDocx");
+      await baixarDocDiagnostico(d, rotuloBase, rotuloAtual, municipio ?? null);
+      toast.success("Análise baixada em .docx (abre no Word e exporta em PDF).");
+    } catch {
+      toast.error("Não foi possível gerar o documento da análise.");
+    } finally {
+      setBaixando(false);
     }
   };
 
@@ -149,10 +167,17 @@ export default function DiagnosticoVariacao({
             Análise automática da diferença entre {rotuloBase} e {rotuloAtual}.
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={copiar}>
-          <ClipboardCopy className="h-4 w-4" />
-          {copiado ? "Copiado" : "Copiar análise"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={copiar}>
+            <ClipboardCopy className="h-4 w-4" />
+            {copiado ? "Copiado" : "Copiar análise"}
+          </Button>
+          <Button size="sm" onClick={baixar} disabled={baixando}>
+            <Download className="h-4 w-4" />
+            {baixando ? "Gerando..." : "Baixar análise (.docx)"}
+          </Button>
+        </div>
+
       </CardHeader>
 
       <CardContent className="space-y-4">
