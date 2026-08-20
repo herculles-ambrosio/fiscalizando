@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
 import { ROTULO_SITUACAO, type Situacao } from "@/lib/vaf/apurar";
+import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 
 const SITUACOES: Situacao[] = [
   "OMISSO",
