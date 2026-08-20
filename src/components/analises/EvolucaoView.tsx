@@ -486,7 +486,15 @@ export default function PaginaEvolucao() {
     [base, atual, mapaMunicipiosPorCodigo],
   );
 
-  function baixarCsv() {
+  // prefixo com a prefeitura ativa: arquivos baixados nunca se confundem entre municípios
+  const prefixoArquivo = `evolucao-vaf-${(municipio?.nome ?? "municipio")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")}`;
+
+  function baixarComparativoCsv() {
     if (!base || !atual || !declarantes) return;
     const diag = diagnosticarEvolucao(base, atual);
     const analise = textoDiagnostico(diag, rotuloArquivo(base), rotuloArquivo(atual));
@@ -954,6 +962,7 @@ export default function PaginaEvolucao() {
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
                     vazio="Todos os contribuintes da competência base declararam também na atual."
+                    nomeArquivo={`${prefixoArquivo}-deixaram-de-declarar.csv`}
                   />
                 </CardContent>
               </Card>
@@ -967,6 +976,7 @@ export default function PaginaEvolucao() {
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
                     vazio="Nenhum declarante novo nesta competência."
+                    nomeArquivo={`${prefixoArquivo}-novos-declarantes.csv`}
                   />
                 </CardContent>
               </Card>
@@ -980,6 +990,7 @@ export default function PaginaEvolucao() {
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
                     vazio="Sem contribuintes para comparar."
+                    nomeArquivo={`${prefixoArquivo}-variacao-contribuintes.csv`}
                   />
                 </CardContent>
               </Card>
