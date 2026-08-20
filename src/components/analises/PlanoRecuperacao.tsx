@@ -535,16 +535,33 @@ function ItemAcao({
           </Collapsible>
         )}
         {acao.ignorados.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {acao.ignorados.length} contribuinte(s) desta ação foram ignorados por situação
-            cadastral (cancelado/baixado/bloqueado):{" "}
-            {acao.ignorados
-              .slice(0, 5)
-              .map((c) => c.nome ?? c.inscricao_estadual)
-              .join(", ")}
-            {acao.ignorados.length > 5 ? "…" : ""}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>
+              {acao.ignorados.length} contribuinte(s) desta ação foram ignorados por situação
+              cadastral (cancelado/baixado/bloqueado):{" "}
+              {acao.ignorados
+                .slice(0, 5)
+                .map((c) => c.nome ?? c.inscricao_estadual)
+                .join(", ")}
+              {acao.ignorados.length > 5 ? "…" : ""}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={() =>
+                baixarCsvIgnorados(
+                  csvIgnorados(acao, situacoesCadastrais),
+                  `ignorados-${acao.chave}.csv`,
+                )
+              }
+            >
+              <Download className="h-3.5 w-3.5" />
+              CSV dos ignorados ({acao.ignorados.length})
+            </Button>
+          </div>
         )}
+
       </div>
 
       <AnotacoesAcao
