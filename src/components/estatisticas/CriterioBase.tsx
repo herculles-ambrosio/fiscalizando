@@ -10,9 +10,12 @@ import {
   periodoDaCarga,
   remessaDaCarga,
   type CargaEstat,
+  type LinhaEstat,
 } from "@/lib/vaf/estatisticas";
+import { formatarMoeda } from "@/lib/format";
 import { useSelecaoCargas } from "@/components/estatisticas/selecaoCargas";
 import { descreverLacuna, detectarLacunas } from "@/lib/vaf/lacunas";
+
 
 const NOME_TIPO: Record<string, string> = {
   mensal: "Mensal",
