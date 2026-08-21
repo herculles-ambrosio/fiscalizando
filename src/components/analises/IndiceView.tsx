@@ -288,11 +288,58 @@ export default function PaginaIndice() {
         vafEstadualReferencia: Number(vafEstadualRef.replace(/[^0-9]/g, "")) || 0,
         fatorCalibragem: Number(fator.replace(",", ".")) || 1,
         codigoMunicipio: municipio?.codigo_sef ? String(municipio.codigo_sef).padStart(3, "0") : "",
+        creditoProprioExterno: planilha?.creditoProprio ?? 0,
+        arquivoCreditoProprio: planilha?.arquivoNome ?? "",
       });
     } catch {
       return null;
     }
-  }, [texto, vafEstadualRef, fator, municipio?.codigo_sef]);
+  }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
+
+  async function selecionarPlanilha(file: File | null) {
+    setErroPlanilha(null);
+    if (!file) return;
+    try {
+      const resumo = lerCreditoPortal(
+        await file.arrayBuffer(),
+        file.name,
+        municipio?.codigo_sef ? String(municipio.codigo_sef) : "",
+      );
+      if (resumo.creditoProprio <= 0) {
+        setErroPlanilha(
+          "A planilha não trouxe notas de Crédito próprio com 'ENTRA' para esta prefeitura.",
+        );
+        setPlanilha(null);
+        return;
+      }
+      setPlanilha(resumo);
+      toast.success(
+        `Crédito próprio carregado: ${formatarMoeda(resumo.creditoProprio)} (${resumo.totalNotasProprio} notas).`,
+      );
+    } catch (e) {
+      setPlanilha(null);
+      setErroPlanilha(e instanceof Error ? e.message : "Não foi possível ler a planilha.");
+    }
+  }
+
+  function baixarCsvPlanilha() {
+    if (!planilha) return;
+    const csv = montarCsv(
+      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
+      planilha.notas.map((n) => [
+        n.tipoNota,
+        n.numero,
+        n.data ?? "",
+        n.remetente,
+        n.municipioRemetente,
+        n.destinatario,
+        n.municipioDestinatario,
+        n.descricao,
+        n.valor.toFixed(2).replace(".", ","),
+      ]),
+    );
+    baixarCsvArquivo(`credito_proprio_portal_${planilha.anoBase ?? ""}.csv`, csv);
+  }
 
   async function selecionar(file: File | null) {
     setArquivo(file);
