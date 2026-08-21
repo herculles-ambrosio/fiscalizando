@@ -268,11 +268,10 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
   const totalVafAtual = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
   const totalVafAnterior = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_anterior ?? 0), 0);
-  const zeradosPagina = (data?.linhas ?? []).filter((c) =>
-    (c.situacoes as string[]).includes("ZERADO"),
-  );
+  const linhasPagina = data?.linhas ?? [];
   const todosMarcados =
-    zeradosPagina.length > 0 && zeradosPagina.every((c) => selecionados.includes(c.id));
+    linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
+
 
   function alternar(id: string, marcado: boolean) {
     setSelecionados((atual) =>
