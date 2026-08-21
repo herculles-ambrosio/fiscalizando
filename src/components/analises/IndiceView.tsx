@@ -549,98 +549,17 @@ export default function PaginaIndice() {
             </div>
 
             {/* Crédito próprio (AF/SIARE) — só vem nos definitivos */}
-            <div className="space-y-2 rounded-lg border border-border bg-card p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium">Crédito próprio (AF/SIARE)</p>
-                  <p className="text-xs text-muted-foreground">
-                    {planilha
-                      ? `Vindo da planilha ${planilha.arquivoNome} — ${planilha.totalNotasProprio} notas, ano base ${planilha.anoBase ?? "—"}.`
-                      : "O arquivo de retorno mensal não trouxe o crédito próprio. Envie o relatório de créditos do Portal do VAF (CSV) para completar a projeção."}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    ref={inputPlanilhaRef}
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="hidden"
-                    onChange={(e) => {
-                      void selecionarPlanilha(e.target.files?.[0] ?? null);
-                      e.target.value = "";
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => inputPlanilhaRef.current?.click()}
-                  >
-                    <FileUp className="mr-2 h-4 w-4" />
-                    {planilha ? "Trocar planilha" : "Carregar planilha do Portal"}
-                  </Button>
-                  {planilha && (
-                    <Button variant="ghost" size="sm" onClick={() => setPlanilha(null)}>
-                      Remover
-                    </Button>
-                  )}
-                </div>
-              </div>
+            <CreditoProprioPortal
+              codigoSef={municipio?.codigo_sef ? String(municipio.codigo_sef) : ""}
+              planilha={planilha}
+              onPlanilha={setPlanilha}
+              anoBaseArquivo={apuracao.anoBase}
+              creditoInternoArquivo={apuracao.creditoInterno}
+              perguntar={perguntar}
+              onPerguntarChange={setPerguntar}
+              contexto={arquivo ? `“${arquivo.name}”` : undefined}
+            />
 
-              {erroPlanilha && (
-                <Alert variant="destructive">
-                  <AlertTitle>Planilha não aproveitada</AlertTitle>
-                  <AlertDescription>{erroPlanilha}</AlertDescription>
-                </Alert>
-              )}
-
-              {planilha && (
-                <div className="grid gap-2 text-xs sm:grid-cols-2">
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Crédito próprio (ENTRA)</span>
-                    <span className="font-mono font-medium">
-                      {formatarMoeda(planilha.creditoProprio)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">
-                      Crédito interno da planilha (conferência)
-                    </span>
-                    <span className="font-mono">{formatarMoeda(planilha.creditoInterno)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Diferença × arquivo de retorno</span>
-                    <span className="font-mono">
-                      {formatarMoeda(planilha.creditoInterno - apuracao.creditoInterno)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Notas “NÃO ENTRA” (fora da base)</span>
-                    <span className="font-mono">{formatarMoeda(planilha.naoEntra)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Frete (não somado)</span>
-                    <span className="font-mono">{formatarMoeda(planilha.frete)}</span>
-                  </div>
-                  {planilha.ignoradasOutroMunicipio > 0 && (
-                    <div className="flex justify-between gap-2">
-                      <span className="text-muted-foreground">Notas de outro município</span>
-                      <span className="font-mono">
-                        {planilha.ignoradasOutroMunicipio} ·{" "}
-                        {formatarMoeda(planilha.valorIgnoradoOutroMunicipio)}
-                      </span>
-                    </div>
-                  )}
-                  {planilha.anoBase != null &&
-                    apuracao.anoBase != null &&
-                    planilha.anoBase !== apuracao.anoBase && (
-                      <p className="sm:col-span-2 text-amber-600">
-                        Atenção: o ano base da planilha ({planilha.anoBase}) é diferente do ano do
-                        arquivo de retorno ({apuracao.anoBase}).
-                      </p>
-                    )}
-                </div>
-              )}
-            </div>
           </CardContent>
         </Card>
       )}
