@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, Info } from "lucide-react";
+import { AlertTriangle, ChevronDown, Info } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +12,7 @@ import {
   type CargaEstat,
 } from "@/lib/vaf/estatisticas";
 import { useSelecaoCargas } from "@/components/estatisticas/selecaoCargas";
+import { descreverLacuna, detectarLacunas } from "@/lib/vaf/lacunas";
 
 const NOME_TIPO: Record<string, string> = {
   mensal: "Mensal",
@@ -65,6 +67,9 @@ export function CriterioBase({
       }));
   }, [universo]);
 
+  const lacunas = useMemo(() => detectarLacunas(cargas), [cargas]);
+  const foraDoCalculo = universo.length - cargas.length;
+
   const anos = [...new Set(cargas.map(anoDaCarga))];
   const alterado = chaveAtual !== [...rascunho].sort().join(",");
 
@@ -108,6 +113,17 @@ export function CriterioBase({
             {anos.length} exercício{anos.length === 1 ? "" : "s"} · {cargas.length} de{" "}
             {universo.length} apuraç{universo.length === 1 ? "ão" : "ões"}
           </Badge>
+          {(lacunas.length > 0 || foraDoCalculo > 0) && (
+            <Badge
+              variant="outline"
+              className="gap-1 border-[var(--omisso-foreground)] text-[11px] text-[var(--omisso-foreground)]"
+            >
+              <AlertTriangle className="h-3 w-3" />
+              {lacunas.length > 0
+                ? `${lacunas.length} exercício(s) incompleto(s)`
+                : `${foraDoCalculo} apuração(ões) fora do cálculo`}
+            </Badge>
+          )}
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 text-xs">
               {aberto ? "Ocultar" : selecao ? "Escolher o que entra" : "Ver o que entra"}
@@ -121,6 +137,36 @@ export function CriterioBase({
 
       <CollapsibleContent>
         <div className="space-y-3 border-t border-border px-4 py-3">
+          {foraDoCalculo > 0 && (
+            <Alert className="border-[var(--omisso-foreground)]/40 bg-[var(--omisso-foreground)]/10">
+              <AlertTriangle className="h-4 w-4 text-[var(--omisso-foreground)]" />
+              <AlertTitle className="text-xs">
+                {foraDoCalculo} apuração(ões) desmarcada(s)
+              </AlertTitle>
+              <AlertDescription className="text-[11px]">
+                Todos os gráficos desta tela desconsideram essas apurações. Marque-as abaixo e
+                clique em “Aplicar aos gráficos” para voltar ao conjunto completo.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {lacunas.map((l) => (
+            <Alert
+              key={l.ano}
+              className="border-[var(--omisso-foreground)]/40 bg-[var(--omisso-foreground)]/10"
+            >
+              <AlertTriangle className="h-4 w-4 text-[var(--omisso-foreground)]" />
+              <AlertTitle className="text-xs">
+                Exercício {l.ano} incompleto — {descreverLacuna(l)}
+              </AlertTitle>
+              <AlertDescription className="text-[11px]">
+                Remessas consideradas: {l.remessas.map((r) => `Arquivo ${r}`).join(", ")}. Podem
+                ficar incompletos: {l.graficos.join(", ")}. A comparação entre exercícios só é justa
+                quando os mesmos arquivos estão apurados nos dois lados.
+              </AlertDescription>
+            </Alert>
+          ))}
+
           {porAno.map(({ ano, cargas: lista }) => {
             const todosDoAno = lista.every((c) => rascunho.has(c.id));
             return (
