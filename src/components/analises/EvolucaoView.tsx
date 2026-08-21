@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, FolderOpen, HelpCircle, Loader2, Minus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +41,8 @@ import { detectarMunicipioRetorno, normalizarCodigoSef } from "@/lib/vaf/municip
 import { formatarIndice } from "@/lib/vaf/indice";
 import {
   analisarArquivo,
+  aplicarCreditoProprio,
+  faltaCreditoProprio,
   compararDeclarantes,
   compararMunicipios,
   csvEvolucao,
@@ -56,6 +58,8 @@ import DiagnosticoVariacao from "@/components/analises/DiagnosticoVariacao";
 import PlanoRecuperacao from "@/components/analises/PlanoRecuperacao";
 import { montarPlanoRecuperacao, textoPlanoRecuperacao } from "@/lib/vaf/recuperacao";
 import { useSituacoesCadastrais } from "@/hooks/useSituacoesCadastrais";
+import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
+import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
@@ -366,8 +370,30 @@ function BannerBloqueio({
 export default function PaginaEvolucao() {
   const { municipio, municipios: municipiosPermitidos, podeTrocar, trocar } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
-  const [base, setBase] = useState<ArquivoEvolucao | null>(null);
-  const [atual, setAtual] = useState<ArquivoEvolucao | null>(null);
+  const [baseArq, setBase] = useState<ArquivoEvolucao | null>(null);
+  const [atualArq, setAtual] = useState<ArquivoEvolucao | null>(null);
+  const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
+  const [perguntarPlanilha, setPerguntarPlanilha] = useState(false);
+  const base = useMemo(
+    () =>
+      baseArq && planilha
+        ? aplicarCreditoProprio(baseArq, planilha.creditoProprio, planilha.arquivoNome)
+        : baseArq,
+    [baseArq, planilha],
+  );
+  const atual = useMemo(
+    () =>
+      atualArq && planilha
+        ? aplicarCreditoProprio(atualArq, planilha.creditoProprio, planilha.arquivoNome)
+        : atualArq,
+    [atualArq, planilha],
+  );
+  const faltaCredito = faltaCreditoProprio(baseArq) || faltaCreditoProprio(atualArq);
+  const arquivoSemCredito = faltaCreditoProprio(atualArq) ? atualArq?.nome : baseArq?.nome;
+  useEffect(() => {
+    if (faltaCredito && !planilha) setPerguntarPlanilha(true);
+  }, [faltaCredito, planilha]);
+
   const [carregando, setCarregando] = useState<"base" | "atual" | null>(null);
   const [vafReferencia, setVafReferencia] = useState("");
   const [nomeGravar, setNomeGravar] = useState("");
@@ -526,6 +552,19 @@ export default function PaginaEvolucao() {
           bloqueio={bloqueio}
           municipioAtivo={municipio}
           onResolver={() => setPendente(bloqueio)}
+        />
+      )}
+
+      {(faltaCredito || planilha) && (
+        <CreditoProprioPortal
+          codigoSef={municipio?.codigo_sef ? String(municipio.codigo_sef) : ""}
+          planilha={planilha}
+          onPlanilha={setPlanilha}
+          anoBaseArquivo={atualArq?.apuracao.anoBase ?? baseArq?.apuracao.anoBase ?? null}
+          creditoInternoArquivo={atualArq?.apuracao.creditoInterno ?? baseArq?.apuracao.creditoInterno}
+          perguntar={perguntarPlanilha}
+          onPerguntarChange={setPerguntarPlanilha}
+          contexto={arquivoSemCredito ? `“${arquivoSemCredito}”` : undefined}
         />
       )}
 

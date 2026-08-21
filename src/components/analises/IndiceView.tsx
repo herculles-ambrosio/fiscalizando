@@ -36,7 +36,9 @@ import {
 } from "@/lib/vaf/indice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { lerCreditoPortal, type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
+
 import { baixarCsv as baixarCsvArquivo, montarCsv } from "@/lib/csv";
 
 
@@ -247,9 +249,9 @@ export default function PaginaIndice() {
   const [vafEstadualRef, setVafEstadualRef] = useState<string>("");
   const [fator, setFator] = useState<string>("1");
   const inputRef = useRef<HTMLInputElement>(null);
-  const inputPlanilhaRef = useRef<HTMLInputElement>(null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
-  const [erroPlanilha, setErroPlanilha] = useState<string | null>(null);
+  const [perguntar, setPerguntar] = useState(false);
+
 
   // calibração é guardada por prefeitura, para não misturar referências ao trocar
   const chaveRef = `${CHAVE_REF}:${municipioId ?? "sem-municipio"}`;
@@ -296,31 +298,17 @@ export default function PaginaIndice() {
     }
   }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
 
-  async function selecionarPlanilha(file: File | null) {
-    setErroPlanilha(null);
-    if (!file) return;
-    try {
-      const resumo = lerCreditoPortal(
-        await file.arrayBuffer(),
-        file.name,
-        municipio?.codigo_sef ? String(municipio.codigo_sef) : "",
-      );
-      if (resumo.creditoProprio <= 0) {
-        setErroPlanilha(
-          "A planilha não trouxe notas de Crédito próprio com 'ENTRA' para esta prefeitura.",
-        );
-        setPlanilha(null);
-        return;
-      }
-      setPlanilha(resumo);
-      toast.success(
-        `Crédito próprio carregado: ${formatarMoeda(resumo.creditoProprio)} (${resumo.totalNotasProprio} notas).`,
-      );
-    } catch (e) {
-      setPlanilha(null);
-      setErroPlanilha(e instanceof Error ? e.message : "Não foi possível ler a planilha.");
-    }
-  }
+  // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
+  // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
+  useEffect(() => {
+    if (apuracao?.estimado && !planilha && apuracao.creditoProprio <= 0) setPerguntar(true);
+  }, [apuracao?.estimado, apuracao?.creditoProprio, planilha]);
+
+  useEffect(() => {
+    setPlanilha(null);
+    setPerguntar(false);
+  }, [municipioId]);
+
 
   function baixarCsvPlanilha() {
     if (!planilha) return;
@@ -549,98 +537,17 @@ export default function PaginaIndice() {
             </div>
 
             {/* Crédito próprio (AF/SIARE) — só vem nos definitivos */}
-            <div className="space-y-2 rounded-lg border border-border bg-card p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium">Crédito próprio (AF/SIARE)</p>
-                  <p className="text-xs text-muted-foreground">
-                    {planilha
-                      ? `Vindo da planilha ${planilha.arquivoNome} — ${planilha.totalNotasProprio} notas, ano base ${planilha.anoBase ?? "—"}.`
-                      : "O arquivo de retorno mensal não trouxe o crédito próprio. Envie o relatório de créditos do Portal do VAF (CSV) para completar a projeção."}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    ref={inputPlanilhaRef}
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="hidden"
-                    onChange={(e) => {
-                      void selecionarPlanilha(e.target.files?.[0] ?? null);
-                      e.target.value = "";
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => inputPlanilhaRef.current?.click()}
-                  >
-                    <FileUp className="mr-2 h-4 w-4" />
-                    {planilha ? "Trocar planilha" : "Carregar planilha do Portal"}
-                  </Button>
-                  {planilha && (
-                    <Button variant="ghost" size="sm" onClick={() => setPlanilha(null)}>
-                      Remover
-                    </Button>
-                  )}
-                </div>
-              </div>
+            <CreditoProprioPortal
+              codigoSef={municipio?.codigo_sef ? String(municipio.codigo_sef) : ""}
+              planilha={planilha}
+              onPlanilha={setPlanilha}
+              anoBaseArquivo={apuracao.anoBase}
+              creditoInternoArquivo={apuracao.creditoInterno}
+              perguntar={perguntar}
+              onPerguntarChange={setPerguntar}
+              contexto={arquivo ? `“${arquivo.name}”` : undefined}
+            />
 
-              {erroPlanilha && (
-                <Alert variant="destructive">
-                  <AlertTitle>Planilha não aproveitada</AlertTitle>
-                  <AlertDescription>{erroPlanilha}</AlertDescription>
-                </Alert>
-              )}
-
-              {planilha && (
-                <div className="grid gap-2 text-xs sm:grid-cols-2">
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Crédito próprio (ENTRA)</span>
-                    <span className="font-mono font-medium">
-                      {formatarMoeda(planilha.creditoProprio)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">
-                      Crédito interno da planilha (conferência)
-                    </span>
-                    <span className="font-mono">{formatarMoeda(planilha.creditoInterno)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Diferença × arquivo de retorno</span>
-                    <span className="font-mono">
-                      {formatarMoeda(planilha.creditoInterno - apuracao.creditoInterno)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Notas “NÃO ENTRA” (fora da base)</span>
-                    <span className="font-mono">{formatarMoeda(planilha.naoEntra)}</span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground">Frete (não somado)</span>
-                    <span className="font-mono">{formatarMoeda(planilha.frete)}</span>
-                  </div>
-                  {planilha.ignoradasOutroMunicipio > 0 && (
-                    <div className="flex justify-between gap-2">
-                      <span className="text-muted-foreground">Notas de outro município</span>
-                      <span className="font-mono">
-                        {planilha.ignoradasOutroMunicipio} ·{" "}
-                        {formatarMoeda(planilha.valorIgnoradoOutroMunicipio)}
-                      </span>
-                    </div>
-                  )}
-                  {planilha.anoBase != null &&
-                    apuracao.anoBase != null &&
-                    planilha.anoBase !== apuracao.anoBase && (
-                      <p className="sm:col-span-2 text-amber-600">
-                        Atenção: o ano base da planilha ({planilha.anoBase}) é diferente do ano do
-                        arquivo de retorno ({apuracao.anoBase}).
-                      </p>
-                    )}
-                </div>
-              )}
-            </div>
           </CardContent>
         </Card>
       )}
