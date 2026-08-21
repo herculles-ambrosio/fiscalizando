@@ -296,31 +296,17 @@ export default function PaginaIndice() {
     }
   }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
 
-  async function selecionarPlanilha(file: File | null) {
-    setErroPlanilha(null);
-    if (!file) return;
-    try {
-      const resumo = lerCreditoPortal(
-        await file.arrayBuffer(),
-        file.name,
-        municipio?.codigo_sef ? String(municipio.codigo_sef) : "",
-      );
-      if (resumo.creditoProprio <= 0) {
-        setErroPlanilha(
-          "A planilha não trouxe notas de Crédito próprio com 'ENTRA' para esta prefeitura.",
-        );
-        setPlanilha(null);
-        return;
-      }
-      setPlanilha(resumo);
-      toast.success(
-        `Crédito próprio carregado: ${formatarMoeda(resumo.creditoProprio)} (${resumo.totalNotasProprio} notas).`,
-      );
-    } catch (e) {
-      setPlanilha(null);
-      setErroPlanilha(e instanceof Error ? e.message : "Não foi possível ler a planilha.");
-    }
-  }
+  // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
+  // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
+  useEffect(() => {
+    if (apuracao?.estimado && !planilha && apuracao.creditoProprio <= 0) setPerguntar(true);
+  }, [apuracao?.estimado, apuracao?.creditoProprio, planilha]);
+
+  useEffect(() => {
+    setPlanilha(null);
+    setPerguntar(false);
+  }, [municipioId]);
+
 
   function baixarCsvPlanilha() {
     if (!planilha) return;
