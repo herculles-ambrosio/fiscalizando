@@ -305,6 +305,10 @@ export type OpcoesEstimativa = {
   fatorCalibragem?: number;
   /** código SEF do município (usado quando o arquivo não tem registro de índice) */
   codigoMunicipio?: string;
+  /** crédito próprio (AF/SIARE) vindo da planilha do Portal do VAF */
+  creditoProprioExterno?: number;
+  /** nome do arquivo da planilha usada */
+  arquivoCreditoProprio?: string;
 };
 
 /**
