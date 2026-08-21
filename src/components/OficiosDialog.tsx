@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, CheckCircle2, ChevronsUpDown, Eye, FileText, Loader2 } from "lucide-react";
+import { Check, CheckCircle2, ChevronsUpDown, Eye, FileText, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -252,6 +252,11 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
         <Button variant="secondary" size="sm">
           <FileText className="mr-2 h-4 w-4" />
           Gerar ofícios
+          {selecionados.length > 0 && (
+            <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+              {selecionados.length}
+            </span>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
@@ -296,7 +301,20 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label>Contribuintes</Label>
+              <div className="flex items-center justify-between">
+                <Label>Contribuintes</Label>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                    selecionados.length > 0
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  <Users className="h-3 w-3" />
+                  {selecionados.length} selecionado(s)
+                </span>
+              </div>
               <div className="flex flex-col gap-2 text-sm">
                 <label className="flex items-center gap-2">
                   <input
@@ -316,7 +334,12 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
                   Apenas os selecionados ({selecionados.length})
                 </label>
               </div>
-              {!selecionados.length && (
+              {selecionados.length > 0 ? (
+                <p className="text-xs text-primary">
+                  A opção “Apenas os selecionados” gerará ofícios para {selecionados.length}{" "}
+                  contribuinte(s).
+                </p>
+              ) : (
                 <p className="text-xs text-muted-foreground">
                   Para usar esta opção, marque os contribuintes na lista (caixas de seleção da
                   primeira coluna) antes de abrir este diálogo.
@@ -325,7 +348,6 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
               <p className="text-xs text-muted-foreground">
                 {carregandoLista ? "Contando…" : `${lista.length} contribuinte(s) neste escopo.`}
               </p>
-
             </div>
 
             <div className="space-y-2">
