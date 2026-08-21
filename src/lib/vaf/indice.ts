@@ -368,7 +368,11 @@ export function estimarIndiceProvisorio(
     vafProprioNaoCompoe: d.somaVafProprioNaoCompoe,
     creditoExterno: d.somaCreditosExternos,
     creditoInterno: d.somaCreditosMunicipios,
-    creditoProprio: 0,
+    creditoProprio,
+    origemCreditoProprio: creditoProprio > 0 ? "planilha" : "arquivo",
+    ...(creditoProprio > 0 && opcoes.arquivoCreditoProprio
+      ? { arquivoCreditoProprio: opcoes.arquivoCreditoProprio }
+      : {}),
     debito: d.somaDebitosMunicipios,
     acertoCredito: 0,
     acertoDebito: 0,
