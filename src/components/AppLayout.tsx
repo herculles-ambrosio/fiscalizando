@@ -34,6 +34,7 @@ const NAV_OPERACAO = [
 const NAV_ANALISE = [
   { to: "/contribuintes", rotulo: "Contribuintes", icone: Users },
   { to: "/analises", rotulo: "Análises do VAF", icone: TrendingUp },
+  { to: "/estatisticas", rotulo: "Estatísticas", icone: PieChart },
   { to: "/oficios", rotulo: "Ofícios", icone: FileSignature },
 ];
 
