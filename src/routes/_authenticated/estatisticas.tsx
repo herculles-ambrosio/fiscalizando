@@ -20,6 +20,10 @@ import { SetoresQualidade } from "@/components/estatisticas/SetoresQualidade";
 const ABAS = ["maiores", "anual", "setores"] as const;
 type Aba = (typeof ABAS)[number];
 
+/** Critério de comparação escolhido, guardado por prefeitura neste navegador. */
+const chaveSelecao = (municipioId: string) => `apuravaf:estatisticas:selecao:${municipioId}`;
+
+
 export const Route = createFileRoute("/_authenticated/estatisticas")({
   validateSearch: (search: Record<string, unknown>) => ({
     aba: (ABAS as readonly string[]).includes(String(search["aba"]))
