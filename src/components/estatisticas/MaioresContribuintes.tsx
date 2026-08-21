@@ -222,7 +222,8 @@ export function MaioresContribuintes({
             Valor contribuído mês a mês
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Uma linha por empresa do Top {quantidade}, por competência apurada.
+            Uma linha por empresa do Top {quantidade}, por competência apurada. Clique no nome da
+            empresa na legenda para abrir o detalhamento.
           </p>
         </CardHeader>
         <CardContent className="h-96 p-6 pt-4">
