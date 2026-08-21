@@ -239,6 +239,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                     <TableHead className="text-right">Índice</TableHead>
                     <TableHead className="text-right">Valor líquido</TableHead>
                     <TableHead>Arquivo</TableHead>
+                    <TableHead>Crédito próprio</TableHead>
                     <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
@@ -267,6 +268,22 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                       <TableCell className="max-w-[14rem] truncate font-mono text-xs text-muted-foreground">
                         {r.arquivo_nome ?? "—"}
                         {r.carga_id ? " · vinculado à apuração" : ""}
+                      </TableCell>
+                      <TableCell className="max-w-[16rem] text-xs">
+                        {r.origem_credito_proprio === "planilha" ? (
+                          <>
+                            <Badge variant="outline">Portal do VAF</Badge>
+                            <span className="ml-2 block truncate font-mono text-muted-foreground">
+                              {r.arquivo_credito_proprio ?? "planilha carregada"}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            {Number(r.credito_proprio) > 0
+                              ? "Arquivo de retorno"
+                              : "Ausente no retorno"}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button

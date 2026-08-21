@@ -458,6 +458,7 @@ export type Database = {
         Row: {
           acerto_credito: number
           acerto_debito: number
+          arquivo_credito_proprio: string | null
           arquivo_nome: string | null
           atualizado_em: string
           carga_id: string | null
@@ -475,6 +476,7 @@ export type Database = {
           id: string
           indice: number
           municipio_id: string
+          origem_credito_proprio: string | null
           origem_vaf_estadual: string | null
           periodo_fim: string | null
           periodo_inicio: string | null
@@ -487,6 +489,7 @@ export type Database = {
         Insert: {
           acerto_credito?: number
           acerto_debito?: number
+          arquivo_credito_proprio?: string | null
           arquivo_nome?: string | null
           atualizado_em?: string
           carga_id?: string | null
@@ -504,6 +507,7 @@ export type Database = {
           id?: string
           indice?: number
           municipio_id: string
+          origem_credito_proprio?: string | null
           origem_vaf_estadual?: string | null
           periodo_fim?: string | null
           periodo_inicio?: string | null
@@ -516,6 +520,7 @@ export type Database = {
         Update: {
           acerto_credito?: number
           acerto_debito?: number
+          arquivo_credito_proprio?: string | null
           arquivo_nome?: string | null
           atualizado_em?: string
           carga_id?: string | null
@@ -533,6 +538,7 @@ export type Database = {
           id?: string
           indice?: number
           municipio_id?: string
+          origem_credito_proprio?: string | null
           origem_vaf_estadual?: string | null
           periodo_fim?: string | null
           periodo_inicio?: string | null
