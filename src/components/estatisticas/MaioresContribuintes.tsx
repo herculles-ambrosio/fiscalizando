@@ -271,6 +271,9 @@ export function MaioresContribuintes({
       <Card>
         <CardHeader className="p-6 pb-2">
           <CardTitle className="font-display text-base font-semibold">Ranking detalhado</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Clique em uma empresa para ver a série mensal completa e o detalhamento da participação.
+          </p>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
