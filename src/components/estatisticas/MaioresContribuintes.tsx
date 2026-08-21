@@ -58,6 +58,7 @@ export function MaioresContribuintes({
   );
   const [ano, setAno] = useState<string>("");
   const [topN, setTopN] = useState<string>("10");
+  const [ieDetalhe, setIeDetalhe] = useState<string | null>(null);
 
   const anoAtivo = ano && anos.includes(Number(ano)) ? Number(ano) : (anos[0] ?? null);
   const quantidade = Math.max(1, Math.min(200, Number(topN) || 10));
