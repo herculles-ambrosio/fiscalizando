@@ -4,7 +4,6 @@
  * sem novas tabelas nem novos uploads.
  */
 
-import { competenciaOrdenavel, formatarCompetencia } from "@/lib/vaf/tipoRetorno";
 
 export type CargaEstat = {
   id: string;
@@ -12,6 +11,7 @@ export type CargaEstat = {
   tipo_retorno: string | null;
   competencia_mes: number | null;
   competencia_ano: number | null;
+  mes_referencia?: number | null;
   criado_em: string;
 };
 
@@ -56,19 +56,29 @@ export function nomeCurto(nome: string | null, ie: string, limite = 26): string 
   return base.length > limite ? `${base.slice(0, limite - 1)}…` : base;
 }
 
-/** Ano de referência de uma carga (usa a competência quando existe). */
+/**
+ * Ano de referência de uma carga: sempre o EXERCÍCIO da apuração.
+ * O ano gravado na competência é o ano de geração do arquivo enviado pela SEF
+ * (ex.: arquivo 13/2026 é do exercício 2025), então não serve de eixo temporal.
+ */
 export function anoDaCarga(c: CargaEstat): number {
-  return c.competencia_ano ?? c.exercicio;
+  return c.exercicio ?? c.competencia_ano ?? 0;
+}
+
+/** Número da remessa (arquivo mensal) dentro do exercício; null no índice definitivo. */
+export function remessaDaCarga(c: CargaEstat): number | null {
+  if (c.tipo_retorno === "indice_definitivo") return null;
+  return c.competencia_mes ?? c.mes_referencia ?? null;
 }
 
 /**
- * Uma carga por competência: quando a mesma competência foi reprocessada,
- * fica a mais recente. Cargas de índice definitivo vencem as mensais do mesmo mês.
+ * Uma carga por exercício + número de arquivo: quando a mesma remessa foi
+ * reprocessada, fica a mais recente. O índice definitivo vence a mensal equivalente.
  */
 export function deduplicarCargas(cargas: CargaEstat[]): CargaEstat[] {
   const mapa = new Map<string, CargaEstat>();
   for (const c of cargas) {
-    const chave = `${anoDaCarga(c)}-${c.competencia_mes ?? "x"}`;
+    const chave = `${anoDaCarga(c)}-${remessaDaCarga(c) ?? "def"}`;
     const atual = mapa.get(chave);
     if (!atual) {
       mapa.set(chave, c);
@@ -90,13 +100,13 @@ export function deduplicarCargas(cargas: CargaEstat[]): CargaEstat[] {
 
 export function periodoDaCarga(c: CargaEstat): Periodo {
   const ano = anoDaCarga(c);
-  const mes = c.competencia_mes;
+  const mes = remessaDaCarga(c);
   return {
     cargaId: c.id,
     mes,
     ano,
-    ordem: competenciaOrdenavel(mes, ano),
-    rotulo: formatarCompetencia(mes, ano) || String(ano),
+    ordem: ano * 100 + (mes ?? 99),
+    rotulo: mes ? `Arquivo ${mes} · ${ano}` : `Definitivo · ${ano}`,
   };
 }
 

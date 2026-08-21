@@ -33,6 +33,7 @@ import { formatarMoeda, formatarPercentual, formatarCompacto } from "@/lib/forma
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import {
   agregarPorContribuinte,
+  anoDaCarga,
   corSerie,
   nomeCurto,
   periodoDaCarga,
@@ -59,12 +60,12 @@ export function ComparativoAnual({
   const quantidade = Number(topN) || 10;
 
   const { anos, porAno, top } = useMemo(() => {
-    const anos = [...new Set(cargas.map((c) => c.competencia_ano ?? c.exercicio))].sort(
+    const anos = [...new Set(cargas.map(anoDaCarga))].sort(
       (a, b) => a - b,
     );
     const porAno = new Map<number, ReturnType<typeof agregarPorContribuinte>>();
     for (const ano of anos) {
-      const doAno = cargas.filter((c) => (c.competencia_ano ?? c.exercicio) === ano);
+      const doAno = cargas.filter((c) => anoDaCarga(c) === ano);
       const mapa = new Map(doAno.map((c) => [c.id, periodoDaCarga(c)]));
       porAno.set(
         ano,
@@ -173,7 +174,7 @@ export function ComparativoAnual({
             Evolução ano a ano por empresa
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Ano no eixo horizontal, uma série por empresa, valor = VAF contribuído no ano. Clique
+            Exercício no eixo horizontal, uma série por empresa, valor = VAF contribuído no exercício. Clique
             em uma série ou na legenda para abrir o detalhamento da empresa.
           </p>
         </CardHeader>

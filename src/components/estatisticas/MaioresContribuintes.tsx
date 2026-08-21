@@ -35,6 +35,7 @@ import { baixarCsv, montarCsv } from "@/lib/csv";
 import { formatarCodigoCnae } from "@/lib/vaf/cnae";
 import {
   agregarPorContribuinte,
+  anoDaCarga,
   corSerie,
   nomeCurto,
   periodoDaCarga,
@@ -53,7 +54,7 @@ export function MaioresContribuintes({
   linhas: LinhaEstat[];
 }) {
   const anos = useMemo(
-    () => [...new Set(cargas.map((c) => c.competencia_ano ?? c.exercicio))].sort((a, b) => b - a),
+    () => [...new Set(cargas.map(anoDaCarga))].sort((a, b) => b - a),
     [cargas],
   );
   const [ano, setAno] = useState<string>("");
@@ -64,7 +65,7 @@ export function MaioresContribuintes({
   const quantidade = Math.max(1, Math.min(200, Number(topN) || 10));
 
   const { ranking, totalPeriodo, periodos } = useMemo(() => {
-    const doAno = cargas.filter((c) => (c.competencia_ano ?? c.exercicio) === anoAtivo);
+    const doAno = cargas.filter((c) => anoDaCarga(c) === anoAtivo);
     const periodos = doAno.map(periodoDaCarga).sort((a, b) => a.ordem - b.ordem);
     const mapa = new Map(periodos.map((p) => [p.cargaId, p]));
     const ranking = agregarPorContribuinte(
@@ -125,9 +126,9 @@ export function MaioresContribuintes({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-40">
-          <label className="mb-1 block text-xs text-muted-foreground">Ano</label>
+          <label className="mb-1 block text-xs text-muted-foreground">Exercício</label>
           <Select value={String(anoAtivo)} onValueChange={setAno}>
-            <SelectTrigger aria-label="Ano">
+            <SelectTrigger aria-label="Exercício">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -166,7 +167,7 @@ export function MaioresContribuintes({
             Empresas que mais contribuíram — {anoAtivo}
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            VAF somado das competências apuradas no ano. Total do recorte:{" "}
+            VAF somado dos arquivos apurados no exercício. Total do recorte:{" "}
             {formatarMoeda(totalPeriodo)}.
           </p>
         </CardHeader>
@@ -222,7 +223,7 @@ export function MaioresContribuintes({
             Valor contribuído mês a mês
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Uma linha por empresa do Top {quantidade}, por competência apurada. Clique no nome da
+            Uma linha por empresa do Top {quantidade}, por arquivo apurado do exercício. Clique no nome da
             empresa na legenda para abrir o detalhamento.
           </p>
         </CardHeader>
