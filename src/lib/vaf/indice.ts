@@ -339,8 +339,18 @@ export function estimarIndiceProvisorio(
     d.somaVafProprioNormal + d.somaVafProprioSn + d.somaVafProprioSimei ||
     d.somaVafDeclarado;
   const vafProprio = Math.round(baseVafProprio * fator);
+  // O retorno mensal costuma não trazer o crédito próprio (AF/SIARE); quando o
+  // usuário carrega a planilha do Portal do VAF, o total dela entra aqui.
+  const creditoProprio =
+    opcoes.creditoProprioExterno && opcoes.creditoProprioExterno > 0
+      ? opcoes.creditoProprioExterno
+      : 0;
   const valorLiquido =
-    vafProprio + d.somaCreditosExternos + d.somaCreditosMunicipios - d.somaDebitosMunicipios;
+    vafProprio +
+    d.somaCreditosExternos +
+    d.somaCreditosMunicipios +
+    creditoProprio -
+    d.somaDebitosMunicipios;
 
   return {
     tipoIndice: "provisorio",
