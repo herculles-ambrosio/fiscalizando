@@ -279,6 +279,7 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
     creditoExterno: num(linhaIndice, 34, 48),
     creditoInterno: num(linhaIndice, 49, 63),
     creditoProprio: num(linhaIndice, 64, 78),
+    origemCreditoProprio: "arquivo",
     debito: num(linhaIndice, 79, 93),
     acertoCredito: num(linhaIndice, 94, 108),
     acertoDebito: num(linhaIndice, 109, 123),
