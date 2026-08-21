@@ -36,6 +36,8 @@ import {
 } from "@/lib/vaf/indice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { lerCreditoPortal, type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import { baixarCsv as baixarCsvArquivo, montarCsv } from "@/lib/csv";
 
 
 
