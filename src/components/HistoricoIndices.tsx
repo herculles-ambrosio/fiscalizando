@@ -269,6 +269,22 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                         {r.arquivo_nome ?? "—"}
                         {r.carga_id ? " · vinculado à apuração" : ""}
                       </TableCell>
+                      <TableCell className="max-w-[16rem] text-xs">
+                        {r.origem_credito_proprio === "planilha" ? (
+                          <>
+                            <Badge variant="outline">Portal do VAF</Badge>
+                            <span className="ml-2 block truncate font-mono text-muted-foreground">
+                              {r.arquivo_credito_proprio ?? "planilha carregada"}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            {Number(r.credito_proprio) > 0
+                              ? "Arquivo de retorno"
+                              : "Ausente no retorno"}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Button
                           variant="ghost"
