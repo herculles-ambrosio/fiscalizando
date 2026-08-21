@@ -27,6 +27,10 @@ export type IndiceSalvo = {
   vaf_estadual: number;
   total_declaracoes: number;
   arquivo_nome: string | null;
+  /** "arquivo" (retorno da SEF) ou "planilha" (Portal do VAF) */
+  origem_credito_proprio: string | null;
+  /** nome do CSV do Portal do VAF usado na projeção */
+  arquivo_credito_proprio: string | null;
   criado_em: string;
 };
 
