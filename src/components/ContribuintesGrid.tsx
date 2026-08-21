@@ -268,11 +268,10 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
   const totalVafAtual = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
   const totalVafAnterior = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_anterior ?? 0), 0);
-  const zeradosPagina = (data?.linhas ?? []).filter((c) =>
-    (c.situacoes as string[]).includes("ZERADO"),
-  );
+  const linhasPagina = data?.linhas ?? [];
   const todosMarcados =
-    zeradosPagina.length > 0 && zeradosPagina.every((c) => selecionados.includes(c.id));
+    linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
+
 
   function alternar(id: string, marcado: boolean) {
     setSelecionados((atual) =>
@@ -444,16 +443,17 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     <TableHead className="w-10">
                       <Checkbox
                         checked={todosMarcados}
-                        disabled={!zeradosPagina.length}
-                        aria-label="Selecionar zerados desta página"
+                        disabled={!linhasPagina.length}
+                        aria-label="Selecionar todos desta página"
                         onCheckedChange={(v) =>
                           setSelecionados((atual) =>
                             v
-                              ? [...new Set([...atual, ...zeradosPagina.map((c) => c.id)])]
-                              : atual.filter((id) => !zeradosPagina.some((c) => c.id === id)),
+                              ? [...new Set([...atual, ...linhasPagina.map((c) => c.id)])]
+                              : atual.filter((id) => !linhasPagina.some((c) => c.id === id)),
                           )
                         }
                       />
+
                     </TableHead>
                     <ColunaHead coluna="nome" ordem={ordem} onSort={ordenarPor}>Contribuinte</ColunaHead>
                     <ColunaHead coluna="cnpj" ordem={ordem} onSort={ordenarPor}>CNPJ</ColunaHead>
@@ -470,7 +470,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                 </TableHeader>
                 <TableBody>
                   {data?.linhas.map((c) => {
-                    const zerado = (c.situacoes as string[]).includes("ZERADO");
+                    
                     const somenteRetorno = (c.situacoes as string[]).includes("SOMENTE_RETORNO");
                     return (
                       <TableRow
@@ -493,14 +493,13 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         }}
                       >
                         <TableCell onClick={(e) => e.stopPropagation()}>
-                          {zerado && (
-                            <Checkbox
-                              checked={selecionados.includes(c.id)}
-                              aria-label={`Selecionar ${c.nome ?? c.inscricao_estadual}`}
-                              onCheckedChange={(v) => alternar(c.id, v === true)}
-                            />
-                          )}
+                          <Checkbox
+                            checked={selecionados.includes(c.id)}
+                            aria-label={`Selecionar ${c.nome ?? c.inscricao_estadual}`}
+                            onCheckedChange={(v) => alternar(c.id, v === true)}
+                          />
                         </TableCell>
+
 
                         <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
                         <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>

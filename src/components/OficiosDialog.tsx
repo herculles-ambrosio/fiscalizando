@@ -316,9 +316,16 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
                   Apenas os selecionados ({selecionados.length})
                 </label>
               </div>
+              {!selecionados.length && (
+                <p className="text-xs text-muted-foreground">
+                  Para usar esta opção, marque os contribuintes na lista (caixas de seleção da
+                  primeira coluna) antes de abrir este diálogo.
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {carregandoLista ? "Contando…" : `${lista.length} contribuinte(s) neste escopo.`}
               </p>
+
             </div>
 
             <div className="space-y-2">
