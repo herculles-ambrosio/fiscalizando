@@ -470,7 +470,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                 </TableHeader>
                 <TableBody>
                   {data?.linhas.map((c) => {
-                    const zerado = (c.situacoes as string[]).includes("ZERADO");
+                    
                     const somenteRetorno = (c.situacoes as string[]).includes("SOMENTE_RETORNO");
                     return (
                       <TableRow
