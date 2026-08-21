@@ -493,14 +493,13 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         }}
                       >
                         <TableCell onClick={(e) => e.stopPropagation()}>
-                          {zerado && (
-                            <Checkbox
-                              checked={selecionados.includes(c.id)}
-                              aria-label={`Selecionar ${c.nome ?? c.inscricao_estadual}`}
-                              onCheckedChange={(v) => alternar(c.id, v === true)}
-                            />
-                          )}
+                          <Checkbox
+                            checked={selecionados.includes(c.id)}
+                            aria-label={`Selecionar ${c.nome ?? c.inscricao_estadual}`}
+                            onCheckedChange={(v) => alternar(c.id, v === true)}
+                          />
                         </TableCell>
+
 
                         <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
                         <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
