@@ -34,13 +34,13 @@ export default function CreditoProprioPortal({
   codigoSef: string;
   planilha: ResumoCreditoPortal | null;
   onPlanilha: (r: ResumoCreditoPortal | null) => void;
-  anoBaseArquivo?: number | null;
-  creditoInternoArquivo?: number;
+  anoBaseArquivo?: number | null | undefined;
+  creditoInternoArquivo?: number | undefined;
   /** abre a pergunta "deseja dar carga na planilha?" */
-  perguntar?: boolean;
-  onPerguntarChange?: (v: boolean) => void;
+  perguntar?: boolean | undefined;
+  onPerguntarChange?: ((v: boolean) => void) | undefined;
   /** texto curto identificando de onde veio a pergunta */
-  contexto?: string;
+  contexto?: string | undefined;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [erro, setErro] = useState<string | null>(null);
