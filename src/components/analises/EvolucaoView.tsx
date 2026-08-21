@@ -366,8 +366,30 @@ function BannerBloqueio({
 export default function PaginaEvolucao() {
   const { municipio, municipios: municipiosPermitidos, podeTrocar, trocar } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
-  const [base, setBase] = useState<ArquivoEvolucao | null>(null);
-  const [atual, setAtual] = useState<ArquivoEvolucao | null>(null);
+  const [baseArq, setBase] = useState<ArquivoEvolucao | null>(null);
+  const [atualArq, setAtual] = useState<ArquivoEvolucao | null>(null);
+  const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
+  const [perguntarPlanilha, setPerguntarPlanilha] = useState(false);
+  const base = useMemo(
+    () =>
+      baseArq && planilha
+        ? aplicarCreditoProprio(baseArq, planilha.creditoProprio, planilha.arquivoNome)
+        : baseArq,
+    [baseArq, planilha],
+  );
+  const atual = useMemo(
+    () =>
+      atualArq && planilha
+        ? aplicarCreditoProprio(atualArq, planilha.creditoProprio, planilha.arquivoNome)
+        : atualArq,
+    [atualArq, planilha],
+  );
+  const faltaCredito = faltaCreditoProprio(baseArq) || faltaCreditoProprio(atualArq);
+  const arquivoSemCredito = faltaCreditoProprio(atualArq) ? atualArq?.nome : baseArq?.nome;
+  useEffect(() => {
+    if (faltaCredito && !planilha) setPerguntarPlanilha(true);
+  }, [faltaCredito, planilha]);
+
   const [carregando, setCarregando] = useState<"base" | "atual" | null>(null);
   const [vafReferencia, setVafReferencia] = useState("");
   const [nomeGravar, setNomeGravar] = useState("");
