@@ -43,6 +43,7 @@ import {
 } from "@/lib/vaf/estatisticas";
 import { estiloTooltip } from "./MaioresContribuintes";
 import { DetalheContribuinte } from "./DetalheContribuinte";
+import { CriterioBase } from "@/components/estatisticas/CriterioBase";
 
 const OPCOES_TOP = [5, 10, 20];
 type Modo = "agrupado" | "empilhado" | "linha";
@@ -133,6 +134,10 @@ export function ComparativoAnual({
 
   return (
     <div className="space-y-6">
+      <CriterioBase
+        cargas={cargas}
+        contexto="cada barra/linha é um exercício, somando todas as remessas apuradas naquele exercício."
+      />
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-44">
           <label className="mb-1 block text-xs text-muted-foreground">Empresas comparadas</label>

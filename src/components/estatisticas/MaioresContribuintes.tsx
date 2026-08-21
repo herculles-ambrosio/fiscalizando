@@ -43,6 +43,7 @@ import {
   type LinhaEstat,
 } from "@/lib/vaf/estatisticas";
 import { DetalheContribuinte } from "./DetalheContribuinte";
+import { CriterioBase } from "@/components/estatisticas/CriterioBase";
 
 const OPCOES_TOP = [5, 10, 20, 50];
 
@@ -124,6 +125,11 @@ export function MaioresContribuintes({
 
   return (
     <div className="space-y-6">
+      <CriterioBase
+        cargas={cargas}
+        anoSelecionado={anoAtivo}
+        contexto="o ranking soma o VAF de todas as remessas apuradas do exercício selecionado."
+      />
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-40">
           <label className="mb-1 block text-xs text-muted-foreground">Exercício</label>
