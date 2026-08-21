@@ -44,6 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CriterioBase } from "@/components/estatisticas/CriterioBase";
 
 const SITUACOES = [
   { chave: "OMISSO", rotulo: "Omissos", cor: "var(--omisso-foreground)" },
@@ -178,6 +179,11 @@ export function SetoresQualidade({
 
   return (
     <div className="space-y-6">
+      <CriterioBase
+        cargas={cargas}
+        anoSelecionado={anoAtivo}
+        contexto="setores, Pareto e qualidade usam as remessas do exercício selecionado; a evolução compara exercícios pelo número da remessa."
+      />
       <div className="w-40">
         <label className="mb-1 block text-xs text-muted-foreground">Exercício</label>
         <Select value={anoAtivo ? String(anoAtivo) : ""} onValueChange={setAno}>
