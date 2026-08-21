@@ -58,6 +58,10 @@ export type ApuracaoIndice = {
   /** VAF B */
   creditoInterno: number;
   creditoProprio: number;
+  /** de onde veio o crédito próprio: registro da SEF ou planilha do Portal do VAF */
+  origemCreditoProprio?: "arquivo" | "planilha";
+  /** nome do arquivo da planilha do Portal do VAF, quando usada */
+  arquivoCreditoProprio?: string;
   debito: number;
   /** VAF C */
   acertoCredito: number;
@@ -275,6 +279,7 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
     creditoExterno: num(linhaIndice, 34, 48),
     creditoInterno: num(linhaIndice, 49, 63),
     creditoProprio: num(linhaIndice, 64, 78),
+    origemCreditoProprio: "arquivo",
     debito: num(linhaIndice, 79, 93),
     acertoCredito: num(linhaIndice, 94, 108),
     acertoDebito: num(linhaIndice, 109, 123),
@@ -300,6 +305,10 @@ export type OpcoesEstimativa = {
   fatorCalibragem?: number;
   /** código SEF do município (usado quando o arquivo não tem registro de índice) */
   codigoMunicipio?: string;
+  /** crédito próprio (AF/SIARE) vindo da planilha do Portal do VAF */
+  creditoProprioExterno?: number;
+  /** nome do arquivo da planilha usada */
+  arquivoCreditoProprio?: string;
 };
 
 /**
@@ -330,8 +339,18 @@ export function estimarIndiceProvisorio(
     d.somaVafProprioNormal + d.somaVafProprioSn + d.somaVafProprioSimei ||
     d.somaVafDeclarado;
   const vafProprio = Math.round(baseVafProprio * fator);
+  // O retorno mensal costuma não trazer o crédito próprio (AF/SIARE); quando o
+  // usuário carrega a planilha do Portal do VAF, o total dela entra aqui.
+  const creditoProprio =
+    opcoes.creditoProprioExterno && opcoes.creditoProprioExterno > 0
+      ? opcoes.creditoProprioExterno
+      : 0;
   const valorLiquido =
-    vafProprio + d.somaCreditosExternos + d.somaCreditosMunicipios - d.somaDebitosMunicipios;
+    vafProprio +
+    d.somaCreditosExternos +
+    d.somaCreditosMunicipios +
+    creditoProprio -
+    d.somaDebitosMunicipios;
 
   return {
     tipoIndice: "provisorio",
@@ -349,7 +368,11 @@ export function estimarIndiceProvisorio(
     vafProprioNaoCompoe: d.somaVafProprioNaoCompoe,
     creditoExterno: d.somaCreditosExternos,
     creditoInterno: d.somaCreditosMunicipios,
-    creditoProprio: 0,
+    creditoProprio,
+    origemCreditoProprio: creditoProprio > 0 ? "planilha" : "arquivo",
+    ...(creditoProprio > 0 && opcoes.arquivoCreditoProprio
+      ? { arquivoCreditoProprio: opcoes.arquivoCreditoProprio }
+      : {}),
     debito: d.somaDebitosMunicipios,
     acertoCredito: 0,
     acertoDebito: 0,
@@ -397,6 +420,13 @@ export function csvIndice(a: ApuracaoIndice, nomeMunicipio: string): string {
     ["VAF A", "Credito externo", br(a.creditoExterno)],
     ["VAF B", "Credito interno", br(a.creditoInterno)],
     ["VAF B", "Credito proprio", br(a.creditoProprio)],
+    [
+      "VAF B",
+      "Origem do credito proprio",
+      a.origemCreditoProprio === "planilha"
+        ? `Planilha do Portal do VAF${a.arquivoCreditoProprio ? ` (${a.arquivoCreditoProprio})` : ""}`
+        : "Arquivo de retorno (SEF-MG)",
+    ],
     ["VAF B", "Debito", br(a.debito)],
     ["VAF C", "Acerto de credito", br(a.acertoCredito)],
     ["VAF C", "Acerto de debito", br(a.acertoDebito)],

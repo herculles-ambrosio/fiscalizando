@@ -36,6 +36,8 @@ import {
 } from "@/lib/vaf/indice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { lerCreditoPortal, type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import { baixarCsv as baixarCsvArquivo, montarCsv } from "@/lib/csv";
 
 
 
@@ -245,6 +247,9 @@ export default function PaginaIndice() {
   const [vafEstadualRef, setVafEstadualRef] = useState<string>("");
   const [fator, setFator] = useState<string>("1");
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputPlanilhaRef = useRef<HTMLInputElement>(null);
+  const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
+  const [erroPlanilha, setErroPlanilha] = useState<string | null>(null);
 
   // calibração é guardada por prefeitura, para não misturar referências ao trocar
   const chaveRef = `${CHAVE_REF}:${municipioId ?? "sem-municipio"}`;
@@ -283,11 +288,58 @@ export default function PaginaIndice() {
         vafEstadualReferencia: Number(vafEstadualRef.replace(/[^0-9]/g, "")) || 0,
         fatorCalibragem: Number(fator.replace(",", ".")) || 1,
         codigoMunicipio: municipio?.codigo_sef ? String(municipio.codigo_sef).padStart(3, "0") : "",
+        creditoProprioExterno: planilha?.creditoProprio ?? 0,
+        arquivoCreditoProprio: planilha?.arquivoNome ?? "",
       });
     } catch {
       return null;
     }
-  }, [texto, vafEstadualRef, fator, municipio?.codigo_sef]);
+  }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
+
+  async function selecionarPlanilha(file: File | null) {
+    setErroPlanilha(null);
+    if (!file) return;
+    try {
+      const resumo = lerCreditoPortal(
+        await file.arrayBuffer(),
+        file.name,
+        municipio?.codigo_sef ? String(municipio.codigo_sef) : "",
+      );
+      if (resumo.creditoProprio <= 0) {
+        setErroPlanilha(
+          "A planilha não trouxe notas de Crédito próprio com 'ENTRA' para esta prefeitura.",
+        );
+        setPlanilha(null);
+        return;
+      }
+      setPlanilha(resumo);
+      toast.success(
+        `Crédito próprio carregado: ${formatarMoeda(resumo.creditoProprio)} (${resumo.totalNotasProprio} notas).`,
+      );
+    } catch (e) {
+      setPlanilha(null);
+      setErroPlanilha(e instanceof Error ? e.message : "Não foi possível ler a planilha.");
+    }
+  }
+
+  function baixarCsvPlanilha() {
+    if (!planilha) return;
+    const csv = montarCsv(
+      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
+      planilha.notas.map((n) => [
+        n.tipoNota,
+        n.numero,
+        n.data ?? "",
+        n.remetente,
+        n.municipioRemetente,
+        n.destinatario,
+        n.municipioDestinatario,
+        n.descricao,
+        n.valor.toFixed(2).replace(".", ","),
+      ]),
+    );
+    baixarCsvArquivo(`credito_proprio_portal_${planilha.anoBase ?? ""}.csv`, csv);
+  }
 
   async function selecionar(file: File | null) {
     setArquivo(file);
@@ -495,8 +547,114 @@ export default function PaginaIndice() {
                 </p>
               </div>
             </div>
+
+            {/* Crédito próprio (AF/SIARE) — só vem nos definitivos */}
+            <div className="space-y-2 rounded-lg border border-border bg-card p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium">Crédito próprio (AF/SIARE)</p>
+                  <p className="text-xs text-muted-foreground">
+                    {planilha
+                      ? `Vindo da planilha ${planilha.arquivoNome} — ${planilha.totalNotasProprio} notas, ano base ${planilha.anoBase ?? "—"}.`
+                      : "O arquivo de retorno mensal não trouxe o crédito próprio. Envie o relatório de créditos do Portal do VAF (CSV) para completar a projeção."}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    ref={inputPlanilhaRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      void selecionarPlanilha(e.target.files?.[0] ?? null);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => inputPlanilhaRef.current?.click()}
+                  >
+                    <FileUp className="mr-2 h-4 w-4" />
+                    {planilha ? "Trocar planilha" : "Carregar planilha do Portal"}
+                  </Button>
+                  {planilha && (
+                    <Button variant="ghost" size="sm" onClick={() => setPlanilha(null)}>
+                      Remover
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {erroPlanilha && (
+                <Alert variant="destructive">
+                  <AlertTitle>Planilha não aproveitada</AlertTitle>
+                  <AlertDescription>{erroPlanilha}</AlertDescription>
+                </Alert>
+              )}
+
+              {planilha && (
+                <div className="grid gap-2 text-xs sm:grid-cols-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Crédito próprio (ENTRA)</span>
+                    <span className="font-mono font-medium">
+                      {formatarMoeda(planilha.creditoProprio)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      Crédito interno da planilha (conferência)
+                    </span>
+                    <span className="font-mono">{formatarMoeda(planilha.creditoInterno)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Diferença × arquivo de retorno</span>
+                    <span className="font-mono">
+                      {formatarMoeda(planilha.creditoInterno - apuracao.creditoInterno)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Notas “NÃO ENTRA” (fora da base)</span>
+                    <span className="font-mono">{formatarMoeda(planilha.naoEntra)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">Frete (não somado)</span>
+                    <span className="font-mono">{formatarMoeda(planilha.frete)}</span>
+                  </div>
+                  {planilha.ignoradasOutroMunicipio > 0 && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Notas de outro município</span>
+                      <span className="font-mono">
+                        {planilha.ignoradasOutroMunicipio} ·{" "}
+                        {formatarMoeda(planilha.valorIgnoradoOutroMunicipio)}
+                      </span>
+                    </div>
+                  )}
+                  {planilha.anoBase != null &&
+                    apuracao.anoBase != null &&
+                    planilha.anoBase !== apuracao.anoBase && (
+                      <p className="sm:col-span-2 text-amber-600">
+                        Atenção: o ano base da planilha ({planilha.anoBase}) é diferente do ano do
+                        arquivo de retorno ({apuracao.anoBase}).
+                      </p>
+                    )}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
+      )}
+
+      {apuracao && !apuracao.estimado && planilha && (
+        <Alert className="no-print">
+          <AlertTitle>Crédito próprio oficial mantido</AlertTitle>
+          <AlertDescription>
+            Este arquivo já traz o índice fechado da SEF-MG. Crédito próprio do arquivo:{" "}
+            {formatarMoeda(apuracao.creditoProprio)} · planilha do Portal:{" "}
+            {formatarMoeda(planilha.creditoProprio)} (diferença{" "}
+            {formatarMoeda(planilha.creditoProprio - apuracao.creditoProprio)}).
+          </AlertDescription>
+        </Alert>
       )}
 
 
@@ -669,6 +827,12 @@ export default function PaginaIndice() {
               <CardContent>
                 <LinhaValor rotulo="Crédito interno" valor={apuracao.creditoInterno} />
                 <LinhaValor rotulo="Crédito próprio" valor={apuracao.creditoProprio} />
+                {apuracao.origemCreditoProprio === "planilha" && (
+                  <p className="-mt-1 mb-2 text-[11px] text-muted-foreground">
+                    Origem: planilha do Portal do VAF
+                    {apuracao.arquivoCreditoProprio ? ` (${apuracao.arquivoCreditoProprio})` : ""}.
+                  </p>
+                )}
                 <LinhaValor rotulo="Débito" valor={apuracao.debito} negativo />
                 <div className="mt-3 flex justify-between border-t border-border pt-2 text-sm font-semibold">
                   <span>Subtotal</span>
@@ -747,6 +911,11 @@ export default function PaginaIndice() {
                     VAF por contribuinte ({apuracao.contribuintesVaf.length})
                   </TabsTrigger>
                   <TabsTrigger value="simei">SIMEI ({apuracao.simei.length})</TabsTrigger>
+                  {planilha && (
+                    <TabsTrigger value="proprio">
+                      Crédito próprio ({planilha.totalNotasProprio})
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 <TabsContent value="externos" className="mt-4">
@@ -778,6 +947,96 @@ export default function PaginaIndice() {
                 <TabsContent value="simei" className="mt-4">
                   <TabelaContribuintes linhas={apuracao.simei} />
                 </TabsContent>
+
+                {planilha && (
+                  <TabsContent value="proprio" className="mt-4 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        Notas com <span className="font-medium">ENTRA</span> e{" "}
+                        <span className="font-medium">Crédito próprio</span> na planilha{" "}
+                        <span className="font-mono text-xs">{planilha.arquivoNome}</span>.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="no-print"
+                        onClick={baixarCsvPlanilha}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Exportar notas
+                      </Button>
+                    </div>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-24">Tipo</TableHead>
+                          <TableHead className="text-right">Notas</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {planilha.porTipoNota.map((t) => (
+                          <TableRow key={t.tipo}>
+                            <TableCell>{t.tipo}</TableCell>
+                            <TableCell className="text-right font-mono text-xs">
+                              {t.quantidade.toLocaleString("pt-BR")}
+                            </TableCell>
+                            <TableCell className="text-right font-mono">
+                              {formatarMoeda(t.valor)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                      <TableFooter>
+                        <TableRow>
+                          <TableCell>Total</TableCell>
+                          <TableCell className="text-right font-mono text-xs">
+                            {planilha.totalNotasProprio.toLocaleString("pt-BR")}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatarMoeda(planilha.creditoProprio)}
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    </Table>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-20">Tipo</TableHead>
+                          <TableHead>Número / chave</TableHead>
+                          <TableHead className="w-24">Saída</TableHead>
+                          <TableHead>Remetente</TableHead>
+                          <TableHead>Produto</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {planilha.notas.slice(0, 300).map((n, i) => (
+                          <TableRow key={`${n.numero}-${i}`}>
+                            <TableCell className="text-xs">{n.tipoNota}</TableCell>
+                            <TableCell className="max-w-[16rem] truncate font-mono text-xs">
+                              {n.numero}
+                            </TableCell>
+                            <TableCell className="text-xs">{n.data ?? "—"}</TableCell>
+                            <TableCell className="font-mono text-xs">{n.remetente}</TableCell>
+                            <TableCell className="max-w-[18rem] truncate">{n.descricao}</TableCell>
+                            <TableCell className="text-right font-mono">
+                              {formatarMoeda(n.valor)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {planilha.notas.length > 300 && (
+                      <p className="text-xs text-muted-foreground">
+                        Mostrando as 300 maiores de {planilha.notas.length.toLocaleString("pt-BR")}.
+                        Use “Exportar notas” para a lista completa.
+                      </p>
+                    )}
+                  </TabsContent>
+                )}
               </Tabs>
             </CardContent>
           </Card>
