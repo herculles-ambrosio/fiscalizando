@@ -4,7 +4,6 @@
  * sem novas tabelas nem novos uploads.
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 export type CargaEstat = {
   id: string;

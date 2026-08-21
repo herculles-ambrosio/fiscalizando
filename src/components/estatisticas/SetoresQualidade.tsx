@@ -23,9 +23,9 @@ import {
 } from "@/components/ui/select";
 import { formatarMoeda, formatarCompacto } from "@/lib/format";
 import { descricaoCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
-import { MESES_CURTOS } from "@/lib/vaf/tipoRetorno";
 import {
   agregarPorContribuinte,
+  anoDaCarga,
   corSerie,
   curvaPareto,
   empresasParaAtingir,
@@ -110,17 +110,20 @@ export function SetoresQualidade({
       .slice(0, 12);
   }, [linhasAno]);
 
+  /** VAF total por número de arquivo (remessa), uma série por exercício. */
   const sazonalidade = useMemo(() => {
     const mapa = new Map<number, Record<string, number>>();
+    let maiorRemessa = 0;
     for (const l of linhas) {
       const p = periodoPorCarga.get(l.carga_id);
-      if (!p?.mes || p.mes > 12) continue;
+      if (!p?.mes) continue;
+      maiorRemessa = Math.max(maiorRemessa, p.mes);
       const atual = mapa.get(p.mes) ?? {};
       atual[String(p.ano)] = (atual[String(p.ano)] ?? 0) + Number(l.vaf_atual ?? 0);
       mapa.set(p.mes, atual);
     }
-    return Array.from({ length: 12 }, (_, i) => ({
-      mes: MESES_CURTOS[i],
+    return Array.from({ length: maiorRemessa }, (_, i) => ({
+      mes: `Arq. ${i + 1}`,
       ...(mapa.get(i + 1) ?? {}),
     }));
   }, [linhas, periodoPorCarga]);
@@ -176,7 +179,7 @@ export function SetoresQualidade({
   return (
     <div className="space-y-6">
       <div className="w-40">
-        <label className="mb-1 block text-xs text-muted-foreground">Ano de referência</label>
+        <label className="mb-1 block text-xs text-muted-foreground">Exercício</label>
         <Select value={anoAtivo ? String(anoAtivo) : ""} onValueChange={setAno}>
           <SelectTrigger aria-label="Ano de referência">
             <SelectValue placeholder="Ano" />
@@ -317,10 +320,10 @@ export function SetoresQualidade({
       <Card>
         <CardHeader className="p-6 pb-2">
           <CardTitle className="font-display text-base font-semibold">
-            Sazonalidade mensal do VAF
+            Evolução por remessa do exercício
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            VAF total do município por mês, um ano sobre o outro.
+            VAF total do município por número do arquivo recebido, um exercício sobre o outro.
           </p>
         </CardHeader>
         <CardContent className="h-80 p-6 pt-4">

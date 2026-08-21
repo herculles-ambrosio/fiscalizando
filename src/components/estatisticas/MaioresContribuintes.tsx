@@ -35,6 +35,7 @@ import { baixarCsv, montarCsv } from "@/lib/csv";
 import { formatarCodigoCnae } from "@/lib/vaf/cnae";
 import {
   agregarPorContribuinte,
+  anoDaCarga,
   corSerie,
   nomeCurto,
   periodoDaCarga,

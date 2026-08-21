@@ -33,6 +33,7 @@ import { formatarMoeda, formatarPercentual, formatarCompacto } from "@/lib/forma
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import {
   agregarPorContribuinte,
+  anoDaCarga,
   corSerie,
   nomeCurto,
   periodoDaCarga,
