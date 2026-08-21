@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
   variacaoPct,
 } from "@/lib/vaf/estatisticas";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
+import { SelecaoCargasContext } from "@/components/estatisticas/selecaoCargas";
 import { MaioresContribuintes } from "@/components/estatisticas/MaioresContribuintes";
 import { ComparativoAnual } from "@/components/estatisticas/ComparativoAnual";
 import { SetoresQualidade } from "@/components/estatisticas/SetoresQualidade";
@@ -52,8 +53,30 @@ function PaginaEstatisticas() {
   const { municipioId } = useMunicipioAtivo();
 
   const { data: cargasBrutas, isLoading: carregandoCargas } = useCargasEstatisticas(municipioId);
-  const cargas = useMemo(() => deduplicarCargas(cargasBrutas ?? []), [cargasBrutas]);
-  const cargaIds = useMemo(() => cargas.map((c) => c.id), [cargas]);
+  const todasCargas = useMemo(() => deduplicarCargas(cargasBrutas ?? []), [cargasBrutas]);
+  const cargaIds = useMemo(() => todasCargas.map((c) => c.id), [todasCargas]);
+  const [selecionadas, setSelecionadas] = useState<string[] | null>(null);
+
+  // Ao trocar de prefeitura (ou chegar novas apurações), volta a considerar tudo.
+  useEffect(() => {
+    setSelecionadas(null);
+  }, [municipioId, cargaIds.join(",")]);
+
+  const cargas = useMemo(() => {
+    if (!selecionadas) return todasCargas;
+    const set = new Set(selecionadas);
+    const filtradas = todasCargas.filter((c) => set.has(c.id));
+    return filtradas.length ? filtradas : todasCargas;
+  }, [todasCargas, selecionadas]);
+
+  const selecaoCargas = useMemo(
+    () => ({
+      todas: todasCargas,
+      selecionadas: cargas.map((c) => c.id),
+      aplicar: (ids: string[]) => setSelecionadas(ids.length ? ids : null),
+    }),
+    [todasCargas, cargas],
+  );
   const { data: linhas, isLoading: carregandoLinhas } = useLinhasEstatisticas(
     municipioId,
     cargaIds,
@@ -102,7 +125,7 @@ function PaginaEstatisticas() {
     );
   }
 
-  if (!cargas.length) {
+  if (!todasCargas.length) {
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
@@ -125,35 +148,34 @@ function PaginaEstatisticas() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Kpi rotulo={`VAF total ${kpis.ano ?? ""}`} valor={formatarMoeda(kpis.total)} />
           <Kpi rotulo="Declarantes no ano" valor={String(kpis.declarantes)} />
-          <Kpi
-            rotulo="Participação do Top 10"
-            valor={`${kpis.participacaoTop10.toFixed(1)}%`}
-          />
+          <Kpi rotulo="Participação do Top 10" valor={`${kpis.participacaoTop10.toFixed(1)}%`} />
           <Kpi rotulo="Variação vs. ano anterior" valor={formatarPercentual(kpis.variacao)} />
         </div>
       )}
 
-      <Tabs
-        value={aba}
-        onValueChange={(v) => navigate({ to: ".", search: { aba: v as Aba } })}
-        className="space-y-6"
-      >
-        <TabsList>
-          <TabsTrigger value="maiores">Maiores contribuintes</TabsTrigger>
-          <TabsTrigger value="anual">Comparativo anual</TabsTrigger>
-          <TabsTrigger value="setores">Setores e qualidade</TabsTrigger>
-        </TabsList>
+      <SelecaoCargasContext.Provider value={selecaoCargas}>
+        <Tabs
+          value={aba}
+          onValueChange={(v) => navigate({ to: ".", search: { aba: v as Aba } })}
+          className="space-y-6"
+        >
+          <TabsList>
+            <TabsTrigger value="maiores">Maiores contribuintes</TabsTrigger>
+            <TabsTrigger value="anual">Comparativo anual</TabsTrigger>
+            <TabsTrigger value="setores">Setores e qualidade</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="maiores">
-          <MaioresContribuintes cargas={cargas} linhas={linhas ?? []} />
-        </TabsContent>
-        <TabsContent value="anual">
-          <ComparativoAnual cargas={cargas} linhas={linhas ?? []} />
-        </TabsContent>
-        <TabsContent value="setores">
-          <SetoresQualidade cargas={cargas} linhas={linhas ?? []} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="maiores">
+            <MaioresContribuintes cargas={cargas} linhas={linhas ?? []} />
+          </TabsContent>
+          <TabsContent value="anual">
+            <ComparativoAnual cargas={cargas} linhas={linhas ?? []} />
+          </TabsContent>
+          <TabsContent value="setores">
+            <SetoresQualidade cargas={cargas} linhas={linhas ?? []} />
+          </TabsContent>
+        </Tabs>
+      </SelecaoCargasContext.Provider>
     </div>
   );
 }

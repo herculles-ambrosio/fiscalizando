@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronDown, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   anoDaCarga,
@@ -9,6 +10,7 @@ import {
   remessaDaCarga,
   type CargaEstat,
 } from "@/lib/vaf/estatisticas";
+import { useSelecaoCargas } from "@/components/estatisticas/selecaoCargas";
 
 const NOME_TIPO: Record<string, string> = {
   mensal: "Mensal",
