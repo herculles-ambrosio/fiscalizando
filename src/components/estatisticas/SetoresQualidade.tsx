@@ -204,7 +204,15 @@ export function SetoresQualidade({
         </CardHeader>
         <CardContent className="h-80 p-6 pt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={pareto} margin={{ left: -12, right: 16 }}>
+            <AreaChart
+              data={pareto}
+              margin={{ left: -12, right: 16 }}
+              className="cursor-pointer"
+              onClick={(estado: { activePayload?: { payload?: { ie?: string } }[] }) => {
+                const ie = estado?.activePayload?.[0]?.payload?.ie;
+                if (ie) setIeDetalhe(ie);
+              }}
+            >
               <defs>
                 <linearGradient id="grad-pareto" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--gold)" stopOpacity={0.5} />
@@ -225,13 +233,7 @@ export function SetoresQualidade({
               <Area
                 type="monotone"
                 className="cursor-pointer"
-                activeDot={{
-                  r: 5,
-                  cursor: "pointer",
-                  onClick: (_e: unknown, d: { payload?: { ie?: string } }) => {
-                    if (d?.payload?.ie) setIeDetalhe(d.payload.ie);
-                  },
-                }}
+                activeDot={{ r: 5, cursor: "pointer" }}
                 dataKey="acumulado"
                 stroke="var(--primary)"
                 fill="url(#grad-pareto)"
