@@ -141,7 +141,7 @@ export function agregarPorContribuinte(
 export function curvaPareto(
   contribuintes: Contribuinte[],
   maxPontos = 60,
-): { posicao: number; acumulado: number; participacao: number; nome: string }[] {
+): { posicao: number; acumulado: number; participacao: number; nome: string; ie: string }[] {
   const total = contribuintes.reduce((s, c) => s + Math.max(c.total, 0), 0);
   if (total <= 0) return [];
   let acumulado = 0;
@@ -152,6 +152,7 @@ export function curvaPareto(
       acumulado: (acumulado / total) * 100,
       participacao: (Math.max(c.total, 0) / total) * 100,
       nome: nomeCurto(c.nome, c.ie),
+      ie: c.ie,
     };
   });
   return pontos;
