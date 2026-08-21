@@ -221,7 +221,7 @@ export function ComparativoAnual({
                   <Bar
                     key={c.ie}
                     dataKey={nomeCurto(c.nome, c.ie, 22)}
-                    stackId={modo === "empilhado" ? "vaf" : undefined}
+                    {...(modo === "empilhado" ? { stackId: "vaf" } : {})}
                     fill={corSerie(i)}
                     radius={modo === "empilhado" ? [0, 0, 0, 0] : [4, 4, 0, 0]}
                   />

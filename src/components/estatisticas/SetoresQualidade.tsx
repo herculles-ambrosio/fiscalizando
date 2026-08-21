@@ -118,14 +118,14 @@ export function SetoresQualidade({
     for (const l of linhas) {
       const p = periodoPorCarga.get(l.carga_id);
       if (!p) continue;
-      const atual = mapa.get(p.rotulo) ?? { ordem: p.ordem };
+      const atual: Record<string, number> = mapa.get(p.rotulo) ?? { ordem: p.ordem };
       for (const s of SITUACOES) {
         if (l.situacoes?.includes(s.chave)) atual[s.chave] = (atual[s.chave] ?? 0) + 1;
       }
       mapa.set(p.rotulo, atual);
     }
     return [...mapa.entries()]
-      .map(([competencia, v]) => ({ competencia, ...v }))
+      .map(([competencia, v]) => ({ competencia, ...v }) as { competencia: string } & Record<string, number>)
       .sort((a, b) => (a["ordem"] ?? 0) - (b["ordem"] ?? 0));
   }, [linhas, periodoPorCarga]);
 
