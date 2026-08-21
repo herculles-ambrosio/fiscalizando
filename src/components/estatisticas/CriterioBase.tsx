@@ -182,26 +182,97 @@ export function CriterioBase({
               <AlertDescription className="text-[11px]">
                 Todos os gráficos desta tela desconsideram essas apurações. Marque-as abaixo e
                 clique em “Aplicar aos gráficos” para voltar ao conjunto completo.
+                <Detalhe titulo="Ver o que ficou de fora">
+                  <TabelaApuracoes cargas={excluidas} resumo={resumoPorCarga} />
+                  <p className="mt-2">
+                    Gráficos afetados: todos os desta tela (ranking, comparativo anual, setores e
+                    qualidade), porque eles somam apenas as apurações marcadas.
+                  </p>
+                </Detalhe>
               </AlertDescription>
             </Alert>
           )}
 
-          {lacunas.map((l) => (
-            <Alert
-              key={l.ano}
-              className="border-[var(--omisso-foreground)]/40 bg-[var(--omisso-foreground)]/10"
-            >
-              <AlertTriangle className="h-4 w-4 text-[var(--omisso-foreground)]" />
-              <AlertTitle className="text-xs">
-                Exercício {l.ano} incompleto — {descreverLacuna(l)}
-              </AlertTitle>
-              <AlertDescription className="text-[11px]">
-                Remessas consideradas: {l.remessas.map((r) => `Arquivo ${r}`).join(", ")}. Podem
-                ficar incompletos: {l.graficos.join(", ")}. A comparação entre exercícios só é justa
-                quando os mesmos arquivos estão apurados nos dois lados.
-              </AlertDescription>
-            </Alert>
-          ))}
+          {lacunas.map((l) => {
+            const doAno = cargas
+              .filter((c) => anoDaCarga(c) === l.ano)
+              .sort((a, b) => (remessaDaCarga(a) ?? 99) - (remessaDaCarga(b) ?? 99));
+            const comparaveis = [...remessasPorAno.entries()]
+              .filter(([ano]) => ano !== l.ano)
+              .map(([ano, set]) => ({
+                ano,
+                faltamAqui: l.faltantes.filter((r) => set.has(r)),
+                temAMais: [...set].filter((r) => !l.remessas.includes(r)).sort((a, b) => a - b),
+              }))
+              .sort((a, b) => b.ano - a.ano);
+            return (
+              <Alert
+                key={l.ano}
+                className="border-[var(--omisso-foreground)]/40 bg-[var(--omisso-foreground)]/10"
+              >
+                <AlertTriangle className="h-4 w-4 text-[var(--omisso-foreground)]" />
+                <AlertTitle className="text-xs">
+                  Exercício {l.ano} incompleto — {descreverLacuna(l)}
+                </AlertTitle>
+                <AlertDescription className="text-[11px]">
+                  Remessas consideradas: {l.remessas.map((r) => `Arquivo ${r}`).join(", ")}. Podem
+                  ficar incompletos: {l.graficos.join(", ")}. A comparação entre exercícios só é
+                  justa quando os mesmos arquivos estão apurados nos dois lados.
+                  <Detalhe titulo={`Ver o que falta no exercício ${l.ano}`}>
+                    <p className="mb-1 font-medium text-foreground">Apurações que entram</p>
+                    <TabelaApuracoes cargas={doAno} resumo={resumoPorCarga} />
+
+                    <p className="mt-3 mb-1 font-medium text-foreground">Remessas faltantes</p>
+                    {l.faltantes.length || l.semFechamento ? (
+                      <div className="flex flex-wrap gap-1">
+                        {l.faltantes.map((r) => (
+                          <Badge key={r} variant="outline" className="text-[10px] font-normal">
+                            Arquivo {r} — não apurado
+                          </Badge>
+                        ))}
+                        {l.semFechamento && (
+                          <Badge variant="outline" className="text-[10px] font-normal">
+                            Arquivo 13 (fechamento) — não apurado
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <p>A sequência está completa; o exercício só tem menos arquivos que os demais.</p>
+                    )}
+
+                    <p className="mt-3 mb-1 font-medium text-foreground">
+                      O que isso impede na comparação temporal
+                    </p>
+                    {comparaveis.length ? (
+                      <ul className="list-disc space-y-0.5 pl-4">
+                        {comparaveis.map((c) => (
+                          <li key={c.ano}>
+                            Contra o exercício {c.ano}:{" "}
+                            {c.temAMais.length
+                              ? `${c.ano} tem os arquivos ${c.temAMais.join(", ")} que ${l.ano} não tem — o total de ${l.ano} fica menor por falta de período, não por queda real.`
+                              : "mesmos arquivos apurados nos dois lados; a comparação é justa."}
+                            {c.faltamAqui.length
+                              ? ` Buracos no meio da sequência de ${l.ano}: ${c.faltamAqui.join(", ")}.`
+                              : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>Não há outro exercício apurado para comparar.</p>
+                    )}
+
+                    <p className="mt-3 mb-1 font-medium text-foreground">Gráficos afetados</p>
+                    <ul className="list-disc space-y-0.5 pl-4">
+                      {l.graficos.map((g) => (
+                        <li key={g}>{g}</li>
+                      ))}
+                    </ul>
+                  </Detalhe>
+                </AlertDescription>
+              </Alert>
+            );
+          })}
+
 
           {porAno.map(({ ano, cargas: lista }) => {
             const todosDoAno = lista.every((c) => rascunho.has(c.id));
