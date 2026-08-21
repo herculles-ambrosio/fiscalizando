@@ -245,7 +245,14 @@ export function MaioresContribuintes({
                 tickFormatter={formatarCompacto}
               />
               <Tooltip contentStyle={estiloTooltip} formatter={(v: number) => formatarMoeda(v)} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend
+                wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                onClick={(e: { dataKey?: unknown; value?: unknown }) => {
+                  const alvo = String(e?.dataKey ?? e?.value ?? "");
+                  const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
+                  if (achado) setIeDetalhe(achado.ie);
+                }}
+              />
               {top.map((c, i) => (
                 <Line
                   key={c.ie}
