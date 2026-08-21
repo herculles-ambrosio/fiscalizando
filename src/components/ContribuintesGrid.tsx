@@ -443,16 +443,17 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     <TableHead className="w-10">
                       <Checkbox
                         checked={todosMarcados}
-                        disabled={!zeradosPagina.length}
-                        aria-label="Selecionar zerados desta página"
+                        disabled={!linhasPagina.length}
+                        aria-label="Selecionar todos desta página"
                         onCheckedChange={(v) =>
                           setSelecionados((atual) =>
                             v
-                              ? [...new Set([...atual, ...zeradosPagina.map((c) => c.id)])]
-                              : atual.filter((id) => !zeradosPagina.some((c) => c.id === id)),
+                              ? [...new Set([...atual, ...linhasPagina.map((c) => c.id)])]
+                              : atual.filter((id) => !linhasPagina.some((c) => c.id === id)),
                           )
                         }
                       />
+
                     </TableHead>
                     <ColunaHead coluna="nome" ordem={ordem} onSort={ordenarPor}>Contribuinte</ColunaHead>
                     <ColunaHead coluna="cnpj" ordem={ordem} onSort={ordenarPor}>CNPJ</ColunaHead>
