@@ -143,7 +143,12 @@ export type ArquivoEvolucao = {
 export function analisarArquivo(
   nome: string,
   textoRetorno: string,
-  opcoes: { vafEstadualReferencia?: number; fatorCalibragem?: number } = {},
+  opcoes: {
+    vafEstadualReferencia?: number;
+    fatorCalibragem?: number;
+    creditoProprioExterno?: number;
+    arquivoCreditoProprio?: string;
+  } = {},
 ): ArquivoEvolucao {
   const temIndiceFechado = possuiIndice(textoRetorno);
   const apuracao = temIndiceFechado
@@ -156,6 +161,37 @@ export function analisarArquivo(
     temIndiceFechado,
   };
 }
+
+/** true quando o arquivo não trouxe o VAF B — Crédito próprio (AF/SIARE). */
+export function faltaCreditoProprio(a: ArquivoEvolucao | null): boolean {
+  return !!a && !a.temIndiceFechado && a.apuracao.creditoProprio <= 0;
+}
+
+/**
+ * Recompõe a apuração com o crédito próprio vindo da planilha do Portal do VAF
+ * (usado quando o retorno mensal não traz AF/SIARE).
+ */
+export function aplicarCreditoProprio(
+  a: ArquivoEvolucao,
+  valor: number,
+  arquivoCreditoProprio?: string,
+): ArquivoEvolucao {
+  if (!faltaCreditoProprio(a) || !(valor > 0)) return a;
+  const valorLiquido = a.apuracao.valorLiquido + valor;
+  return {
+    ...a,
+    apuracao: {
+      ...a.apuracao,
+      creditoProprio: valor,
+      origemCreditoProprio: "planilha",
+      ...(arquivoCreditoProprio ? { arquivoCreditoProprio } : {}),
+      valorLiquido,
+      indice:
+        a.apuracao.vafEstadual > 0 ? (valorLiquido / a.apuracao.vafEstadual) * 100 : a.apuracao.indice,
+    },
+  };
+}
+
 
 export type LinhaEvolucao = {
   chave: string;
