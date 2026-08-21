@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronLeft, ChevronRight, ChevronsUpDown, Loader2, Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, CheckSquare, ChevronLeft, ChevronRight, ChevronsUpDown, Loader2, Search, X } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -122,6 +122,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [selecionandoTodos, setSelecionandoTodos] = useState(false);
   const [detalhe, setDetalhe] = useState<ContribuinteLinha | null>(null);
 
   const [ordem, setOrdem] = useState<{ coluna: ColunaOrdenavel; asc: boolean }>({
@@ -279,6 +280,37 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     );
   }
 
+  async function selecionarTodos() {
+    setSelecionandoTodos(true);
+    try {
+      let q = supabase
+        .from("contribuintes_apurados")
+        .select("id")
+        .eq("carga_id", cargaId);
+
+      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+      if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
+      if (termo)
+        q = q.or(
+          `nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`,
+        );
+
+      const { data, error } = await q.limit(10000);
+      if (error) throw error;
+      const ids = (data ?? []).map((d) => d.id);
+      setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSelecionandoTodos(false);
+    }
+  }
+
+  function limparSelecao() {
+    setSelecionados([]);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -291,6 +323,34 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <AtualizarRegimes cargaId={cargaId} />
+          {data && data.total > 0 && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selecionarTodos}
+                disabled={selecionandoTodos}
+                aria-label="Selecionar todos os contribuintes dos filtros atuais"
+              >
+                {selecionandoTodos ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckSquare className="mr-2 h-4 w-4" />
+                )}
+                Selecionar todos
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={limparSelecao}
+                disabled={selecionados.length === 0}
+                aria-label="Limpar seleção atual"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Limpar seleção
+              </Button>
+            </>
+          )}
           {carga && (
             <OficiosDialog
               cargaId={cargaId}
