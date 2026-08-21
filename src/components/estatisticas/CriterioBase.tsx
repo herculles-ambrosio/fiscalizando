@@ -352,7 +352,7 @@ export function CriterioBase({
                   ? "Selecione ao menos uma apuração."
                   : alterado
                     ? `${rascunho.size} apuração(ões) marcadas — clique em Aplicar para recalcular.`
-                    : "Seleção aplicada aos gráficos."}
+                    : "Seleção aplicada aos gráficos e salva para esta prefeitura."}
               </span>
             </div>
           )}
@@ -360,8 +360,10 @@ export function CriterioBase({
           <p className="text-[11px] text-muted-foreground">
             “Arquivo N” é o número da remessa enviada pela SEF dentro do exercício (13 = fechamento
             do ano). Cargas de exercícios com remessas diferentes comparam totais acumulados do que
-            já foi apurado em cada exercício.
+            já foi apurado em cada exercício. Seu critério fica salvo neste navegador por prefeitura
+            e volta automaticamente na próxima visita.
           </p>
+
         </div>
       </CollapsibleContent>
     </Collapsible>
