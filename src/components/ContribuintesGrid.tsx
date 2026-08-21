@@ -323,6 +323,34 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <AtualizarRegimes cargaId={cargaId} />
+          {data && data.total > 0 && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selecionarTodos}
+                disabled={selecionandoTodos}
+                aria-label="Selecionar todos os contribuintes dos filtros atuais"
+              >
+                {selecionandoTodos ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckSquare className="mr-2 h-4 w-4" />
+                )}
+                Selecionar todos
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={limparSelecao}
+                disabled={selecionados.length === 0}
+                aria-label="Limpar seleção atual"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Limpar seleção
+              </Button>
+            </>
+          )}
           {carga && (
             <OficiosDialog
               cargaId={cargaId}
