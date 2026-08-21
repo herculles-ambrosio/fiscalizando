@@ -129,6 +129,7 @@ export function MaioresContribuintes({
         cargas={cargas}
         anoSelecionado={anoAtivo}
         contexto="o ranking soma o VAF de todas as remessas apuradas do exercício selecionado."
+        linhas={linhas}
       />
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-40">

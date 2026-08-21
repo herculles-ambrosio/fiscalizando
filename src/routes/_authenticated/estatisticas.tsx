@@ -20,6 +20,10 @@ import { SetoresQualidade } from "@/components/estatisticas/SetoresQualidade";
 const ABAS = ["maiores", "anual", "setores"] as const;
 type Aba = (typeof ABAS)[number];
 
+/** Critério de comparação escolhido, guardado por prefeitura neste navegador. */
+const chaveSelecao = (municipioId: string) => `apuravaf:estatisticas:selecao:${municipioId}`;
+
+
 export const Route = createFileRoute("/_authenticated/estatisticas")({
   validateSearch: (search: Record<string, unknown>) => ({
     aba: (ABAS as readonly string[]).includes(String(search["aba"]))
@@ -57,9 +61,21 @@ function PaginaEstatisticas() {
   const cargaIds = useMemo(() => todasCargas.map((c) => c.id), [todasCargas]);
   const [selecionadas, setSelecionadas] = useState<string[] | null>(null);
 
-  // Ao trocar de prefeitura (ou chegar novas apurações), volta a considerar tudo.
+  // Ao trocar de prefeitura, recupera o critério salvo daquela prefeitura (se ainda válido).
   useEffect(() => {
-    setSelecionadas(null);
+    if (!municipioId || !cargaIds.length) {
+      setSelecionadas(null);
+      return;
+    }
+    try {
+      const bruto = localStorage.getItem(chaveSelecao(municipioId));
+      const ids = bruto
+        ? (JSON.parse(bruto) as string[]).filter((id) => cargaIds.includes(id))
+        : [];
+      setSelecionadas(ids.length && ids.length !== cargaIds.length ? ids : null);
+    } catch {
+      setSelecionadas(null);
+    }
   }, [municipioId, cargaIds.join(",")]);
 
   const cargas = useMemo(() => {
@@ -73,10 +89,21 @@ function PaginaEstatisticas() {
     () => ({
       todas: todasCargas,
       selecionadas: cargas.map((c) => c.id),
-      aplicar: (ids: string[]) => setSelecionadas(ids.length ? ids : null),
+      aplicar: (ids: string[]) => {
+        const novo = ids.length && ids.length !== cargaIds.length ? ids : null;
+        setSelecionadas(novo);
+        if (!municipioId) return;
+        try {
+          if (novo) localStorage.setItem(chaveSelecao(municipioId), JSON.stringify(novo));
+          else localStorage.removeItem(chaveSelecao(municipioId));
+        } catch {
+          /* armazenamento indisponível: a seleção vale só nesta sessão */
+        }
+      },
     }),
-    [todasCargas, cargas],
+    [todasCargas, cargas, cargaIds, municipioId],
   );
+
   const { data: linhas, isLoading: carregandoLinhas } = useLinhasEstatisticas(
     municipioId,
     cargaIds,

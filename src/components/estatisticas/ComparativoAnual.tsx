@@ -137,6 +137,7 @@ export function ComparativoAnual({
       <CriterioBase
         cargas={cargas}
         contexto="cada barra/linha é um exercício, somando todas as remessas apuradas naquele exercício."
+        linhas={linhas}
       />
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-44">
