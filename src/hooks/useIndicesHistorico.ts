@@ -108,6 +108,8 @@ export function useSalvarIndice() {
         vaf_estadual: a.vafEstadual,
         total_declaracoes: a.totalDeclaracoes,
         arquivo_nome: d.arquivoNome,
+        origem_credito_proprio: a.origemCreditoProprio ?? "arquivo",
+        arquivo_credito_proprio: a.arquivoCreditoProprio ?? null,
         criado_por: userData.user?.id ?? null,
       };
 
