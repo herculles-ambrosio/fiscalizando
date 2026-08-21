@@ -29,3 +29,15 @@ export function formatarDataHora(iso: string | null | undefined): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
+
+/** Valor curto para eixos de gráfico: 12,3 mil / 4,5 mi / 1,2 bi. */
+export function formatarCompacto(valor: number | null | undefined): string {
+  if (valor == null || !isFinite(valor)) return "—";
+  const abs = Math.abs(valor);
+  const fmt = (v: number, s: string) =>
+    `${v.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} ${s}`;
+  if (abs >= 1_000_000_000) return fmt(valor / 1_000_000_000, "bi");
+  if (abs >= 1_000_000) return fmt(valor / 1_000_000, "mi");
+  if (abs >= 1_000) return fmt(valor / 1_000, "mil");
+  return valor.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+}

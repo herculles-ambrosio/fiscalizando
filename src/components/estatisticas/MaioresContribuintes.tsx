@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarCnpj, formatarMoeda, formatarPercentual } from "@/lib/format";
+import { formatarCnpj, formatarMoeda, formatarPercentual, formatarCompacto } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { formatarCodigoCnae } from "@/lib/vaf/cnae";
 import {
@@ -177,7 +177,7 @@ export function MaioresContribuintes({
                 tickLine={false}
                 axisLine={false}
                 stroke="var(--muted-foreground)"
-                tickFormatter={(v: number) => (v / 1_000_000).toFixed(1) + " mi"}
+                tickFormatter={formatarCompacto}
               />
               <YAxis
                 type="category"
@@ -227,7 +227,7 @@ export function MaioresContribuintes({
                 tickLine={false}
                 axisLine={false}
                 stroke="var(--muted-foreground)"
-                tickFormatter={(v: number) => (v / 1_000_000).toFixed(1) + " mi"}
+                tickFormatter={formatarCompacto}
               />
               <Tooltip contentStyle={estiloTooltip} formatter={(v: number) => formatarMoeda(v)} />
               <Legend wrapperStyle={{ fontSize: 11 }} />

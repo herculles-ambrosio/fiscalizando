@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatarMoeda } from "@/lib/format";
+import { formatarMoeda, formatarCompacto } from "@/lib/format";
 import { descricaoCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 import { MESES_CURTOS } from "@/lib/vaf/tipoRetorno";
 import {
@@ -235,7 +235,7 @@ export function SetoresQualidade({
               <XAxis
                 type="number"
                 {...eixoValor}
-                tickFormatter={(v: number) => (v / 1_000_000).toFixed(1) + " mi"}
+                tickFormatter={formatarCompacto}
               />
               <YAxis type="category" dataKey="rotulo" width={90} {...eixoValor} />
               <Tooltip
@@ -266,7 +266,7 @@ export function SetoresQualidade({
             <LineChart data={sazonalidade} margin={{ left: -8, right: 16 }}>
               <CartesianGrid strokeDasharray="2 6" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="mes" {...eixoValor} />
-              <YAxis {...eixoValor} tickFormatter={(v: number) => (v / 1_000_000).toFixed(1) + " mi"} />
+              <YAxis {...eixoValor} tickFormatter={formatarCompacto} />
               <Tooltip contentStyle={estiloTooltip} formatter={(v: number) => formatarMoeda(v)} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               {anos.map((a, i) => (

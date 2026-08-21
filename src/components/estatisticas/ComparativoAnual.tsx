@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarMoeda, formatarPercentual } from "@/lib/format";
+import { formatarMoeda, formatarPercentual, formatarCompacto } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import {
   agregarPorContribuinte,
@@ -185,7 +185,7 @@ export function ComparativoAnual({
                   tickLine={false}
                   axisLine={false}
                   stroke="var(--muted-foreground)"
-                  tickFormatter={(v: number) => (v / 1_000_000).toFixed(1) + " mi"}
+                  tickFormatter={formatarCompacto}
                 />
                 <Tooltip contentStyle={estiloTooltip} formatter={(v: number) => formatarMoeda(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -209,7 +209,7 @@ export function ComparativoAnual({
                   tickLine={false}
                   axisLine={false}
                   stroke="var(--muted-foreground)"
-                  tickFormatter={(v: number) => (v / 1_000_000).toFixed(1) + " mi"}
+                  tickFormatter={formatarCompacto}
                 />
                 <Tooltip
                   cursor={{ fill: "var(--muted)", opacity: 0.4 }}
