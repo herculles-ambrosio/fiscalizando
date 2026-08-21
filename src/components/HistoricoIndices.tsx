@@ -239,6 +239,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                     <TableHead className="text-right">Índice</TableHead>
                     <TableHead className="text-right">Valor líquido</TableHead>
                     <TableHead>Arquivo</TableHead>
+                    <TableHead>Crédito próprio</TableHead>
                     <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
