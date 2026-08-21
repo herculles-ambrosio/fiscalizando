@@ -122,6 +122,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(0);
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [selecionandoTodos, setSelecionandoTodos] = useState(false);
   const [detalhe, setDetalhe] = useState<ContribuinteLinha | null>(null);
 
   const [ordem, setOrdem] = useState<{ coluna: ColunaOrdenavel; asc: boolean }>({
