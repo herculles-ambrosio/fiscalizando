@@ -289,7 +289,19 @@ export function MaioresContribuintes({
             </TableHeader>
             <TableBody>
               {top.map((c, i) => (
-                <TableRow key={c.ie}>
+                <TableRow
+                  key={c.ie}
+                  role="button"
+                  tabIndex={0}
+                  className="cursor-pointer"
+                  onClick={() => setIeDetalhe(c.ie)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setIeDetalhe(c.ie);
+                    }
+                  }}
+                >
                   <TableCell className="tabular-nums text-muted-foreground">{i + 1}</TableCell>
                   <TableCell className="font-medium">{c.nome ?? `IE ${c.ie}`}</TableCell>
                   <TableCell className="tabular-nums">{formatarCnpj(c.cnpj)}</TableCell>
