@@ -72,24 +72,44 @@ export function MaioresContribuintes({
   const [ano, setAno] = useState<string>("");
   const [topN, setTopN] = useState<string>("10");
   const [ieDetalhe, setIeDetalhe] = useState<string | null>(null);
+  const [situacoes, setSituacoes] = useState<Situacao[]>([]);
+  const [tipoGrafico, setTipoGrafico] = useState<"barras" | "linha">("barras");
 
   const anoAtivo = ano && anos.includes(Number(ano)) ? Number(ano) : (anos[0] ?? null);
   const quantidade = Math.max(1, Math.min(200, Number(topN) || 10));
 
-  const { ranking, totalPeriodo, periodos } = useMemo(() => {
+  function alternarSituacao(s: Situacao) {
+    setSituacoes((atual) =>
+      atual.includes(s) ? atual.filter((x) => x !== s) : [...atual, s],
+    );
+  }
+
+  const linhasFiltradas = useMemo(
+    () =>
+      situacoes.length
+        ? linhas.filter((l) => l.situacoes?.some((s) => situacoes.includes(s as Situacao)))
+        : linhas,
+    [linhas, situacoes],
+  );
+
+  const { ranking, totalPeriodo, periodos, contagemPorPeriodo } = useMemo(() => {
     const doAno = cargas.filter((c) => anoDaCarga(c) === anoAtivo);
     const periodos = doAno.map(periodoDaCarga).sort((a, b) => a.ordem - b.ordem);
     const mapa = new Map(periodos.map((p) => [p.cargaId, p]));
-    const ranking = agregarPorContribuinte(
-      linhas.filter((l) => mapa.has(l.carga_id)),
-      mapa,
-    );
+    const doRecorte = linhasFiltradas.filter((l) => mapa.has(l.carga_id));
+    const ranking = agregarPorContribuinte(doRecorte, mapa);
+    const contagemPorPeriodo = new Map<string, number>();
+    for (const l of doRecorte) {
+      const p = mapa.get(l.carga_id)!;
+      contagemPorPeriodo.set(p.rotulo, (contagemPorPeriodo.get(p.rotulo) ?? 0) + 1);
+    }
     return {
       ranking,
       periodos,
+      contagemPorPeriodo,
       totalPeriodo: ranking.reduce((s, c) => s + c.total, 0),
     };
-  }, [cargas, linhas, anoAtivo]);
+  }, [cargas, linhasFiltradas, anoAtivo]);
 
   const top = ranking.slice(0, quantidade);
 
@@ -100,13 +120,26 @@ export function MaioresContribuintes({
     participacao: totalPeriodo > 0 ? (c.total / totalPeriodo) * 100 : 0,
   }));
 
+  const rotuloFiltro = situacoes.length
+    ? situacoes.map((s) => ROTULO_SITUACAO[s]).join(", ")
+    : "Todas as situações";
+
   const dadosMensais = periodos.map((p) => {
-    const linha: Record<string, string | number> = { competencia: p.rotulo };
+    const linha: Record<string, string | number> = {
+      competencia: p.rotulo,
+      __arquivo: p.mes ? `Arquivo ${p.mes}` : "Definitivo",
+      __qtd: contagemPorPeriodo.get(p.rotulo) ?? 0,
+    };
+    let totalArquivo = 0;
     top.forEach((c) => {
-      linha[nomeCurto(c.nome, c.ie, 22)] = c.porPeriodo.get(p.rotulo) ?? 0;
+      const v = c.porPeriodo.get(p.rotulo) ?? 0;
+      linha[nomeCurto(c.nome, c.ie, 22)] = v;
+      totalArquivo += v;
     });
+    linha.__total = totalArquivo;
     return linha;
   });
+
 
   function exportar() {
     const csv = montarCsv(
