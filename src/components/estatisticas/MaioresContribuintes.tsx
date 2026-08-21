@@ -126,9 +126,9 @@ export function MaioresContribuintes({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-40">
-          <label className="mb-1 block text-xs text-muted-foreground">Ano</label>
+          <label className="mb-1 block text-xs text-muted-foreground">Exercício</label>
           <Select value={String(anoAtivo)} onValueChange={setAno}>
-            <SelectTrigger aria-label="Ano">
+            <SelectTrigger aria-label="Exercício">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -167,7 +167,7 @@ export function MaioresContribuintes({
             Empresas que mais contribuíram — {anoAtivo}
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            VAF somado das competências apuradas no ano. Total do recorte:{" "}
+            VAF somado dos arquivos apurados no exercício. Total do recorte:{" "}
             {formatarMoeda(totalPeriodo)}.
           </p>
         </CardHeader>
@@ -223,7 +223,7 @@ export function MaioresContribuintes({
             Valor contribuído mês a mês
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Uma linha por empresa do Top {quantidade}, por competência apurada. Clique no nome da
+            Uma linha por empresa do Top {quantidade}, por arquivo apurado do exercício. Clique no nome da
             empresa na legenda para abrir o detalhamento.
           </p>
         </CardHeader>

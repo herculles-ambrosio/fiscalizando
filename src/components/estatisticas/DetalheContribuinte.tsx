@@ -160,9 +160,9 @@ export function DetalheContribuinte({
     if (!dados) return;
     const csv = montarCsv(
       [
-        "Competência",
+        "Arquivo / exercício",
         "VAF do contribuinte",
-        "VAF total da competência",
+        "VAF total do arquivo",
         "Participação %",
         "Posição no ranking",
         "Declarantes",
@@ -211,7 +211,7 @@ export function DetalheContribuinte({
                     }
                   />
                   <Resumo
-                    rotulo="Média por competência"
+                    rotulo="Média por arquivo"
                     valor={formatarMoeda(
                       serieVisivel.filter((s) => s.vaf !== 0).length
                         ? totalVisivel / serieVisivel.filter((s) => s.vaf !== 0).length
@@ -219,7 +219,7 @@ export function DetalheContribuinte({
                     )}
                   />
                   <Resumo
-                    rotulo="Melhor competência"
+                    rotulo="Melhor arquivo"
                     valor={
                       dados.maior ? `${dados.maior.rotulo} · ${formatarMoeda(dados.maior.vaf)}` : "—"
                     }
@@ -261,9 +261,9 @@ export function DetalheContribuinte({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Competência</TableHead>
+                        <TableHead>Arquivo / exercício</TableHead>
                         <TableHead className="text-right">VAF do contribuinte</TableHead>
-                        <TableHead className="text-right">VAF da competência</TableHead>
+                        <TableHead className="text-right">VAF do arquivo</TableHead>
                         <TableHead className="text-right">Participação</TableHead>
                         <TableHead className="text-right">Posição</TableHead>
                         <TableHead>Situações</TableHead>

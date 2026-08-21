@@ -181,7 +181,7 @@ export function SetoresQualidade({
       <div className="w-40">
         <label className="mb-1 block text-xs text-muted-foreground">Exercício</label>
         <Select value={anoAtivo ? String(anoAtivo) : ""} onValueChange={setAno}>
-          <SelectTrigger aria-label="Ano de referência">
+          <SelectTrigger aria-label="Exercício">
             <SelectValue placeholder="Ano" />
           </SelectTrigger>
           <SelectContent>
@@ -352,7 +352,7 @@ export function SetoresQualidade({
       <Card>
         <CardHeader className="p-6 pb-2">
           <CardTitle className="font-display text-base font-semibold">
-            Qualidade da declaração por competência
+            Qualidade da declaração por arquivo
           </CardTitle>
           <p className="text-xs text-muted-foreground">
             Número de contribuintes omissos, zerados, fora do prazo e discrepantes.
@@ -380,7 +380,7 @@ export function SetoresQualidade({
             Entradas e saídas de declarantes
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Quantas empresas passaram a declarar e quantas deixaram de declarar em cada competência.
+            Quantas empresas passaram a declarar e quantas deixaram de declarar em cada arquivo recebido.
           </p>
         </CardHeader>
         <CardContent className="h-80 p-6 pt-4">

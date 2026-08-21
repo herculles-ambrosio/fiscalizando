@@ -174,7 +174,7 @@ export function ComparativoAnual({
             Evolução ano a ano por empresa
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Ano no eixo horizontal, uma série por empresa, valor = VAF contribuído no ano. Clique
+            Exercício no eixo horizontal, uma série por empresa, valor = VAF contribuído no exercício. Clique
             em uma série ou na legenda para abrir o detalhamento da empresa.
           </p>
         </CardHeader>
