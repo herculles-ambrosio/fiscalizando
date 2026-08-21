@@ -827,6 +827,12 @@ export default function PaginaIndice() {
               <CardContent>
                 <LinhaValor rotulo="Crédito interno" valor={apuracao.creditoInterno} />
                 <LinhaValor rotulo="Crédito próprio" valor={apuracao.creditoProprio} />
+                {apuracao.origemCreditoProprio === "planilha" && (
+                  <p className="-mt-1 mb-2 text-[11px] text-muted-foreground">
+                    Origem: planilha do Portal do VAF
+                    {apuracao.arquivoCreditoProprio ? ` (${apuracao.arquivoCreditoProprio})` : ""}.
+                  </p>
+                )}
                 <LinhaValor rotulo="Débito" valor={apuracao.debito} negativo />
                 <div className="mt-3 flex justify-between border-t border-border pt-2 text-sm font-semibold">
                   <span>Subtotal</span>
