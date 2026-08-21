@@ -5,6 +5,7 @@ import {
   FileUp,
   History,
   FileSignature,
+  PieChart,
   LogOut,
   Settings,
   TrendingUp,
