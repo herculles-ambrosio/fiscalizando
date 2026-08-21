@@ -53,7 +53,7 @@ export function MaioresContribuintes({
   linhas: LinhaEstat[];
 }) {
   const anos = useMemo(
-    () => [...new Set(cargas.map((c) => c.competencia_ano ?? c.exercicio))].sort((a, b) => b - a),
+    () => [...new Set(cargas.map(anoDaCarga))].sort((a, b) => b - a),
     [cargas],
   );
   const [ano, setAno] = useState<string>("");
@@ -64,7 +64,7 @@ export function MaioresContribuintes({
   const quantidade = Math.max(1, Math.min(200, Number(topN) || 10));
 
   const { ranking, totalPeriodo, periodos } = useMemo(() => {
-    const doAno = cargas.filter((c) => (c.competencia_ano ?? c.exercicio) === anoAtivo);
+    const doAno = cargas.filter((c) => anoDaCarga(c) === anoAtivo);
     const periodos = doAno.map(periodoDaCarga).sort((a, b) => a.ordem - b.ordem);
     const mapa = new Map(periodos.map((p) => [p.cargaId, p]));
     const ranking = agregarPorContribuinte(

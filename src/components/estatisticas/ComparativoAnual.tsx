@@ -59,12 +59,12 @@ export function ComparativoAnual({
   const quantidade = Number(topN) || 10;
 
   const { anos, porAno, top } = useMemo(() => {
-    const anos = [...new Set(cargas.map((c) => c.competencia_ano ?? c.exercicio))].sort(
+    const anos = [...new Set(cargas.map(anoDaCarga))].sort(
       (a, b) => a - b,
     );
     const porAno = new Map<number, ReturnType<typeof agregarPorContribuinte>>();
     for (const ano of anos) {
-      const doAno = cargas.filter((c) => (c.competencia_ano ?? c.exercicio) === ano);
+      const doAno = cargas.filter((c) => anoDaCarga(c) === ano);
       const mapa = new Map(doAno.map((c) => [c.id, periodoDaCarga(c)]));
       porAno.set(
         ano,

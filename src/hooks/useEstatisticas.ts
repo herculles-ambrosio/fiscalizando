@@ -12,7 +12,7 @@ export function useCargasEstatisticas(municipioId: string | null) {
     queryFn: async (): Promise<CargaEstat[]> => {
       const { data, error } = await supabase
         .from("cargas")
-        .select("id, exercicio, tipo_retorno, competencia_mes, competencia_ano, criado_em")
+        .select("id, exercicio, tipo_retorno, competencia_mes, competencia_ano, mes_referencia, criado_em")
         .eq("municipio_id", municipioId!)
         .eq("status", "concluida")
         .order("criado_em", { ascending: false });

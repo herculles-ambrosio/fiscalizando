@@ -60,7 +60,7 @@ export function SetoresQualidade({
   linhas: LinhaEstat[];
 }) {
   const anos = useMemo(
-    () => [...new Set(cargas.map((c) => c.competencia_ano ?? c.exercicio))].sort((a, b) => b - a),
+    () => [...new Set(cargas.map(anoDaCarga))].sort((a, b) => b - a),
     [cargas],
   );
   const [ano, setAno] = useState<string>("");
