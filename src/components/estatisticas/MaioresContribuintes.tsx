@@ -212,6 +212,41 @@ export function MaioresContribuintes({
         </Button>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">Situações:</span>
+        {SITUACOES_RAPIDAS.map((s) => {
+          const ativo = situacoes.includes(s);
+          return (
+            <Badge
+              key={s}
+              role="button"
+              tabIndex={0}
+              aria-pressed={ativo}
+              variant={ativo ? "default" : "outline"}
+              className="cursor-pointer select-none"
+              onClick={() => alternarSituacao(s)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  alternarSituacao(s);
+                }
+              }}
+            >
+              {ROTULO_SITUACAO[s]}
+            </Badge>
+          );
+        })}
+        {situacoes.length > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setSituacoes([])}>
+            Limpar filtros
+          </Button>
+        )}
+        <span className="text-xs text-muted-foreground">
+          Exibindo: {rotuloFiltro}
+        </span>
+      </div>
+
+
       <Card>
         <CardHeader className="p-6 pb-2">
           <CardTitle className="font-display text-base font-semibold">
