@@ -36,10 +36,13 @@ export function CriterioBase({
   cargas,
   anoSelecionado = null,
   contexto,
+  linhas = [],
 }: {
   cargas: CargaEstat[];
   anoSelecionado?: number | null;
   contexto: string;
+  /** Contribuintes de todas as apurações, para medir o impacto de cada alerta. */
+  linhas?: LinhaEstat[];
 }) {
   const [aberto, setAberto] = useState(false);
   const selecao = useSelecaoCargas();
@@ -55,6 +58,18 @@ export function CriterioBase({
     setChaveSync(chaveAtual);
     setRascunho(new Set(aplicadas));
   }
+
+  /** Contribuintes distintos e VAF somado por apuração. */
+  const resumoPorCarga = useMemo(() => {
+    const mapa = new Map<string, { ies: Set<string>; vaf: number }>();
+    for (const l of linhas) {
+      const atual = mapa.get(l.carga_id) ?? { ies: new Set<string>(), vaf: 0 };
+      atual.ies.add(l.inscricao_estadual);
+      atual.vaf += Number(l.vaf_atual ?? 0);
+      mapa.set(l.carga_id, atual);
+    }
+    return mapa;
+  }, [linhas]);
 
   const porAno = useMemo(() => {
     const mapa = new Map<number, CargaEstat[]>();
@@ -72,9 +87,27 @@ export function CriterioBase({
 
   const lacunas = useMemo(() => detectarLacunas(cargas), [cargas]);
   const foraDoCalculo = universo.length - cargas.length;
+  const excluidas = useMemo(
+    () => universo.filter((c) => !aplicadas.has(c.id)),
+    [universo, aplicadas],
+  );
+
+  /** Remessas apuradas por exercício, para mostrar o que impede a comparação. */
+  const remessasPorAno = useMemo(() => {
+    const mapa = new Map<number, Set<number>>();
+    for (const c of cargas) {
+      const r = remessaDaCarga(c);
+      if (r == null) continue;
+      const set = mapa.get(anoDaCarga(c)) ?? new Set<number>();
+      set.add(r);
+      mapa.set(anoDaCarga(c), set);
+    }
+    return mapa;
+  }, [cargas]);
 
   const anos = [...new Set(cargas.map(anoDaCarga))];
   const alterado = chaveAtual !== [...rascunho].sort().join(",");
+
 
   function alternar(id: string, marcado: boolean) {
     setRascunho((atual) => {
