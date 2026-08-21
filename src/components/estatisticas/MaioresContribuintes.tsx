@@ -41,6 +41,7 @@ import {
   type CargaEstat,
   type LinhaEstat,
 } from "@/lib/vaf/estatisticas";
+import { DetalheContribuinte } from "./DetalheContribuinte";
 
 const OPCOES_TOP = [5, 10, 20, 50];
 
@@ -57,6 +58,7 @@ export function MaioresContribuintes({
   );
   const [ano, setAno] = useState<string>("");
   const [topN, setTopN] = useState<string>("10");
+  const [ieDetalhe, setIeDetalhe] = useState<string | null>(null);
 
   const anoAtivo = ano && anos.includes(Number(ano)) ? Number(ano) : (anos[0] ?? null);
   const quantidade = Math.max(1, Math.min(200, Number(topN) || 10));
@@ -79,6 +81,7 @@ export function MaioresContribuintes({
   const top = ranking.slice(0, quantidade);
 
   const dadosBarras = top.map((c) => ({
+    ie: c.ie,
     nome: nomeCurto(c.nome, c.ie, 22),
     vaf: c.total,
     participacao: totalPeriodo > 0 ? (c.total / totalPeriodo) * 100 : 0,
@@ -196,7 +199,18 @@ export function MaioresContribuintes({
                   "VAF",
                 ]}
               />
-              <Bar dataKey="vaf" fill="var(--primary)" radius={[0, 6, 6, 0]} />
+              <Bar
+                dataKey="vaf"
+                fill="var(--primary)"
+                radius={[0, 6, 6, 0]}
+                className="cursor-pointer"
+                onClick={(d: { ie?: string } & Record<string, unknown>) => {
+                  const ie = (d?.ie ?? (d as { payload?: { ie?: string } })?.payload?.ie) as
+                    | string
+                    | undefined;
+                  if (ie) setIeDetalhe(ie);
+                }}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -208,7 +222,8 @@ export function MaioresContribuintes({
             Valor contribuído mês a mês
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Uma linha por empresa do Top {quantidade}, por competência apurada.
+            Uma linha por empresa do Top {quantidade}, por competência apurada. Clique no nome da
+            empresa na legenda para abrir o detalhamento.
           </p>
         </CardHeader>
         <CardContent className="h-96 p-6 pt-4">
@@ -230,7 +245,14 @@ export function MaioresContribuintes({
                 tickFormatter={formatarCompacto}
               />
               <Tooltip contentStyle={estiloTooltip} formatter={(v: number) => formatarMoeda(v)} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend
+                wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                onClick={(e: { dataKey?: unknown; value?: unknown }) => {
+                  const alvo = String(e?.dataKey ?? e?.value ?? "");
+                  const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
+                  if (achado) setIeDetalhe(achado.ie);
+                }}
+              />
               {top.map((c, i) => (
                 <Line
                   key={c.ie}
@@ -249,6 +271,9 @@ export function MaioresContribuintes({
       <Card>
         <CardHeader className="p-6 pb-2">
           <CardTitle className="font-display text-base font-semibold">Ranking detalhado</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Clique em uma empresa para ver a série mensal completa e o detalhamento da participação.
+          </p>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -264,7 +289,19 @@ export function MaioresContribuintes({
             </TableHeader>
             <TableBody>
               {top.map((c, i) => (
-                <TableRow key={c.ie}>
+                <TableRow
+                  key={c.ie}
+                  role="button"
+                  tabIndex={0}
+                  className="cursor-pointer"
+                  onClick={() => setIeDetalhe(c.ie)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setIeDetalhe(c.ie);
+                    }
+                  }}
+                >
                   <TableCell className="tabular-nums text-muted-foreground">{i + 1}</TableCell>
                   <TableCell className="font-medium">{c.nome ?? `IE ${c.ie}`}</TableCell>
                   <TableCell className="tabular-nums">{formatarCnpj(c.cnpj)}</TableCell>
@@ -294,6 +331,14 @@ export function MaioresContribuintes({
           </Table>
         </CardContent>
       </Card>
+
+      <DetalheContribuinte
+        ie={ieDetalhe}
+        cargas={cargas}
+        linhas={linhas}
+        ano={anoAtivo}
+        onOpenChange={(aberto) => !aberto && setIeDetalhe(null)}
+      />
     </div>
   );
 }

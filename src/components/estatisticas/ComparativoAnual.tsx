@@ -41,6 +41,7 @@ import {
   type LinhaEstat,
 } from "@/lib/vaf/estatisticas";
 import { estiloTooltip } from "./MaioresContribuintes";
+import { DetalheContribuinte } from "./DetalheContribuinte";
 
 const OPCOES_TOP = [5, 10, 20];
 type Modo = "agrupado" | "empilhado" | "linha";
@@ -54,6 +55,7 @@ export function ComparativoAnual({
 }) {
   const [topN, setTopN] = useState("10");
   const [modo, setModo] = useState<Modo>("agrupado");
+  const [ieDetalhe, setIeDetalhe] = useState<string | null>(null);
   const quantidade = Number(topN) || 10;
 
   const { anos, porAno, top } = useMemo(() => {
@@ -171,7 +173,8 @@ export function ComparativoAnual({
             Evolução ano a ano por empresa
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Ano no eixo horizontal, uma série por empresa, valor = VAF contribuído no ano.
+            Ano no eixo horizontal, uma série por empresa, valor = VAF contribuído no ano. Clique
+            em uma série ou na legenda para abrir o detalhamento da empresa.
           </p>
         </CardHeader>
         <CardContent className="h-96 p-6 pt-4">
@@ -188,7 +191,14 @@ export function ComparativoAnual({
                   tickFormatter={formatarCompacto}
                 />
                 <Tooltip contentStyle={estiloTooltip} formatter={(v: number) => formatarMoeda(v)} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Legend
+                  wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                  onClick={(e: { dataKey?: unknown; value?: unknown }) => {
+                    const alvo = String(e?.dataKey ?? e?.value ?? "");
+                    const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
+                    if (achado) setIeDetalhe(achado.ie);
+                  }}
+                />
                 {top.map((c, i) => (
                   <Line
                     key={c.ie}
@@ -197,6 +207,8 @@ export function ComparativoAnual({
                     stroke={corSerie(i)}
                     strokeWidth={2}
                     dot={{ r: 3 }}
+                    className="cursor-pointer"
+                    onClick={() => setIeDetalhe(c.ie)}
                   />
                 ))}
               </LineChart>
@@ -216,7 +228,14 @@ export function ComparativoAnual({
                   contentStyle={estiloTooltip}
                   formatter={(v: number) => formatarMoeda(v)}
                 />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Legend
+                  wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                  onClick={(e: { dataKey?: unknown; value?: unknown }) => {
+                    const alvo = String(e?.dataKey ?? e?.value ?? "");
+                    const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
+                    if (achado) setIeDetalhe(achado.ie);
+                  }}
+                />
                 {top.map((c, i) => (
                   <Bar
                     key={c.ie}
@@ -224,6 +243,8 @@ export function ComparativoAnual({
                     {...(modo === "empilhado" ? { stackId: "vaf" } : {})}
                     fill={corSerie(i)}
                     radius={modo === "empilhado" ? [0, 0, 0, 0] : [4, 4, 0, 0]}
+                    className="cursor-pointer"
+                    onClick={() => setIeDetalhe(c.ie)}
                   />
                 ))}
               </BarChart>
@@ -237,6 +258,9 @@ export function ComparativoAnual({
           <CardTitle className="font-display text-base font-semibold">
             Comparativo ano × empresa
           </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Clique em uma empresa para abrir a série mensal completa e o detalhamento.
+          </p>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -259,7 +283,19 @@ export function ComparativoAnual({
                 const v = variacaoPct(atual, anterior);
                 const novo = anterior === 0 && atual > 0;
                 return (
-                  <TableRow key={c.ie}>
+                  <TableRow
+                    key={c.ie}
+                    role="button"
+                    tabIndex={0}
+                    className="cursor-pointer"
+                    onClick={() => setIeDetalhe(c.ie)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setIeDetalhe(c.ie);
+                      }
+                    }}
+                  >
                     <TableCell className="font-medium">
                       {c.nome ?? `IE ${c.ie}`}
                       {novo && (
@@ -287,6 +323,13 @@ export function ComparativoAnual({
           </Table>
         </CardContent>
       </Card>
+
+      <DetalheContribuinte
+        ie={ieDetalhe}
+        cargas={cargas}
+        linhas={linhas}
+        onOpenChange={(aberto) => !aberto && setIeDetalhe(null)}
+      />
     </div>
   );
 }
