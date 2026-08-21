@@ -484,6 +484,58 @@ export function MaioresContribuintes({
   );
 }
 
+type ItemTooltip = { name?: string; value?: number; color?: string };
+
+function TooltipComposicao({
+  active,
+  payload,
+  label,
+  rotuloFiltro,
+}: {
+  active?: boolean;
+  payload?: ItemTooltip[];
+  label?: string;
+  rotuloFiltro: string;
+}) {
+  if (!active || !payload?.length) return null;
+  const itens = [...payload].sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+  const meta = (payload[0] as unknown as { payload?: Record<string, unknown> })?.payload ?? {};
+  const totalArquivo = Number(meta.__total ?? 0);
+  const qtd = Number(meta.__qtd ?? 0);
+  const competencia = String(meta.competencia ?? label ?? "");
+
+  return (
+    <div style={estiloTooltip} className="px-3 py-2">
+      <p className="font-medium">{competencia}</p>
+      <p className="text-muted-foreground">
+        {rotuloFiltro} · {qtd.toLocaleString("pt-BR")} contribuinte(s) no arquivo
+      </p>
+      <div className="mt-2 space-y-0.5">
+        {itens.map((i) => (
+          <div key={i.name} className="flex items-center gap-2">
+            <span
+              className="inline-block h-2 w-2 shrink-0 rounded-full"
+              style={{ background: i.color }}
+            />
+            <span className="flex-1 truncate">{i.name}</span>
+            <span className="tabular-nums">
+              {formatarMoeda(i.value ?? 0)}
+              {totalArquivo > 0
+                ? ` · ${(((i.value ?? 0) / totalArquivo) * 100).toFixed(1)}%`
+                : ""}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 border-t border-border pt-1 tabular-nums">
+        Total exibido no arquivo: {formatarMoeda(totalArquivo)}
+      </p>
+    </div>
+  );
+}
+
+
+
 export const estiloTooltip = {
   background: "var(--popover)",
   border: "1px solid var(--border)",
