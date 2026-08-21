@@ -247,9 +247,9 @@ export default function PaginaIndice() {
   const [vafEstadualRef, setVafEstadualRef] = useState<string>("");
   const [fator, setFator] = useState<string>("1");
   const inputRef = useRef<HTMLInputElement>(null);
-  const inputPlanilhaRef = useRef<HTMLInputElement>(null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
-  const [erroPlanilha, setErroPlanilha] = useState<string | null>(null);
+  const [perguntar, setPerguntar] = useState(false);
+
 
   // calibração é guardada por prefeitura, para não misturar referências ao trocar
   const chaveRef = `${CHAVE_REF}:${municipioId ?? "sem-municipio"}`;
