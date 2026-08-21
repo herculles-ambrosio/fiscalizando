@@ -280,6 +280,37 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     );
   }
 
+  async function selecionarTodos() {
+    setSelecionandoTodos(true);
+    try {
+      let q = supabase
+        .from("contribuintes_apurados")
+        .select("id")
+        .eq("carga_id", cargaId);
+
+      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+      if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
+      if (termo)
+        q = q.or(
+          `nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`,
+        );
+
+      const { data, error } = await q.limit(10000);
+      if (error) throw error;
+      const ids = (data ?? []).map((d) => d.id);
+      setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSelecionandoTodos(false);
+    }
+  }
+
+  function limparSelecao() {
+    setSelecionados([]);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
