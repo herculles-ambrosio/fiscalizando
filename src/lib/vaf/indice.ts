@@ -420,6 +420,13 @@ export function csvIndice(a: ApuracaoIndice, nomeMunicipio: string): string {
     ["VAF A", "Credito externo", br(a.creditoExterno)],
     ["VAF B", "Credito interno", br(a.creditoInterno)],
     ["VAF B", "Credito proprio", br(a.creditoProprio)],
+    [
+      "VAF B",
+      "Origem do credito proprio",
+      a.origemCreditoProprio === "planilha"
+        ? `Planilha do Portal do VAF${a.arquivoCreditoProprio ? ` (${a.arquivoCreditoProprio})` : ""}`
+        : "Arquivo de retorno (SEF-MG)",
+    ],
     ["VAF B", "Debito", br(a.debito)],
     ["VAF C", "Acerto de credito", br(a.acertoCredito)],
     ["VAF C", "Acerto de debito", br(a.acertoDebito)],
