@@ -136,7 +136,7 @@ export function MaioresContribuintes({
       linha[nomeCurto(c.nome, c.ie, 22)] = v;
       totalArquivo += v;
     });
-    linha.__total = totalArquivo;
+    linha["__total"] = totalArquivo;
     return linha;
   });
 
@@ -500,9 +500,9 @@ function TooltipComposicao({
   if (!active || !payload?.length) return null;
   const itens = [...payload].sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
   const meta = (payload[0] as unknown as { payload?: Record<string, unknown> })?.payload ?? {};
-  const totalArquivo = Number(meta.__total ?? 0);
-  const qtd = Number(meta.__qtd ?? 0);
-  const competencia = String(meta.competencia ?? label ?? "");
+  const totalArquivo = Number(meta["__total"] ?? 0);
+  const qtd = Number(meta["__qtd"] ?? 0);
+  const competencia = String(meta["competencia"] ?? label ?? "");
 
   return (
     <div style={estiloTooltip} className="px-3 py-2">
