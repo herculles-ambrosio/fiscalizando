@@ -227,54 +227,68 @@ export function MaioresContribuintes({
       <Card>
         <CardHeader className="p-6 pb-2">
           <CardTitle className="font-display text-base font-semibold">
-            Valor contribuído mês a mês
+            Composição por arquivo apurado
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Uma linha por empresa do Top {quantidade}, por arquivo apurado do exercício. Clique no nome da
-            empresa na legenda para abrir o detalhamento.
+            {periodos.length > 1
+              ? `Cada barra é um arquivo do exercício ${anoAtivo}; as faixas empilhadas mostram quanto cada empresa do Top ${quantidade} trouxe naquele arquivo. Clique na legenda para abrir o detalhamento.`
+              : `O exercício ${anoAtivo} tem só um arquivo apurado (${periodos[0]?.rotulo ?? "—"}), então não há série ao longo do ano para comparar.`}
           </p>
         </CardHeader>
-        <CardContent className="h-96 p-6 pt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dadosMensais} margin={{ left: -8, right: 16 }}>
-              <CartesianGrid strokeDasharray="2 6" stroke="var(--border)" vertical={false} />
-              <XAxis
-                dataKey="competencia"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-                stroke="var(--muted-foreground)"
-              />
-              <YAxis
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-                stroke="var(--muted-foreground)"
-                tickFormatter={formatarCompacto}
-              />
-              <Tooltip contentStyle={estiloTooltip} formatter={(v: number) => formatarMoeda(v)} />
-              <Legend
-                wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
-                onClick={(e: { dataKey?: unknown; value?: unknown }) => {
-                  const alvo = String(e?.dataKey ?? e?.value ?? "");
-                  const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
-                  if (achado) setIeDetalhe(achado.ie);
-                }}
-              />
-              {top.map((c, i) => (
-                <Line
-                  key={c.ie}
-                  type="monotone"
-                  dataKey={nomeCurto(c.nome, c.ie, 22)}
-                  stroke={corSerie(i)}
-                  strokeWidth={2}
-                  dot={false}
+        <CardContent className={periodos.length > 1 ? "h-96 p-6 pt-4" : "p-6 pt-2"}>
+          {periodos.length > 1 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dadosMensais} margin={{ left: -8, right: 16 }}>
+                <CartesianGrid strokeDasharray="2 6" stroke="var(--border)" vertical={false} />
+                <XAxis
+                  dataKey="competencia"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  stroke="var(--muted-foreground)"
                 />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+                <YAxis
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  stroke="var(--muted-foreground)"
+                  tickFormatter={formatarCompacto}
+                />
+                <Tooltip
+                  cursor={{ fill: "var(--muted)", opacity: 0.4 }}
+                  contentStyle={estiloTooltip}
+                  formatter={(v: number) => formatarMoeda(v)}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                  onClick={(e: { dataKey?: unknown; value?: unknown }) => {
+                    const alvo = String(e?.dataKey ?? e?.value ?? "");
+                    const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
+                    if (achado) setIeDetalhe(achado.ie);
+                  }}
+                />
+                {top.map((c, i) => (
+                  <Bar
+                    key={c.ie}
+                    stackId="vaf"
+                    dataKey={nomeCurto(c.nome, c.ie, 22)}
+                    fill={corSerie(i)}
+                    className="cursor-pointer"
+                    onClick={() => setIeDetalhe(c.ie)}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="rounded-md border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+              Assim que uma segunda remessa do exercício {anoAtivo} for apurada, este bloco passa a
+              mostrar a evolução arquivo a arquivo. Por enquanto, use o ranking acima — ele já traz
+              todo o valor apurado em {periodos[0]?.rotulo ?? "—"}.
+            </p>
+          )}
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader className="p-6 pb-2">
