@@ -183,6 +183,7 @@ export function SetoresQualidade({
         cargas={cargas}
         anoSelecionado={anoAtivo}
         contexto="setores, Pareto e qualidade usam as remessas do exercício selecionado; a evolução compara exercícios pelo número da remessa."
+        linhas={linhas}
       />
       <div className="w-40">
         <label className="mb-1 block text-xs text-muted-foreground">Exercício</label>
