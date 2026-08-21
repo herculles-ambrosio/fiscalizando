@@ -58,6 +58,10 @@ export type ApuracaoIndice = {
   /** VAF B */
   creditoInterno: number;
   creditoProprio: number;
+  /** de onde veio o crédito próprio: registro da SEF ou planilha do Portal do VAF */
+  origemCreditoProprio?: "arquivo" | "planilha";
+  /** nome do arquivo da planilha do Portal do VAF, quando usada */
+  arquivoCreditoProprio?: string;
   debito: number;
   /** VAF C */
   acertoCredito: number;
