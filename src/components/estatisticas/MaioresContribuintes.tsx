@@ -41,6 +41,7 @@ import {
   type CargaEstat,
   type LinhaEstat,
 } from "@/lib/vaf/estatisticas";
+import { DetalheContribuinte } from "./DetalheContribuinte";
 
 const OPCOES_TOP = [5, 10, 20, 50];
 
