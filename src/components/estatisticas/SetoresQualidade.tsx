@@ -34,6 +34,16 @@ import {
   type LinhaEstat,
 } from "@/lib/vaf/estatisticas";
 import { estiloTooltip } from "./MaioresContribuintes";
+import { DetalheContribuinte } from "./DetalheContribuinte";
+import { DetalheSetor } from "./DetalheSetor";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const SITUACOES = [
   { chave: "OMISSO", rotulo: "Omissos", cor: "var(--omisso-foreground)" },
@@ -54,6 +64,8 @@ export function SetoresQualidade({
     [cargas],
   );
   const [ano, setAno] = useState<string>("");
+  const [cnaeDetalhe, setCnaeDetalhe] = useState<string | null>(null);
+  const [ieDetalhe, setIeDetalhe] = useState<string | null>(null);
   const anoAtivo = ano && anos.includes(Number(ano)) ? Number(ano) : (anos[0] ?? null);
 
   const periodoPorCarga = useMemo(
@@ -212,6 +224,14 @@ export function SetoresQualidade({
               />
               <Area
                 type="monotone"
+                className="cursor-pointer"
+                activeDot={{
+                  r: 5,
+                  cursor: "pointer",
+                  onClick: (_e: unknown, d: { payload?: { ie?: string } }) => {
+                    if (d?.payload?.ie) setIeDetalhe(d.payload.ie);
+                  },
+                }}
                 dataKey="acumulado"
                 stroke="var(--primary)"
                 fill="url(#grad-pareto)"
@@ -246,9 +266,49 @@ export function SetoresQualidade({
                 }
                 formatter={(v: number) => [formatarMoeda(v), "VAF"]}
               />
-              <Bar dataKey="vaf" fill="var(--gold)" radius={[0, 6, 6, 0]} />
+              <Bar
+                dataKey="vaf"
+                fill="var(--gold)"
+                radius={[0, 6, 6, 0]}
+                className="cursor-pointer"
+                onClick={(d: { cnae?: string } & Record<string, unknown>) => {
+                  const alvo = (d?.cnae ?? (d as { payload?: { cnae?: string } })?.payload?.cnae) as
+                    | string
+                    | undefined;
+                  if (alvo) setCnaeDetalhe(alvo);
+                }}
+              />
             </BarChart>
           </ResponsiveContainer>
+        </CardContent>
+        <CardContent className="p-6 pt-0">
+          <p className="mb-2 text-xs text-muted-foreground">
+            Clique em uma barra ou linha para abrir o detalhamento do setor.
+          </p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>CNAE</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead className="text-right">VAF</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {porCnae.map((c) => (
+                <TableRow
+                  key={c.cnae}
+                  className="cursor-pointer"
+                  onClick={() => setCnaeDetalhe(c.cnae)}
+                >
+                  <TableCell className="font-medium tabular-nums">{c.rotulo}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {c.descricao || "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{formatarMoeda(c.vaf)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -336,6 +396,26 @@ export function SetoresQualidade({
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      <DetalheSetor
+        cnae={cnaeDetalhe}
+        cargas={cargas}
+        linhas={linhas}
+        ano={anoAtivo}
+        onOpenChange={(aberto) => !aberto && setCnaeDetalhe(null)}
+        onSelecionarContribuinte={(ie) => {
+          setCnaeDetalhe(null);
+          setIeDetalhe(ie);
+        }}
+      />
+
+      <DetalheContribuinte
+        ie={ieDetalhe}
+        cargas={cargas}
+        linhas={linhas}
+        ano={anoAtivo}
+        onOpenChange={(aberto) => !aberto && setIeDetalhe(null)}
+      />
     </div>
   );
 }
