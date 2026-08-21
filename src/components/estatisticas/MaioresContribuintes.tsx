@@ -305,25 +305,50 @@ export function MaioresContribuintes({
 
       <Card>
         <CardHeader className="p-6 pb-2">
-          <CardTitle className="font-display text-base font-semibold">
-            Composição por arquivo apurado
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {periodos.length > 1
-              ? `Cada barra é um arquivo do exercício ${anoAtivo}; as faixas empilhadas mostram quanto cada empresa do Top ${quantidade} trouxe naquele arquivo. Clique na legenda para abrir o detalhamento.`
-              : `O exercício ${anoAtivo} tem só um arquivo apurado (${periodos[0]?.rotulo ?? "—"}), então não há série ao longo do ano para comparar.`}
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="font-display text-base font-semibold">
+                Composição por arquivo apurado
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                {periodos.length > 1
+                  ? `Arquivos do exercício ${anoAtivo} em ordem de remessa; cada série é uma empresa do Top ${quantidade} (${rotuloFiltro}). Clique na legenda ou na série para abrir o detalhamento.`
+                  : `O exercício ${anoAtivo} tem só um arquivo apurado (${periodos[0]?.rotulo ?? "—"}), então não há série ao longo do ano para comparar.`}
+              </p>
+            </div>
+            {periodos.length > 1 && (
+              <div className="flex items-center gap-1 rounded-md border border-border p-1">
+                <Button
+                  size="sm"
+                  variant={tipoGrafico === "barras" ? "secondary" : "ghost"}
+                  onClick={() => setTipoGrafico("barras")}
+                >
+                  <BarChart3 className="mr-1.5 h-4 w-4" />
+                  Barras empilhadas
+                </Button>
+                <Button
+                  size="sm"
+                  variant={tipoGrafico === "linha" ? "secondary" : "ghost"}
+                  onClick={() => setTipoGrafico("linha")}
+                >
+                  <LineChartIcon className="mr-1.5 h-4 w-4" />
+                  Linha
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
-        <CardContent className={periodos.length > 1 ? "h-96 p-6 pt-4" : "p-6 pt-2"}>
+        <CardContent className={periodos.length > 1 ? "h-[26rem] p-6 pt-4" : "p-6 pt-2"}>
           {periodos.length > 1 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dadosMensais} margin={{ left: -8, right: 16 }}>
+              <ComposedChart data={dadosMensais} margin={{ left: -8, right: 16, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="2 6" stroke="var(--border)" vertical={false} />
                 <XAxis
-                  dataKey="competencia"
+                  dataKey="__arquivo"
                   fontSize={11}
                   tickLine={false}
                   axisLine={false}
+                  interval={0}
                   stroke="var(--muted-foreground)"
                 />
                 <YAxis
@@ -335,28 +360,42 @@ export function MaioresContribuintes({
                 />
                 <Tooltip
                   cursor={{ fill: "var(--muted)", opacity: 0.4 }}
-                  contentStyle={estiloTooltip}
-                  formatter={(v: number) => formatarMoeda(v)}
+                  wrapperStyle={{ outline: "none" }}
+                  content={<TooltipComposicao rotuloFiltro={rotuloFiltro} />}
                 />
                 <Legend
-                  wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                  verticalAlign="bottom"
+                  align="left"
+                  wrapperStyle={{ fontSize: 11, cursor: "pointer", paddingTop: 8 }}
                   onClick={(e: { dataKey?: unknown; value?: unknown }) => {
                     const alvo = String(e?.dataKey ?? e?.value ?? "");
                     const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
                     if (achado) setIeDetalhe(achado.ie);
                   }}
                 />
-                {top.map((c, i) => (
-                  <Bar
-                    key={c.ie}
-                    stackId="vaf"
-                    dataKey={nomeCurto(c.nome, c.ie, 22)}
-                    fill={corSerie(i)}
-                    className="cursor-pointer"
-                    onClick={() => setIeDetalhe(c.ie)}
-                  />
-                ))}
-              </BarChart>
+                {top.map((c, i) =>
+                  tipoGrafico === "barras" ? (
+                    <Bar
+                      key={c.ie}
+                      stackId="vaf"
+                      dataKey={nomeCurto(c.nome, c.ie, 22)}
+                      fill={corSerie(i)}
+                      className="cursor-pointer"
+                      onClick={() => setIeDetalhe(c.ie)}
+                    />
+                  ) : (
+                    <Line
+                      key={c.ie}
+                      type="monotone"
+                      dataKey={nomeCurto(c.nome, c.ie, 22)}
+                      stroke={corSerie(i)}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      activeDot={{ r: 5, onClick: () => setIeDetalhe(c.ie) }}
+                    />
+                  ),
+                )}
+              </ComposedChart>
             </ResponsiveContainer>
           ) : (
             <p className="rounded-md border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
@@ -367,6 +406,7 @@ export function MaioresContribuintes({
           )}
         </CardContent>
       </Card>
+
 
 
       <Card>
