@@ -3,15 +3,18 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  ComposedChart,
   Legend,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { Download } from "lucide-react";
+import { BarChart3, Download, LineChart as LineChartIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -31,6 +34,7 @@ import {
 import { formatarCnpj, formatarMoeda, formatarPercentual, formatarCompacto } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { formatarCodigoCnae } from "@/lib/vaf/cnae";
+import { ROTULO_SITUACAO, type Situacao } from "@/lib/vaf/apurar";
 import {
   agregarPorContribuinte,
   anoDaCarga,
@@ -44,6 +48,15 @@ import { DetalheContribuinte } from "./DetalheContribuinte";
 import { CriterioBase } from "@/components/estatisticas/CriterioBase";
 
 const OPCOES_TOP = [5, 10, 20, 50];
+
+const SITUACOES_RAPIDAS: Situacao[] = [
+  "NORMAL",
+  "DISCREPANTE",
+  "OMISSO",
+  "ZERADO",
+  "FORA_DO_PRAZO",
+];
+
 
 export function MaioresContribuintes({
   cargas,
