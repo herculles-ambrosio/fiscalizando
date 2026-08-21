@@ -370,3 +370,63 @@ export function CriterioBase({
   );
 }
 
+/** Bloco recolhível usado dentro dos alertas para o detalhamento. */
+function Detalhe({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <Collapsible open={aberto} onOpenChange={setAberto} className="mt-2">
+      <CollapsibleTrigger asChild>
+        <Button variant="outline" size="sm" className="h-6 px-2 text-[11px]">
+          {aberto ? "Ocultar detalhes" : titulo}
+          <ChevronDown
+            className={`ml-1 h-3 w-3 transition-transform ${aberto ? "rotate-180" : ""}`}
+          />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="mt-2 rounded-md border border-border bg-background p-2 text-[11px]">
+          {children}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+function TabelaApuracoes({
+  cargas,
+  resumo,
+}: {
+  cargas: CargaEstat[];
+  resumo: Map<string, { ies: Set<string>; vaf: number }>;
+}) {
+  if (!cargas.length) return <p>Nenhuma apuração nesta lista.</p>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-[11px]">
+        <thead className="text-muted-foreground">
+          <tr>
+            <th className="py-1 pr-3 font-medium">Apuração</th>
+            <th className="py-1 pr-3 font-medium">Tipo</th>
+            <th className="py-1 pr-3 font-medium">Contribuintes</th>
+            <th className="py-1 font-medium">VAF</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cargas.map((c) => {
+            const r = resumo.get(c.id);
+            return (
+              <tr key={c.id} className="border-t border-border/60">
+                <td className="py-1 pr-3">{periodoDaCarga(c).rotulo}</td>
+                <td className="py-1 pr-3">{rotuloTipo(c.tipo_retorno)}</td>
+                <td className="py-1 pr-3 tabular-nums">{r ? r.ies.size : "—"}</td>
+                <td className="py-1 tabular-nums">{r ? formatarMoeda(r.vaf) : "—"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
