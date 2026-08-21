@@ -947,6 +947,96 @@ export default function PaginaIndice() {
                 <TabsContent value="simei" className="mt-4">
                   <TabelaContribuintes linhas={apuracao.simei} />
                 </TabsContent>
+
+                {planilha && (
+                  <TabsContent value="proprio" className="mt-4 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        Notas com <span className="font-medium">ENTRA</span> e{" "}
+                        <span className="font-medium">Crédito próprio</span> na planilha{" "}
+                        <span className="font-mono text-xs">{planilha.arquivoNome}</span>.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="no-print"
+                        onClick={baixarCsvPlanilha}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Exportar notas
+                      </Button>
+                    </div>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-24">Tipo</TableHead>
+                          <TableHead className="text-right">Notas</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {planilha.porTipoNota.map((t) => (
+                          <TableRow key={t.tipo}>
+                            <TableCell>{t.tipo}</TableCell>
+                            <TableCell className="text-right font-mono text-xs">
+                              {t.quantidade.toLocaleString("pt-BR")}
+                            </TableCell>
+                            <TableCell className="text-right font-mono">
+                              {formatarMoeda(t.valor)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                      <TableFooter>
+                        <TableRow>
+                          <TableCell>Total</TableCell>
+                          <TableCell className="text-right font-mono text-xs">
+                            {planilha.totalNotasProprio.toLocaleString("pt-BR")}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatarMoeda(planilha.creditoProprio)}
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    </Table>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-20">Tipo</TableHead>
+                          <TableHead>Número / chave</TableHead>
+                          <TableHead className="w-24">Saída</TableHead>
+                          <TableHead>Remetente</TableHead>
+                          <TableHead>Produto</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {planilha.notas.slice(0, 300).map((n, i) => (
+                          <TableRow key={`${n.numero}-${i}`}>
+                            <TableCell className="text-xs">{n.tipoNota}</TableCell>
+                            <TableCell className="max-w-[16rem] truncate font-mono text-xs">
+                              {n.numero}
+                            </TableCell>
+                            <TableCell className="text-xs">{n.data ?? "—"}</TableCell>
+                            <TableCell className="font-mono text-xs">{n.remetente}</TableCell>
+                            <TableCell className="max-w-[18rem] truncate">{n.descricao}</TableCell>
+                            <TableCell className="text-right font-mono">
+                              {formatarMoeda(n.valor)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {planilha.notas.length > 300 && (
+                      <p className="text-xs text-muted-foreground">
+                        Mostrando as 300 maiores de {planilha.notas.length.toLocaleString("pt-BR")}.
+                        Use “Exportar notas” para a lista completa.
+                      </p>
+                    )}
+                  </TabsContent>
+                )}
               </Tabs>
             </CardContent>
           </Card>
