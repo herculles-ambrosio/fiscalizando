@@ -199,7 +199,18 @@ export function MaioresContribuintes({
                   "VAF",
                 ]}
               />
-              <Bar dataKey="vaf" fill="var(--primary)" radius={[0, 6, 6, 0]} />
+              <Bar
+                dataKey="vaf"
+                fill="var(--primary)"
+                radius={[0, 6, 6, 0]}
+                className="cursor-pointer"
+                onClick={(d: { ie?: string } & Record<string, unknown>) => {
+                  const ie = (d?.ie ?? (d as { payload?: { ie?: string } })?.payload?.ie) as
+                    | string
+                    | undefined;
+                  if (ie) setIeDetalhe(ie);
+                }}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
