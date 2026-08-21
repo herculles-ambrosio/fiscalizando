@@ -331,6 +331,14 @@ export function MaioresContribuintes({
           </Table>
         </CardContent>
       </Card>
+
+      <DetalheContribuinte
+        ie={ieDetalhe}
+        cargas={cargas}
+        linhas={linhas}
+        ano={anoAtivo}
+        onOpenChange={(aberto) => !aberto && setIeDetalhe(null)}
+      />
     </div>
   );
 }
