@@ -81,6 +81,7 @@ export function MaioresContribuintes({
   const top = ranking.slice(0, quantidade);
 
   const dadosBarras = top.map((c) => ({
+    ie: c.ie,
     nome: nomeCurto(c.nome, c.ie, 22),
     vaf: c.total,
     participacao: totalPeriodo > 0 ? (c.total / totalPeriodo) * 100 : 0,
