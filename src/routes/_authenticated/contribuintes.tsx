@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
-import { formatarCompetencia, rotuloTipoRetorno, type TipoRetorno } from "@/lib/vaf/tipoRetorno";
+import { rotuloExercicioRemessa, rotuloTipoRetorno, type TipoRetorno } from "@/lib/vaf/tipoRetorno";
 import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 
 export const Route = createFileRoute("/_authenticated/contribuintes")({
@@ -60,9 +60,9 @@ type CargaResumo = {
 };
 
 function rotuloCarga(c: CargaResumo): string {
-  const competencia = formatarCompetencia(c.competencia_mes, c.competencia_ano);
+  const periodo = rotuloExercicioRemessa(c.exercicio, c.competencia_mes, c.tipo_retorno);
   const tipo = rotuloTipoRetorno((c.tipo_retorno ?? "mensal") as TipoRetorno);
-  return `${competencia || c.exercicio} · ${tipo}`;
+  return `${periodo} · ${tipo}`;
 }
 
 function PaginaContribuintes() {
