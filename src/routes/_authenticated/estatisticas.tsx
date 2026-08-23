@@ -20,8 +20,6 @@ import { MaioresContribuintes } from "@/components/estatisticas/MaioresContribui
 import { ComparativoAnual } from "@/components/estatisticas/ComparativoAnual";
 import { SetoresQualidade } from "@/components/estatisticas/SetoresQualidade";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
 
 const ABAS = ["maiores", "anual", "setores"] as const;
 type Aba = (typeof ABAS)[number];
@@ -146,13 +144,13 @@ function PaginaEstatisticas() {
     const anterior = anos[1];
     const totalDoAno = (ano: number | undefined) => {
       if (ano == null) return 0;
-      const ids = new Set(cargasDoExercicio(cargas, ano).map((c) => c.id));
+      const ids = new Set(cargasDoExercicio(cargas, ano, fonte).map((c) => c.id));
       return linhas
         .filter((l) => ids.has(l.carga_id))
         .reduce((s, l) => s + Number(l.vaf_atual ?? 0), 0);
     };
     const idsUltimo = new Set(
-      ultimo == null ? [] : cargasDoExercicio(cargas, ultimo).map((c) => c.id),
+      ultimo == null ? [] : cargasDoExercicio(cargas, ultimo, fonte).map((c) => c.id),
     );
     const linhasUltimo = linhas.filter((l) => idsUltimo.has(l.carga_id));
     const mapa = new Map(cargas.map((c) => [c.id, periodoDaCarga(c)]));
@@ -168,7 +166,7 @@ function PaginaEstatisticas() {
       participacaoTop10: total > 0 ? (top10 / total) * 100 : 0,
       variacao: variacaoPct(totalDoAno(ultimo), totalDoAno(anterior)),
     };
-  }, [cargas, linhas]);
+  }, [cargas, linhas, fonte]);
 
   if (carregandoCargas || carregandoLinhas) {
     return (
@@ -222,7 +220,7 @@ function PaginaEstatisticas() {
             <MaioresContribuintes cargas={cargas} linhas={linhas ?? []} />
           </TabsContent>
           <TabsContent value="anual">
-            <ComparativoAnual cargas={cargas} linhas={linhas ?? []} />
+            <ComparativoAnual cargas={cargas} linhas={linhas ?? []} fonte={fonte} />
           </TabsContent>
           <TabsContent value="setores">
             <SetoresQualidade cargas={cargas} linhas={linhas ?? []} />
