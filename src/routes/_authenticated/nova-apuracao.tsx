@@ -740,11 +740,13 @@ function NovaApuracao() {
       <Dialog open={dialogoDuplicada} onOpenChange={setDialogoDuplicada}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Competência já processada</DialogTitle>
+            <DialogTitle>Remessa já processada</DialogTitle>
             <DialogDescription>
-              Já existe apuração de {ROTULO_TIPO_RETORNO[tipoRetorno]} para a competência{" "}
-              {formatarCompetencia(competenciaMes, competenciaAno)} neste município. Deseja
-              substituir pela nova apuração? A apuração anterior e seus dados serão apagados.
+              Já existe apuração de {ROTULO_TIPO_RETORNO[tipoRetorno]} para a{" "}
+              {rotuloRemessa(competenciaMes)} de entrega {competenciaAno ?? "—"} neste município.
+              Deseja substituir pela nova apuração? A apuração anterior e seus dados serão apagados.
+            </DialogDescription>
+
             </DialogDescription>
           </DialogHeader>
           <ul className="space-y-1 text-sm text-muted-foreground">
