@@ -84,8 +84,8 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
         const anterior = atual.provisorio;
         const mais_recente =
           !anterior ||
-          competenciaOrdenavel(r.competencia_mes, r.competencia_ano) >
-            competenciaOrdenavel(anterior.competencia_mes, anterior.competencia_ano);
+          ordemExercicioRemessa(r.exercicio, r.competencia_mes) >
+            ordemExercicioRemessa(anterior.exercicio, anterior.competencia_mes);
         if (mais_recente) atual.provisorio = r;
       }
       porExercicio.set(r.exercicio, atual);
@@ -100,14 +100,15 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
         .slice()
         .sort(
           (a, b) =>
-            competenciaOrdenavel(a.competencia_mes, a.competencia_ano) -
-            competenciaOrdenavel(b.competencia_mes, b.competencia_ano),
+            ordemExercicioRemessa(a.exercicio, a.competencia_mes) -
+            ordemExercicioRemessa(b.exercicio, b.competencia_mes),
         )
         .map((r) => ({
-          rotulo: formatarCompetencia(r.competencia_mes, r.competencia_ano),
+          rotulo: rotuloExercicioRemessa(r.exercicio, r.competencia_mes),
           indice: Number(r.indice),
           liquido: Number(r.valor_liquido),
         })),
+
     [registros],
   );
 
