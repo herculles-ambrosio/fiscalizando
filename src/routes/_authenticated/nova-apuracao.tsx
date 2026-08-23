@@ -39,13 +39,12 @@ import {
 import {
   ROTULO_TIPO_RETORNO,
   TIPOS_RETORNO,
-  MESES_CURTOS,
   anoDoArquivo,
   anoDoArquivoAtivos,
-  rotuloMes,
+  rotuloRemessa,
   sugerirTipoRetorno,
   validarCompetencia,
-  formatarCompetencia,
+
   type TipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
 
