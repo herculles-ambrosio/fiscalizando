@@ -197,9 +197,21 @@ export function variacaoPct(atual: number, anterior: number): number | null {
 /**
  * Cargas que representam um exercício: quando existe apuração de índice
  * definitivo naquele exercício, ela é a fonte oficial e substitui as remessas
- * mensais (que são parciais e se sobrepõem). Sem definitivo, usa as mensais.
+ * mensais. Sem definitivo, vale apenas a remessa mais recente do exercício,
+ * porque cada remessa traz o acumulado do ano (somar 12 + 13 duplicaria o VAF).
  */
 export type FonteExercicio = "definitiva" | "mensais";
+
+/** Remessa mensal vencedora do exercício: maior número de arquivo; empate pelo upload mais novo. */
+export function remessaVencedora(mensais: CargaEstat[]): CargaEstat | null {
+  if (!mensais.length) return null;
+  return [...mensais].sort((a, b) => {
+    const ra = remessaDaCarga(a) ?? 0;
+    const rb = remessaDaCarga(b) ?? 0;
+    if (ra !== rb) return rb - ra;
+    return new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime();
+  })[0]!;
+}
 
 export function cargasDoExercicio(
   cargas: CargaEstat[],
@@ -207,10 +219,23 @@ export function cargasDoExercicio(
   fonte: FonteExercicio = "definitiva",
 ): CargaEstat[] {
   const doAno = cargas.filter((c) => anoDaCarga(c) === ano);
-  if (fonte === "mensais") {
-    const mensais = doAno.filter((c) => c.tipo_retorno !== "indice_definitivo");
-    return mensais.length ? mensais : doAno;
-  }
+  const mensais = doAno.filter((c) => c.tipo_retorno !== "indice_definitivo");
   const definitivas = doAno.filter((c) => c.tipo_retorno === "indice_definitivo");
-  return definitivas.length ? definitivas : doAno;
+  if (fonte === "mensais") {
+    const vencedora = remessaVencedora(mensais);
+    return vencedora ? [vencedora] : definitivas;
+  }
+  if (definitivas.length) return definitivas;
+  const vencedora = remessaVencedora(mensais);
+  return vencedora ? [vencedora] : doAno;
+}
+
+/** Remessas do exercício que foram substituídas pela fonte vigente. */
+export function cargasSubstituidas(
+  cargas: CargaEstat[],
+  ano: number,
+  fonte: FonteExercicio = "definitiva",
+): CargaEstat[] {
+  const usadas = new Set(cargasDoExercicio(cargas, ano, fonte).map((c) => c.id));
+  return cargas.filter((c) => anoDaCarga(c) === ano && !usadas.has(c.id));
 }
