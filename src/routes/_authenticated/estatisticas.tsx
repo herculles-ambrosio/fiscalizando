@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { NotaRemessa } from "@/components/NotaRemessa";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -199,6 +200,7 @@ function PaginaEstatisticas() {
         <div className="space-y-1.5">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Fonte do exercício
+            <NotaRemessa className="ml-1" />
           </p>
           <ToggleGroup
             type="single"

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { NotaRemessa } from "@/components/NotaRemessa";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -288,6 +289,7 @@ export default function Comparacao() {
                     <span className="space-y-1">
                       <span className="block font-medium">
                         {rotuloExercicioRemessa(c.exercicio, c.competencia_mes, c.tipo_retorno)}
+                        <NotaRemessa className="ml-1" />
                       </span>
                       <Badge variant="outline">{rotuloTipoRetorno(c.tipo_retorno)}</Badge>
                       <span className="block text-xs text-muted-foreground">
