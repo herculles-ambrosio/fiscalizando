@@ -115,6 +115,20 @@ export function CriterioBase({
   const anos = [...new Set(cargas.map(anoDaCarga))];
   const alterado = chaveAtual !== [...rascunho].sort().join(",");
 
+  /** Qual apuração vale em cada exercício e quais foram substituídas por ela. */
+  const fontePorAno = useMemo(
+    () =>
+      [...anos]
+        .sort((a, b) => b - a)
+        .map((ano) => ({
+          ano,
+          usadas: cargasDoExercicio(cargas, ano, fonte),
+          substituidas: cargasSubstituidas(cargas, ano, fonte),
+        })),
+    [cargas, anos.join(","), fonte],
+  );
+  const totalSubstituidas = fontePorAno.reduce((s, a) => s + a.substituidas.length, 0);
+
 
   function alternar(id: string, marcado: boolean) {
     setRascunho((atual) => {
