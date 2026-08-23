@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -11,7 +11,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BarChart3, Download, LineChart as LineChartIcon } from "lucide-react";
+import { BarChart3, Download, ImageDown, LineChart as LineChartIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { baixarGraficoPng, baixarGraficoSvg } from "@/lib/chartExport";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +81,8 @@ export function MaioresContribuintes({
   const [ieDetalhe, setIeDetalhe] = useState<string | null>(null);
   const [situacoes, setSituacoes] = useState<Situacao[]>([]);
   const [tipoGrafico, setTipoGrafico] = useState<"barras" | "linha">("barras");
+  const refRanking = useRef<HTMLDivElement>(null);
+  const refComposicao = useRef<HTMLDivElement>(null);
 
   const anoAtivo = ano && anos.includes(Number(ano)) ? Number(ano) : (anos[0] ?? null);
   const quantidade = Math.max(1, Math.min(200, Number(topN) || 10));
@@ -156,6 +165,24 @@ export function MaioresContribuintes({
     );
     baixarCsv(`maiores-contribuintes-${anoAtivo ?? "periodo"}.csv`, csv);
   }
+
+  const sufixo = `${anoAtivo ?? "periodo"}-top${quantidade}${situacoes.length ? `-${situacoes.join("_").toLowerCase()}` : ""}`;
+
+  function exportarComposicaoCsv() {
+    const empresas = top.map((c) => nomeCurto(c.nome, c.ie, 22));
+    const csv = montarCsv(
+      ["Arquivo apurado", "Competência", "Contribuintes no arquivo", ...empresas, "Total exibido"],
+      dadosMensais.map((l) => [
+        l["__arquivo"],
+        l["competencia"],
+        l["__qtd"],
+        ...empresas.map((e) => Number(l[e] ?? 0).toFixed(2)),
+        Number(l["__total"] ?? 0).toFixed(2),
+      ]),
+    );
+    baixarCsv(`composicao-por-arquivo-${sufixo}.csv`, csv);
+  }
+
 
   if (!anoAtivo) {
     return (
@@ -249,15 +276,28 @@ export function MaioresContribuintes({
 
       <Card>
         <CardHeader className="p-6 pb-2">
-          <CardTitle className="font-display text-base font-semibold">
-            Empresas que mais contribuíram — {anoAtivo}
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            VAF somado dos arquivos apurados no exercício. Total do recorte:{" "}
-            {formatarMoeda(totalPeriodo)}.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="font-display text-base font-semibold">
+                Empresas que mais contribuíram — {anoAtivo}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                VAF somado dos arquivos apurados no exercício. Total do recorte:{" "}
+                {formatarMoeda(totalPeriodo)}.
+              </p>
+            </div>
+            <MenuExportar
+              onCsv={exportar}
+              onPng={() => baixarGraficoPng(refRanking.current, `ranking-${sufixo}.png`)}
+              onSvg={() => baixarGraficoSvg(refRanking.current, `ranking-${sufixo}.svg`)}
+            />
+          </div>
         </CardHeader>
-        <CardContent className="p-6 pt-4" style={{ height: Math.max(320, top.length * 30 + 60) }}>
+        <CardContent
+          ref={refRanking}
+          className="p-6 pt-4"
+          style={{ height: Math.max(320, top.length * 30 + 60) }}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dadosBarras} layout="vertical" margin={{ left: 8, right: 24 }}>
               <CartesianGrid strokeDasharray="2 6" stroke="var(--border)" horizontal={false} />
@@ -316,29 +356,47 @@ export function MaioresContribuintes({
                   : `O exercício ${anoAtivo} tem só um arquivo apurado (${periodos[0]?.rotulo ?? "—"}), então não há série ao longo do ano para comparar.`}
               </p>
             </div>
-            {periodos.length > 1 && (
-              <div className="flex items-center gap-1 rounded-md border border-border p-1">
-                <Button
-                  size="sm"
-                  variant={tipoGrafico === "barras" ? "secondary" : "ghost"}
-                  onClick={() => setTipoGrafico("barras")}
-                >
-                  <BarChart3 className="mr-1.5 h-4 w-4" />
-                  Barras empilhadas
-                </Button>
-                <Button
-                  size="sm"
-                  variant={tipoGrafico === "linha" ? "secondary" : "ghost"}
-                  onClick={() => setTipoGrafico("linha")}
-                >
-                  <LineChartIcon className="mr-1.5 h-4 w-4" />
-                  Linha
-                </Button>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {periodos.length > 1 && (
+                <div className="flex items-center gap-1 rounded-md border border-border p-1">
+                  <Button
+                    size="sm"
+                    variant={tipoGrafico === "barras" ? "secondary" : "ghost"}
+                    onClick={() => setTipoGrafico("barras")}
+                  >
+                    <BarChart3 className="mr-1.5 h-4 w-4" />
+                    Barras empilhadas
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={tipoGrafico === "linha" ? "secondary" : "ghost"}
+                    onClick={() => setTipoGrafico("linha")}
+                  >
+                    <LineChartIcon className="mr-1.5 h-4 w-4" />
+                    Linha
+                  </Button>
+                </div>
+              )}
+              <MenuExportar
+                onCsv={exportarComposicaoCsv}
+                onPng={
+                  periodos.length > 1
+                    ? () => baixarGraficoPng(refComposicao.current, `composicao-${sufixo}.png`)
+                    : undefined
+                }
+                onSvg={
+                  periodos.length > 1
+                    ? () => baixarGraficoSvg(refComposicao.current, `composicao-${sufixo}.svg`)
+                    : undefined
+                }
+              />
+            </div>
           </div>
         </CardHeader>
-        <CardContent className={periodos.length > 1 ? "h-[26rem] p-6 pt-4" : "p-6 pt-2"}>
+        <CardContent
+          ref={refComposicao}
+          className={periodos.length > 1 ? "h-[26rem] p-6 pt-4" : "p-6 pt-2"}
+        >
           {periodos.length > 1 ? (
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={dadosMensais} margin={{ left: -8, right: 16, bottom: 8 }}>
@@ -545,3 +603,38 @@ export const estiloTooltip = {
   maxWidth: 320,
   whiteSpace: "normal" as const,
 };
+
+function MenuExportar({
+  onCsv,
+  onPng,
+  onSvg,
+}: {
+  onCsv: () => void;
+  onPng?: (() => void) | undefined;
+  onSvg?: (() => void) | undefined;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="outline">
+          <ImageDown className="mr-1.5 h-4 w-4" />
+          Exportar
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onCsv}>
+          <Download className="mr-2 h-4 w-4" />
+          Dados exibidos (CSV)
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={!onPng} onClick={() => onPng?.()}>
+          <ImageDown className="mr-2 h-4 w-4" />
+          Imagem do gráfico (PNG)
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={!onSvg} onClick={() => onSvg?.()}>
+          <ImageDown className="mr-2 h-4 w-4" />
+          Imagem vetorial (SVG)
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
