@@ -210,12 +210,12 @@ function PaginaEstatisticas() {
             size="sm"
           >
             <ToggleGroupItem value="definitiva">Apuração definitiva</ToggleGroupItem>
-            <ToggleGroupItem value="mensais">Remessas mensais</ToggleGroupItem>
+            <ToggleGroupItem value="mensais">Remessas do exercício</ToggleGroupItem>
           </ToggleGroup>
           <p className="max-w-xs text-xs text-muted-foreground">
             {fonte === "definitiva"
-              ? "Quando o exercício tem índice definitivo, ele substitui as remessas mensais."
-              : "Usa as remessas mensais do exercício, mesmo quando existe índice definitivo."}
+              ? "Quando o exercício tem índice definitivo, ele substitui as remessas do arquivo de retorno."
+              : "Usa as remessas (arquivos de retorno) do exercício, mesmo quando existe índice definitivo."}
           </p>
         </div>
       </div>
