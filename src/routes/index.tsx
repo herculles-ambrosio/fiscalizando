@@ -189,6 +189,9 @@ function Login() {
           </p>
 
           <div className="pt-4 border-t border-border/60">
+            <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
+              Desenvolvido por
+            </p>
             <BrandFooter />
           </div>
 
