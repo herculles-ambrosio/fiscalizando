@@ -610,8 +610,8 @@ function MenuExportar({
   onSvg,
 }: {
   onCsv: () => void;
-  onPng?: () => void;
-  onSvg?: () => void;
+  onPng?: (() => void) | undefined;
+  onSvg?: (() => void) | undefined;
 }) {
   return (
     <DropdownMenu>
