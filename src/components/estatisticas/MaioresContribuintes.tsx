@@ -142,7 +142,7 @@ export function MaioresContribuintes({
     let totalArquivo = 0;
     top.forEach((c) => {
       const v = c.porPeriodo.get(p.rotulo) ?? 0;
-      linha[nomeCurto(c.nome, c.ie, 22)] = v;
+      linha[`empresa:${c.ie}`] = v;
       totalArquivo += v;
     });
     linha["__total"] = totalArquivo;
@@ -169,14 +169,14 @@ export function MaioresContribuintes({
   const sufixo = `${anoAtivo ?? "periodo"}-top${quantidade}${situacoes.length ? `-${situacoes.join("_").toLowerCase()}` : ""}`;
 
   function exportarComposicaoCsv() {
-    const empresas = top.map((c) => nomeCurto(c.nome, c.ie, 22));
+    const empresas = top.map((c) => ({ chave: `empresa:${c.ie}`, rotulo: `${nomeCurto(c.nome, c.ie, 22)} (${c.ie})` }));
     const csv = montarCsv(
-      ["Arquivo apurado", "Competência", "Contribuintes no arquivo", ...empresas, "Total exibido"],
+      ["Arquivo apurado", "Competência", "Contribuintes no arquivo", ...empresas.map((e) => e.rotulo), "Total exibido"],
       dadosMensais.map((l) => [
         l["__arquivo"],
         l["competencia"],
         l["__qtd"],
-        ...empresas.map((e) => Number(l[e] ?? 0).toFixed(2)),
+        ...empresas.map((e) => Number(l[e.chave] ?? 0).toFixed(2)),
         Number(l["__total"] ?? 0).toFixed(2),
       ]),
     );
@@ -288,7 +288,7 @@ export function MaioresContribuintes({
             </div>
             <MenuExportar
               onCsv={exportar}
-              onPng={() => baixarGraficoPng(refRanking.current, `ranking-${sufixo}.png`)}
+              onPng={() => void baixarGraficoPng(refRanking.current, `ranking-${sufixo}.png`)}
               onSvg={() => baixarGraficoSvg(refRanking.current, `ranking-${sufixo}.svg`)}
             />
           </div>
@@ -381,7 +381,7 @@ export function MaioresContribuintes({
                 onCsv={exportarComposicaoCsv}
                 onPng={
                   periodos.length > 1
-                    ? () => baixarGraficoPng(refComposicao.current, `composicao-${sufixo}.png`)
+                    ? () => void baixarGraficoPng(refComposicao.current, `composicao-${sufixo}.png`)
                     : undefined
                 }
                 onSvg={
@@ -426,8 +426,8 @@ export function MaioresContribuintes({
                   align="left"
                   wrapperStyle={{ fontSize: 11, cursor: "pointer", paddingTop: 8 }}
                   onClick={(e: { dataKey?: unknown; value?: unknown }) => {
-                    const alvo = String(e?.dataKey ?? e?.value ?? "");
-                    const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
+                    const alvo = String(e?.dataKey ?? "").replace(/^empresa:/, "");
+                    const achado = top.find((c) => c.ie === alvo);
                     if (achado) setIeDetalhe(achado.ie);
                   }}
                 />
@@ -436,7 +436,8 @@ export function MaioresContribuintes({
                     <Bar
                       key={c.ie}
                       stackId="vaf"
-                      dataKey={nomeCurto(c.nome, c.ie, 22)}
+                      dataKey={`empresa:${c.ie}`}
+                      name={nomeCurto(c.nome, c.ie, 22)}
                       fill={corSerie(i)}
                       className="cursor-pointer"
                       onClick={() => setIeDetalhe(c.ie)}
@@ -445,7 +446,8 @@ export function MaioresContribuintes({
                     <Line
                       key={c.ie}
                       type="monotone"
-                      dataKey={nomeCurto(c.nome, c.ie, 22)}
+                      dataKey={`empresa:${c.ie}`}
+                      name={nomeCurto(c.nome, c.ie, 22)}
                       stroke={corSerie(i)}
                       strokeWidth={2}
                       dot={{ r: 3 }}
