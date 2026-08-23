@@ -166,6 +166,24 @@ export function MaioresContribuintes({
     baixarCsv(`maiores-contribuintes-${anoAtivo ?? "periodo"}.csv`, csv);
   }
 
+  const sufixo = `${anoAtivo ?? "periodo"}-top${quantidade}${situacoes.length ? `-${situacoes.join("_").toLowerCase()}` : ""}`;
+
+  function exportarComposicaoCsv() {
+    const empresas = top.map((c) => nomeCurto(c.nome, c.ie, 22));
+    const csv = montarCsv(
+      ["Arquivo apurado", "Competência", "Contribuintes no arquivo", ...empresas, "Total exibido"],
+      dadosMensais.map((l) => [
+        l["__arquivo"],
+        l["competencia"],
+        l["__qtd"],
+        ...empresas.map((e) => Number(l[e] ?? 0).toFixed(2)),
+        Number(l["__total"] ?? 0).toFixed(2),
+      ]),
+    );
+    baixarCsv(`composicao-por-arquivo-${sufixo}.csv`, csv);
+  }
+
+
   if (!anoAtivo) {
     return (
       <Card>
