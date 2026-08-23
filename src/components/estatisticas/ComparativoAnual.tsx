@@ -139,6 +139,7 @@ export function ComparativoAnual({
   return (
     <div className="space-y-6">
       <CriterioBase
+        fonte={fonte}
         cargas={cargas}
         contexto="cada barra/linha é um exercício, somando todas as remessas apuradas naquele exercício."
         linhas={linhas}

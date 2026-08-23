@@ -7,10 +7,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   anoDaCarga,
+  cargasDoExercicio,
+  cargasSubstituidas,
   periodoDaCarga,
   remessaDaCarga,
   type CargaEstat,
+  type FonteExercicio,
   type LinhaEstat,
+  vafComposto,
 } from "@/lib/vaf/estatisticas";
 import { formatarMoeda } from "@/lib/format";
 import { useSelecaoCargas } from "@/components/estatisticas/selecaoCargas";
@@ -37,12 +41,14 @@ export function CriterioBase({
   anoSelecionado = null,
   contexto,
   linhas = [],
+  fonte = "definitiva",
 }: {
   cargas: CargaEstat[];
   anoSelecionado?: number | null;
   contexto: string;
   /** Contribuintes de todas as apurações, para medir o impacto de cada alerta. */
   linhas?: LinhaEstat[];
+  fonte?: FonteExercicio;
 }) {
   const [aberto, setAberto] = useState(false);
   const selecao = useSelecaoCargas();
@@ -66,7 +72,7 @@ export function CriterioBase({
     for (const l of linhas) {
       const atual = mapa.get(l.carga_id) ?? { ies: new Set<string>(), vaf: 0 };
       atual.ies.add(l.inscricao_estadual);
-      atual.vaf += Number(l.vaf_atual ?? 0);
+      atual.vaf += vafComposto(l);
       mapa.set(l.carga_id, atual);
     }
     return mapa;
@@ -109,6 +115,20 @@ export function CriterioBase({
   const anos = [...new Set(cargas.map(anoDaCarga))];
   const alterado = chaveAtual !== [...rascunho].sort().join(",");
 
+  /** Qual apuração vale em cada exercício e quais foram substituídas por ela. */
+  const fontePorAno = useMemo(
+    () =>
+      [...anos]
+        .sort((a, b) => b - a)
+        .map((ano) => ({
+          ano,
+          usadas: cargasDoExercicio(cargas, ano, fonte),
+          substituidas: cargasSubstituidas(cargas, ano, fonte),
+        })),
+    [cargas, anos.join(","), fonte],
+  );
+  const totalSubstituidas = fontePorAno.reduce((s, a) => s + a.substituidas.length, 0);
+
 
   function alternar(id: string, marcado: boolean) {
     setRascunho((atual) => {
@@ -142,8 +162,10 @@ export function CriterioBase({
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">Critério de comparação:</span> {contexto} O
           eixo temporal é o <strong>exercício</strong> informado na apuração (não o ano do arquivo).
-          Entram apenas apurações concluídas; quando a mesma remessa foi reprocessada, vale a mais
-          recente, e o índice definitivo prevalece sobre a mensal equivalente.
+          Entram apenas apurações concluídas. Como cada remessa traz o acumulado do exercício,{" "}
+          <strong>vale só a remessa mais recente de cada ano</strong> (a 13, por exemplo, substitui
+          a 12) e o índice definitivo prevalece sobre as mensais. Os totais consideram apenas o VAF
+          que compõe o índice: valores negativos não são somados, igual à Análise do VAF.
         </p>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant="secondary" className="text-[11px]">
@@ -174,6 +196,35 @@ export function CriterioBase({
 
       <CollapsibleContent>
         <div className="space-y-3 border-t border-border px-4 py-3">
+          <div className="rounded-md border border-border bg-background/60 p-3">
+            <p className="mb-2 text-xs font-medium text-foreground">
+              O que vale em cada exercício
+              {totalSubstituidas > 0 && (
+                <span className="ml-2 font-normal text-muted-foreground">
+                  {totalSubstituidas} apuração(ões) substituída(s) para não duplicar o VAF
+                </span>
+              )}
+            </p>
+            <ul className="space-y-1 text-[11px] text-muted-foreground">
+              {fontePorAno.map((a) => (
+                <li key={a.ano}>
+                  <span className="font-medium text-foreground">{a.ano}:</span>{" "}
+                  {a.usadas.map((c) => `${rotuloTipo(c.tipo_retorno)} ${periodoDaCarga(c).rotulo}`).join(", ") ||
+                    "—"}
+                  {a.substituidas.length > 0 && (
+                    <span>
+                      {" "}
+                      · substituída(s):{" "}
+                      {a.substituidas
+                        .map((c) => `${rotuloTipo(c.tipo_retorno)} ${periodoDaCarga(c).rotulo}`)
+                        .join(", ")}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {foraDoCalculo > 0 && (
             <Alert className="border-[var(--omisso-foreground)]/40 bg-[var(--omisso-foreground)]/10">
               <AlertTriangle className="h-4 w-4 text-[var(--omisso-foreground)]" />

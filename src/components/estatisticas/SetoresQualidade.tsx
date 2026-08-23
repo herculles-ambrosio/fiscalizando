@@ -26,12 +26,15 @@ import { descricaoCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 import {
   agregarPorContribuinte,
   anoDaCarga,
+  cargasDoExercicio,
   corSerie,
   curvaPareto,
   empresasParaAtingir,
   periodoDaCarga,
   type CargaEstat,
+  type FonteExercicio,
   type LinhaEstat,
+  vafComposto,
 } from "@/lib/vaf/estatisticas";
 import { estiloTooltip } from "./MaioresContribuintes";
 import { DetalheContribuinte } from "./DetalheContribuinte";
@@ -56,9 +59,11 @@ const SITUACOES = [
 export function SetoresQualidade({
   cargas,
   linhas,
+  fonte = "definitiva",
 }: {
   cargas: CargaEstat[];
   linhas: LinhaEstat[];
+  fonte?: FonteExercicio;
 }) {
   const anos = useMemo(
     () => [...new Set(cargas.map(anoDaCarga))].sort((a, b) => b - a),
@@ -74,13 +79,19 @@ export function SetoresQualidade({
     [cargas],
   );
 
-  const linhasAno = useMemo(
+  // Só a fonte vigente do exercício entra nos totais (remessas anteriores são
+  // acumuladas dentro da mais recente).
+  const idsAno = useMemo(
     () =>
-      linhas.filter((l) => {
-        const p = periodoPorCarga.get(l.carga_id);
-        return p && p.ano === anoAtivo;
-      }),
-    [linhas, periodoPorCarga, anoAtivo],
+      new Set(
+        anoAtivo == null ? [] : cargasDoExercicio(cargas, anoAtivo, fonte).map((c) => c.id),
+      ),
+    [cargas, anoAtivo, fonte],
+  );
+
+  const linhasAno = useMemo(
+    () => linhas.filter((l) => idsAno.has(l.carga_id)),
+    [linhas, idsAno],
   );
 
   const ranking = useMemo(
@@ -98,7 +109,7 @@ export function SetoresQualidade({
     const mapa = new Map<string, number>();
     for (const l of linhasAno) {
       const cnae = l.cnae || "sem CNAE";
-      mapa.set(cnae, (mapa.get(cnae) ?? 0) + Number(l.vaf_atual ?? 0));
+      mapa.set(cnae, (mapa.get(cnae) ?? 0) + vafComposto(l));
     }
     return [...mapa.entries()]
       .map(([cnae, vaf]) => ({
@@ -120,7 +131,7 @@ export function SetoresQualidade({
       if (!p?.mes) continue;
       maiorRemessa = Math.max(maiorRemessa, p.mes);
       const atual = mapa.get(p.mes) ?? {};
-      atual[String(p.ano)] = (atual[String(p.ano)] ?? 0) + Number(l.vaf_atual ?? 0);
+      atual[String(p.ano)] = (atual[String(p.ano)] ?? 0) + vafComposto(l);
       mapa.set(p.mes, atual);
     }
     return Array.from({ length: maiorRemessa }, (_, i) => ({
@@ -180,6 +191,7 @@ export function SetoresQualidade({
   return (
     <div className="space-y-6">
       <CriterioBase
+        fonte={fonte}
         cargas={cargas}
         anoSelecionado={anoAtivo}
         contexto="setores, Pareto e qualidade usam as remessas do exercício selecionado; a evolução compara exercícios pelo número da remessa."
