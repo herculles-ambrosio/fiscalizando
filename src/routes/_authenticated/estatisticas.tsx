@@ -111,22 +111,18 @@ function PaginaEstatisticas() {
 
   const kpis = useMemo(() => {
     if (!linhas?.length) return null;
-    const anos = [...new Set(cargas.map((c) => c.competencia_ano ?? c.exercicio))].sort(
-      (a, b) => b - a,
-    );
+    const anos = [...new Set(cargas.map(anoDaCarga))].sort((a, b) => b - a);
     const ultimo = anos[0];
     const anterior = anos[1];
     const totalDoAno = (ano: number | undefined) => {
       if (ano == null) return 0;
-      const ids = new Set(
-        cargas.filter((c) => (c.competencia_ano ?? c.exercicio) === ano).map((c) => c.id),
-      );
+      const ids = new Set(cargasDoExercicio(cargas, ano).map((c) => c.id));
       return linhas
         .filter((l) => ids.has(l.carga_id))
         .reduce((s, l) => s + Number(l.vaf_atual ?? 0), 0);
     };
     const idsUltimo = new Set(
-      cargas.filter((c) => (c.competencia_ano ?? c.exercicio) === ultimo).map((c) => c.id),
+      ultimo == null ? [] : cargasDoExercicio(cargas, ultimo).map((c) => c.id),
     );
     const linhasUltimo = linhas.filter((l) => idsUltimo.has(l.carga_id));
     const mapa = new Map(cargas.map((c) => [c.id, periodoDaCarga(c)]));
