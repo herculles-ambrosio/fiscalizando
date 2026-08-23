@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { NotaRemessa } from "@/components/NotaRemessa";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, RefreshCw, Trash2 } from "lucide-react";
@@ -220,7 +221,12 @@ function Historico() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Exercício</TableHead>
-                  <TableHead>Remessa</TableHead>
+                  <TableHead>
+                    <span className="inline-flex items-center gap-1">
+                      Remessa
+                      <NotaRemessa />
+                    </span>
+                  </TableHead>
                   <TableHead>Tipo de retorno</TableHead>
 
                   <TableHead>Processada em</TableHead>

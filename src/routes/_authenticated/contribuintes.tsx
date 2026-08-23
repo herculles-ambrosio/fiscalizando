@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { NotaRemessa } from "@/components/NotaRemessa";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Download } from "lucide-react";
@@ -118,10 +119,14 @@ function PaginaContribuintes() {
         <div>
           <h1 className="text-2xl font-semibold">Contribuintes</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Relatório por situação, CNAE e comparação de declarantes com a competência anterior.
+            Relatório por situação, CNAE e comparação de declarantes com a remessa anterior.
           </p>
         </div>
-        <div className="w-72">
+        <div className="w-72 space-y-1">
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            Apuração (exercício · remessa)
+            <NotaRemessa />
+          </p>
           <Select value={selecionada?.id ?? ""} onValueChange={setCargaId}>
             <SelectTrigger aria-label="Apuração">
               <SelectValue placeholder="Escolha a apuração" />

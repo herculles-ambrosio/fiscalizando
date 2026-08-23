@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { NotaRemessa } from "@/components/NotaRemessa";
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Building2, CheckCircle2, Loader2, Upload } from "lucide-react";
@@ -424,7 +425,10 @@ function NovaApuracao() {
 
             {tipoRetorno === "mensal" && (
               <div className="space-y-2">
-                <Label htmlFor="mes-referencia">Remessa (nº do arquivo)</Label>
+                <Label htmlFor="mes-referencia" className="inline-flex items-center gap-1">
+                  Remessa (nº do arquivo)
+                  <NotaRemessa />
+                </Label>
                 <Input
                   id="mes-referencia"
                   type="number"
@@ -443,7 +447,10 @@ function NovaApuracao() {
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="competencia-mes">Remessa do arquivo</Label>
+                <Label htmlFor="competencia-mes" className="inline-flex items-center gap-1">
+                  Remessa do arquivo
+                  <NotaRemessa />
+                </Label>
                 <Select
                   value={competenciaMes ? String(competenciaMes) : "nenhum"}
                   onValueChange={(v) =>
