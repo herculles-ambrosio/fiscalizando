@@ -66,7 +66,7 @@ export function CriterioBase({
     for (const l of linhas) {
       const atual = mapa.get(l.carga_id) ?? { ies: new Set<string>(), vaf: 0 };
       atual.ies.add(l.inscricao_estadual);
-      atual.vaf += Number(l.vaf_atual ?? 0);
+      atual.vaf += vafComposto(l);
       mapa.set(l.carga_id, atual);
     }
     return mapa;

@@ -60,9 +60,9 @@ export function detalharSetor(
   const serie = periodos.map((p) => {
     const totalPeriodo = doEscopo
       .filter((l) => l.carga_id === p.cargaId)
-      .reduce((s, l) => s + Number(l.vaf_atual ?? 0), 0);
+      .reduce((s, l) => s + vafComposto(l), 0);
     const doPeriodo = doSetor.filter((l) => l.carga_id === p.cargaId);
-    const vaf = doPeriodo.reduce((s, l) => s + Number(l.vaf_atual ?? 0), 0);
+    const vaf = doPeriodo.reduce((s, l) => s + vafComposto(l), 0);
     return {
       rotulo: p.rotulo,
       ano: p.ano,
@@ -75,7 +75,7 @@ export function detalharSetor(
 
   const empresas = agregarPorContribuinte(doSetor, porCarga);
   const total = empresas.reduce((s, c) => s + c.total, 0);
-  const totalMunicipio = doEscopo.reduce((s, l) => s + Number(l.vaf_atual ?? 0), 0);
+  const totalMunicipio = doEscopo.reduce((s, l) => s + vafComposto(l), 0);
 
   return {
     cnae,

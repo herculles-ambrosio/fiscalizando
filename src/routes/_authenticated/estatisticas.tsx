@@ -147,7 +147,7 @@ function PaginaEstatisticas() {
       const ids = new Set(cargasDoExercicio(cargas, ano, fonte).map((c) => c.id));
       return linhas
         .filter((l) => ids.has(l.carga_id))
-        .reduce((s, l) => s + Number(l.vaf_atual ?? 0), 0);
+        .reduce((s, l) => s + vafComposto(l), 0);
     };
     const idsUltimo = new Set(
       ultimo == null ? [] : cargasDoExercicio(cargas, ultimo, fonte).map((c) => c.id),

@@ -82,8 +82,8 @@ export function detalharContribuinte(ie: string, cargas: CargaEstat[], linhas: L
       cnpj = cnpj ?? alvo.cnpj;
       cnae = cnae ?? alvo.cnae;
     }
-    const totalPeriodo = doPeriodo.reduce((s, l) => s + Number(l.vaf_atual ?? 0), 0);
-    const vaf = Number(alvo?.vaf_atual ?? 0);
+    const totalPeriodo = doPeriodo.reduce((s, l) => s + vafComposto(l), 0);
+    const vaf = (alvo ? vafComposto(alvo) : 0);
     serie.push({
       rotulo: p.rotulo,
       ano: p.ano,

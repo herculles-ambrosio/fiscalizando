@@ -98,7 +98,7 @@ export function SetoresQualidade({
     const mapa = new Map<string, number>();
     for (const l of linhasAno) {
       const cnae = l.cnae || "sem CNAE";
-      mapa.set(cnae, (mapa.get(cnae) ?? 0) + Number(l.vaf_atual ?? 0));
+      mapa.set(cnae, (mapa.get(cnae) ?? 0) + vafComposto(l));
     }
     return [...mapa.entries()]
       .map(([cnae, vaf]) => ({
@@ -120,7 +120,7 @@ export function SetoresQualidade({
       if (!p?.mes) continue;
       maiorRemessa = Math.max(maiorRemessa, p.mes);
       const atual = mapa.get(p.mes) ?? {};
-      atual[String(p.ano)] = (atual[String(p.ano)] ?? 0) + Number(l.vaf_atual ?? 0);
+      atual[String(p.ano)] = (atual[String(p.ano)] ?? 0) + vafComposto(l);
       mapa.set(p.mes, atual);
     }
     return Array.from({ length: maiorRemessa }, (_, i) => ({

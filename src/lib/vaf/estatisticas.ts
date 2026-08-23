@@ -137,7 +137,7 @@ export function agregarPorContribuinte(
   for (const l of linhas) {
     const periodo = periodoPorCarga.get(l.carga_id);
     if (!periodo) continue;
-    const vaf = Number(l.vaf_atual ?? 0);
+    const vaf = vafComposto(l);
     const atual = mapa.get(l.inscricao_estadual) ?? {
       ie: l.inscricao_estadual,
       nome: l.nome,
