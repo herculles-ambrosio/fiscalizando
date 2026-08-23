@@ -254,4 +254,22 @@
   #relatorio-indice tr {
     page-break-inside: avoid;
   }
+
+  .print-footer {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid #d4d4d4;
+    padding: 4px 0;
+    font-size: 9px;
+    color: #444;
+  }
+}
+
+.print-footer {
+  display: none;
 }
