@@ -12,18 +12,24 @@ import {
   deduplicarCargas,
   periodoDaCarga,
   variacaoPct,
+  type FonteExercicio,
 } from "@/lib/vaf/estatisticas";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { SelecaoCargasContext } from "@/components/estatisticas/selecaoCargas";
 import { MaioresContribuintes } from "@/components/estatisticas/MaioresContribuintes";
 import { ComparativoAnual } from "@/components/estatisticas/ComparativoAnual";
 import { SetoresQualidade } from "@/components/estatisticas/SetoresQualidade";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 const ABAS = ["maiores", "anual", "setores"] as const;
 type Aba = (typeof ABAS)[number];
 
 /** Critério de comparação escolhido, guardado por prefeitura neste navegador. */
 const chaveSelecao = (municipioId: string) => `apuravaf:estatisticas:selecao:${municipioId}`;
+/** Fonte do exercício (definitiva x remessas mensais), por prefeitura. */
+const chaveFonte = (municipioId: string) => `apuravaf:estatisticas:fonte:${municipioId}`;
 
 
 export const Route = createFileRoute("/_authenticated/estatisticas")({
