@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { NotaRemessa } from "@/components/NotaRemessa";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Download } from "lucide-react";
