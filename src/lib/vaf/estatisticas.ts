@@ -190,8 +190,18 @@ export function variacaoPct(atual: number, anterior: number): number | null {
  * definitivo naquele exercício, ela é a fonte oficial e substitui as remessas
  * mensais (que são parciais e se sobrepõem). Sem definitivo, usa as mensais.
  */
-export function cargasDoExercicio(cargas: CargaEstat[], ano: number): CargaEstat[] {
+export type FonteExercicio = "definitiva" | "mensais";
+
+export function cargasDoExercicio(
+  cargas: CargaEstat[],
+  ano: number,
+  fonte: FonteExercicio = "definitiva",
+): CargaEstat[] {
   const doAno = cargas.filter((c) => anoDaCarga(c) === ano);
+  if (fonte === "mensais") {
+    const mensais = doAno.filter((c) => c.tipo_retorno !== "indice_definitivo");
+    return mensais.length ? mensais : doAno;
+  }
   const definitivas = doAno.filter((c) => c.tipo_retorno === "indice_definitivo");
   return definitivas.length ? definitivas : doAno;
 }

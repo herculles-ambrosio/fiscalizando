@@ -12,18 +12,22 @@ import {
   deduplicarCargas,
   periodoDaCarga,
   variacaoPct,
+  type FonteExercicio,
 } from "@/lib/vaf/estatisticas";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { SelecaoCargasContext } from "@/components/estatisticas/selecaoCargas";
 import { MaioresContribuintes } from "@/components/estatisticas/MaioresContribuintes";
 import { ComparativoAnual } from "@/components/estatisticas/ComparativoAnual";
 import { SetoresQualidade } from "@/components/estatisticas/SetoresQualidade";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const ABAS = ["maiores", "anual", "setores"] as const;
 type Aba = (typeof ABAS)[number];
 
 /** Critério de comparação escolhido, guardado por prefeitura neste navegador. */
 const chaveSelecao = (municipioId: string) => `apuravaf:estatisticas:selecao:${municipioId}`;
+/** Fonte do exercício (definitiva x remessas mensais), por prefeitura. */
+const chaveFonte = (municipioId: string) => `apuravaf:estatisticas:fonte:${municipioId}`;
 
 
 export const Route = createFileRoute("/_authenticated/estatisticas")({
@@ -62,6 +66,28 @@ function PaginaEstatisticas() {
   const todasCargas = useMemo(() => deduplicarCargas(cargasBrutas ?? []), [cargasBrutas]);
   const cargaIds = useMemo(() => todasCargas.map((c) => c.id), [todasCargas]);
   const [selecionadas, setSelecionadas] = useState<string[] | null>(null);
+  const [fonte, setFonte] = useState<FonteExercicio>("definitiva");
+
+  // Preferência de fonte do exercício, lembrada por prefeitura.
+  useEffect(() => {
+    if (!municipioId) return;
+    try {
+      const salvo = localStorage.getItem(chaveFonte(municipioId));
+      setFonte(salvo === "mensais" ? "mensais" : "definitiva");
+    } catch {
+      setFonte("definitiva");
+    }
+  }, [municipioId]);
+
+  function alterarFonte(valor: FonteExercicio) {
+    setFonte(valor);
+    if (!municipioId) return;
+    try {
+      localStorage.setItem(chaveFonte(municipioId), valor);
+    } catch {
+      /* armazenamento indisponível: vale só nesta sessão */
+    }
+  }
 
   // Ao trocar de prefeitura, recupera o critério salvo daquela prefeitura (se ainda válido).
   useEffect(() => {
@@ -118,13 +144,13 @@ function PaginaEstatisticas() {
     const anterior = anos[1];
     const totalDoAno = (ano: number | undefined) => {
       if (ano == null) return 0;
-      const ids = new Set(cargasDoExercicio(cargas, ano).map((c) => c.id));
+      const ids = new Set(cargasDoExercicio(cargas, ano, fonte).map((c) => c.id));
       return linhas
         .filter((l) => ids.has(l.carga_id))
         .reduce((s, l) => s + Number(l.vaf_atual ?? 0), 0);
     };
     const idsUltimo = new Set(
-      ultimo == null ? [] : cargasDoExercicio(cargas, ultimo).map((c) => c.id),
+      ultimo == null ? [] : cargasDoExercicio(cargas, ultimo, fonte).map((c) => c.id),
     );
     const linhasUltimo = linhas.filter((l) => idsUltimo.has(l.carga_id));
     const mapa = new Map(cargas.map((c) => [c.id, periodoDaCarga(c)]));
@@ -140,7 +166,7 @@ function PaginaEstatisticas() {
       participacaoTop10: total > 0 ? (top10 / total) * 100 : 0,
       variacao: variacaoPct(totalDoAno(ultimo), totalDoAno(anterior)),
     };
-  }, [cargas, linhas]);
+  }, [cargas, linhas, fonte]);
 
   if (carregandoCargas || carregandoLinhas) {
     return (
@@ -162,11 +188,33 @@ function PaginaEstatisticas() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Estatísticas</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Quem sustenta o VAF do município, como isso evolui ano a ano e onde está concentrado.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Estatísticas</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Quem sustenta o VAF do município, como isso evolui ano a ano e onde está concentrado.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Fonte do exercício
+          </p>
+          <ToggleGroup
+            type="single"
+            value={fonte}
+            onValueChange={(v) => v && alterarFonte(v as FonteExercicio)}
+            variant="outline"
+            size="sm"
+          >
+            <ToggleGroupItem value="definitiva">Apuração definitiva</ToggleGroupItem>
+            <ToggleGroupItem value="mensais">Remessas mensais</ToggleGroupItem>
+          </ToggleGroup>
+          <p className="max-w-xs text-xs text-muted-foreground">
+            {fonte === "definitiva"
+              ? "Quando o exercício tem índice definitivo, ele substitui as remessas mensais."
+              : "Usa as remessas mensais do exercício, mesmo quando existe índice definitivo."}
+          </p>
+        </div>
       </div>
 
       {kpis && (
@@ -194,7 +242,7 @@ function PaginaEstatisticas() {
             <MaioresContribuintes cargas={cargas} linhas={linhas ?? []} />
           </TabsContent>
           <TabsContent value="anual">
-            <ComparativoAnual cargas={cargas} linhas={linhas ?? []} />
+            <ComparativoAnual cargas={cargas} linhas={linhas ?? []} fonte={fonte} />
           </TabsContent>
           <TabsContent value="setores">
             <SetoresQualidade cargas={cargas} linhas={linhas ?? []} />
