@@ -22,7 +22,7 @@ import { useSalvarIndice } from "@/hooks/useIndicesHistorico";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
-import { anoDoArquivo, remessaDoArquivo, formatarCompetencia } from "@/lib/vaf/tipoRetorno";
+import { anoDoArquivo, remessaDoArquivo, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
 import {
   apurarIndice,
   conferirLiquido,
@@ -371,7 +371,7 @@ export default function PaginaIndice() {
     String(municipio.codigo_sef).padStart(3, "0") !== apuracao.codigoMunicipio.padStart(3, "0");
   const mostrarRelatorio = !!apuracao && !divergente;
 
-  // Competência do arquivo (P443RT1226 -> 12/2026); o exercício vem do ano base apurado.
+  // Remessa e ano de entrega do arquivo (P443RT1226 -> remessa 12, entrega 2026); o exercício vem do ano base apurado.
   const competencia = useMemo(() => {
     const nome = arquivo?.name ?? "";
     const mes = nome ? remessaDoArquivo(nome) : null;
@@ -451,9 +451,10 @@ export default function PaginaIndice() {
 
       {mostrarRelatorio && exercicio && (
         <p className="no-print text-xs text-muted-foreground">
-          Será salvo como exercício <span className="font-medium">{exercicio}</span> · competência{" "}
+          Será salvo como exercício <span className="font-medium">{exercicio}</span> ·{" "}
           <span className="font-medium">
-            {formatarCompetencia(competencia.mes, competencia.ano)}
+            {rotuloRemessa(competencia.mes)}
+            {competencia.ano ? ` · entrega ${competencia.ano}` : ""}
           </span>{" "}
           · {apuracao?.estimado ? "projeção provisória" : `índice ${apuracao?.tipoIndice}`}.
         </p>

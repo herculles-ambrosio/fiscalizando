@@ -33,7 +33,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatarMoeda } from "@/lib/format";
 import { formatarIndice } from "@/lib/vaf/indice";
-import { competenciaOrdenavel, formatarCompetencia } from "@/lib/vaf/tipoRetorno";
+import { ordemExercicioRemessa, rotuloExercicioRemessa, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
 import { useExcluirIndice, useIndicesSalvos, type IndiceSalvo } from "@/hooks/useIndicesHistorico";
 import { toast } from "sonner";
 
@@ -84,8 +84,8 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
         const anterior = atual.provisorio;
         const mais_recente =
           !anterior ||
-          competenciaOrdenavel(r.competencia_mes, r.competencia_ano) >
-            competenciaOrdenavel(anterior.competencia_mes, anterior.competencia_ano);
+          ordemExercicioRemessa(r.exercicio, r.competencia_mes) >
+            ordemExercicioRemessa(anterior.exercicio, anterior.competencia_mes);
         if (mais_recente) atual.provisorio = r;
       }
       porExercicio.set(r.exercicio, atual);
@@ -100,14 +100,15 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
         .slice()
         .sort(
           (a, b) =>
-            competenciaOrdenavel(a.competencia_mes, a.competencia_ano) -
-            competenciaOrdenavel(b.competencia_mes, b.competencia_ano),
+            ordemExercicioRemessa(a.exercicio, a.competencia_mes) -
+            ordemExercicioRemessa(b.exercicio, b.competencia_mes),
         )
         .map((r) => ({
-          rotulo: formatarCompetencia(r.competencia_mes, r.competencia_ano),
+          rotulo: rotuloExercicioRemessa(r.exercicio, r.competencia_mes),
           indice: Number(r.indice),
           liquido: Number(r.valor_liquido),
         })),
+
     [registros],
   );
 
@@ -156,10 +157,8 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                           <div className="flex items-center gap-2">
                             <span className="font-mono">{formatarIndice(Number(c.provisorio.indice))}</span>
                             <Badge variant="secondary" className="text-[10px]">
-                              {formatarCompetencia(
-                                c.provisorio.competencia_mes,
-                                c.provisorio.competencia_ano,
-                              )}
+                              {rotuloRemessa(c.provisorio.competencia_mes)}
+
                               {c.provisorio.estimado ? " · projeção" : ""}
                             </Badge>
                           </div>
@@ -214,7 +213,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                       />
                       <ChartTooltip
                         formatter={(v: number) => formatarIndice(Number(v))}
-                        labelFormatter={(l: string) => `Competência ${l}`}
+                        labelFormatter={(l: string) => l}
                       />
                       <Line
                         type="monotone"
@@ -234,7 +233,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-24">Exercício</TableHead>
-                    <TableHead className="w-28">Competência</TableHead>
+                    <TableHead className="w-28">Remessa</TableHead>
                     <TableHead className="w-32">Tipo</TableHead>
                     <TableHead className="text-right">Índice</TableHead>
                     <TableHead className="text-right">Valor líquido</TableHead>
@@ -248,7 +247,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                     <TableRow key={r.id}>
                       <TableCell>{r.exercicio}</TableCell>
                       <TableCell>
-                        {formatarCompetencia(r.competencia_mes, r.competencia_ano)}
+                        {rotuloRemessa(r.competencia_mes)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={r.tipo_indice === "definitivo" ? "default" : "secondary"}>
@@ -311,7 +310,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
             <AlertDialogDescription>
               O índice{" "}
               {aExcluir
-                ? `${aExcluir.tipo_indice} de ${formatarCompetencia(aExcluir.competencia_mes, aExcluir.competencia_ano)}`
+                ? `${aExcluir.tipo_indice} de ${rotuloExercicioRemessa(aExcluir.exercicio, aExcluir.competencia_mes)}`
                 : ""}{" "}
               será removido. A apuração de contribuintes não é afetada.
             </AlertDialogDescription>

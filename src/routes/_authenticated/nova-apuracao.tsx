@@ -39,13 +39,12 @@ import {
 import {
   ROTULO_TIPO_RETORNO,
   TIPOS_RETORNO,
-  MESES_CURTOS,
   anoDoArquivo,
   anoDoArquivoAtivos,
-  rotuloMes,
+  rotuloRemessa,
   sugerirTipoRetorno,
   validarCompetencia,
-  formatarCompetencia,
+
   type TipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
 
@@ -425,7 +424,7 @@ function NovaApuracao() {
 
             {tipoRetorno === "mensal" && (
               <div className="space-y-2">
-                <Label htmlFor="mes-referencia">Remessa/mês de referência</Label>
+                <Label htmlFor="mes-referencia">Remessa (nº do arquivo)</Label>
                 <Input
                   id="mes-referencia"
                   type="number"
@@ -436,12 +435,15 @@ function NovaApuracao() {
                     setMesReferencia(e.target.value ? Number(e.target.value) : null)
                   }
                 />
+                <p className="text-xs text-muted-foreground">
+                  Número da entrega feita pela SEF (1 a 13) — não é mês de competência.
+                </p>
               </div>
             )}
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="competencia-mes">Competência — mês</Label>
+                <Label htmlFor="competencia-mes">Remessa do arquivo</Label>
                 <Select
                   value={competenciaMes ? String(competenciaMes) : "nenhum"}
                   onValueChange={(v) =>
@@ -449,22 +451,26 @@ function NovaApuracao() {
                   }
                 >
                   <SelectTrigger id="competencia-mes">
-                    <SelectValue placeholder="Sem mês" />
+                    <SelectValue placeholder="Sem remessa" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="nenhum">Sem mês (anual)</SelectItem>
-                    {[...MESES_CURTOS.map((_, i) => i + 1), 13].map((m) => (
+                    <SelectItem value="nenhum">Sem remessa (anual)</SelectItem>
+                    {Array.from({ length: 13 }, (_, i) => i + 1).map((m) => (
                       <SelectItem key={m} value={String(m)}>
-                        {rotuloMes(m)}
+                        {rotuloRemessa(m)}
                       </SelectItem>
                     ))}
                   </SelectContent>
 
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  O arquivo de retorno não traz mês: 12 e 13 são o nº da entrega, e a 13 é o
+                  fechamento do exercício.
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="competencia-ano">Competência — ano</Label>
+                <Label htmlFor="competencia-ano">Ano de entrega do arquivo</Label>
                 <Input
                   id="competencia-ano"
                   type="number"
@@ -477,10 +483,12 @@ function NovaApuracao() {
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Em branco, usa o exercício detectado nos arquivos.
+                  Ano em que a SEF gerou o arquivo. O ano de referência das análises é o exercício
+                  detectado no conteúdo.
                 </p>
               </div>
             </div>
+
 
 
             <div className="grid gap-5 sm:grid-cols-2">
@@ -606,9 +614,9 @@ function NovaApuracao() {
               alertas.length === 0 ? (
                 <Alert>
                   <CheckCircle2 className="h-4 w-4" />
-                  <AlertTitle>Competência validada</AlertTitle>
+                  <AlertTitle>Remessa validada</AlertTitle>
                   <AlertDescription>
-                    A competência confere com os nomes dos arquivos enviados.
+                    A remessa e o ano de entrega conferem com os nomes dos arquivos enviados.
                   </AlertDescription>
                 </Alert>
               ) : (
@@ -616,8 +624,8 @@ function NovaApuracao() {
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>
                     {temErroCompetencia
-                      ? "Competência inconsistente"
-                      : "Verifique a competência"}
+                      ? "Remessa inconsistente"
+                      : "Verifique a remessa"}
                   </AlertTitle>
                   <AlertDescription>
                     <ul className="list-disc space-y-1 pl-4">
@@ -633,23 +641,29 @@ function NovaApuracao() {
             {precisaMotivo && (
               <div className="space-y-2 rounded-lg border border-dashed p-4">
                 <Label htmlFor="motivo-competencia">
-                  Motivo da correção manual da competência
+                  Motivo da correção manual da remessa
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   Detectado no arquivo:{" "}
-                  <strong>{formatarCompetencia(detectada.mes, detectada.ano)}</strong> · Informado:{" "}
-                  <strong>{formatarCompetencia(competenciaMes, competenciaAno)}</strong>
+                  <strong>
+                    {rotuloRemessa(detectada.mes)} · entrega {detectada.ano ?? "—"}
+                  </strong>{" "}
+                  · Informado:{" "}
+                  <strong>
+                    {rotuloRemessa(competenciaMes)} · entrega {competenciaAno ?? "—"}
+                  </strong>
                 </p>
                 <Textarea
                   id="motivo-competencia"
                   rows={3}
-                  placeholder="Ex.: arquivo renomeado pela prefeitura; a remessa 12 refere-se à competência 11/2026."
+                  placeholder="Ex.: arquivo renomeado pela prefeitura; o conteúdo é da remessa 11."
                   value={motivoAjuste}
                   onChange={(e) => setMotivoAjuste(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  O motivo fica registrado na apuração junto com a competência detectada
+                  O motivo fica registrado na apuração junto com a remessa detectada
                   automaticamente.
+
                 </p>
               </div>
             )}
@@ -726,12 +740,13 @@ function NovaApuracao() {
       <Dialog open={dialogoDuplicada} onOpenChange={setDialogoDuplicada}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Competência já processada</DialogTitle>
+            <DialogTitle>Remessa já processada</DialogTitle>
             <DialogDescription>
-              Já existe apuração de {ROTULO_TIPO_RETORNO[tipoRetorno]} para a competência{" "}
-              {formatarCompetencia(competenciaMes, competenciaAno)} neste município. Deseja
-              substituir pela nova apuração? A apuração anterior e seus dados serão apagados.
+              Já existe apuração de {ROTULO_TIPO_RETORNO[tipoRetorno]} para a{" "}
+              {rotuloRemessa(competenciaMes)} de entrega {competenciaAno ?? "—"} neste município.
+              Deseja substituir pela nova apuração? A apuração anterior e seus dados serão apagados.
             </DialogDescription>
+
           </DialogHeader>
           <ul className="space-y-1 text-sm text-muted-foreground">
             {duplicadas.map((c) => (

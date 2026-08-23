@@ -34,35 +34,37 @@ export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: numb
   return { tipo: "mensal", mes: remessa };
 }
 
-export const MESES_CURTOS = [
-  "jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez",
-] as const;
-
-/** Rótulo do mês/remessa, incluindo a remessa 13 (fechamento). */
-export function rotuloMes(mes: number | null | undefined): string {
-  if (!mes) return "—";
-  if (mes === 13) return "13 · fechamento";
-  if (mes < 1 || mes > 12) return String(mes);
-  return `${String(mes).padStart(2, "0")} · ${MESES_CURTOS[mes - 1]}`;
+/**
+ * Rótulo da remessa (número do arquivo enviado pela SEF), de 1 a 13.
+ * Não é mês de competência: o layout do retorno não traz mês, só o exercício.
+ */
+export function rotuloRemessa(remessa: number | null | undefined): string {
+  if (!remessa) return "—";
+  if (remessa === 13) return "Arquivo 13 · fechamento";
+  return `Arquivo ${String(remessa).padStart(2, "0")}`;
 }
 
-/** Rótulo da competência: "mm/aaaa" quando há mês, senão só o ano. */
-export function formatarCompetencia(
-  mes: number | null | undefined,
-  ano: number | null | undefined,
+/** Rótulo temporal padrão do sistema: "2025 · Arquivo 12" / "2025 · Definitivo". */
+export function rotuloExercicioRemessa(
+  exercicio: number | null | undefined,
+  remessa: number | null | undefined,
+  tipo?: string | null,
 ): string {
-  if (!ano) return "—";
-  if (!mes || mes < 1 || mes > 13) return String(ano);
-  return `${String(mes).padStart(2, "0")}/${ano}`;
+  if (!exercicio) return "—";
+  if (tipo === "indice_definitivo" || remessa === 13) return `${exercicio} · Definitivo`;
+  if (tipo === "indice_provisorio" && !remessa) return `${exercicio} · Provisório`;
+  if (!remessa || remessa < 1 || remessa > 13) return String(exercicio);
+  return `${exercicio} · Arquivo ${String(remessa).padStart(2, "0")}`;
 }
 
-
-export function competenciaOrdenavel(
-  mes: number | null | undefined,
-  ano: number | null | undefined,
+/** Ordenação por exercício e, dentro dele, pelo número da remessa. */
+export function ordemExercicioRemessa(
+  exercicio: number | null | undefined,
+  remessa: number | null | undefined,
 ): number {
-  return (ano ?? 0) * 100 + (mes ?? 0);
+  return (exercicio ?? 0) * 100 + (remessa ?? 0);
 }
+
 
 /** Ano de competência a partir do nome padrão SEF-MG (P443RT1226 -> 2026). */
 export function anoDoArquivo(nome: string): number | null {
@@ -106,7 +108,7 @@ export function validarCompetencia(params: {
   if (nomeRetorno && !anoRetorno) {
     alertas.push({
       nivel: "aviso",
-      mensagem: `O nome "${nomeRetorno}" não segue o padrão P{código}RT{remessa}{ano}. Confira a competência manualmente.`,
+      mensagem: `O nome "${nomeRetorno}" não segue o padrão P{código}RT{remessa}{ano}. Confira a remessa e o ano de entrega manualmente.`,
     });
   }
 
@@ -127,19 +129,19 @@ export function validarCompetencia(params: {
   if (!competenciaAno) {
     alertas.push({
       nivel: "aviso",
-      mensagem: "Competência sem ano — será usado o exercício detectado nos arquivos.",
+      mensagem: "Ano de entrega do arquivo em branco — será usado o exercício detectado nos arquivos.",
     });
   } else {
     if (competenciaAno < 1990 || competenciaAno > new Date().getFullYear() + 1) {
       alertas.push({
         nivel: "erro",
-        mensagem: `Ano de competência ${competenciaAno} fora do intervalo esperado.`,
+        mensagem: `Ano de entrega ${competenciaAno} fora do intervalo esperado.`,
       });
     }
     if (anoRetorno && competenciaAno !== anoRetorno) {
       alertas.push({
         nivel: "erro",
-        mensagem: `Ano da competência (${competenciaAno}) diferente do ano do arquivo de retorno (${anoRetorno}).`,
+        mensagem: `Ano de entrega informado (${competenciaAno}) diferente do ano do arquivo de retorno (${anoRetorno}).`,
       });
     }
   }
@@ -148,21 +150,22 @@ export function validarCompetencia(params: {
     if (remessa && competenciaMes && competenciaMes !== remessa) {
       alertas.push({
         nivel: "erro",
-        mensagem: `Mês da competência (${String(competenciaMes).padStart(2, "0")}) diferente da remessa do arquivo (${String(remessa).padStart(2, "0")}).`,
+        mensagem: `Remessa informada (${String(competenciaMes).padStart(2, "0")}) diferente da remessa do nome do arquivo (${String(remessa).padStart(2, "0")}).`,
       });
     }
     if (remessa && !competenciaMes) {
       alertas.push({
         nivel: "aviso",
-        mensagem: `O arquivo indica a remessa ${String(remessa).padStart(2, "0")}; informe o mês da competência.`,
+        mensagem: `O arquivo indica a remessa ${String(remessa).padStart(2, "0")}; informe o número da remessa.`,
       });
     }
   } else if (competenciaMes && !(competenciaMes === 13 && remessa === 13)) {
     alertas.push({
       nivel: "aviso",
-      mensagem: `Retornos de índice ${tipoRetorno === "indice_definitivo" ? "definitivo" : "provisório"} normalmente são anuais — o mês ${String(competenciaMes).padStart(2, "0")} foi informado.`,
+      mensagem: `Retornos de índice ${tipoRetorno === "indice_definitivo" ? "definitivo" : "provisório"} costumam vir na remessa 13 — a remessa ${String(competenciaMes).padStart(2, "0")} foi informada.`,
     });
   }
+
 
 
   return alertas;

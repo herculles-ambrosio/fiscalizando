@@ -21,8 +21,8 @@ import { baixarCsv, montarCsv } from "@/lib/csv";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import {
-  competenciaOrdenavel,
-  formatarCompetencia,
+  ordemExercicioRemessa,
+  rotuloExercicioRemessa,
   rotuloTipoRetorno,
 } from "@/lib/vaf/tipoRetorno";
 
@@ -95,9 +95,8 @@ export default function Comparacao() {
         .filter((c): c is NonNullable<typeof c> => !!c)
         .sort(
           (a, b) =>
-            competenciaOrdenavel(a.competencia_mes, a.competencia_ano) -
-              competenciaOrdenavel(b.competencia_mes, b.competencia_ano) ||
-            a.exercicio - b.exercicio ||
+            ordemExercicioRemessa(a.exercicio, a.competencia_mes) -
+              ordemExercicioRemessa(b.exercicio, b.competencia_mes) ||
             a.criado_em.localeCompare(b.criado_em),
         ),
     [selecionadas, cargas],
@@ -186,7 +185,7 @@ export default function Comparacao() {
 
   const colunas = escolhidas.map(
     (c) =>
-      `${formatarCompetencia(c.competencia_mes, c.competencia_ano)} · ${rotuloTipoRetorno(c.tipo_retorno)}`,
+      `${rotuloExercicioRemessa(c.exercicio, c.competencia_mes, c.tipo_retorno)} · ${rotuloTipoRetorno(c.tipo_retorno)}`,
   );
 
   // cada exportação leva exatamente as linhas visíveis na aba (mesma busca e mesmo limite)
@@ -288,7 +287,7 @@ export default function Comparacao() {
                     />
                     <span className="space-y-1">
                       <span className="block font-medium">
-                        Competência {formatarCompetencia(c.competencia_mes, c.competencia_ano)}
+                        {rotuloExercicioRemessa(c.exercicio, c.competencia_mes, c.tipo_retorno)}
                       </span>
                       <Badge variant="outline">{rotuloTipoRetorno(c.tipo_retorno)}</Badge>
                       <span className="block text-xs text-muted-foreground">
@@ -327,7 +326,7 @@ export default function Comparacao() {
                       <TableHead>Indicador</TableHead>
                       {escolhidas.map((c) => (
                         <TableHead key={c.id} className="text-right">
-                          {formatarCompetencia(c.competencia_mes, c.competencia_ano)} ·{" "}
+                          {rotuloExercicioRemessa(c.exercicio, c.competencia_mes, c.tipo_retorno)} ·{" "}
                           {rotuloTipoRetorno(c.tipo_retorno)}
                         </TableHead>
                       ))}
@@ -395,7 +394,7 @@ export default function Comparacao() {
                       <TableHead>Contribuinte</TableHead>
                       {escolhidas.map((c) => (
                         <TableHead key={c.id} className="text-right">
-                          {formatarCompetencia(c.competencia_mes, c.competencia_ano)} ·{" "}
+                          {rotuloExercicioRemessa(c.exercicio, c.competencia_mes, c.tipo_retorno)} ·{" "}
                           {rotuloTipoRetorno(c.tipo_retorno)}
                         </TableHead>
                       ))}
@@ -463,7 +462,7 @@ export default function Comparacao() {
                       <TableHead>CNAE</TableHead>
                       {escolhidas.map((c) => (
                         <TableHead key={c.id} className="text-right">
-                          {formatarCompetencia(c.competencia_mes, c.competencia_ano)} ·{" "}
+                          {rotuloExercicioRemessa(c.exercicio, c.competencia_mes, c.tipo_retorno)} ·{" "}
                           {rotuloTipoRetorno(c.tipo_retorno)}
                         </TableHead>
                       ))}
@@ -523,7 +522,7 @@ export default function Comparacao() {
                       <TableHead>CNPJ</TableHead>
                       {escolhidas.map((c) => (
                         <TableHead key={c.id} className="text-right">
-                          {formatarCompetencia(c.competencia_mes, c.competencia_ano)} ·{" "}
+                          {rotuloExercicioRemessa(c.exercicio, c.competencia_mes, c.tipo_retorno)} ·{" "}
                           {rotuloTipoRetorno(c.tipo_retorno)}
                         </TableHead>
                       ))}
