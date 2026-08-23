@@ -44,7 +44,7 @@ import {
   TIPOS_RETORNO,
   rotuloTipoRetorno,
   type TipoRetorno,
-  formatarCompetencia,
+  rotuloRemessa,
 } from "@/lib/vaf/tipoRetorno";
 import { formatarDataHora } from "@/lib/format";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
@@ -220,7 +220,7 @@ function Historico() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Exercício</TableHead>
-                  <TableHead>Competência</TableHead>
+                  <TableHead>Remessa</TableHead>
                   <TableHead>Tipo de retorno</TableHead>
 
                   <TableHead>Processada em</TableHead>
@@ -246,13 +246,12 @@ function Historico() {
                       </Link>
                     </TableCell>
                     <TableCell className="tabular-nums">
-                      {formatarCompetencia(c.competencia_mes, c.competencia_ano)}
+                      {rotuloRemessa(c.competencia_mes)}
                       {c.competencia_ajustada && (
                         <span
                           className="ml-2 cursor-help text-xs text-amber-600 dark:text-amber-400"
-                          title={`Competência corrigida manualmente. Detectado: ${formatarCompetencia(
+                          title={`Remessa corrigida manualmente. Detectado: ${rotuloRemessa(
                             c.competencia_detectada_mes,
-                            c.competencia_detectada_ano,
                           )}. Motivo: ${c.competencia_motivo ?? "—"}`}
                         >
                           ajustada
