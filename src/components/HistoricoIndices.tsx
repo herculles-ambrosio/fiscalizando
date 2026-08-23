@@ -157,10 +157,8 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                           <div className="flex items-center gap-2">
                             <span className="font-mono">{formatarIndice(Number(c.provisorio.indice))}</span>
                             <Badge variant="secondary" className="text-[10px]">
-                              {formatarCompetencia(
-                                c.provisorio.competencia_mes,
-                                c.provisorio.competencia_ano,
-                              )}
+                              {rotuloRemessa(c.provisorio.competencia_mes)}
+
                               {c.provisorio.estimado ? " · projeção" : ""}
                             </Badge>
                           </div>
