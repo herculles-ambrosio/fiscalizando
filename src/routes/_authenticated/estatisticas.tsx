@@ -68,6 +68,28 @@ function PaginaEstatisticas() {
   const todasCargas = useMemo(() => deduplicarCargas(cargasBrutas ?? []), [cargasBrutas]);
   const cargaIds = useMemo(() => todasCargas.map((c) => c.id), [todasCargas]);
   const [selecionadas, setSelecionadas] = useState<string[] | null>(null);
+  const [fonte, setFonte] = useState<FonteExercicio>("definitiva");
+
+  // Preferência de fonte do exercício, lembrada por prefeitura.
+  useEffect(() => {
+    if (!municipioId) return;
+    try {
+      const salvo = localStorage.getItem(chaveFonte(municipioId));
+      setFonte(salvo === "mensais" ? "mensais" : "definitiva");
+    } catch {
+      setFonte("definitiva");
+    }
+  }, [municipioId]);
+
+  function alterarFonte(valor: FonteExercicio) {
+    setFonte(valor);
+    if (!municipioId) return;
+    try {
+      localStorage.setItem(chaveFonte(municipioId), valor);
+    } catch {
+      /* armazenamento indisponível: vale só nesta sessão */
+    }
+  }
 
   // Ao trocar de prefeitura, recupera o critério salvo daquela prefeitura (se ainda válido).
   useEffect(() => {
