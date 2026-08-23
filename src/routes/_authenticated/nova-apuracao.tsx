@@ -424,7 +424,7 @@ function NovaApuracao() {
 
             {tipoRetorno === "mensal" && (
               <div className="space-y-2">
-                <Label htmlFor="mes-referencia">Remessa/mês de referência</Label>
+                <Label htmlFor="mes-referencia">Remessa (nº do arquivo)</Label>
                 <Input
                   id="mes-referencia"
                   type="number"
@@ -435,12 +435,15 @@ function NovaApuracao() {
                     setMesReferencia(e.target.value ? Number(e.target.value) : null)
                   }
                 />
+                <p className="text-xs text-muted-foreground">
+                  Número da entrega feita pela SEF (1 a 13) — não é mês de competência.
+                </p>
               </div>
             )}
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="competencia-mes">Competência — mês</Label>
+                <Label htmlFor="competencia-mes">Remessa do arquivo</Label>
                 <Select
                   value={competenciaMes ? String(competenciaMes) : "nenhum"}
                   onValueChange={(v) =>
@@ -448,22 +451,26 @@ function NovaApuracao() {
                   }
                 >
                   <SelectTrigger id="competencia-mes">
-                    <SelectValue placeholder="Sem mês" />
+                    <SelectValue placeholder="Sem remessa" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="nenhum">Sem mês (anual)</SelectItem>
-                    {[...MESES_CURTOS.map((_, i) => i + 1), 13].map((m) => (
+                    <SelectItem value="nenhum">Sem remessa (anual)</SelectItem>
+                    {Array.from({ length: 13 }, (_, i) => i + 1).map((m) => (
                       <SelectItem key={m} value={String(m)}>
-                        {rotuloMes(m)}
+                        {rotuloRemessa(m)}
                       </SelectItem>
                     ))}
                   </SelectContent>
 
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  O arquivo de retorno não traz mês: 12 e 13 são o nº da entrega, e a 13 é o
+                  fechamento do exercício.
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="competencia-ano">Competência — ano</Label>
+                <Label htmlFor="competencia-ano">Ano de entrega do arquivo</Label>
                 <Input
                   id="competencia-ano"
                   type="number"
@@ -476,10 +483,12 @@ function NovaApuracao() {
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Em branco, usa o exercício detectado nos arquivos.
+                  Ano em que a SEF gerou o arquivo. O ano de referência das análises é o exercício
+                  detectado no conteúdo.
                 </p>
               </div>
             </div>
+
 
 
             <div className="grid gap-5 sm:grid-cols-2">
