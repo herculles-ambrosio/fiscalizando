@@ -184,3 +184,14 @@ export function variacaoPct(atual: number, anterior: number): number | null {
   if (!anterior) return null;
   return ((atual - anterior) / Math.abs(anterior)) * 100;
 }
+
+/**
+ * Cargas que representam um exercício: quando existe apuração de índice
+ * definitivo naquele exercício, ela é a fonte oficial e substitui as remessas
+ * mensais (que são parciais e se sobrepõem). Sem definitivo, usa as mensais.
+ */
+export function cargasDoExercicio(cargas: CargaEstat[], ano: number): CargaEstat[] {
+  const doAno = cargas.filter((c) => anoDaCarga(c) === ano);
+  const definitivas = doAno.filter((c) => c.tipo_retorno === "indice_definitivo");
+  return definitivas.length ? definitivas : doAno;
+}
