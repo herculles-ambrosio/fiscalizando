@@ -38,12 +38,14 @@ export function CriterioBase({
   anoSelecionado = null,
   contexto,
   linhas = [],
+  fonte = "definitiva",
 }: {
   cargas: CargaEstat[];
   anoSelecionado?: number | null;
   contexto: string;
   /** Contribuintes de todas as apurações, para medir o impacto de cada alerta. */
   linhas?: LinhaEstat[];
+  fonte?: FonteExercicio;
 }) {
   const [aberto, setAberto] = useState(false);
   const selecao = useSelecaoCargas();
