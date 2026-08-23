@@ -34,6 +34,7 @@ import { baixarCsv, montarCsv } from "@/lib/csv";
 import {
   agregarPorContribuinte,
   anoDaCarga,
+  cargasDoExercicio,
   corSerie,
   nomeCurto,
   periodoDaCarga,
