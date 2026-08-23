@@ -24,6 +24,7 @@ export function NotaRemessa({
   label?: string;
 }) {
   return (
+    <TooltipProvider delayDuration={150}>
     <Tooltip>
       <TooltipTrigger asChild>
         <button
@@ -41,6 +42,7 @@ export function NotaRemessa({
       </TooltipTrigger>
       <TooltipContent className="max-w-xs text-xs leading-relaxed">{TEXTO}</TooltipContent>
     </Tooltip>
+    </TooltipProvider>
   );
 }
 
