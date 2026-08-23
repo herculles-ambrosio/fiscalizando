@@ -628,7 +628,7 @@ export default function PaginaEvolucao() {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row">
             <Input
-              placeholder="Nome da análise (ex.: Definitivo 2024 x Mensal 07/2025)"
+              placeholder="Nome da análise (ex.: Definitivo 2024 x Arquivo 7/2025)"
               value={nomeGravar}
               onChange={(e) => setNomeGravar(e.target.value)}
             />
