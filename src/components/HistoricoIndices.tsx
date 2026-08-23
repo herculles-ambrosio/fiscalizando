@@ -198,7 +198,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
             <TabsContent value="evolucao" className="mt-4">
               {serie.length < 2 ? (
                 <p className="text-sm text-muted-foreground">
-                  Salve pelo menos duas competências provisórias para ver a evolução.
+                  Salve pelo menos duas remessas provisórias para ver a evolução.
                 </p>
               ) : (
                 <div className="h-72 w-full">

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/analises")({
       {
         name: "description",
         content:
-          "Analise a evolução do VAF entre competências, compare apurações e apure o índice provisório ou definitivo do município.",
+          "Analise a evolução do VAF entre remessas, compare apurações e apure o índice provisório ou definitivo do município.",
       },
       { property: "og:title", content: "Análises do VAF" },
       {

@@ -42,7 +42,7 @@ import { estiloTooltip } from "./MaioresContribuintes";
 
 const SEM_CNAE = "sem CNAE";
 
-/** Agrega o setor (CNAE) informado: série por competência e ranking de empresas. */
+/** Agrega o setor (CNAE) informado: série por remessa e ranking de empresas. */
 export function detalharSetor(
   cnae: string,
   cargas: CargaEstat[],

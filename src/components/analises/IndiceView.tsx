@@ -396,7 +396,7 @@ export default function PaginaIndice() {
       });
       toast.success(
         r.substituido
-          ? "Índice atualizado no histórico desta competência."
+          ? "Índice atualizado no histórico desta remessa."
           : "Índice salvo no histórico.",
       );
     } catch (e) {

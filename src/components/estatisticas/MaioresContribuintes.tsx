@@ -177,7 +177,7 @@ export function MaioresContribuintes({
   function exportarComposicaoCsv() {
     const empresas = top.map((c) => ({ chave: `empresa:${c.ie}`, rotulo: `${nomeCurto(c.nome, c.ie, 22)} (${c.ie})` }));
     const csv = montarCsv(
-      ["Arquivo apurado", "Competência", "Contribuintes no arquivo", ...empresas.map((e) => e.rotulo), "Total exibido"],
+      ["Arquivo apurado", "Remessa", "Contribuintes no arquivo", ...empresas.map((e) => e.rotulo), "Total exibido"],
       dadosMensais.map((l) => [
         l["__arquivo"],
         l["competencia"],

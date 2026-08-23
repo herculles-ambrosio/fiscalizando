@@ -316,7 +316,7 @@ function NovaApuracao() {
 
     if (precisaMotivo && motivoAjuste.trim().length < 5) {
       setErro(
-        "Informe o motivo da correção manual da competência (mínimo de 5 caracteres) para prosseguir.",
+        "Informe o motivo da correção manual da remessa (mínimo de 5 caracteres) para prosseguir.",
       );
       return;
     }
@@ -331,7 +331,7 @@ function NovaApuracao() {
     if (temErroCompetencia && !precisaMotivo && !ignorarAlertas) {
       setIgnorarAlertas(true);
       setErro(
-        "A competência informada não confere com os arquivos. Revise os alertas ou clique novamente em Processar apuração para continuar assim mesmo.",
+        "A remessa informada não confere com os arquivos. Revise os alertas ou clique novamente em Processar apuração para continuar assim mesmo.",
       );
       return;
     }

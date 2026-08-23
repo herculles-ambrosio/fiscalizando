@@ -572,14 +572,14 @@ export default function PaginaEvolucao() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <CaixaArquivo
-          titulo="Arquivo base (competência anterior)"
+          titulo="Arquivo base (remessa anterior)"
           descricao="Ex.: índice definitivo do ano anterior."
           arquivo={base}
           carregando={carregando === "base"}
           onSelecionar={(f) => carregar(f, "base")}
         />
         <CaixaArquivo
-          titulo="Arquivo atual (competência a comparar)"
+          titulo="Arquivo atual (remessa a comparar)"
           descricao="Ex.: retorno mensal, provisório ou definitivo do ano atual."
           arquivo={atual}
           carregando={carregando === "atual"}
@@ -710,7 +710,7 @@ export default function PaginaEvolucao() {
         <Alert>
           <AlertTitle>Selecione os dois arquivos</AlertTitle>
           <AlertDescription>
-            Carregue o arquivo da competência anterior e o da competência atual para ver o
+            Carregue o arquivo da remessa anterior e o da remessa atual para ver o
             comparativo completo.
           </AlertDescription>
         </Alert>
@@ -997,7 +997,7 @@ export default function PaginaEvolucao() {
                     linhas={declarantes.sairam}
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
-                    vazio="Todos os contribuintes da competência base declararam também na atual."
+                    vazio="Todos os contribuintes da remessa base declararam também na atual."
                     nomeArquivo={`${prefixoArquivo}-deixaram-de-declarar.csv`}
                   />
                 </CardContent>
@@ -1011,7 +1011,7 @@ export default function PaginaEvolucao() {
                     linhas={declarantes.entraram}
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
-                    vazio="Nenhum declarante novo nesta competência."
+                    vazio="Nenhum declarante novo nesta remessa."
                     nomeArquivo={`${prefixoArquivo}-novos-declarantes.csv`}
                   />
                 </CardContent>

@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/contribuintes")({
       {
         property: "og:description",
         content:
-          "Filtre contribuintes por situação e CNAE e veja quem deixou de declarar em relação à competência anterior.",
+          "Filtre contribuintes por situação e CNAE e veja quem deixou de declarar em relação à remessa anterior.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -214,7 +214,7 @@ function DeixaramDeDeclarar({
 
   function baixarCsv() {
     const linhas = [
-      ["IE", "CNPJ", "Contribuinte", "CNAE", "Descrição do CNAE", "VAF na competência anterior"],
+      ["IE", "CNPJ", "Contribuinte", "CNAE", "Descrição do CNAE", "VAF na remessa anterior"],
       ...(data ?? []).map((l) => [
         l.inscricao_estadual,
         l.cnpj ?? "",
@@ -274,7 +274,7 @@ function DeixaramDeDeclarar({
                     <TableHead>CNPJ</TableHead>
                     <TableHead>IE</TableHead>
                     <TableHead>CNAE</TableHead>
-                    <TableHead className="text-right">VAF na competência anterior</TableHead>
+                    <TableHead className="text-right">VAF na remessa anterior</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -298,7 +298,7 @@ function DeixaramDeDeclarar({
                   {!data?.length && (
                     <TableRow>
                       <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                        Todos os declarantes da competência anterior voltaram a declarar.
+                        Todos os declarantes da remessa anterior voltaram a declarar.
                       </TableCell>
                     </TableRow>
                   )}

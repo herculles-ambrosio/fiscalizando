@@ -53,7 +53,7 @@ export type SerieDetalhe = {
   situacoes: string[];
 };
 
-/** Série mensal completa de um contribuinte, com participação e posição em cada competência. */
+/** Série completa de um contribuinte por remessa, com participação e posição em cada uma. */
 export function detalharContribuinte(ie: string, cargas: CargaEstat[], linhas: LinhaEstat[]) {
   const periodos = cargas.map(periodoDaCarga).sort((a, b) => a.ordem - b.ordem);
   const porCarga = new Map(periodos.map((p) => [p.cargaId, p]));
