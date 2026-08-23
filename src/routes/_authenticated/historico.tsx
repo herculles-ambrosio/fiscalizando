@@ -277,7 +277,7 @@ function Historico() {
                       >
                         {rotuloTipoRetorno(c.tipo_retorno)}
                         {c.tipo_retorno === "mensal" && c.mes_referencia
-                          ? ` ${String(c.mes_referencia).padStart(2, "0")}`
+                          ? ` · arquivo ${c.mes_referencia}`
                           : ""}
                       </Badge>
                     </TableCell>
