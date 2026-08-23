@@ -40,6 +40,7 @@ import {
   periodoDaCarga,
   variacaoPct,
   type CargaEstat,
+  type FonteExercicio,
   type LinhaEstat,
 } from "@/lib/vaf/estatisticas";
 import { estiloTooltip } from "./MaioresContribuintes";
@@ -52,9 +53,11 @@ type Modo = "agrupado" | "empilhado" | "linha";
 export function ComparativoAnual({
   cargas,
   linhas,
+  fonte = "definitiva",
 }: {
   cargas: CargaEstat[];
   linhas: LinhaEstat[];
+  fonte?: FonteExercicio;
 }) {
   const [topN, setTopN] = useState("10");
   const [modo, setModo] = useState<Modo>("agrupado");
@@ -67,7 +70,7 @@ export function ComparativoAnual({
     );
     const porAno = new Map<number, ReturnType<typeof agregarPorContribuinte>>();
     for (const ano of anos) {
-      const doAno = cargasDoExercicio(cargas, ano);
+      const doAno = cargasDoExercicio(cargas, ano, fonte);
       const mapa = new Map(doAno.map((c) => [c.id, periodoDaCarga(c)] as const));
       porAno.set(
         ano,
@@ -79,7 +82,7 @@ export function ComparativoAnual({
     }
     const recente = anos.length ? (porAno.get(anos[anos.length - 1]!) ?? []) : [];
     return { anos, porAno, top: recente.slice(0, quantidade) };
-  }, [cargas, linhas, quantidade]);
+  }, [cargas, linhas, quantidade, fonte]);
 
   const totalPorAnoEmpresa = useMemo(() => {
     const mapa = new Map<string, Map<number, number>>();
