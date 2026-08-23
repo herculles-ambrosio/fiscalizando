@@ -81,6 +81,8 @@ export function MaioresContribuintes({
   const [ieDetalhe, setIeDetalhe] = useState<string | null>(null);
   const [situacoes, setSituacoes] = useState<Situacao[]>([]);
   const [tipoGrafico, setTipoGrafico] = useState<"barras" | "linha">("barras");
+  const refRanking = useRef<HTMLDivElement>(null);
+  const refComposicao = useRef<HTMLDivElement>(null);
 
   const anoAtivo = ano && anos.includes(Number(ano)) ? Number(ano) : (anos[0] ?? null);
   const quantidade = Math.max(1, Math.min(200, Number(topN) || 10));
