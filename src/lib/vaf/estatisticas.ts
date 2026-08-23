@@ -1,3 +1,5 @@
+import { rotuloExercicioRemessa } from "./tipoRetorno";
+
 /**
  * Agregações puras para o menu de Estatísticas.
  * Trabalha sobre as apurações já gravadas (cargas + contribuintes_apurados),
@@ -106,7 +108,7 @@ export function periodoDaCarga(c: CargaEstat): Periodo {
     mes,
     ano,
     ordem: ano * 100 + (mes ?? 99),
-    rotulo: mes ? `Arquivo ${mes} · ${ano}` : `Definitivo · ${ano}`,
+    rotulo: rotuloExercicioRemessa(ano, mes, c.tipo_retorno),
   };
 }
 

@@ -34,10 +34,6 @@ export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: numb
   return { tipo: "mensal", mes: remessa };
 }
 
-export const MESES_CURTOS = [
-  "jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez",
-] as const;
-
 /**
  * Rótulo da remessa (número do arquivo enviado pela SEF), de 1 a 13.
  * Não é mês de competência: o layout do retorno não traz mês, só o exercício.
