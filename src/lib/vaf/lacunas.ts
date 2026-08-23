@@ -44,12 +44,13 @@ export function detectarLacunas(cargas: CargaEstat[]): Lacuna[] {
     const menosRemessas = maiorGeral > 0 && maiorDoAno < maiorGeral;
     if (!faltantes.length && !semFechamento && !menosRemessas) continue;
 
+    // Cada remessa traz o acumulado do exercício, então arquivos intermediários
+    // que faltam não afetam os totais — só a série por remessa.
     const graficos: string[] = [];
-    if (faltantes.length) {
-      graficos.push("Maiores contribuintes (soma do exercício)", "Setores e qualidade");
-    }
-    if (semFechamento || menosRemessas) graficos.push("Comparativo anual");
     if (faltantes.length || menosRemessas) graficos.push("Evolução por remessa");
+    if (semFechamento || menosRemessas) {
+      graficos.push("Comparativo anual", "Maiores contribuintes (total do exercício)");
+    }
 
     lacunas.push({
       ano,
