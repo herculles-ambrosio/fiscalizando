@@ -188,11 +188,33 @@ function PaginaEstatisticas() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Estatísticas</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Quem sustenta o VAF do município, como isso evolui ano a ano e onde está concentrado.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Estatísticas</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Quem sustenta o VAF do município, como isso evolui ano a ano e onde está concentrado.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Fonte do exercício
+          </p>
+          <ToggleGroup
+            type="single"
+            value={fonte}
+            onValueChange={(v) => v && alterarFonte(v as FonteExercicio)}
+            variant="outline"
+            size="sm"
+          >
+            <ToggleGroupItem value="definitiva">Apuração definitiva</ToggleGroupItem>
+            <ToggleGroupItem value="mensais">Remessas mensais</ToggleGroupItem>
+          </ToggleGroup>
+          <p className="max-w-xs text-xs text-muted-foreground">
+            {fonte === "definitiva"
+              ? "Quando o exercício tem índice definitivo, ele substitui as remessas mensais."
+              : "Usa as remessas mensais do exercício, mesmo quando existe índice definitivo."}
+          </p>
+        </div>
       </div>
 
       {kpis && (
