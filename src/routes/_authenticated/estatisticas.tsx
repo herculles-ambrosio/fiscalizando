@@ -7,6 +7,8 @@ import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useCargasEstatisticas, useLinhasEstatisticas } from "@/hooks/useEstatisticas";
 import {
   agregarPorContribuinte,
+  anoDaCarga,
+  cargasDoExercicio,
   deduplicarCargas,
   periodoDaCarga,
   variacaoPct,
