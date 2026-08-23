@@ -38,31 +38,37 @@ export const MESES_CURTOS = [
   "jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez",
 ] as const;
 
-/** Rótulo do mês/remessa, incluindo a remessa 13 (fechamento). */
-export function rotuloMes(mes: number | null | undefined): string {
-  if (!mes) return "—";
-  if (mes === 13) return "13 · fechamento";
-  if (mes < 1 || mes > 12) return String(mes);
-  return `${String(mes).padStart(2, "0")} · ${MESES_CURTOS[mes - 1]}`;
+/**
+ * Rótulo da remessa (número do arquivo enviado pela SEF), de 1 a 13.
+ * Não é mês de competência: o layout do retorno não traz mês, só o exercício.
+ */
+export function rotuloRemessa(remessa: number | null | undefined): string {
+  if (!remessa) return "—";
+  if (remessa === 13) return "Arquivo 13 · fechamento";
+  return `Arquivo ${String(remessa).padStart(2, "0")}`;
 }
 
-/** Rótulo da competência: "mm/aaaa" quando há mês, senão só o ano. */
-export function formatarCompetencia(
-  mes: number | null | undefined,
-  ano: number | null | undefined,
+/** Rótulo temporal padrão do sistema: "2025 · Arquivo 12" / "2025 · Definitivo". */
+export function rotuloExercicioRemessa(
+  exercicio: number | null | undefined,
+  remessa: number | null | undefined,
+  tipo?: string | null,
 ): string {
-  if (!ano) return "—";
-  if (!mes || mes < 1 || mes > 13) return String(ano);
-  return `${String(mes).padStart(2, "0")}/${ano}`;
+  if (!exercicio) return "—";
+  if (tipo === "indice_definitivo" || remessa === 13) return `${exercicio} · Definitivo`;
+  if (tipo === "indice_provisorio" && !remessa) return `${exercicio} · Provisório`;
+  if (!remessa || remessa < 1 || remessa > 13) return String(exercicio);
+  return `${exercicio} · Arquivo ${String(remessa).padStart(2, "0")}`;
 }
 
-
-export function competenciaOrdenavel(
-  mes: number | null | undefined,
-  ano: number | null | undefined,
+/** Ordenação por exercício e, dentro dele, pelo número da remessa. */
+export function ordemExercicioRemessa(
+  exercicio: number | null | undefined,
+  remessa: number | null | undefined,
 ): number {
-  return (ano ?? 0) * 100 + (mes ?? 0);
+  return (exercicio ?? 0) * 100 + (remessa ?? 0);
 }
+
 
 /** Ano de competência a partir do nome padrão SEF-MG (P443RT1226 -> 2026). */
 export function anoDoArquivo(nome: string): number | null {
