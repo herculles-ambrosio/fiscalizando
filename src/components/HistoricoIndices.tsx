@@ -33,7 +33,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatarMoeda } from "@/lib/format";
 import { formatarIndice } from "@/lib/vaf/indice";
-import { competenciaOrdenavel, formatarCompetencia } from "@/lib/vaf/tipoRetorno";
+import { ordemExercicioRemessa, rotuloExercicioRemessa, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
 import { useExcluirIndice, useIndicesSalvos, type IndiceSalvo } from "@/hooks/useIndicesHistorico";
 import { toast } from "sonner";
 
