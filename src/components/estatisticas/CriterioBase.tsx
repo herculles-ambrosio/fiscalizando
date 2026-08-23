@@ -7,9 +7,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   anoDaCarga,
+  cargasDoExercicio,
+  cargasSubstituidas,
   periodoDaCarga,
   remessaDaCarga,
   type CargaEstat,
+  type FonteExercicio,
   type LinhaEstat,
   vafComposto,
 } from "@/lib/vaf/estatisticas";
