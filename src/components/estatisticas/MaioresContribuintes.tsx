@@ -356,29 +356,47 @@ export function MaioresContribuintes({
                   : `O exercício ${anoAtivo} tem só um arquivo apurado (${periodos[0]?.rotulo ?? "—"}), então não há série ao longo do ano para comparar.`}
               </p>
             </div>
-            {periodos.length > 1 && (
-              <div className="flex items-center gap-1 rounded-md border border-border p-1">
-                <Button
-                  size="sm"
-                  variant={tipoGrafico === "barras" ? "secondary" : "ghost"}
-                  onClick={() => setTipoGrafico("barras")}
-                >
-                  <BarChart3 className="mr-1.5 h-4 w-4" />
-                  Barras empilhadas
-                </Button>
-                <Button
-                  size="sm"
-                  variant={tipoGrafico === "linha" ? "secondary" : "ghost"}
-                  onClick={() => setTipoGrafico("linha")}
-                >
-                  <LineChartIcon className="mr-1.5 h-4 w-4" />
-                  Linha
-                </Button>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {periodos.length > 1 && (
+                <div className="flex items-center gap-1 rounded-md border border-border p-1">
+                  <Button
+                    size="sm"
+                    variant={tipoGrafico === "barras" ? "secondary" : "ghost"}
+                    onClick={() => setTipoGrafico("barras")}
+                  >
+                    <BarChart3 className="mr-1.5 h-4 w-4" />
+                    Barras empilhadas
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={tipoGrafico === "linha" ? "secondary" : "ghost"}
+                    onClick={() => setTipoGrafico("linha")}
+                  >
+                    <LineChartIcon className="mr-1.5 h-4 w-4" />
+                    Linha
+                  </Button>
+                </div>
+              )}
+              <MenuExportar
+                onCsv={exportarComposicaoCsv}
+                onPng={
+                  periodos.length > 1
+                    ? () => baixarGraficoPng(refComposicao.current, `composicao-${sufixo}.png`)
+                    : undefined
+                }
+                onSvg={
+                  periodos.length > 1
+                    ? () => baixarGraficoSvg(refComposicao.current, `composicao-${sufixo}.svg`)
+                    : undefined
+                }
+              />
+            </div>
           </div>
         </CardHeader>
-        <CardContent className={periodos.length > 1 ? "h-[26rem] p-6 pt-4" : "p-6 pt-2"}>
+        <CardContent
+          ref={refComposicao}
+          className={periodos.length > 1 ? "h-[26rem] p-6 pt-4" : "p-6 pt-2"}
+        >
           {periodos.length > 1 ? (
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={dadosMensais} margin={{ left: -8, right: 16, bottom: 8 }}>
