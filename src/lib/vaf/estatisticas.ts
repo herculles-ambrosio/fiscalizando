@@ -119,6 +119,15 @@ export type Contribuinte = {
   porPeriodo: Map<string, number>;
 };
 
+/**
+ * VAF que compõe o índice: valores negativos não entram, exatamente como na
+ * apuração do índice (Análise do VAF). Mantém os indicadores coerentes entre
+ * os dois módulos e impede participações acima de 100%.
+ */
+export function vafComposto(linha: { vaf_atual: number | null }): number {
+  return Math.max(Number(linha.vaf_atual ?? 0), 0);
+}
+
 /** Soma o VAF por contribuinte no conjunto de períodos informado. */
 export function agregarPorContribuinte(
   linhas: LinhaEstat[],
