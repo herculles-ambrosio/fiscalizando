@@ -36,6 +36,7 @@ import {
   periodoDaCarga,
   type CargaEstat,
   type LinhaEstat,
+  vafComposto,
 } from "@/lib/vaf/estatisticas";
 import { estiloTooltip } from "./MaioresContribuintes";
 

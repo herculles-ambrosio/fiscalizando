@@ -11,6 +11,7 @@ import {
   remessaDaCarga,
   type CargaEstat,
   type LinhaEstat,
+  vafComposto,
 } from "@/lib/vaf/estatisticas";
 import { formatarMoeda } from "@/lib/format";
 import { useSelecaoCargas } from "@/components/estatisticas/selecaoCargas";

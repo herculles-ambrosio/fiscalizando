@@ -13,6 +13,7 @@ import {
   periodoDaCarga,
   variacaoPct,
   type FonteExercicio,
+  vafComposto,
 } from "@/lib/vaf/estatisticas";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { SelecaoCargasContext } from "@/components/estatisticas/selecaoCargas";
