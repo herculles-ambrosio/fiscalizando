@@ -129,16 +129,21 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((evento) => {
       if (evento !== "SIGNED_IN" && evento !== "SIGNED_OUT" && evento !== "USER_UPDATED") return;
-      router.invalidate();
-      if (evento !== "SIGNED_OUT") queryClient.invalidateQueries();
+      // Não invalide o roteador enquanto a rota autenticada ainda executa o
+      // beforeLoad. A restauração da sessão também pode emitir SIGNED_IN e a
+      // invalidação concorrente cancela o MatchInner com uma rejeição sem valor.
+      if (evento === "SIGNED_OUT") {
+        queryClient.clear();
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: ["perfil"] });
     });
     return () => sub.subscription.unsubscribe();
-  }, [queryClient, router]);
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
