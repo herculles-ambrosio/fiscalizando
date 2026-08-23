@@ -81,6 +81,9 @@ export async function baixarGraficoPng(
     if (!blob) return false;
     baixarBlob(nomeArquivo, blob);
     return true;
+  } catch (error) {
+    console.error(error);
+    return false;
   } finally {
     URL.revokeObjectURL(url);
   }

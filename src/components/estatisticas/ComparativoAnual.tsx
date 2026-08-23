@@ -95,7 +95,7 @@ export function ComparativoAnual({
   const dados = anos.map((ano) => {
     const linha: Record<string, string | number> = { ano: String(ano) };
     for (const c of top) {
-      linha[nomeCurto(c.nome, c.ie, 22)] = totalPorAnoEmpresa.get(c.ie)?.get(ano) ?? 0;
+      linha[`empresa:${c.ie}`] = totalPorAnoEmpresa.get(c.ie)?.get(ano) ?? 0;
     }
     return linha;
   });
@@ -201,8 +201,8 @@ export function ComparativoAnual({
                 <Legend
                   wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
                   onClick={(e: { dataKey?: unknown; value?: unknown }) => {
-                    const alvo = String(e?.dataKey ?? e?.value ?? "");
-                    const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
+                    const alvo = String(e?.dataKey ?? "").replace(/^empresa:/, "");
+                    const achado = top.find((c) => c.ie === alvo);
                     if (achado) setIeDetalhe(achado.ie);
                   }}
                 />
@@ -210,7 +210,8 @@ export function ComparativoAnual({
                   <Line
                     key={c.ie}
                     type="monotone"
-                    dataKey={nomeCurto(c.nome, c.ie, 22)}
+                    dataKey={`empresa:${c.ie}`}
+                    name={nomeCurto(c.nome, c.ie, 22)}
                     stroke={corSerie(i)}
                     strokeWidth={2}
                     dot={{ r: 3 }}
@@ -238,15 +239,16 @@ export function ComparativoAnual({
                 <Legend
                   wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
                   onClick={(e: { dataKey?: unknown; value?: unknown }) => {
-                    const alvo = String(e?.dataKey ?? e?.value ?? "");
-                    const achado = top.find((c) => nomeCurto(c.nome, c.ie, 22) === alvo);
+                    const alvo = String(e?.dataKey ?? "").replace(/^empresa:/, "");
+                    const achado = top.find((c) => c.ie === alvo);
                     if (achado) setIeDetalhe(achado.ie);
                   }}
                 />
                 {top.map((c, i) => (
                   <Bar
                     key={c.ie}
-                    dataKey={nomeCurto(c.nome, c.ie, 22)}
+                    dataKey={`empresa:${c.ie}`}
+                    name={nomeCurto(c.nome, c.ie, 22)}
                     {...(modo === "empilhado" ? { stackId: "vaf" } : {})}
                     fill={corSerie(i)}
                     radius={modo === "empilhado" ? [0, 0, 0, 0] : [4, 4, 0, 0]}
