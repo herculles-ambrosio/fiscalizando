@@ -196,6 +196,35 @@ export function CriterioBase({
 
       <CollapsibleContent>
         <div className="space-y-3 border-t border-border px-4 py-3">
+          <div className="rounded-md border border-border bg-background/60 p-3">
+            <p className="mb-2 text-xs font-medium text-foreground">
+              O que vale em cada exercício
+              {totalSubstituidas > 0 && (
+                <span className="ml-2 font-normal text-muted-foreground">
+                  {totalSubstituidas} apuração(ões) substituída(s) para não duplicar o VAF
+                </span>
+              )}
+            </p>
+            <ul className="space-y-1 text-[11px] text-muted-foreground">
+              {fontePorAno.map((a) => (
+                <li key={a.ano}>
+                  <span className="font-medium text-foreground">{a.ano}:</span>{" "}
+                  {a.usadas.map((c) => `${rotuloTipo(c.tipo_retorno)} ${periodoDaCarga(c).rotulo}`).join(", ") ||
+                    "—"}
+                  {a.substituidas.length > 0 && (
+                    <span>
+                      {" "}
+                      · substituída(s):{" "}
+                      {a.substituidas
+                        .map((c) => `${rotuloTipo(c.tipo_retorno)} ${periodoDaCarga(c).rotulo}`)
+                        .join(", ")}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {foraDoCalculo > 0 && (
             <Alert className="border-[var(--omisso-foreground)]/40 bg-[var(--omisso-foreground)]/10">
               <AlertTriangle className="h-4 w-4 text-[var(--omisso-foreground)]" />
