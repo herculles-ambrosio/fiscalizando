@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { CargaEstat, LinhaEstat } from "@/lib/vaf/estatisticas";
 
-const PAGINA = 5000;
+/** Limite de linhas por resposta da API; páginas maiores voltariam truncadas. */
+const PAGINA = 1000;
 
 /** Cargas concluídas do município, da mais recente para a mais antiga. */
 export function useCargasEstatisticas(municipioId: string | null) {
