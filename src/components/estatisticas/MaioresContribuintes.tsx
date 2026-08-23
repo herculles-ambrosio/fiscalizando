@@ -276,15 +276,28 @@ export function MaioresContribuintes({
 
       <Card>
         <CardHeader className="p-6 pb-2">
-          <CardTitle className="font-display text-base font-semibold">
-            Empresas que mais contribuíram — {anoAtivo}
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            VAF somado dos arquivos apurados no exercício. Total do recorte:{" "}
-            {formatarMoeda(totalPeriodo)}.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="font-display text-base font-semibold">
+                Empresas que mais contribuíram — {anoAtivo}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                VAF somado dos arquivos apurados no exercício. Total do recorte:{" "}
+                {formatarMoeda(totalPeriodo)}.
+              </p>
+            </div>
+            <MenuExportar
+              onCsv={exportar}
+              onPng={() => baixarGraficoPng(refRanking.current, `ranking-${sufixo}.png`)}
+              onSvg={() => baixarGraficoSvg(refRanking.current, `ranking-${sufixo}.svg`)}
+            />
+          </div>
         </CardHeader>
-        <CardContent className="p-6 pt-4" style={{ height: Math.max(320, top.length * 30 + 60) }}>
+        <CardContent
+          ref={refRanking}
+          className="p-6 pt-4"
+          style={{ height: Math.max(320, top.length * 30 + 60) }}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dadosBarras} layout="vertical" margin={{ left: 8, right: 24 }}>
               <CartesianGrid strokeDasharray="2 6" stroke="var(--border)" horizontal={false} />
