@@ -162,8 +162,10 @@ export function CriterioBase({
         <p className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">Critério de comparação:</span> {contexto} O
           eixo temporal é o <strong>exercício</strong> informado na apuração (não o ano do arquivo).
-          Entram apenas apurações concluídas; quando a mesma remessa foi reprocessada, vale a mais
-          recente, e o índice definitivo prevalece sobre a mensal equivalente.
+          Entram apenas apurações concluídas. Como cada remessa traz o acumulado do exercício,{" "}
+          <strong>vale só a remessa mais recente de cada ano</strong> (a 13, por exemplo, substitui
+          a 12) e o índice definitivo prevalece sobre as mensais. Os totais consideram apenas o VAF
+          que compõe o índice: valores negativos não são somados, igual à Análise do VAF.
         </p>
         <div className="ml-auto flex items-center gap-2">
           <Badge variant="secondary" className="text-[11px]">
