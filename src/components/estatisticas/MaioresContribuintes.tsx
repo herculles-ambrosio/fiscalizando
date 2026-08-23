@@ -603,3 +603,38 @@ export const estiloTooltip = {
   maxWidth: 320,
   whiteSpace: "normal" as const,
 };
+
+function MenuExportar({
+  onCsv,
+  onPng,
+  onSvg,
+}: {
+  onCsv: () => void;
+  onPng?: () => void;
+  onSvg?: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="outline">
+          <ImageDown className="mr-1.5 h-4 w-4" />
+          Exportar
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onCsv}>
+          <Download className="mr-2 h-4 w-4" />
+          Dados exibidos (CSV)
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={!onPng} onClick={() => onPng?.()}>
+          <ImageDown className="mr-2 h-4 w-4" />
+          Imagem do gráfico (PNG)
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={!onSvg} onClick={() => onSvg?.()}>
+          <ImageDown className="mr-2 h-4 w-4" />
+          Imagem vetorial (SVG)
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
