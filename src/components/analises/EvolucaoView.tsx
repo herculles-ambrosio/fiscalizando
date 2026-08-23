@@ -36,7 +36,7 @@ import {
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { decodificarArquivo } from "@/lib/vaf/parser";
-import { anoDoArquivo, codigoMunicipioDoArquivo, remessaDoArquivo, rotuloMes } from "@/lib/vaf/tipoRetorno";
+import { anoDoArquivo, codigoMunicipioDoArquivo, remessaDoArquivo, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
 import { detectarMunicipioRetorno, normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
 import { formatarIndice } from "@/lib/vaf/indice";
 import {
@@ -64,8 +64,8 @@ import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
   const ano = anoDoArquivo(a.nome);
-  const competencia = remessa ? `${rotuloMes(remessa)}${ano ? `/${ano}` : ""}` : (ano ?? "");
-  return competencia ? String(competencia) : a.nome;
+  const rotulo = remessa ? `${rotuloRemessa(remessa)}${ano ? ` · entrega ${ano}` : ""}` : (ano ?? "");
+  return rotulo ? String(rotulo) : a.nome;
 }
 
 function formatarValor(valor: number, formato: LinhaEvolucao["formato"]): string {
