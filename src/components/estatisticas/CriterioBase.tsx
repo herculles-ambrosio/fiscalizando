@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ChevronDown, Info } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -51,13 +51,14 @@ export function CriterioBase({
     () => new Set(selecao ? selecao.selecionadas : cargas.map((c) => c.id)),
     [selecao, cargas],
   );
-  const [rascunho, setRascunho] = useState<Set<string>>(aplicadas);
-  const [chaveSync, setChaveSync] = useState("");
-  const chaveAtual = [...aplicadas].sort().join(",");
-  if (chaveAtual !== chaveSync) {
-    setChaveSync(chaveAtual);
-    setRascunho(new Set(aplicadas));
-  }
+  const chaveAtual = useMemo(() => [...aplicadas].sort().join(","), [aplicadas]);
+  const [rascunho, setRascunho] = useState<Set<string>>(() => new Set(aplicadas));
+  // Sincroniza o rascunho com a seleção aplicada sem atualizar estado durante o
+  // render (isso derrubava a árvore do React e deixava a tela branca).
+  useEffect(() => {
+    setRascunho(new Set(chaveAtual ? chaveAtual.split(",") : []));
+  }, [chaveAtual]);
+
 
   /** Contribuintes distintos e VAF somado por apuração. */
   const resumoPorCarga = useMemo(() => {
