@@ -42,15 +42,19 @@ export function useMunicipios() {
 export function useMunicipioAtivo() {
   const { data: perfil } = usePerfil();
   const { data: municipios, isLoading } = useMunicipios();
-  const [escolhido, setEscolhido] = useState<string | null>(lerArmazenado);
+  // Inicia sempre em null: ler o localStorage durante o render quebraria a
+  // hidratação (o servidor não tem storage) e derrubaria a árvore React.
+  const [escolhido, setEscolhido] = useState<string | null>(null);
 
   useEffect(() => {
+    setEscolhido(lerArmazenado());
     const fn = (id: string | null) => setEscolhido(id);
     ouvintes.add(fn);
     return () => {
       ouvintes.delete(fn);
     };
   }, []);
+
 
   const lista = municipios ?? [];
   const permitido = (id: string | null | undefined) => !!id && lista.some((m) => m.id === id);
