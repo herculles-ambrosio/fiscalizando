@@ -213,7 +213,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                       />
                       <ChartTooltip
                         formatter={(v: number) => formatarIndice(Number(v))}
-                        labelFormatter={(l: string) => `Competência ${l}`}
+                        labelFormatter={(l: string) => l}
                       />
                       <Line
                         type="monotone"
@@ -233,7 +233,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-24">Exercício</TableHead>
-                    <TableHead className="w-28">Competência</TableHead>
+                    <TableHead className="w-28">Remessa</TableHead>
                     <TableHead className="w-32">Tipo</TableHead>
                     <TableHead className="text-right">Índice</TableHead>
                     <TableHead className="text-right">Valor líquido</TableHead>
@@ -247,7 +247,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                     <TableRow key={r.id}>
                       <TableCell>{r.exercicio}</TableCell>
                       <TableCell>
-                        {formatarCompetencia(r.competencia_mes, r.competencia_ano)}
+                        {rotuloRemessa(r.competencia_mes)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={r.tipo_indice === "definitivo" ? "default" : "secondary"}>
@@ -310,7 +310,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
             <AlertDialogDescription>
               O índice{" "}
               {aExcluir
-                ? `${aExcluir.tipo_indice} de ${formatarCompetencia(aExcluir.competencia_mes, aExcluir.competencia_ano)}`
+                ? `${aExcluir.tipo_indice} de ${rotuloExercicioRemessa(aExcluir.exercicio, aExcluir.competencia_mes)}`
                 : ""}{" "}
               será removido. A apuração de contribuintes não é afetada.
             </AlertDialogDescription>
