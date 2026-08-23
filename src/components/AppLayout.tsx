@@ -158,6 +158,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <LogOut className="h-4 w-4" strokeWidth={1.75} />
             Sair
           </button>
+          <BrandFooter variante="escuro" className="mt-4 px-3" />
         </div>
       </aside>
 

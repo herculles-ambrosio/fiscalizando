@@ -2,6 +2,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  Footer,
   HeadingLevel,
   Packer,
   Paragraph,
@@ -235,6 +236,22 @@ export function construirDocDiagnostico(
       {
         properties: {
           page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } },
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 60 },
+                children: [
+                  texto("H-Tech Minas — Consultoria Tributária · Apura VAF 2.0", {
+                    size: 16,
+                    color: "666666",
+                  }),
+                ],
+              }),
+            ],
+          }),
         },
         children: filhos,
       },
