@@ -747,7 +747,6 @@ function NovaApuracao() {
               Deseja substituir pela nova apuração? A apuração anterior e seus dados serão apagados.
             </DialogDescription>
 
-            </DialogDescription>
           </DialogHeader>
           <ul className="space-y-1 text-sm text-muted-foreground">
             {duplicadas.map((c) => (
