@@ -66,7 +66,7 @@ export function ComparativoAnual({
     );
     const porAno = new Map<number, ReturnType<typeof agregarPorContribuinte>>();
     for (const ano of anos) {
-      const doAno = cargas.filter((c) => anoDaCarga(c) === ano);
+      const doAno = cargasDoExercicio(cargas, ano);
       const mapa = new Map(doAno.map((c) => [c.id, periodoDaCarga(c)]));
       porAno.set(
         ano,
