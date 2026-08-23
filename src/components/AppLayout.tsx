@@ -18,6 +18,8 @@ import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
+import { BrandFooter } from "@/components/BrandFooter";
+import { PrintFooter } from "@/components/PrintFooter";
 import {
   Select,
   SelectContent,
@@ -156,6 +158,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <LogOut className="h-4 w-4" strokeWidth={1.75} />
             Sair
           </button>
+          <BrandFooter variante="escuro" className="mt-4 px-3" />
         </div>
       </aside>
 
@@ -190,7 +193,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </Select>
           </div>
         )}
-        <main className="min-w-0 flex-1 px-5 py-7 md:px-9 md:py-10">{children}</main>
+        <main className="min-w-0 flex-1 px-5 py-7 md:px-9 md:py-10">
+          {children}
+          <PrintFooter />
+        </main>
       </div>
     </div>
   );
