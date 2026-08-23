@@ -240,13 +240,13 @@ function PaginaEstatisticas() {
           </TabsList>
 
           <TabsContent value="maiores">
-            <MaioresContribuintes cargas={cargas} linhas={linhas ?? []} />
+            <MaioresContribuintes cargas={cargas} linhas={linhas ?? []} fonte={fonte} />
           </TabsContent>
           <TabsContent value="anual">
             <ComparativoAnual cargas={cargas} linhas={linhas ?? []} fonte={fonte} />
           </TabsContent>
           <TabsContent value="setores">
-            <SetoresQualidade cargas={cargas} linhas={linhas ?? []} />
+            <SetoresQualidade cargas={cargas} linhas={linhas ?? []} fonte={fonte} />
           </TabsContent>
         </Tabs>
       </SelecaoCargasContext.Provider>

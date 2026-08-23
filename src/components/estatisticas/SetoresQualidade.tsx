@@ -26,11 +26,13 @@ import { descricaoCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 import {
   agregarPorContribuinte,
   anoDaCarga,
+  cargasDoExercicio,
   corSerie,
   curvaPareto,
   empresasParaAtingir,
   periodoDaCarga,
   type CargaEstat,
+  type FonteExercicio,
   type LinhaEstat,
   vafComposto,
 } from "@/lib/vaf/estatisticas";
