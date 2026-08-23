@@ -542,8 +542,9 @@ export default function PaginaEvolucao() {
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">Evolução do VAF</h1>
         <p className="text-sm text-muted-foreground">
-          Compare duas competências (mensal, índice provisório ou definitivo) e analise a evolução do
-          líquido, dos componentes VAF A/B/C, das declarações e dos contribuintes declarantes.
+          Compare duas remessas (mensal, índice provisório ou definitivo) e analise a evolução do
+          líquido, dos componentes VAF A/B/C, das declarações e dos contribuintes declarantes.{" "}
+          <NotaRemessa className="ml-1" />
         </p>
       </div>
 
