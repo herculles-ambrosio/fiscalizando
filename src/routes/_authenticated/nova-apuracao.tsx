@@ -614,9 +614,9 @@ function NovaApuracao() {
               alertas.length === 0 ? (
                 <Alert>
                   <CheckCircle2 className="h-4 w-4" />
-                  <AlertTitle>Competência validada</AlertTitle>
+                  <AlertTitle>Remessa validada</AlertTitle>
                   <AlertDescription>
-                    A competência confere com os nomes dos arquivos enviados.
+                    A remessa e o ano de entrega conferem com os nomes dos arquivos enviados.
                   </AlertDescription>
                 </Alert>
               ) : (
@@ -624,8 +624,8 @@ function NovaApuracao() {
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>
                     {temErroCompetencia
-                      ? "Competência inconsistente"
-                      : "Verifique a competência"}
+                      ? "Remessa inconsistente"
+                      : "Verifique a remessa"}
                   </AlertTitle>
                   <AlertDescription>
                     <ul className="list-disc space-y-1 pl-4">
@@ -641,23 +641,29 @@ function NovaApuracao() {
             {precisaMotivo && (
               <div className="space-y-2 rounded-lg border border-dashed p-4">
                 <Label htmlFor="motivo-competencia">
-                  Motivo da correção manual da competência
+                  Motivo da correção manual da remessa
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   Detectado no arquivo:{" "}
-                  <strong>{formatarCompetencia(detectada.mes, detectada.ano)}</strong> · Informado:{" "}
-                  <strong>{formatarCompetencia(competenciaMes, competenciaAno)}</strong>
+                  <strong>
+                    {rotuloRemessa(detectada.mes)} · entrega {detectada.ano ?? "—"}
+                  </strong>{" "}
+                  · Informado:{" "}
+                  <strong>
+                    {rotuloRemessa(competenciaMes)} · entrega {competenciaAno ?? "—"}
+                  </strong>
                 </p>
                 <Textarea
                   id="motivo-competencia"
                   rows={3}
-                  placeholder="Ex.: arquivo renomeado pela prefeitura; a remessa 12 refere-se à competência 11/2026."
+                  placeholder="Ex.: arquivo renomeado pela prefeitura; o conteúdo é da remessa 11."
                   value={motivoAjuste}
                   onChange={(e) => setMotivoAjuste(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  O motivo fica registrado na apuração junto com a competência detectada
+                  O motivo fica registrado na apuração junto com a remessa detectada
                   automaticamente.
+
                 </p>
               </div>
             )}
