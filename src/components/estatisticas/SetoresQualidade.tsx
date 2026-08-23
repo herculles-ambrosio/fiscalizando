@@ -57,9 +57,11 @@ const SITUACOES = [
 export function SetoresQualidade({
   cargas,
   linhas,
+  fonte = "definitiva",
 }: {
   cargas: CargaEstat[];
   linhas: LinhaEstat[];
+  fonte?: FonteExercicio;
 }) {
   const anos = useMemo(
     () => [...new Set(cargas.map(anoDaCarga))].sort((a, b) => b - a),
@@ -75,13 +77,19 @@ export function SetoresQualidade({
     [cargas],
   );
 
-  const linhasAno = useMemo(
+  // Só a fonte vigente do exercício entra nos totais (remessas anteriores são
+  // acumuladas dentro da mais recente).
+  const idsAno = useMemo(
     () =>
-      linhas.filter((l) => {
-        const p = periodoPorCarga.get(l.carga_id);
-        return p && p.ano === anoAtivo;
-      }),
-    [linhas, periodoPorCarga, anoAtivo],
+      new Set(
+        anoAtivo == null ? [] : cargasDoExercicio(cargas, anoAtivo, fonte).map((c) => c.id),
+      ),
+    [cargas, anoAtivo, fonte],
+  );
+
+  const linhasAno = useMemo(
+    () => linhas.filter((l) => idsAno.has(l.carga_id)),
+    [linhas, idsAno],
   );
 
   const ranking = useMemo(
@@ -181,6 +189,7 @@ export function SetoresQualidade({
   return (
     <div className="space-y-6">
       <CriterioBase
+        fonte={fonte}
         cargas={cargas}
         anoSelecionado={anoAtivo}
         contexto="setores, Pareto e qualidade usam as remessas do exercício selecionado; a evolução compara exercícios pelo número da remessa."

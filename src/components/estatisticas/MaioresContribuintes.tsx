@@ -47,7 +47,9 @@ import {
   anoDaCarga,
   corSerie,
   nomeCurto,
+  cargasDoExercicio,
   periodoDaCarga,
+  type FonteExercicio,
   type CargaEstat,
   type LinhaEstat,
 } from "@/lib/vaf/estatisticas";
@@ -68,9 +70,11 @@ const SITUACOES_RAPIDAS: Situacao[] = [
 export function MaioresContribuintes({
   cargas,
   linhas,
+  fonte = "definitiva",
 }: {
   cargas: CargaEstat[];
   linhas: LinhaEstat[];
+  fonte?: FonteExercicio;
 }) {
   const anos = useMemo(
     () => [...new Set(cargas.map(anoDaCarga))].sort((a, b) => b - a),
@@ -102,7 +106,9 @@ export function MaioresContribuintes({
   );
 
   const { ranking, totalPeriodo, periodos, contagemPorPeriodo } = useMemo(() => {
-    const doAno = cargas.filter((c) => anoDaCarga(c) === anoAtivo);
+    // Cada remessa traz o acumulado do exercício: usa só a fonte vigente do ano
+    // para não somar duas vezes o mesmo VAF.
+    const doAno = anoAtivo == null ? [] : cargasDoExercicio(cargas, anoAtivo, fonte);
     const periodos = doAno.map(periodoDaCarga).sort((a, b) => a.ordem - b.ordem);
     const mapa = new Map(periodos.map((p) => [p.cargaId, p]));
     const doRecorte = linhasFiltradas.filter((l) => mapa.has(l.carga_id));
@@ -118,7 +124,7 @@ export function MaioresContribuintes({
       contagemPorPeriodo,
       totalPeriodo: ranking.reduce((s, c) => s + c.total, 0),
     };
-  }, [cargas, linhasFiltradas, anoAtivo]);
+  }, [cargas, linhasFiltradas, anoAtivo, fonte]);
 
   const top = ranking.slice(0, quantidade);
 
@@ -197,6 +203,7 @@ export function MaioresContribuintes({
   return (
     <div className="space-y-6">
       <CriterioBase
+        fonte={fonte}
         cargas={cargas}
         anoSelecionado={anoAtivo}
         contexto="o ranking soma o VAF de todas as remessas apuradas do exercício selecionado."
