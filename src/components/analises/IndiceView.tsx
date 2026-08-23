@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { NotaRemessa } from "@/components/NotaRemessa";
 import { Download, FileUp, HelpCircle, Printer, Save, TrendingUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -454,6 +455,7 @@ export default function PaginaIndice() {
           Será salvo como exercício <span className="font-medium">{exercicio}</span> ·{" "}
           <span className="font-medium">
             {rotuloRemessa(competencia.mes)}
+            <NotaRemessa className="ml-1" />
             {competencia.ano ? ` · entrega ${competencia.ano}` : ""}
           </span>{" "}
           · {apuracao?.estimado ? "projeção provisória" : `índice ${apuracao?.tipoIndice}`}.
