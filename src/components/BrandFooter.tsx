@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/Htechminas_transparente.png.asset.json";
+import logoAsset from "@/assets/Htechminas_transparente-2.png.asset.json";
 import { cn } from "@/lib/utils";
 
 interface BrandFooterProps {
@@ -17,13 +17,14 @@ export function BrandFooter({ variante = "claro", tamanho = "sm", className }: B
         alt="H-Tech Minas"
         className={cn(
           "w-auto object-contain",
-          tamanho === "sm" ? "h-8" : "h-14",
+          tamanho === "sm" ? "h-10" : "h-16",
           escuro && "brightness-110",
         )}
       />
       <div className={cn("text-[10px] leading-tight", escuro ? "text-sidebar-foreground/50" : "text-muted-foreground/70")}>
-        <p>© {new Date().getFullYear()} H-Tech Minas.</p>
-        <p>Consultoria Tributária · Desenvolvimento de Sistemas.</p>
+        <p className="font-medium text-foreground/80">H-Tech Minas</p>
+        <p>Consultoria Tributária · Desenvolvimento de Sistemas</p>
+        <p>© {new Date().getFullYear()}</p>
       </div>
     </div>
   );
