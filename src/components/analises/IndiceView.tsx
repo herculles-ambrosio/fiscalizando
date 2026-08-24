@@ -19,7 +19,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
-import { useSalvarIndice } from "@/hooks/useIndicesHistorico";
+import {
+  apuracaoDoHistorico,
+  useSalvarIndice,
+  type IndiceSalvo,
+} from "@/hooks/useIndicesHistorico";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
@@ -252,6 +256,7 @@ export default function PaginaIndice() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
   const [perguntar, setPerguntar] = useState(false);
+  const [registroHistorico, setRegistroHistorico] = useState<IndiceSalvo | null>(null);
 
 
   // calibração é guardada por prefeitura, para não misturar referências ao trocar
@@ -363,6 +368,7 @@ export default function PaginaIndice() {
   }
 
   async function selecionar(file: File | null) {
+    setRegistroHistorico(null);
     setArquivo(file);
     setTexto(null);
     setErro(null);
@@ -406,12 +412,17 @@ export default function PaginaIndice() {
 
   // Remessa e ano de entrega do arquivo (P443RT1226 -> remessa 12, entrega 2026); o exercício vem do ano base apurado.
   const competencia = useMemo(() => {
+    if (registroHistorico)
+      return {
+        mes: registroHistorico.competencia_mes,
+        ano: registroHistorico.competencia_ano,
+      };
     const nome = arquivo?.name ?? "";
     const mes = nome ? remessaDoArquivo(nome) : null;
     const ano = nome ? anoDoArquivo(nome) : null;
     const anoFallback = apuracao?.periodoFim ? Number(apuracao.periodoFim.slice(0, 4)) : null;
     return { mes, ano: ano ?? anoFallback };
-  }, [arquivo?.name, apuracao?.periodoFim]);
+  }, [registroHistorico, arquivo?.name, apuracao?.periodoFim]);
 
   const exercicio = apuracao?.anoBase ?? competencia.ano ?? null;
 
@@ -469,7 +480,7 @@ export default function PaginaIndice() {
         exercicio,
         competenciaMes: competencia.mes,
         competenciaAno: competencia.ano,
-        arquivoNome: arquivo?.name ?? null,
+        arquivoNome: arquivo?.name ?? registroHistorico?.arquivo_nome ?? null,
       });
       toast.success(
         r.substituido
@@ -1065,7 +1076,7 @@ export default function PaginaIndice() {
         </Card>
       )}
 
-      <HistoricoIndices municipioId={municipioId} />
+      <HistoricoIndices municipioId={municipioId} onCarregar={carregarDoHistorico} />
 
     </div>
   );
