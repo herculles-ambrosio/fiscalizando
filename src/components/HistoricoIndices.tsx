@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { History, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { Eye, History, Trash2, TrendingDown, TrendingUp } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -179,11 +179,24 @@ function Diferenca({ base, comparado }: { base: number; comparado: number }) {
   );
 }
 
-export function HistoricoIndices({ municipioId }: { municipioId: string | null }) {
+export function HistoricoIndices({
+  municipioId,
+  onCarregar,
+}: {
+  municipioId: string | null;
+  onCarregar?: (registro: IndiceSalvo) => void;
+}) {
   const { data: registros = [], isLoading } = useIndicesSalvos(municipioId);
   const excluir = useExcluirIndice(municipioId);
   const [aExcluir, setAExcluir] = useState<IndiceSalvo | null>(null);
   const [detalhe, setDetalhe] = useState<IndiceSalvo | null>(null);
+
+  // clique na linha: carrega o índice na tela (quando o pai suporta) ou abre o detalhe
+  const abrir = (r: IndiceSalvo | null) => {
+    if (!r) return;
+    if (onCarregar) onCarregar(r);
+    else setDetalhe(r);
+  };
 
   const comparacoes = useMemo<Comparacao[]>(() => {
     const porExercicio = new Map<number, Comparacao>();
@@ -266,15 +279,15 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                     <TableRow
                       key={c.exercicio}
                       className="cursor-pointer"
-                      title="Abrir detalhes do índice"
-                      onClick={() => setDetalhe(c.definitivo ?? c.provisorio)}
+                      title={onCarregar ? "Carregar este índice na tela" : "Abrir detalhes do índice"}
+                      onClick={() => abrir(c.definitivo ?? c.provisorio)}
                     >
                       <TableCell className="font-medium">{c.exercicio}</TableCell>
                       <TableCell
                         onClick={(e) => {
                           if (!c.provisorio) return;
                           e.stopPropagation();
-                          setDetalhe(c.provisorio);
+                          abrir(c.provisorio);
                         }}
                       >
                         {c.provisorio ? (
@@ -295,7 +308,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                         onClick={(e) => {
                           if (!c.definitivo) return;
                           e.stopPropagation();
-                          setDetalhe(c.definitivo);
+                          abrir(c.definitivo);
                         }}
                       >
                         {c.definitivo ? (
@@ -370,7 +383,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                     <TableHead className="text-right">Valor líquido</TableHead>
                     <TableHead>Arquivo</TableHead>
                     <TableHead>Crédito próprio</TableHead>
-                    <TableHead className="w-10" />
+                    <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -378,8 +391,8 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                     <TableRow
                       key={r.id}
                       className="cursor-pointer"
-                      title="Abrir detalhes do índice"
-                      onClick={() => setDetalhe(r)}
+                      title={onCarregar ? "Carregar este índice na tela" : "Abrir detalhes do índice"}
+                      onClick={() => abrir(r)}
                     >
                       <TableCell>{r.exercicio}</TableCell>
                       <TableCell>
@@ -420,7 +433,19 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDetalhe(r);
+                          }}
+                          aria-label="Ver detalhes do índice"
+                          title="Ver detalhes"
+                        >
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

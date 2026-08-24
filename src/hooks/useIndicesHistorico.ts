@@ -34,6 +34,47 @@ export type IndiceSalvo = {
   criado_em: string;
 };
 
+/**
+ * Reconstrói uma apuração de índice a partir do registro salvo, para
+ * reabrir o cálculo na tela sem precisar do arquivo original.
+ * O detalhamento por município/contribuinte não é armazenado.
+ */
+export function apuracaoDoHistorico(r: IndiceSalvo, codigoMunicipio: string): ApuracaoIndice {
+  return {
+    tipoIndice: r.tipo_indice,
+    estimado: r.estimado,
+    ...(r.origem_vaf_estadual === "arquivo" || r.origem_vaf_estadual === "referencia"
+      ? { origemVafEstadual: r.origem_vaf_estadual }
+      : {}),
+    fatorCalibragem: Number(r.fator_calibragem) || 1,
+    codigoMunicipio,
+    anoBase: r.exercicio,
+    periodoInicio: r.periodo_inicio,
+    periodoFim: r.periodo_fim,
+    vafProprio: Number(r.vaf_proprio),
+    creditoExterno: Number(r.credito_externo),
+    creditoInterno: Number(r.credito_interno),
+    creditoProprio: Number(r.credito_proprio),
+    origemCreditoProprio:
+      r.origem_credito_proprio === "planilha" ? "planilha" : "arquivo",
+    ...(r.arquivo_credito_proprio ? { arquivoCreditoProprio: r.arquivo_credito_proprio } : {}),
+    debito: Number(r.debito),
+    acertoCredito: Number(r.acerto_credito),
+    acertoDebito: Number(r.acerto_debito),
+    valorLiquido: Number(r.valor_liquido),
+    indice: Number(r.indice),
+    vafEstadual: Number(r.vaf_estadual),
+    creditoProprioAf: 0,
+    creditoProprioSiare: 0,
+    creditosExternos: [],
+    creditosPorMunicipio: [],
+    debitosPorMunicipio: [],
+    contribuintesVaf: [],
+    simei: [],
+    totalDeclaracoes: r.total_declaracoes,
+  };
+}
+
 export function useIndicesSalvos(municipioId: string | null) {
   return useQuery({
     queryKey: ["indices-salvos", municipioId],

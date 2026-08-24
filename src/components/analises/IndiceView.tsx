@@ -19,7 +19,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
-import { useSalvarIndice } from "@/hooks/useIndicesHistorico";
+import {
+  apuracaoDoHistorico,
+  useSalvarIndice,
+  type IndiceSalvo,
+} from "@/hooks/useIndicesHistorico";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
@@ -252,6 +256,7 @@ export default function PaginaIndice() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
   const [perguntar, setPerguntar] = useState(false);
+  const [registroHistorico, setRegistroHistorico] = useState<IndiceSalvo | null>(null);
 
 
   // calibração é guardada por prefeitura, para não misturar referências ao trocar
@@ -283,7 +288,7 @@ export default function PaginaIndice() {
     return (codigo: string) => mapa.get(codigo.padStart(3, "0")) ?? "—";
   }, [municipios]);
 
-  const apuracao = useMemo<ApuracaoIndice | null>(() => {
+  const apuracaoArquivo = useMemo<ApuracaoIndice | null>(() => {
     if (!texto) return null;
     try {
       if (possuiIndice(texto)) return apurarIndice(texto);
@@ -299,16 +304,48 @@ export default function PaginaIndice() {
     }
   }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
 
+  // Índice reaberto a partir do histórico (sem o arquivo original)
+  const apuracaoHistorico = useMemo<ApuracaoIndice | null>(
+    () =>
+      registroHistorico
+        ? apuracaoDoHistorico(
+            registroHistorico,
+            municipio?.codigo_sef ? String(municipio.codigo_sef).padStart(3, "0") : "",
+          )
+        : null,
+    [registroHistorico, municipio?.codigo_sef],
+  );
+
+  const apuracao = apuracaoHistorico ?? apuracaoArquivo;
+
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
   useEffect(() => {
+    if (registroHistorico) return;
     if (apuracao?.estimado && !planilha && apuracao.creditoProprio <= 0) setPerguntar(true);
-  }, [apuracao?.estimado, apuracao?.creditoProprio, planilha]);
+  }, [registroHistorico, apuracao?.estimado, apuracao?.creditoProprio, planilha]);
 
   useEffect(() => {
     setPlanilha(null);
     setPerguntar(false);
+    setRegistroHistorico(null);
   }, [municipioId]);
+
+  function carregarDoHistorico(r: IndiceSalvo) {
+    setArquivo(null);
+    setTexto(null);
+    setErro(null);
+    setPlanilha(null);
+    setPerguntar(false);
+    setRegistroHistorico(r);
+    if (r.vaf_estadual) setVafEstadualRef(String(Math.round(Number(r.vaf_estadual))));
+    setFator(String(Number(r.fator_calibragem) || 1).replace(".", ","));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast.success(
+      `Índice ${r.tipo_indice} de ${r.exercicio} · ${rotuloRemessa(r.competencia_mes)} carregado na tela.`,
+    );
+  }
+
 
 
   function baixarCsvPlanilha() {
@@ -331,6 +368,7 @@ export default function PaginaIndice() {
   }
 
   async function selecionar(file: File | null) {
+    setRegistroHistorico(null);
     setArquivo(file);
     setTexto(null);
     setErro(null);
@@ -374,12 +412,17 @@ export default function PaginaIndice() {
 
   // Remessa e ano de entrega do arquivo (P443RT1226 -> remessa 12, entrega 2026); o exercício vem do ano base apurado.
   const competencia = useMemo(() => {
+    if (registroHistorico)
+      return {
+        mes: registroHistorico.competencia_mes,
+        ano: registroHistorico.competencia_ano,
+      };
     const nome = arquivo?.name ?? "";
     const mes = nome ? remessaDoArquivo(nome) : null;
     const ano = nome ? anoDoArquivo(nome) : null;
     const anoFallback = apuracao?.periodoFim ? Number(apuracao.periodoFim.slice(0, 4)) : null;
     return { mes, ano: ano ?? anoFallback };
-  }, [arquivo?.name, apuracao?.periodoFim]);
+  }, [registroHistorico, arquivo?.name, apuracao?.periodoFim]);
 
   const exercicio = apuracao?.anoBase ?? competencia.ano ?? null;
 
@@ -437,7 +480,7 @@ export default function PaginaIndice() {
         exercicio,
         competenciaMes: competencia.mes,
         competenciaAno: competencia.ano,
-        arquivoNome: arquivo?.name ?? null,
+        arquivoNome: arquivo?.name ?? registroHistorico?.arquivo_nome ?? null,
       });
       toast.success(
         r.substituido
@@ -525,6 +568,48 @@ export default function PaginaIndice() {
       )}
 
 
+      {registroHistorico && (
+        <Alert className="no-print">
+          <AlertTitle className="flex flex-wrap items-center gap-2">
+            Índice carregado do histórico
+            <Badge variant={registroHistorico.tipo_indice === "definitivo" ? "default" : "secondary"}>
+              {registroHistorico.tipo_indice === "definitivo"
+                ? "Definitivo"
+                : registroHistorico.estimado
+                  ? "Projeção"
+                  : "Provisório"}
+            </Badge>
+          </AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>
+              Exercício {registroHistorico.exercicio} ·{" "}
+              {rotuloRemessa(registroHistorico.competencia_mes)}
+              {registroHistorico.competencia_ano ? ` · entrega ${registroHistorico.competencia_ano}` : ""} ·
+              arquivo{" "}
+              <span className="font-mono">{registroHistorico.arquivo_nome ?? "não informado"}</span>
+              {registroHistorico.origem_credito_proprio === "planilha"
+                ? ` · crédito próprio do Portal do VAF (${registroHistorico.arquivo_credito_proprio ?? "planilha"})`
+                : ""}
+              .
+            </p>
+            <p className="text-xs">
+              Os valores consolidados vêm do registro salvo. O detalhamento por município e por
+              contribuinte só aparece ao enviar novamente o arquivo de retorno.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setRegistroHistorico(null);
+                setPlanilha(null);
+              }}
+            >
+              Limpar e voltar ao arquivo
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {arquivo && (
         <p className="no-print text-xs text-muted-foreground">
           Arquivo: <span className="font-mono">{arquivo.name}</span> ·{" "}
@@ -556,7 +641,7 @@ export default function PaginaIndice() {
         </Alert>
       )}
 
-      {apuracao?.estimado && (
+      {!registroHistorico && apuracao?.estimado && (
         <Card className="no-print border-amber-500/40 bg-amber-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Projeção do índice provisório</CardTitle>
@@ -1033,7 +1118,7 @@ export default function PaginaIndice() {
         </Card>
       )}
 
-      <HistoricoIndices municipioId={municipioId} />
+      <HistoricoIndices municipioId={municipioId} onCarregar={carregarDoHistorico} />
 
     </div>
   );
