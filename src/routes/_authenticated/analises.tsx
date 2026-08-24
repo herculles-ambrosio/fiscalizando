@@ -48,7 +48,7 @@ function PaginaAnalises() {
       onValueChange={(v) => navigate({ to: ".", search: { aba: v as Aba } })}
       className="space-y-6"
     >
-      <TabsList>
+      <TabsList className="no-print">
         <TabsTrigger value="evolucao">Evolução do VAF</TabsTrigger>
         <TabsTrigger value="comparacao">Comparar apurações</TabsTrigger>
         <TabsTrigger value="indice">Índice do VAF</TabsTrigger>

@@ -180,7 +180,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </header>
 
         {podeTrocar && (
-          <div className="border-b border-border bg-card px-5 py-2 md:hidden">
+          <div className="no-print border-b border-border bg-card px-5 py-2 md:hidden">
             <Select value={municipioId ?? ""} onValueChange={trocar}>
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Prefeitura" />
