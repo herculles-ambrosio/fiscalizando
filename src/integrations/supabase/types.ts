@@ -470,6 +470,7 @@ export type Database = {
           criado_em: string
           criado_por: string | null
           debito: number
+          detalhamento_path: string | null
           estimado: boolean
           exercicio: number
           fator_calibragem: number
@@ -501,6 +502,7 @@ export type Database = {
           criado_em?: string
           criado_por?: string | null
           debito?: number
+          detalhamento_path?: string | null
           estimado?: boolean
           exercicio: number
           fator_calibragem?: number
@@ -532,6 +534,7 @@ export type Database = {
           criado_em?: string
           criado_por?: string | null
           debito?: number
+          detalhamento_path?: string | null
           estimado?: boolean
           exercicio?: number
           fator_calibragem?: number
