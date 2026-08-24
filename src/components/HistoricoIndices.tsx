@@ -384,8 +384,8 @@ export function HistoricoIndices({
                     <TableRow
                       key={r.id}
                       className="cursor-pointer"
-                      title="Abrir detalhes do índice"
-                      onClick={() => setDetalhe(r)}
+                      title={onCarregar ? "Carregar este índice na tela" : "Abrir detalhes do índice"}
+                      onClick={() => abrir(r)}
                     >
                       <TableCell>{r.exercicio}</TableCell>
                       <TableCell>
