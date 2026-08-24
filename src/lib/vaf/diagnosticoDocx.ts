@@ -241,39 +241,17 @@ export function construirDocDiagnostico(
     styles: { default: { document: { run: { font: FONTE, size: 20 } } } },
     sections: [
       {
-        properties: {
-          page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } },
-        },
+        properties: { page: { margin: MARGENS_TIMBRADO } },
+        headers: { default: cabecalhoTimbrado(timbrado) },
         footers: {
-          default: new Footer({
-            children: [
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 60 },
-                children: [
-                  texto("H-Tech Minas — Consultoria Tributária · Apura VAF 2.0", {
-                    size: 16,
-                    color: "666666",
-                  }),
-                ],
-              }),
-            ],
-          }),
+          default: rodapeTimbrado(
+            `Apura VAF 2.0 — relatório gerado em ${new Date().toLocaleDateString("pt-BR")}`,
+          ),
         },
         children: filhos,
       },
     ],
   });
-}
-
-async function carregarLogo(): Promise<ArrayBuffer | null> {
-  try {
-    const resp = await fetch(logoAsset.url);
-    if (!resp.ok) return null;
-    return await resp.arrayBuffer();
-  } catch {
-    return null;
-  }
 }
 
 export async function baixarDocDiagnostico(
@@ -283,8 +261,8 @@ export async function baixarDocDiagnostico(
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
 ): Promise<void> {
-  const logo = await carregarLogo();
-  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, logo);
+  const imagens = await carregarImagensTimbrado();
+  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, imagens);
 
   const blob = await Packer.toBlob(doc);
   const limpo = (s: string) => s.replace(/[^\w.-]+/g, "_").slice(0, 40);
@@ -295,3 +273,4 @@ export async function baixarDocDiagnostico(
   a.click();
   URL.revokeObjectURL(url);
 }
+
