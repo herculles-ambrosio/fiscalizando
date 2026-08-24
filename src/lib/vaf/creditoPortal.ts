@@ -89,6 +89,15 @@ export function lerCreditoPortal(
   const iCreditoPara = idx("creditoPara");
   const iFrete = idx("vlrFrete");
   const iAno = idx("anoBase");
+  /**
+   * O Portal do VAF varia o nome da coluna com o nome/razão social do
+   * remetente entre versões do relatório — procuramos qualquer variação.
+   */
+  const iRemetenteNome = cabecalho.findIndex((c) =>
+    /^(nome|razao|razão)(social)?remetente$|^remetente(nome|razaosocial)$|^(nome|razaosocial)_?remetente$/i.test(
+      c.replace(/\s+/g, ""),
+    ),
+  );
   const alvo = String(codigoMunicipio ?? "").replace(/^0+/, "");
 
   let creditoProprio = 0;
