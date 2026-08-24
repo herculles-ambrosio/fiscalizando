@@ -1120,32 +1120,34 @@ export default function PaginaEvolucao() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="w-20">Código</TableHead>
+                            <TableHead className="w-16">Código</TableHead>
                             <TableHead>Município</TableHead>
-                            <TableHead className="text-right">Base</TableHead>
-                            <TableHead className="text-right">Atual</TableHead>
-                            <TableHead className="text-right">Diferença</TableHead>
+                            <TableHead className="text-right">Base (R$)</TableHead>
+                            <TableHead className="text-right">Atual (R$)</TableHead>
+                            <TableHead className="text-right">Diferença (R$)</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {bloco.linhas.slice(0, 100).map((m) => (
                             <TableRow key={m.codigo}>
-                              <TableCell className="font-mono text-xs">{m.codigo}</TableCell>
-                              <TableCell className="max-w-[12rem] truncate text-sm">
+                              <TableCell className="font-mono">{m.codigo}</TableCell>
+                              <TableCell className="max-w-[12rem] truncate">
                                 {m.nome ?? (
-                                  <span className="text-muted-foreground italic">Não cadastrado</span>
+                                  <span className="text-muted-foreground italic">
+                                    Código não encontrado na tabela SEF-MG
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell className="text-right font-mono">
-                                {formatarMoeda(m.base)}
+                                {formatarValorGrid(m.base)}
                               </TableCell>
                               <TableCell className="text-right font-mono">
-                                {formatarMoeda(m.atual)}
+                                {formatarValorGrid(m.atual)}
                               </TableCell>
                               <TableCell
                                 className={`text-right font-mono ${m.diferenca < 0 ? "text-destructive" : m.diferenca > 0 ? "text-emerald-600" : ""}`}
                               >
-                                {formatarMoeda(m.diferenca)}
+                                {formatarValorGrid(m.diferenca)}
                               </TableCell>
                             </TableRow>
                           ))}
