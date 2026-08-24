@@ -9,7 +9,7 @@ const CAMPOS_DATA = [
 ];
 
 /**
- * Os arquivos da SEF-MG traizem os valores em reais inteiros (sem centavos
+ * Os arquivos da SEF-MG trazem os valores em reais inteiros (sem centavos
  * implícitos) — o mesmo critério usado na apuração do índice e no registro 40.
  */
 export const DECIMAIS_IMPLICITAS = 0;
