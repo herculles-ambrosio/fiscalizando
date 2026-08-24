@@ -433,7 +433,19 @@ export function HistoricoIndices({
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDetalhe(r);
+                          }}
+                          aria-label="Ver detalhes do índice"
+                          title="Ver detalhes"
+                        >
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
