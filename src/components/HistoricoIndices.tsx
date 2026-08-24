@@ -263,7 +263,12 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                 </TableHeader>
                 <TableBody>
                   {comparacoes.map((c) => (
-                    <TableRow key={c.exercicio}>
+                    <TableRow
+                      key={c.exercicio}
+                      className="cursor-pointer"
+                      title="Abrir detalhes do índice"
+                      onClick={() => setDetalhe(c.definitivo ?? c.provisorio)}
+                    >
                       <TableCell className="font-medium">{c.exercicio}</TableCell>
                       <TableCell>
                         {c.provisorio ? (
