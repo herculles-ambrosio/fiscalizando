@@ -137,6 +137,22 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
   const creditosMapa = new Map<string, LinhaMunicipio>();
   const debitosMapa = new Map<string, LinhaMunicipio>();
 
+  /**
+   * Cadastro por inscrição estadual montado com os registros de declaração:
+   * 01 traz o nome e a data de entrega, 10 traz o CNPJ (numero_documento).
+   * Os registros 23 (VAF por contribuinte) não carregam nome nem CNPJ.
+   */
+  type Cadastro = { nome: string | null; cnpj: string | null; data: string | null };
+  const cadastro = new Map<string, Cadastro>();
+  const registrarCadastro = (ie: string, dados: Partial<Cadastro>) => {
+    if (!ie) return;
+    const atual = cadastro.get(ie) ?? { nome: null, cnpj: null, data: null };
+    if (dados.nome) atual.nome = dados.nome;
+    if (dados.cnpj) atual.cnpj = dados.cnpj;
+    if (dados.data) atual.data = dados.data;
+    cadastro.set(ie, atual);
+  };
+
   // Registros 12/13: 22-36 AF, 37-51 NFA, 52-66 NFE, 67-81 NFF, 82-96 total.
   const acumularMunicipio = (mapa: Map<string, LinhaMunicipio>, l: string) => {
     const codigo = texto(l, 19, 21);
