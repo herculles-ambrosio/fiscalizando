@@ -1211,14 +1211,19 @@ export default function PaginaIndice() {
                             </TableCell>
                             <TableCell className="text-xs">{n.data ?? "—"}</TableCell>
                             <TableCell className="max-w-[16rem] truncate">
-                              {nomePorIe(n.remetente) ?? (
-                                <span className="font-mono text-xs">{n.remetente}</span>
-                              )}
-                              {nomePorIe(n.remetente) && (
-                                <span className="block font-mono text-[10px] text-muted-foreground">
-                                  {n.remetente}
-                                </span>
-                              )}
+                              {(() => {
+                                const nome = n.remetenteNome ?? nomePorIe(n.remetente);
+                                return nome ? (
+                                  <>
+                                    <span>{nome}</span>
+                                    <span className="block font-mono text-[10px] text-muted-foreground">
+                                      {n.remetente}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="font-mono text-xs">{n.remetente}</span>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell className="max-w-[18rem] truncate">{n.descricao}</TableCell>
                             <TableCell className="text-right font-mono">
