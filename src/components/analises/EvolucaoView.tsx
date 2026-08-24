@@ -1094,11 +1094,13 @@ export default function PaginaEvolucao() {
               <Card>
                 <CardContent className="p-0">
                   <TabelaMovimentos
-                    linhas={declarantes.todos.slice(0, 300)}
+                    linhas={declarantes.todos}
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
                     vazio="Sem contribuintes para comparar."
                     nomeArquivo={`${prefixoArquivo}-variacao-contribuintes.csv`}
+                    ocultarOrigem
+                    porPagina={20}
                   />
                 </CardContent>
               </Card>
