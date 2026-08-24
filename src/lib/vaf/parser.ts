@@ -8,7 +8,11 @@ const CAMPOS_DATA = [
   "data_entrada_vaf",
 ];
 
-export const DECIMAIS_IMPLICITAS = 2;
+/**
+ * Os arquivos da SEF-MG traizem os valores em reais inteiros (sem centavos
+ * implícitos) — o mesmo critério usado na apuração do índice e no registro 40.
+ */
+export const DECIMAIS_IMPLICITAS = 0;
 
 export function parseLinha(linha: string, layout: Campo[]): Record<string, any> {
   const maxEnd = Math.max(...layout.map((c) => c[1]));
