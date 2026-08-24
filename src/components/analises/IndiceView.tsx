@@ -297,6 +297,24 @@ export default function PaginaIndice() {
     };
   }, [municipios]);
 
+  // inscrição estadual -> nome do contribuinte (a planilha do Portal só traz a IE)
+  const nomePorIe = useMemo(() => {
+    const mapa = new Map<string, string>();
+    const normalizar = (ie: string) => (ie ?? "").replace(/\D/g, "").replace(/^0+/, "");
+    const registrar = (linhas: LinhaContribuinte[]) => {
+      for (const l of linhas) {
+        const chave = normalizar(l.inscricao_estadual);
+        if (chave && l.nome && !mapa.has(chave)) mapa.set(chave, l.nome);
+      }
+    };
+    if (apuracaoRef.current) {
+      registrar(apuracaoRef.current.contribuintesVaf);
+      registrar(apuracaoRef.current.simei);
+      registrar(apuracaoRef.current.creditosExternos);
+    }
+    return (ie: string) => mapa.get(normalizar(ie)) ?? null;
+  }, [apuracaoTick]);
+
   const apuracaoArquivo = useMemo<ApuracaoIndice | null>(() => {
     if (!texto) return null;
     try {
