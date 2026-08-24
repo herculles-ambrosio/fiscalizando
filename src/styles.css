@@ -255,6 +255,21 @@
     page-break-inside: avoid;
   }
 
+  .print-header {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid #d4d4d4;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+
+  .print-header img {
+    height: 74px;
+    width: auto;
+    object-fit: contain;
+  }
+
   .print-footer {
     display: flex !important;
     position: fixed;
@@ -270,6 +285,8 @@
   }
 }
 
-.print-footer {
+.print-footer,
+.print-header {
   display: none;
 }
+
