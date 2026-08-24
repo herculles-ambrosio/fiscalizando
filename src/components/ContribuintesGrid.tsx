@@ -37,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarCnpj, formatarData, formatarMoeda, formatarPercentual } from "@/lib/format";
+import { formatarCnpj, formatarData, formatarPercentual, formatarValorGrid } from "@/lib/format";
 import {
   ROTULO_SITUACAO,
   ROTULO_SITUACAO_CADASTRAL,
@@ -519,8 +519,8 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     <ColunaHead coluna="cnpj" ordem={ordem} onSort={ordenarPor}>CNPJ</ColunaHead>
                     <ColunaHead coluna="inscricao_estadual" ordem={ordem} onSort={ordenarPor}>IE</ColunaHead>
                     <ColunaHead coluna="cnae" ordem={ordem} onSort={ordenarPor}>CNAE</ColunaHead>
-                    <ColunaHead coluna="vaf_atual" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF atual</ColunaHead>
-                    <ColunaHead coluna="vaf_anterior" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF anterior</ColunaHead>
+                    <ColunaHead coluna="vaf_atual" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF atual (R$)</ColunaHead>
+                    <ColunaHead coluna="vaf_anterior" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF anterior (R$)</ColunaHead>
                     <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
                     <ColunaHead coluna="data_entrega" ordem={ordem} onSort={ordenarPor}>Entrega</ColunaHead>
 
@@ -577,10 +577,10 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                           )}
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
-                          {formatarMoeda(c.vaf_atual)}
+                          {formatarValorGrid(c.vaf_atual)}
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
-                          {formatarMoeda(c.vaf_anterior)}
+                          {formatarValorGrid(c.vaf_anterior)}
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
                           {formatarPercentual(c.variacao_pct)}
@@ -622,10 +622,10 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         {data.linhas.length} contribuinte(s) nesta página · {data.total} no total
                       </TableCell>
                       <TableCell className="text-right font-medium whitespace-nowrap">
-                        {formatarMoeda(totalVafAtual)}
+                        {formatarValorGrid(totalVafAtual)}
                       </TableCell>
                       <TableCell className="text-right font-medium whitespace-nowrap">
-                        {formatarMoeda(totalVafAnterior)}
+                        {formatarValorGrid(totalVafAnterior)}
                       </TableCell>
                       <TableCell colSpan={4} />
                     </TableRow>
