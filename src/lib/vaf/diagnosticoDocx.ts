@@ -118,41 +118,12 @@ export function construirDocDiagnostico(
   atualNome: string,
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
-  logo?: ArrayBuffer | null,
+  imagens?: ImagensTimbrado,
 ): Document {
+  const timbrado: ImagensTimbrado = imagens ?? { marca: null, marcaDagua: null };
   const filhos: Array<Paragraph | Table> = [
-    ...(logo
-      ? [
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 60 },
-            children: [
-              new ImageRun({
-                type: "png",
-                data: logo,
-                transformation: { width: 200, height: 150 },
-                altText: {
-                  title: "H-Tech Minas",
-                  description: "H-Tech Minas — Consultoria Tributária e Desenvolvimento de Sistemas",
-                  name: "H-Tech Minas",
-                },
-              }),
-            ],
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 240 },
-            border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "CCCCCC", space: 6 } },
-            children: [
-              texto("H-Tech Minas — Consultoria Tributária · Desenvolvimento de Sistemas", {
-                size: 16,
-                color: "666666",
-              }),
-            ],
-          }),
-        ]
-      : []),
     new Paragraph({
+
       heading: HeadingLevel.HEADING_1,
       spacing: { after: 120 },
       children: [texto("Análise da variação do VAF — Por que variou", { bold: true, size: 30 })],
