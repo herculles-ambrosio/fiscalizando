@@ -143,6 +143,8 @@ export function lerCreditoPortal(
         numero: limparCampo(c[idx("nfa")]) || limparCampo(c[idx("chaveAcesso")]),
         data: (c[idx("saida")] ?? "").trim() || null,
         remetente: limparCampo(c[idx("identificacaoRemetente")]),
+        remetenteNome:
+          iRemetenteNome >= 0 ? (c[iRemetenteNome] ?? "").trim() || null : null,
         municipioRemetente: (c[idx("municipioRemetente")] ?? "").trim(),
         destinatario: limparCampo(c[idx("identificacaoDestinatario")]),
         municipioDestinatario: (c[idx("municipioDestinatario")] ?? "").trim(),
