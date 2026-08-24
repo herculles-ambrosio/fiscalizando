@@ -316,6 +316,28 @@
     vertical-align: top;
   }
 
+  /* Nenhum relatório deve estourar a largura da página impressa */
+  .timbrado-tabela > tbody > tr > td {
+    max-width: 182mm;
+  }
+
+  .timbrado-tabela > tbody [class*="overflow-x"] {
+    overflow: hidden !important;
+  }
+
+  .timbrado-tabela > tbody table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed;
+  }
+
+  .timbrado-tabela > tbody table th,
+  .timbrado-tabela > tbody table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   /* Espaços reservados em cada página para a camada fixa do timbrado */
   .timbrado-espaco-topo > tr > td {
     height: 20mm;
