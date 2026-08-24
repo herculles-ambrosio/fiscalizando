@@ -191,6 +191,13 @@ export function HistoricoIndices({
   const [aExcluir, setAExcluir] = useState<IndiceSalvo | null>(null);
   const [detalhe, setDetalhe] = useState<IndiceSalvo | null>(null);
 
+  // clique na linha: carrega o índice na tela (quando o pai suporta) ou abre o detalhe
+  const abrir = (r: IndiceSalvo | null) => {
+    if (!r) return;
+    if (onCarregar) onCarregar(r);
+    else setDetalhe(r);
+  };
+
   const comparacoes = useMemo<Comparacao[]>(() => {
     const porExercicio = new Map<number, Comparacao>();
     for (const r of registros) {
