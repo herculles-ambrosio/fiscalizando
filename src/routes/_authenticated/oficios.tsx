@@ -42,7 +42,7 @@ function PaginaOficios() {
       onValueChange={(v) => navigate({ to: ".", search: { aba: v as Aba } })}
       className="space-y-6"
     >
-      <TabsList>
+      <TabsList className="no-print">
         <TabsTrigger value="modelos">Modelos de ofício</TabsTrigger>
         <TabsTrigger value="emitidos">Ofícios emitidos</TabsTrigger>
       </TabsList>
