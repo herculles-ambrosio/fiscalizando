@@ -301,7 +301,7 @@ export function HistoricoIndices({
                         onClick={(e) => {
                           if (!c.definitivo) return;
                           e.stopPropagation();
-                          setDetalhe(c.definitivo);
+                          abrir(c.definitivo);
                         }}
                       >
                         {c.definitivo ? (
