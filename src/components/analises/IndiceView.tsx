@@ -297,24 +297,6 @@ export default function PaginaIndice() {
     };
   }, [municipios]);
 
-  // inscrição estadual -> nome do contribuinte (a planilha do Portal só traz a IE)
-  const nomePorIe = useMemo(() => {
-    const mapa = new Map<string, string>();
-    const normalizar = (ie: string) => (ie ?? "").replace(/\D/g, "").replace(/^0+/, "");
-    const registrar = (linhas: LinhaContribuinte[]) => {
-      for (const l of linhas) {
-        const chave = normalizar(l.inscricao_estadual);
-        if (chave && l.nome && !mapa.has(chave)) mapa.set(chave, l.nome);
-      }
-    };
-    if (apuracaoRef.current) {
-      registrar(apuracaoRef.current.contribuintesVaf);
-      registrar(apuracaoRef.current.simei);
-      registrar(apuracaoRef.current.creditosExternos);
-    }
-    return (ie: string) => mapa.get(normalizar(ie)) ?? null;
-  }, [apuracaoTick]);
-
   const apuracaoArquivo = useMemo<ApuracaoIndice | null>(() => {
     if (!texto) return null;
     try {
@@ -345,6 +327,24 @@ export default function PaginaIndice() {
   );
 
   const apuracao = apuracaoHistorico ?? apuracaoArquivo;
+
+  // inscrição estadual -> nome do contribuinte (a planilha do Portal só traz a IE)
+  const nomePorIe = useMemo(() => {
+    const mapa = new Map<string, string>();
+    const normalizar = (ie: string) => (ie ?? "").replace(/\D/g, "").replace(/^0+/, "");
+    const registrar = (linhas: LinhaContribuinte[]) => {
+      for (const l of linhas) {
+        const chave = normalizar(l.inscricao_estadual);
+        if (chave && l.nome && !mapa.has(chave)) mapa.set(chave, l.nome);
+      }
+    };
+    if (apuracao) {
+      registrar(apuracao.contribuintesVaf);
+      registrar(apuracao.simei);
+      registrar(apuracao.creditosExternos);
+    }
+    return (ie: string) => mapa.get(normalizar(ie)) ?? null;
+  }, [apuracao]);
 
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
@@ -1001,6 +1001,22 @@ export default function PaginaIndice() {
               <CardTitle className="text-base">Detalhamento</CardTitle>
             </CardHeader>
             <CardContent>
+              {carregandoDetalhe && (
+                <p className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Carregando o detalhamento salvo…
+                </p>
+              )}
+              {registroHistorico && !carregandoDetalhe && !detalheHistorico && (
+                <Alert className="mb-4">
+                  <AlertTitle>Detalhamento não disponível</AlertTitle>
+                  <AlertDescription>
+                    Este índice foi salvo antes do armazenamento do detalhamento. Carregue novamente
+                    o arquivo de retorno (e a planilha de crédito próprio, se houver) e salve outra
+                    vez para gravar as listas completas.
+                  </AlertDescription>
+                </Alert>
+              )}
               <Tabs defaultValue="externos">
                 <TabsList className="no-print">
                   <TabsTrigger value="externos">
@@ -1120,7 +1136,16 @@ export default function PaginaIndice() {
                               {n.numero}
                             </TableCell>
                             <TableCell className="text-xs">{n.data ?? "—"}</TableCell>
-                            <TableCell className="font-mono text-xs">{n.remetente}</TableCell>
+                            <TableCell className="max-w-[16rem] truncate">
+                              {nomePorIe(n.remetente) ?? (
+                                <span className="font-mono text-xs">{n.remetente}</span>
+                              )}
+                              {nomePorIe(n.remetente) && (
+                                <span className="block font-mono text-[10px] text-muted-foreground">
+                                  {n.remetente}
+                                </span>
+                              )}
+                            </TableCell>
                             <TableCell className="max-w-[18rem] truncate">{n.descricao}</TableCell>
                             <TableCell className="text-right font-mono">
                               {formatarMoeda(n.valor)}
