@@ -183,6 +183,7 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
   const { data: registros = [], isLoading } = useIndicesSalvos(municipioId);
   const excluir = useExcluirIndice(municipioId);
   const [aExcluir, setAExcluir] = useState<IndiceSalvo | null>(null);
+  const [detalhe, setDetalhe] = useState<IndiceSalvo | null>(null);
 
   const comparacoes = useMemo<Comparacao[]>(() => {
     const porExercicio = new Map<number, Comparacao>();
