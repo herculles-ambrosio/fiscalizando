@@ -500,6 +500,18 @@ export default function PaginaIndice() {
         </div>
       </div>
 
+      {mostrarRelatorio && periodo.corrigido && (
+        <Alert className="no-print">
+          <AlertTitle>Período do arquivo será ajustado</AlertTitle>
+          <AlertDescription>
+            O retorno não trouxe um período apurado válido
+            {periodo.invalido ? " (data fora de faixa)" : ""}. Ao salvar no histórico, o período será
+            corrigido automaticamente para 01/01/{exercicio} a 31/12/{exercicio}.
+          </AlertDescription>
+        </Alert>
+      )}
+
+
       {mostrarRelatorio && exercicio && (
         <p className="no-print text-xs text-muted-foreground">
           Será salvo como exercício <span className="font-medium">{exercicio}</span> ·{" "}
