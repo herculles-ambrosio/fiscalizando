@@ -299,16 +299,48 @@ export default function PaginaIndice() {
     }
   }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
 
+  // Índice reaberto a partir do histórico (sem o arquivo original)
+  const apuracaoHistorico = useMemo<ApuracaoIndice | null>(
+    () =>
+      registroHistorico
+        ? apuracaoDoHistorico(
+            registroHistorico,
+            municipio?.codigo_sef ? String(municipio.codigo_sef).padStart(3, "0") : "",
+          )
+        : null,
+    [registroHistorico, municipio?.codigo_sef],
+  );
+
+  const apuracao = apuracaoHistorico ?? apuracaoArquivo;
+
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
   useEffect(() => {
+    if (registroHistorico) return;
     if (apuracao?.estimado && !planilha && apuracao.creditoProprio <= 0) setPerguntar(true);
-  }, [apuracao?.estimado, apuracao?.creditoProprio, planilha]);
+  }, [registroHistorico, apuracao?.estimado, apuracao?.creditoProprio, planilha]);
 
   useEffect(() => {
     setPlanilha(null);
     setPerguntar(false);
+    setRegistroHistorico(null);
   }, [municipioId]);
+
+  function carregarDoHistorico(r: IndiceSalvo) {
+    setArquivo(null);
+    setTexto(null);
+    setErro(null);
+    setPlanilha(null);
+    setPerguntar(false);
+    setRegistroHistorico(r);
+    if (r.vaf_estadual) setVafEstadualRef(String(Math.round(Number(r.vaf_estadual))));
+    setFator(String(Number(r.fator_calibragem) || 1).replace(".", ","));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast.success(
+      `Índice ${r.tipo_indice} de ${r.exercicio} · ${rotuloRemessa(r.competencia_mes)} carregado na tela.`,
+    );
+  }
+
 
 
   function baixarCsvPlanilha() {
