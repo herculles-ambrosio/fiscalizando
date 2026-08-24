@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { History, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { Eye, History, Trash2, TrendingDown, TrendingUp } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -383,7 +383,7 @@ export function HistoricoIndices({
                     <TableHead className="text-right">Valor líquido</TableHead>
                     <TableHead>Arquivo</TableHead>
                     <TableHead>Crédito próprio</TableHead>
-                    <TableHead className="w-10" />
+                    <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
