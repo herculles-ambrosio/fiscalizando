@@ -442,6 +442,9 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
         )}
       </CardContent>
 
+      <DetalheIndice registro={detalhe} onOpenChange={(o) => !o && setDetalhe(null)} />
+
+
       <AlertDialog open={!!aExcluir} onOpenChange={(o) => !o && setAExcluir(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
