@@ -2,9 +2,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
-  Footer,
   HeadingLevel,
-  ImageRun,
   Packer,
   Paragraph,
   ShadingType,
@@ -14,9 +12,16 @@ import {
   TextRun,
   WidthType,
 } from "docx";
-import logoAsset from "@/assets/htechminas-logo.png.asset.json";
+import {
+  MARGENS_TIMBRADO,
+  cabecalhoTimbrado,
+  carregarImagensTimbrado,
+  rodapeTimbrado,
+  type ImagensTimbrado,
+} from "@/lib/reportTimbrado";
 import type { DiagnosticoEvolucao, FatorVariacao } from "./diagnostico";
 import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
+
 
 
 const FONTE = "Arial";
