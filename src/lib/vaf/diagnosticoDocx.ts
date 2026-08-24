@@ -292,6 +292,16 @@ export function construirDocDiagnostico(
   });
 }
 
+async function carregarLogo(): Promise<ArrayBuffer | null> {
+  try {
+    const resp = await fetch(logoAsset.url);
+    if (!resp.ok) return null;
+    return await resp.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
+
 export async function baixarDocDiagnostico(
   d: DiagnosticoEvolucao,
   baseNome: string,
@@ -299,7 +309,9 @@ export async function baixarDocDiagnostico(
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
 ): Promise<void> {
-  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes);
+  const logo = await carregarLogo();
+  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, logo);
+
   const blob = await Packer.toBlob(doc);
   const limpo = (s: string) => s.replace(/[^\w.-]+/g, "_").slice(0, 40);
   const url = URL.createObjectURL(blob);
