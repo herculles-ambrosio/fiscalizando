@@ -224,14 +224,31 @@
   }
 }
 
+/* Fora da impressão a tabela do timbrado se comporta como blocos comuns. */
+.timbrado-tabela,
+.timbrado-tabela > tbody,
+.timbrado-tabela > tbody > tr,
+.timbrado-tabela > tbody > tr > td {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+
+.timbrado-fixo {
+  display: none;
+}
+
+
 @media print {
   @page {
-    margin: 26mm 12mm 24mm;
+    margin: 12mm 14mm 10mm;
   }
 
   .no-print,
   aside,
-  header {
+  header:not(.timbrado-cabecalho) {
     display: none !important;
   }
 
@@ -239,8 +256,15 @@
     padding: 0 !important;
   }
 
-  body {
+  html {
     background: #fff;
+  }
+
+  body,
+  #root,
+  main,
+  main > div {
+    background: transparent !important;
   }
 
   #relatorio-indice {
@@ -259,51 +283,100 @@
     page-break-inside: avoid;
   }
 
-  /* ---- Papel timbrado H-Tech Minas ---- */
+  /* ---- Papel timbrado H-Tech Minas (repetido em todas as páginas) ---- */
+  .timbrado-tabela {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  .timbrado-tabela > tbody {
+    display: table-row-group;
+  }
+
+  .timbrado-tabela > thead {
+    display: table-header-group;
+  }
+
+  .timbrado-tabela > tfoot {
+    display: table-footer-group;
+  }
+
+  .timbrado-tabela tr {
+    display: table-row;
+  }
+
+  .timbrado-tabela > thead > tr > td,
+  .timbrado-tabela > tfoot > tr > td,
+  .timbrado-tabela > tbody > tr > td {
+    display: table-cell;
+    padding: 0;
+    border: 0;
+    vertical-align: top;
+  }
+
+  /* Espaços reservados em cada página para a camada fixa do timbrado */
+  .timbrado-espaco-topo > tr > td {
+    height: 20mm;
+  }
+
+  .timbrado-espaco-pe > tr > td {
+    height: 16mm;
+  }
+
+  .timbrado-fixo {
+    display: block;
+  }
+
   .timbrado-cabecalho {
-    display: flex !important;
     position: fixed;
-    top: -20mm;
+    top: 0;
     left: 0;
-    right: 0;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+    width: 182mm;
+    text-align: center;
   }
 
   .timbrado-cabecalho img {
-    height: 15mm;
+    display: inline-block;
+    height: 13mm;
     width: auto;
     object-fit: contain;
   }
 
-  .timbrado-marca-nome {
-    margin: 0;
-    font-size: 20px;
-    letter-spacing: 0.02em;
-    line-height: 1.05;
-    color: #58514e;
+  .timbrado-rodape {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: -14mm;
+    width: 210mm;
+    align-items: stretch;
+    overflow: hidden;
   }
 
-  .timbrado-marca-nome strong {
-    font-weight: 700;
-    color: #4a4441;
+  .timbrado-rodape-barra {
+    width: 26mm;
+    background: #e2582a;
   }
 
-  .timbrado-marca-sub {
+  .timbrado-rodape-texto {
+    flex: 1;
+    background: #4a4441;
+    padding: 2.5mm 6mm;
+    color: #fff;
+    font-size: 8.5px;
+    line-height: 1.45;
+  }
+
+  .timbrado-rodape-texto p {
     margin: 0;
-    font-size: 7.5px;
-    letter-spacing: 0.04em;
-    line-height: 1.25;
-    color: #e2582a;
   }
 
   .timbrado-dagua {
-    display: block !important;
     position: fixed;
-    top: 45%;
+    top: 50%;
     left: 0;
-    right: 0;
+    width: 182mm;
     z-index: -1;
     text-align: center;
     transform: translateY(-50%);
@@ -313,47 +386,11 @@
     width: 62%;
     height: auto;
     margin: 0 auto;
-  }
-
-  .timbrado-rodape {
-    display: flex !important;
-    position: fixed;
-    bottom: -18mm;
-    left: 0;
-    right: 0;
-    align-items: stretch;
-    gap: 0;
-    overflow: hidden;
-  }
-
-  .timbrado-rodape-barra {
-    width: 16mm;
-    background: #e2582a;
-  }
-
-  .timbrado-rodape-texto {
-    flex: 1;
-    background: #4a4441;
-    padding: 2.5mm 4mm;
-    color: #fff;
-    font-size: 8.5px;
-    line-height: 1.35;
-  }
-
-  .timbrado-rodape-texto p {
-    margin: 0;
-  }
-
-  .timbrado-rodape-nota {
-    color: #d9d3d0;
-    font-size: 7.5px;
+    opacity: 0.6;
   }
 }
 
-.timbrado-cabecalho,
-.timbrado-rodape,
-.timbrado-dagua {
-  display: none;
-}
+
+
 
 

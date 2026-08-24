@@ -16,8 +16,8 @@ import {
   VerticalPositionRelativeFrom,
   WidthType,
 } from "docx";
-import marcaAsset from "@/assets/htechminas-marca.png.asset.json";
-import marcaDaguaAsset from "@/assets/htechminas-marca-dagua.png.asset.json";
+import marcaAsset from "@/assets/timbrado-logo.png.asset.json";
+import marcaDaguaAsset from "@/assets/timbrado-dagua.png.asset.json";
 
 export const CONTATO_HTECH = {
   endereco: "Rua Frederico Dolabela, 703 - Centro - Manhuaçu - MG",
@@ -65,7 +65,7 @@ export function cabecalhoTimbrado(imgs: ImagensTimbrado): Header {
           new ImageRun({
             type: "png",
             data: imgs.marcaDagua,
-            transformation: { width: 430, height: 184 },
+            transformation: { width: 400, height: 271 },
             floating: {
               behindDocument: true,
               horizontalPosition: {
@@ -92,45 +92,34 @@ export function cabecalhoTimbrado(imgs: ImagensTimbrado): Header {
     filhos.push(
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { after: 40 },
+        spacing: { after: 120 },
         children: [
           new ImageRun({
             type: "png",
             data: imgs.marca,
-            transformation: { width: 150, height: 93 },
+            transformation: { width: 240, height: 53 },
             altText: {
               title: "H-Tech Minas",
-              description: "Logo H-Tech Minas",
+              description: "Logo H-Tech Minas — Consultoria Tributária",
               name: "H-Tech Minas",
             },
           }),
         ],
       }),
     );
+  } else {
+    filhos.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 120 },
+        children: [
+          new TextRun({ text: "H-TECH", font: FONTE, size: 22, bold: true, color: "58514E" }),
+          new TextRun({ text: " MINAS", font: FONTE, size: 22, color: "58514E" }),
+        ],
+      }),
+    );
   }
 
-  filhos.push(
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 60 },
-      children: [
-        new TextRun({ text: "H-TECH", font: FONTE, size: 22, bold: true, color: "58514E" }),
-        new TextRun({ text: " MINAS", font: FONTE, size: 22, color: "58514E" }),
-      ],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 120 },
-      children: [
-        new TextRun({
-          text: "CONSULTORIA TRIBUTÁRIA · DESENVOLVIMENTO DE SISTEMAS",
-          font: FONTE,
-          size: 13,
-          color: LARANJA,
-        }),
-      ],
-    }),
-  );
 
   return new Header({ children: filhos });
 }
