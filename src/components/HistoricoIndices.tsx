@@ -375,7 +375,12 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                 </TableHeader>
                 <TableBody>
                   {registros.map((r) => (
-                    <TableRow key={r.id}>
+                    <TableRow
+                      key={r.id}
+                      className="cursor-pointer"
+                      title="Abrir detalhes do índice"
+                      onClick={() => setDetalhe(r)}
+                    >
                       <TableCell>{r.exercicio}</TableCell>
                       <TableCell>
                         {rotuloRemessa(r.competencia_mes)}
