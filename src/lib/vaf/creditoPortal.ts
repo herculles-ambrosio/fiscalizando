@@ -16,6 +16,8 @@ export type NotaCredito = {
   numero: string;
   data: string | null;
   remetente: string;
+  /** Nome/razão social do remetente, quando a planilha traz a coluna. */
+  remetenteNome: string | null;
   municipioRemetente: string;
   destinatario: string;
   municipioDestinatario: string;
