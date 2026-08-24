@@ -19,6 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useNomesContribuintes } from "@/hooks/useNomesContribuintes";
 import {
   apuracaoDoHistorico,
   baixarDetalhamento,
@@ -334,6 +335,7 @@ export default function PaginaIndice() {
   const apuracao = apuracaoHistorico ?? apuracaoArquivo;
 
   // inscrição estadual -> nome do contribuinte (a planilha do Portal só traz a IE)
+  const { data: nomesGravados } = useNomesContribuintes(municipioId);
   const nomePorIe = useMemo(() => {
     const mapa = new Map<string, string>();
     const normalizar = (ie: string) => (ie ?? "").replace(/\D/g, "").replace(/^0+/, "");
@@ -348,8 +350,11 @@ export default function PaginaIndice() {
       registrar(apuracao.simei);
       registrar(apuracao.creditosExternos);
     }
+    for (const [ie, nome] of Object.entries(nomesGravados ?? {})) {
+      if (!mapa.has(ie)) mapa.set(ie, nome);
+    }
     return (ie: string) => mapa.get(normalizar(ie)) ?? null;
-  }, [apuracao]);
+  }, [apuracao, nomesGravados]);
 
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
@@ -415,11 +420,12 @@ export default function PaginaIndice() {
   function baixarCsvPlanilha() {
     if (!planilha) return;
     const csv = montarCsv(
-      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
+      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Inscricao remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
       planilha.notas.map((n) => [
         n.tipoNota,
         n.numero,
         n.data ?? "",
+        n.remetenteNome ?? nomePorIe(n.remetente) ?? "",
         n.remetente,
         n.municipioRemetente,
         n.destinatario,
@@ -1207,14 +1213,19 @@ export default function PaginaIndice() {
                             </TableCell>
                             <TableCell className="text-xs">{n.data ?? "—"}</TableCell>
                             <TableCell className="max-w-[16rem] truncate">
-                              {nomePorIe(n.remetente) ?? (
-                                <span className="font-mono text-xs">{n.remetente}</span>
-                              )}
-                              {nomePorIe(n.remetente) && (
-                                <span className="block font-mono text-[10px] text-muted-foreground">
-                                  {n.remetente}
-                                </span>
-                              )}
+                              {(() => {
+                                const nome = n.remetenteNome ?? nomePorIe(n.remetente);
+                                return nome ? (
+                                  <>
+                                    <span>{nome}</span>
+                                    <span className="block font-mono text-[10px] text-muted-foreground">
+                                      {n.remetente}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="font-mono text-xs">{n.remetente}</span>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell className="max-w-[18rem] truncate">{n.descricao}</TableCell>
                             <TableCell className="text-right font-mono">

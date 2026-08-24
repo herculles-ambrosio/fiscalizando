@@ -16,6 +16,8 @@ export type NotaCredito = {
   numero: string;
   data: string | null;
   remetente: string;
+  /** Nome/razão social do remetente, quando a planilha traz a coluna. */
+  remetenteNome: string | null;
   municipioRemetente: string;
   destinatario: string;
   municipioDestinatario: string;
@@ -87,6 +89,15 @@ export function lerCreditoPortal(
   const iCreditoPara = idx("creditoPara");
   const iFrete = idx("vlrFrete");
   const iAno = idx("anoBase");
+  /**
+   * O Portal do VAF varia o nome da coluna com o nome/razão social do
+   * remetente entre versões do relatório — procuramos qualquer variação.
+   */
+  const iRemetenteNome = cabecalho.findIndex((c) =>
+    /^(nome|razao|razão)(social)?remetente$|^remetente(nome|razaosocial)$|^(nome|razaosocial)_?remetente$/i.test(
+      c.replace(/\s+/g, ""),
+    ),
+  );
   const alvo = String(codigoMunicipio ?? "").replace(/^0+/, "");
 
   let creditoProprio = 0;
@@ -132,6 +143,8 @@ export function lerCreditoPortal(
         numero: limparCampo(c[idx("nfa")]) || limparCampo(c[idx("chaveAcesso")]),
         data: (c[idx("saida")] ?? "").trim() || null,
         remetente: limparCampo(c[idx("identificacaoRemetente")]),
+        remetenteNome:
+          iRemetenteNome >= 0 ? (c[iRemetenteNome] ?? "").trim() || null : null,
         municipioRemetente: (c[idx("municipioRemetente")] ?? "").trim(),
         destinatario: limparCampo(c[idx("identificacaoDestinatario")]),
         municipioDestinatario: (c[idx("municipioDestinatario")] ?? "").trim(),
