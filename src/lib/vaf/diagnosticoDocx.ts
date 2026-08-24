@@ -4,6 +4,7 @@ import {
   Document,
   Footer,
   HeadingLevel,
+  ImageRun,
   Packer,
   Paragraph,
   ShadingType,
@@ -13,8 +14,10 @@ import {
   TextRun,
   WidthType,
 } from "docx";
+import logoAsset from "@/assets/htechminas-logo.png.asset.json";
 import type { DiagnosticoEvolucao, FatorVariacao } from "./diagnostico";
 import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
+
 
 const FONTE = "Arial";
 const LARGURA = 9026; // A4 com margens de 1"
@@ -115,8 +118,40 @@ export function construirDocDiagnostico(
   atualNome: string,
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
+  logo?: ArrayBuffer | null,
 ): Document {
   const filhos: Array<Paragraph | Table> = [
+    ...(logo
+      ? [
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 60 },
+            children: [
+              new ImageRun({
+                type: "png",
+                data: logo,
+                transformation: { width: 200, height: 150 },
+                altText: {
+                  title: "H-Tech Minas",
+                  description: "H-Tech Minas — Consultoria Tributária e Desenvolvimento de Sistemas",
+                  name: "H-Tech Minas",
+                },
+              }),
+            ],
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 240 },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "CCCCCC", space: 6 } },
+            children: [
+              texto("H-Tech Minas — Consultoria Tributária · Desenvolvimento de Sistemas", {
+                size: 16,
+                color: "666666",
+              }),
+            ],
+          }),
+        ]
+      : []),
     new Paragraph({
       heading: HeadingLevel.HEADING_1,
       spacing: { after: 120 },
@@ -126,6 +161,7 @@ export function construirDocDiagnostico(
     paragrafo(`Arquivo comparado/estimado: ${atualNome}`),
     ...(municipio ? [paragrafo(`Município: ${municipio}`)] : []),
     paragrafo(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, { after: 200 }),
+
 
     paragrafo("Resumo", { bold: true, size: 24 }),
     paragrafo(d.resumo, { after: 160 }),
@@ -259,6 +295,16 @@ export function construirDocDiagnostico(
   });
 }
 
+async function carregarLogo(): Promise<ArrayBuffer | null> {
+  try {
+    const resp = await fetch(logoAsset.url);
+    if (!resp.ok) return null;
+    return await resp.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
+
 export async function baixarDocDiagnostico(
   d: DiagnosticoEvolucao,
   baseNome: string,
@@ -266,7 +312,9 @@ export async function baixarDocDiagnostico(
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
 ): Promise<void> {
-  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes);
+  const logo = await carregarLogo();
+  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, logo);
+
   const blob = await Packer.toBlob(doc);
   const limpo = (s: string) => s.replace(/[^\w.-]+/g, "_").slice(0, 40);
   const url = URL.createObjectURL(blob);
