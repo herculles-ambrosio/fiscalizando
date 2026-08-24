@@ -334,6 +334,7 @@ export default function PaginaIndice() {
   const apuracao = apuracaoHistorico ?? apuracaoArquivo;
 
   // inscrição estadual -> nome do contribuinte (a planilha do Portal só traz a IE)
+  const { data: nomesGravados } = useNomesContribuintes(municipioId);
   const nomePorIe = useMemo(() => {
     const mapa = new Map<string, string>();
     const normalizar = (ie: string) => (ie ?? "").replace(/\D/g, "").replace(/^0+/, "");
@@ -348,8 +349,11 @@ export default function PaginaIndice() {
       registrar(apuracao.simei);
       registrar(apuracao.creditosExternos);
     }
+    for (const [ie, nome] of Object.entries(nomesGravados ?? {})) {
+      if (!mapa.has(ie)) mapa.set(ie, nome);
+    }
     return (ie: string) => mapa.get(normalizar(ie)) ?? null;
-  }, [apuracao]);
+  }, [apuracao, nomesGravados]);
 
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
