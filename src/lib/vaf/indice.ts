@@ -83,12 +83,17 @@ export type ApuracaoIndice = {
 
 
 function dataSefPonto(valor: string): string | null {
-  // "1.1.2024" / "31.12.2024" -> ISO
+  // "1.1.2024" / "31.12.2024" -> ISO; retornos mensais podem trazer período vazio/zerado
   const partes = valor.trim().split(".");
   if (partes.length !== 3) return null;
   const [d, m, a] = partes;
   if (!d || !m || !a) return null;
-  return `${a}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  const dia = Number(d);
+  const mes = Number(m);
+  const ano = Number(a);
+  if (!Number.isFinite(dia) || !Number.isFinite(mes) || !Number.isFinite(ano)) return null;
+  if (ano < 1900 || ano > 2999 || mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
+  return `${String(ano)}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 }
 
 function dataDdMmAaaa(valor: string): string | null {
