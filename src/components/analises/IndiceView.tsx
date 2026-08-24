@@ -383,12 +383,57 @@ export default function PaginaIndice() {
 
   const exercicio = apuracao?.anoBase ?? competencia.ano ?? null;
 
+  // Períodos do retorno mensal costumam vir vazios/zerados ("0-12-31").
+  // Aqui validamos e, quando possível, corrigimos para 01/01–31/12 do exercício.
+  const periodo = useMemo(() => {
+    const valido = (v: string | null | undefined) => {
+      if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+      const [a, m, d] = v.split("-").map(Number);
+      if (!a || !m || !d) return null;
+      if (a < 1900 || a > 2999 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+      if (Number.isNaN(Date.parse(v))) return null;
+      return v;
+    };
+    const inicioOriginal = apuracao?.periodoInicio ?? null;
+    const fimOriginal = apuracao?.periodoFim ?? null;
+    const inicioOk = valido(inicioOriginal);
+    const fimOk = valido(fimOriginal);
+    const inicio = inicioOk ?? (exercicio ? `${exercicio}-01-01` : null);
+    const fim = fimOk ?? (exercicio ? `${exercicio}-12-31` : null);
+    const invalido = (!!inicioOriginal && !inicioOk) || (!!fimOriginal && !fimOk);
+    const ausente = !inicioOriginal || !fimOriginal;
+    return { inicio, fim, corrigido: (invalido || ausente) && !!inicio && !!fim, invalido };
+  }, [apuracao?.periodoInicio, apuracao?.periodoFim, exercicio]);
+
   async function salvarNoHistorico() {
-    if (!apuracao || !municipioId || !exercicio) return;
+    if (!apuracao || !municipioId) return;
+
+    // validações do formulário antes de gravar
+    if (!exercicio || exercicio < 1900 || exercicio > 2999) {
+      toast.error("Exercício inválido no arquivo. Verifique o retorno antes de salvar.");
+      return;
+    }
+    if (competencia.mes !== null && (competencia.mes < 1 || competencia.mes > 13)) {
+      toast.error("Remessa inválida (deve ser de 1 a 13). Verifique o nome do arquivo.");
+      return;
+    }
+    if (competencia.ano !== null && (competencia.ano < 1900 || competencia.ano > 2999)) {
+      toast.error("Ano de entrega inválido. Verifique o nome do arquivo.");
+      return;
+    }
+    if (!periodo.inicio || !periodo.fim) {
+      toast.error("Não foi possível determinar o período apurado. Verifique o arquivo.");
+      return;
+    }
+    if (periodo.inicio > periodo.fim) {
+      toast.error("Período inválido: a data inicial é posterior à final.");
+      return;
+    }
+
     try {
       const r = await salvarIndice.mutateAsync({
         municipioId,
-        apuracao,
+        apuracao: { ...apuracao, periodoInicio: periodo.inicio, periodoFim: periodo.fim },
         exercicio,
         competenciaMes: competencia.mes,
         competenciaAno: competencia.ano,
@@ -399,6 +444,11 @@ export default function PaginaIndice() {
           ? "Índice atualizado no histórico desta remessa."
           : "Índice salvo no histórico.",
       );
+      if (periodo.corrigido) {
+        toast.info(
+          `Período ajustado automaticamente para 01/01/${exercicio} a 31/12/${exercicio}.`,
+        );
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível salvar o índice.");
     }
