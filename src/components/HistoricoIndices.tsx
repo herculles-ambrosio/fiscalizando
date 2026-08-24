@@ -30,8 +30,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatarMoeda } from "@/lib/format";
+import { formatarData, formatarMoeda } from "@/lib/format";
 import { formatarIndice } from "@/lib/vaf/indice";
 import { ordemExercicioRemessa, rotuloExercicioRemessa, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
 import { useExcluirIndice, useIndicesSalvos, type IndiceSalvo } from "@/hooks/useIndicesHistorico";
@@ -42,6 +49,111 @@ type Comparacao = {
   provisorio: IndiceSalvo | null;
   definitivo: IndiceSalvo | null;
 };
+
+function Linha({ rotulo, valor }: { rotulo: string; valor: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b py-1.5 last:border-b-0">
+      <span className="text-xs text-muted-foreground">{rotulo}</span>
+      <span className="font-mono text-sm">{valor}</span>
+    </div>
+  );
+}
+
+function DetalheIndice({
+  registro,
+  onOpenChange,
+}: {
+  registro: IndiceSalvo | null;
+  onOpenChange: (aberto: boolean) => void;
+}) {
+  return (
+    <Dialog open={!!registro} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        {registro && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex flex-wrap items-center gap-2">
+                Índice {rotuloExercicioRemessa(registro.exercicio, registro.competencia_mes)}
+                <Badge variant={registro.tipo_indice === "definitivo" ? "default" : "secondary"}>
+                  {registro.tipo_indice === "definitivo"
+                    ? "Definitivo"
+                    : registro.estimado
+                      ? "Projeção"
+                      : "Provisório"}
+                </Badge>
+              </DialogTitle>
+              <DialogDescription>
+                {registro.arquivo_nome ?? "sem arquivo"} · salvo em{" "}
+                {new Date(registro.criado_em).toLocaleString("pt-BR")}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
+              <Linha rotulo="Índice" valor={formatarIndice(Number(registro.indice))} />
+              <Linha rotulo="Valor líquido" valor={formatarMoeda(Number(registro.valor_liquido))} />
+              <Linha rotulo="VAF próprio" valor={formatarMoeda(Number(registro.vaf_proprio))} />
+              <Linha rotulo="VAF estadual" valor={formatarMoeda(Number(registro.vaf_estadual))} />
+              <Linha
+                rotulo="Crédito externo"
+                valor={formatarMoeda(Number(registro.credito_externo))}
+              />
+              <Linha
+                rotulo="Crédito interno"
+                valor={formatarMoeda(Number(registro.credito_interno))}
+              />
+              <Linha
+                rotulo="Crédito próprio (AF/SIARE)"
+                valor={formatarMoeda(Number(registro.credito_proprio))}
+              />
+              <Linha rotulo="Débito" valor={formatarMoeda(Number(registro.debito))} />
+              <Linha
+                rotulo="Acerto de crédito"
+                valor={formatarMoeda(Number(registro.acerto_credito))}
+              />
+              <Linha
+                rotulo="Acerto de débito"
+                valor={formatarMoeda(Number(registro.acerto_debito))}
+              />
+              <Linha rotulo="Declarações" valor={registro.total_declaracoes} />
+              <Linha rotulo="Remessa" valor={rotuloRemessa(registro.competencia_mes)} />
+              <Linha rotulo="Entrega" valor={registro.competencia_ano ?? "—"} />
+              <Linha
+                rotulo="Período apurado"
+                valor={
+                  registro.periodo_inicio && registro.periodo_fim
+                    ? `${formatarData(registro.periodo_inicio)} a ${formatarData(registro.periodo_fim)}`
+                    : "—"
+                }
+              />
+              <Linha
+                rotulo="Origem do VAF estadual"
+                valor={registro.origem_vaf_estadual ?? "—"}
+              />
+              <Linha
+                rotulo="Fator de calibragem"
+                valor={Number(registro.fator_calibragem).toLocaleString("pt-BR", {
+                  maximumFractionDigits: 4,
+                })}
+              />
+              <Linha
+                rotulo="Origem do crédito próprio"
+                valor={
+                  registro.origem_credito_proprio === "planilha"
+                    ? (registro.arquivo_credito_proprio ?? "Portal do VAF")
+                    : "Arquivo de retorno"
+                }
+              />
+              <Linha
+                rotulo="Apuração vinculada"
+                valor={registro.carga_id ? "Sim" : "—"}
+              />
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function Diferenca({ base, comparado }: { base: number; comparado: number }) {
   const delta = comparado - base;
