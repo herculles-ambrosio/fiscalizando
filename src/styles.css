@@ -326,16 +326,20 @@
   }
 
   .timbrado-tabela > tbody table {
-    width: 100% !important;
+    max-width: 100%;
     min-width: 0 !important;
-    table-layout: fixed;
   }
 
-  .timbrado-tabela > tbody table th,
-  .timbrado-tabela > tbody table td {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  /* fonte um pouco menor para caber a largura das tabelas */
+  .timbrado-tabela > tbody {
+    font-size: 9px;
+  }
+
+  /* fundos transparentes para a marca d'água aparecer atrás do conteúdo */
+  .timbrado-tabela > tbody [class*="bg-card"],
+  .timbrado-tabela > tbody [class*="bg-background"],
+  .timbrado-tabela > tbody [class*="bg-white"] {
+    background-color: transparent !important;
   }
 
   /* Espaços reservados em cada página para a camada fixa do timbrado */
