@@ -354,7 +354,7 @@
 
   /* Espaços reservados em cada página para a camada fixa do timbrado */
   .timbrado-espaco-topo > tr > td {
-    height: 20mm;
+    height: 16mm;
   }
 
   .timbrado-espaco-pe > tr > td {

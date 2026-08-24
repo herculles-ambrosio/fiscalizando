@@ -235,7 +235,7 @@ function PaginaEstatisticas() {
           onValueChange={(v) => navigate({ to: ".", search: { aba: v as Aba } })}
           className="space-y-6"
         >
-          <TabsList>
+          <TabsList className="no-print">
             <TabsTrigger value="maiores">Maiores contribuintes</TabsTrigger>
             <TabsTrigger value="anual">Comparativo anual</TabsTrigger>
             <TabsTrigger value="setores">Setores e qualidade</TabsTrigger>

@@ -143,7 +143,7 @@ function PaginaContribuintes() {
       </div>
 
       <Tabs defaultValue="lista" className="space-y-6">
-        <TabsList>
+        <TabsList className="no-print">
           <TabsTrigger value="lista">Situações e CNAE</TabsTrigger>
           <TabsTrigger value="sairam">Deixaram de declarar</TabsTrigger>
         </TabsList>

@@ -31,15 +31,43 @@ export type IndiceSalvo = {
   origem_credito_proprio: string | null;
   /** nome do CSV do Portal do VAF usado na projeção */
   arquivo_credito_proprio: string | null;
+  /** arquivo JSON no bucket "uploads" com o detalhamento completo da apuração */
+  detalhamento_path: string | null;
   criado_em: string;
 };
+
+/** Listas de detalhamento gravadas junto com o índice (bucket "uploads"). */
+export type DetalhamentoIndice = {
+  creditosExternos?: ApuracaoIndice["creditosExternos"];
+  creditosPorMunicipio?: ApuracaoIndice["creditosPorMunicipio"];
+  debitosPorMunicipio?: ApuracaoIndice["debitosPorMunicipio"];
+  contribuintesVaf?: ApuracaoIndice["contribuintesVaf"];
+  simei?: ApuracaoIndice["simei"];
+  planilha?: unknown;
+};
+
+/** Baixa o detalhamento salvo de um índice do histórico. */
+export async function baixarDetalhamento(path: string): Promise<DetalhamentoIndice | null> {
+  const { data, error } = await supabase.storage.from("uploads").download(path);
+  if (error || !data) return null;
+  try {
+    return JSON.parse(await data.text()) as DetalhamentoIndice;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Reconstrói uma apuração de índice a partir do registro salvo, para
  * reabrir o cálculo na tela sem precisar do arquivo original.
- * O detalhamento por município/contribuinte não é armazenado.
+ * O detalhamento (créditos, municípios, contribuintes, SIMEI) vem do JSON
+ * gravado no armazenamento, quando disponível.
  */
-export function apuracaoDoHistorico(r: IndiceSalvo, codigoMunicipio: string): ApuracaoIndice {
+export function apuracaoDoHistorico(
+  r: IndiceSalvo,
+  codigoMunicipio: string,
+  detalhe?: DetalhamentoIndice | null,
+): ApuracaoIndice {
   return {
     tipoIndice: r.tipo_indice,
     estimado: r.estimado,
@@ -66,11 +94,11 @@ export function apuracaoDoHistorico(r: IndiceSalvo, codigoMunicipio: string): Ap
     vafEstadual: Number(r.vaf_estadual),
     creditoProprioAf: 0,
     creditoProprioSiare: 0,
-    creditosExternos: [],
-    creditosPorMunicipio: [],
-    debitosPorMunicipio: [],
-    contribuintesVaf: [],
-    simei: [],
+    creditosExternos: detalhe?.creditosExternos ?? [],
+    creditosPorMunicipio: detalhe?.creditosPorMunicipio ?? [],
+    debitosPorMunicipio: detalhe?.debitosPorMunicipio ?? [],
+    contribuintesVaf: detalhe?.contribuintesVaf ?? [],
+    simei: detalhe?.simei ?? [],
     totalDeclaracoes: r.total_declaracoes,
   };
 }
@@ -100,6 +128,8 @@ export type DadosSalvarIndice = {
   competenciaMes: number | null;
   competenciaAno: number | null;
   arquivoNome: string | null;
+  /** planilha do Portal do VAF usada na projeção, para gravar no detalhamento */
+  planilha?: unknown;
 };
 
 /** Salva (ou substitui) a apuração de índice no histórico do município. */
@@ -173,18 +203,49 @@ export function useSalvarIndice() {
       const { data: existente, error: erroBusca } = await consulta.maybeSingle();
       if (erroBusca) throw erroBusca;
 
+      let id: string;
+      let substituido: boolean;
+
       if (existente) {
         const { error } = await supabase
           .from("indices_apurados")
           .update(registro)
           .eq("id", existente.id);
         if (error) throw error;
-        return { substituido: true };
+        id = existente.id;
+        substituido = true;
+      } else {
+        const { data: criado, error } = await supabase
+          .from("indices_apurados")
+          .insert(registro)
+          .select("id")
+          .single();
+        if (error) throw error;
+        id = criado.id;
+        substituido = false;
       }
 
-      const { error } = await supabase.from("indices_apurados").insert(registro);
-      if (error) throw error;
-      return { substituido: false };
+      // detalhamento vai para o armazenamento (é grande demais para a tabela)
+      const detalhe: DetalhamentoIndice = {
+        creditosExternos: a.creditosExternos,
+        creditosPorMunicipio: a.creditosPorMunicipio,
+        debitosPorMunicipio: a.debitosPorMunicipio,
+        contribuintesVaf: a.contribuintesVaf,
+        simei: a.simei,
+        ...(d.planilha ? { planilha: d.planilha } : {}),
+      };
+      const path = `${d.municipioId}/indices/${id}.json`;
+      const { error: erroUpload } = await supabase.storage
+        .from("uploads")
+        .upload(path, new Blob([JSON.stringify(detalhe)], { type: "application/json" }), {
+          upsert: true,
+          contentType: "application/json",
+        });
+      if (!erroUpload) {
+        await supabase.from("indices_apurados").update({ detalhamento_path: path }).eq("id", id);
+      }
+
+      return { substituido, detalhamento: !erroUpload };
     },
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: ["indices-salvos", vars.municipioId] });
