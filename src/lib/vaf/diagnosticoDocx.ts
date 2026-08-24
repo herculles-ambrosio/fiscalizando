@@ -4,6 +4,7 @@ import {
   Document,
   Footer,
   HeadingLevel,
+  ImageRun,
   Packer,
   Paragraph,
   ShadingType,
@@ -13,8 +14,10 @@ import {
   TextRun,
   WidthType,
 } from "docx";
+import logoAsset from "@/assets/htechminas-logo.png.asset.json";
 import type { DiagnosticoEvolucao, FatorVariacao } from "./diagnostico";
 import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
+
 
 const FONTE = "Arial";
 const LARGURA = 9026; // A4 com margens de 1"
