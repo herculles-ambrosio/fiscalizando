@@ -568,6 +568,48 @@ export default function PaginaIndice() {
       )}
 
 
+      {registroHistorico && (
+        <Alert className="no-print">
+          <AlertTitle className="flex flex-wrap items-center gap-2">
+            Índice carregado do histórico
+            <Badge variant={registroHistorico.tipo_indice === "definitivo" ? "default" : "secondary"}>
+              {registroHistorico.tipo_indice === "definitivo"
+                ? "Definitivo"
+                : registroHistorico.estimado
+                  ? "Projeção"
+                  : "Provisório"}
+            </Badge>
+          </AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>
+              Exercício {registroHistorico.exercicio} ·{" "}
+              {rotuloRemessa(registroHistorico.competencia_mes)}
+              {registroHistorico.competencia_ano ? ` · entrega ${registroHistorico.competencia_ano}` : ""} ·
+              arquivo{" "}
+              <span className="font-mono">{registroHistorico.arquivo_nome ?? "não informado"}</span>
+              {registroHistorico.origem_credito_proprio === "planilha"
+                ? ` · crédito próprio do Portal do VAF (${registroHistorico.arquivo_credito_proprio ?? "planilha"})`
+                : ""}
+              .
+            </p>
+            <p className="text-xs">
+              Os valores consolidados vêm do registro salvo. O detalhamento por município e por
+              contribuinte só aparece ao enviar novamente o arquivo de retorno.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setRegistroHistorico(null);
+                setPlanilha(null);
+              }}
+            >
+              Limpar e voltar ao arquivo
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {arquivo && (
         <p className="no-print text-xs text-muted-foreground">
           Arquivo: <span className="font-mono">{arquivo.name}</span> ·{" "}
@@ -599,7 +641,7 @@ export default function PaginaIndice() {
         </Alert>
       )}
 
-      {apuracao?.estimado && (
+      {!registroHistorico && apuracao?.estimado && (
         <Card className="no-print border-amber-500/40 bg-amber-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Projeção do índice provisório</CardTitle>
