@@ -272,15 +272,15 @@ export function HistoricoIndices({
                     <TableRow
                       key={c.exercicio}
                       className="cursor-pointer"
-                      title="Abrir detalhes do índice"
-                      onClick={() => setDetalhe(c.definitivo ?? c.provisorio)}
+                      title={onCarregar ? "Carregar este índice na tela" : "Abrir detalhes do índice"}
+                      onClick={() => abrir(c.definitivo ?? c.provisorio)}
                     >
                       <TableCell className="font-medium">{c.exercicio}</TableCell>
                       <TableCell
                         onClick={(e) => {
                           if (!c.provisorio) return;
                           e.stopPropagation();
-                          setDetalhe(c.provisorio);
+                          abrir(c.provisorio);
                         }}
                       >
                         {c.provisorio ? (
