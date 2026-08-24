@@ -38,7 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarCnpj, formatarMoeda, formatarPercentual, formatarCompacto } from "@/lib/format";
+import { formatarCnpj, formatarMoeda, formatarPercentual, formatarCompacto, formatarValorGrid } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { formatarCodigoCnae } from "@/lib/vaf/cnae";
 import { ROTULO_SITUACAO, type Situacao } from "@/lib/vaf/apurar";
@@ -514,7 +514,7 @@ export function MaioresContribuintes({
                   <TableCell className="font-medium">{c.nome ?? `IE ${c.ie}`}</TableCell>
                   <TableCell className="tabular-nums">{formatarCnpj(c.cnpj)}</TableCell>
                   <TableCell>{formatarCodigoCnae(c.cnae)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatarMoeda(c.total)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatarValorGrid(c.total)}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {totalPeriodo > 0 ? `${((c.total / totalPeriodo) * 100).toFixed(1)}%` : "—"}
                   </TableCell>
@@ -525,7 +525,7 @@ export function MaioresContribuintes({
               <TableRow>
                 <TableCell colSpan={4}>Soma do Top {top.length}</TableCell>
                 <TableCell className="text-right tabular-nums">
-                  {formatarMoeda(top.reduce((s, c) => s + c.total, 0))}
+                  {formatarValorGrid(top.reduce((s, c) => s + c.total, 0))}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
                   {totalPeriodo > 0

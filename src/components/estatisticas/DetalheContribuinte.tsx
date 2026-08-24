@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarCnpj, formatarMoeda, formatarPercentual, formatarCompacto } from "@/lib/format";
+import { formatarCnpj, formatarMoeda, formatarPercentual, formatarCompacto, formatarValorGrid } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { formatarCodigoCnae } from "@/lib/vaf/cnae";
 import {
@@ -275,10 +275,10 @@ export function DetalheContribuinte({
                         <TableRow key={s.rotulo}>
                           <TableCell className="font-medium">{s.rotulo}</TableCell>
                           <TableCell className="text-right tabular-nums">
-                            {formatarMoeda(s.vaf)}
+                            {formatarValorGrid(s.vaf)}
                           </TableCell>
                           <TableCell className="text-right tabular-nums text-muted-foreground">
-                            {formatarMoeda(s.totalPeriodo)}
+                            {formatarValorGrid(s.totalPeriodo)}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {s.totalPeriodo > 0 ? `${s.participacao.toFixed(2)}%` : "—"}
@@ -304,10 +304,10 @@ export function DetalheContribuinte({
                       <TableRow>
                         <TableCell>Total do recorte</TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {formatarMoeda(totalVisivel)}
+                          {formatarValorGrid(totalVisivel)}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {formatarMoeda(totalGeralVisivel)}
+                          {formatarValorGrid(totalGeralVisivel)}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {totalGeralVisivel > 0
@@ -339,7 +339,7 @@ export function DetalheContribuinte({
                             <TableRow key={a}>
                               <TableCell className="font-medium">{a}</TableCell>
                               <TableCell className="text-right tabular-nums">
-                                {formatarMoeda(v.vaf)}
+                                {formatarValorGrid(v.vaf)}
                               </TableCell>
                               <TableCell className="text-right tabular-nums">
                                 {v.total > 0 ? `${((v.vaf / v.total) * 100).toFixed(2)}%` : "—"}

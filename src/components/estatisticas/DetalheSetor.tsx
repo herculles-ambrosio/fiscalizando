@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarCnpj, formatarMoeda, formatarCompacto } from "@/lib/format";
+import { formatarCnpj, formatarMoeda, formatarCompacto, formatarValorGrid } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { descricaoCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 import {
@@ -196,7 +196,7 @@ export function DetalheSetor({
                         {c.cnpj ? formatarCnpj(c.cnpj) : "—"}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
-                        {formatarMoeda(c.total)}
+                        {formatarValorGrid(c.total)}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {dados.total > 0 ? ((c.total / dados.total) * 100).toFixed(2) : "0.00"}%
@@ -208,7 +208,7 @@ export function DetalheSetor({
                   <TableRow>
                     <TableCell colSpan={2}>Total do setor</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatarMoeda(dados.total)}
+                      {formatarValorGrid(dados.total)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">100%</TableCell>
                   </TableRow>
