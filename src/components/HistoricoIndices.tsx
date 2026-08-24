@@ -270,7 +270,13 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                       onClick={() => setDetalhe(c.definitivo ?? c.provisorio)}
                     >
                       <TableCell className="font-medium">{c.exercicio}</TableCell>
-                      <TableCell>
+                      <TableCell
+                        onClick={(e) => {
+                          if (!c.provisorio) return;
+                          e.stopPropagation();
+                          setDetalhe(c.provisorio);
+                        }}
+                      >
                         {c.provisorio ? (
                           <div className="flex items-center gap-2">
                             <span className="font-mono">{formatarIndice(Number(c.provisorio.indice))}</span>
@@ -284,7 +290,14 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="font-mono">
+                      <TableCell
+                        className="font-mono"
+                        onClick={(e) => {
+                          if (!c.definitivo) return;
+                          e.stopPropagation();
+                          setDetalhe(c.definitivo);
+                        }}
+                      >
                         {c.definitivo ? (
                           formatarIndice(Number(c.definitivo.indice))
                         ) : (
