@@ -43,7 +43,9 @@ export function apuracaoDoHistorico(r: IndiceSalvo, codigoMunicipio: string): Ap
   return {
     tipoIndice: r.tipo_indice,
     estimado: r.estimado,
-    origemVafEstadual: (r.origem_vaf_estadual as "arquivo" | "referencia" | null) ?? undefined,
+    ...(r.origem_vaf_estadual === "arquivo" || r.origem_vaf_estadual === "referencia"
+      ? { origemVafEstadual: r.origem_vaf_estadual }
+      : {}),
     fatorCalibragem: Number(r.fator_calibragem) || 1,
     codigoMunicipio,
     anoBase: r.exercicio,
@@ -55,7 +57,7 @@ export function apuracaoDoHistorico(r: IndiceSalvo, codigoMunicipio: string): Ap
     creditoProprio: Number(r.credito_proprio),
     origemCreditoProprio:
       r.origem_credito_proprio === "planilha" ? "planilha" : "arquivo",
-    arquivoCreditoProprio: r.arquivo_credito_proprio ?? undefined,
+    ...(r.arquivo_credito_proprio ? { arquivoCreditoProprio: r.arquivo_credito_proprio } : {}),
     debito: Number(r.debito),
     acertoCredito: Number(r.acerto_credito),
     acertoDebito: Number(r.acerto_debito),
