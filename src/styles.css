@@ -330,9 +330,15 @@
     min-width: 0 !important;
   }
 
-  /* reduz proporcionalmente o conteúdo para caber na largura da página */
-  .timbrado-tabela > tbody > tr > td {
-    zoom: 0.78;
+  /* tabelas mais compactas para caber a largura da página */
+  .timbrado-tabela > tbody table {
+    font-size: 7.5px !important;
+  }
+
+  .timbrado-tabela > tbody table th,
+  .timbrado-tabela > tbody table td {
+    padding: 2px 4px !important;
+    font-size: 7.5px !important;
   }
 
   /* fundos transparentes para a marca d'água aparecer atrás do conteúdo */
