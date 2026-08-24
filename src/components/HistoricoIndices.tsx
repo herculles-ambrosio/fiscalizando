@@ -179,7 +179,13 @@ function Diferenca({ base, comparado }: { base: number; comparado: number }) {
   );
 }
 
-export function HistoricoIndices({ municipioId }: { municipioId: string | null }) {
+export function HistoricoIndices({
+  municipioId,
+  onCarregar,
+}: {
+  municipioId: string | null;
+  onCarregar?: (registro: IndiceSalvo) => void;
+}) {
   const { data: registros = [], isLoading } = useIndicesSalvos(municipioId);
   const excluir = useExcluirIndice(municipioId);
   const [aExcluir, setAExcluir] = useState<IndiceSalvo | null>(null);
