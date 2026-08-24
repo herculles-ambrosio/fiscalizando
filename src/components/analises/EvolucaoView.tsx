@@ -472,12 +472,17 @@ export default function PaginaEvolucao() {
   const salvarEvolucao = useSalvarEvolucao();
   const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
 
+  // Prefeituras cadastradas têm prioridade; o restante vem da tabela oficial da SEF-MG.
   const mapaMunicipiosPorCodigo = useMemo(() => {
     const mapa = new Map<string, string>();
     for (const m of municipios ?? []) {
-      if (m.codigo_sef) mapa.set(m.codigo_sef, m.nome);
+      const cod = normalizarCodigoSef(m.codigo_sef);
+      if (cod) mapa.set(cod, m.nome);
     }
-    return mapa;
+    return {
+      get: (codigo: string) =>
+        mapa.get(normalizarCodigoSef(codigo) ?? codigo) ?? nomeMunicipioSef(codigo) ?? undefined,
+    };
   }, [municipios]);
 
   async function carregar(file: File, alvo: "base" | "atual", forcar = false) {
