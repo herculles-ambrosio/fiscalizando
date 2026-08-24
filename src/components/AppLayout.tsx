@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { BrandFooter } from "@/components/BrandFooter";
 import { PrintFooter } from "@/components/PrintFooter";
+import { PrintHeader } from "@/components/PrintHeader";
+
 import {
   Select,
   SelectContent,
