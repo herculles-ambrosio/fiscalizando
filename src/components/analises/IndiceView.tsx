@@ -22,10 +22,13 @@ import { useConfiguracao } from "@/hooks/useConfiguracao";
 import {
   apuracaoDoHistorico,
   baixarDetalhamento,
+  useCargasComRetorno,
+  useRevalidarDetalhamento,
   useSalvarIndice,
   type DetalhamentoIndice,
   type IndiceSalvo,
 } from "@/hooks/useIndicesHistorico";
+import { podeRevalidar } from "@/lib/vaf/revalidarIndice";
 import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
@@ -262,6 +265,8 @@ export default function PaginaIndice() {
   const [registroHistorico, setRegistroHistorico] = useState<IndiceSalvo | null>(null);
   const [detalheHistorico, setDetalheHistorico] = useState<DetalhamentoIndice | null>(null);
   const [carregandoDetalhe, setCarregandoDetalhe] = useState(false);
+  const { data: cargasRetorno = [] } = useCargasComRetorno(municipioId);
+  const revalidar = useRevalidarDetalhamento(municipioId);
 
 
   // calibração é guardada por prefeitura, para não misturar referências ao trocar
@@ -378,6 +383,9 @@ export default function PaginaIndice() {
       } finally {
         setCarregandoDetalhe(false);
       }
+    } else if (podeRevalidar(r, cargasRetorno)) {
+      // índice salvo antes da gravação do detalhamento: reconstrói do arquivo guardado
+      await revalidarRegistro(r);
     }
     if (r.vaf_estadual) setVafEstadualRef(String(Math.round(Number(r.vaf_estadual))));
     setFator(String(Number(r.fator_calibragem) || 1).replace(".", ","));
@@ -388,6 +396,21 @@ export default function PaginaIndice() {
   }
 
 
+
+  async function revalidarRegistro(r: IndiceSalvo) {
+    setCarregandoDetalhe(true);
+    try {
+      const detalhe = await revalidar.um.mutateAsync({ registro: r, cargas: cargasRetorno });
+      setDetalheHistorico(detalhe);
+      toast.success("Detalhamento reconstruído a partir do arquivo guardado.");
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Não foi possível reconstruir o detalhamento.",
+      );
+    } finally {
+      setCarregandoDetalhe(false);
+    }
+  }
 
   function baixarCsvPlanilha() {
     if (!planilha) return;
@@ -1010,10 +1033,57 @@ export default function PaginaIndice() {
               {registroHistorico && !carregandoDetalhe && !detalheHistorico && (
                 <Alert className="mb-4">
                   <AlertTitle>Detalhamento não disponível</AlertTitle>
-                  <AlertDescription>
-                    Este índice foi salvo antes do armazenamento do detalhamento. Carregue novamente
-                    o arquivo de retorno (e a planilha de crédito próprio, se houver) e salve outra
-                    vez para gravar as listas completas.
+                  <AlertDescription className="space-y-2">
+                    {podeRevalidar(registroHistorico, cargasRetorno) ? (
+                      <p>
+                        O arquivo de retorno deste índice está guardado no sistema. Clique em
+                        "Revalidar detalhamento" para reconstruir as listas.
+                      </p>
+                    ) : (
+                      <>
+                        <p>
+                          Este índice foi salvo antes da gravação do detalhamento e o arquivo de
+                          origem não está guardado no sistema. Para regravar:
+                        </p>
+                        <ol className="list-decimal space-y-1 pl-5">
+                          <li>
+                            Selecione o arquivo de retorno
+                            {registroHistorico.arquivo_nome
+                              ? ` "${registroHistorico.arquivo_nome}"`
+                              : " da SEF-MG"}{" "}
+                            no campo acima.
+                          </li>
+                          {registroHistorico.origem_credito_proprio === "planilha" && (
+                            <li>
+                              Envie também a planilha do Portal do VAF
+                              {registroHistorico.arquivo_credito_proprio
+                                ? ` "${registroHistorico.arquivo_credito_proprio}"`
+                                : ""}{" "}
+                              — é a única forma de recompor a aba "Crédito próprio".
+                            </li>
+                          )}
+                          <li>
+                            Confirme exercício {registroHistorico.exercicio} ·{" "}
+                            {rotuloRemessa(registroHistorico.competencia_mes)} e clique em "Salvar no
+                            histórico": o registro é substituído, mantendo o mesmo índice.
+                          </li>
+                        </ol>
+                      </>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="no-print"
+                      disabled={
+                        revalidar.um.isPending || !podeRevalidar(registroHistorico, cargasRetorno)
+                      }
+                      onClick={() => revalidarRegistro(registroHistorico)}
+                    >
+                      {revalidar.um.isPending && (
+                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      )}
+                      Revalidar detalhamento
+                    </Button>
                   </AlertDescription>
                 </Alert>
               )}

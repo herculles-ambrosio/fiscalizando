@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { ApuracaoIndice } from "@/lib/vaf/indice";
+import {
+  cargasComRetorno,
+  podeRevalidar,
+  revalidarDetalhamento,
+  type CargaRetorno,
+} from "@/lib/vaf/revalidarIndice";
 
 export type IndiceSalvo = {
   id: string;
@@ -264,4 +270,62 @@ export function useExcluirIndice(municipioId: string | null) {
       qc.invalidateQueries({ queryKey: ["indices-salvos", municipioId] });
     },
   });
+}
+
+/** Cargas do município que ainda têm o arquivo de retorno guardado. */
+export function useCargasComRetorno(municipioId: string | null) {
+  return useQuery({
+    queryKey: ["cargas-com-retorno", municipioId],
+    enabled: !!municipioId,
+    queryFn: () => cargasComRetorno(municipioId!),
+  });
+}
+
+export type StatusDetalhamento = "pronto" | "reconstruivel" | "faltando";
+
+export function statusDetalhamento(r: IndiceSalvo, cargas: CargaRetorno[]): StatusDetalhamento {
+  if (r.detalhamento_path) return "pronto";
+  return podeRevalidar(r, cargas) ? "reconstruivel" : "faltando";
+}
+
+/**
+ * Reconstrói o detalhamento de índices salvos antes da gravação automática,
+ * reprocessando o arquivo de retorno guardado no armazenamento.
+ */
+export function useRevalidarDetalhamento(municipioId: string | null) {
+  const qc = useQueryClient();
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: ["indices-salvos", municipioId] });
+  };
+
+  const um = useMutation({
+    mutationFn: async ({ registro, cargas }: { registro: IndiceSalvo; cargas: CargaRetorno[] }) =>
+      revalidarDetalhamento(registro, cargas),
+    onSuccess: invalidar,
+  });
+
+  const lote = useMutation({
+    mutationFn: async ({
+      registros,
+      cargas,
+    }: {
+      registros: IndiceSalvo[];
+      cargas: CargaRetorno[];
+    }) => {
+      let ok = 0;
+      let falhas = 0;
+      for (const r of registros) {
+        try {
+          await revalidarDetalhamento(r, cargas);
+          ok += 1;
+        } catch {
+          falhas += 1;
+        }
+      }
+      return { ok, falhas };
+    },
+    onSuccess: invalidar,
+  });
+
+  return { um, lote };
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Eye, History, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { Eye, History, Loader2, RefreshCw, Trash2, TrendingDown, TrendingUp } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -41,7 +41,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatarData, formatarMoeda } from "@/lib/format";
 import { formatarIndice } from "@/lib/vaf/indice";
 import { ordemExercicioRemessa, rotuloExercicioRemessa, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
-import { useExcluirIndice, useIndicesSalvos, type IndiceSalvo } from "@/hooks/useIndicesHistorico";
+import {
+  statusDetalhamento,
+  useCargasComRetorno,
+  useExcluirIndice,
+  useIndicesSalvos,
+  useRevalidarDetalhamento,
+  type IndiceSalvo,
+  type StatusDetalhamento,
+} from "@/hooks/useIndicesHistorico";
 import { toast } from "sonner";
 
 type Comparacao = {
@@ -187,6 +195,37 @@ export function HistoricoIndices({
   onCarregar?: (registro: IndiceSalvo) => void;
 }) {
   const { data: registros = [], isLoading } = useIndicesSalvos(municipioId);
+  const { data: cargasRetorno = [] } = useCargasComRetorno(municipioId);
+  const revalidar = useRevalidarDetalhamento(municipioId);
+
+  const situacoes = useMemo(() => {
+    const mapa = new Map<string, StatusDetalhamento>();
+    for (const r of registros) mapa.set(r.id, statusDetalhamento(r, cargasRetorno));
+    return mapa;
+  }, [registros, cargasRetorno]);
+
+  const pendentes = useMemo(
+    () => registros.filter((r) => situacoes.get(r.id) === "reconstruivel"),
+    [registros, situacoes],
+  );
+
+  async function revalidarUm(r: IndiceSalvo) {
+    try {
+      await revalidar.um.mutateAsync({ registro: r, cargas: cargasRetorno });
+      toast.success("Detalhamento reconstruído a partir do arquivo guardado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível reconstruir o detalhamento.");
+    }
+  }
+
+  async function revalidarTodos() {
+    const { ok, falhas } = await revalidar.lote.mutateAsync({
+      registros: pendentes,
+      cargas: cargasRetorno,
+    });
+    if (ok) toast.success(`${ok} índice(s) com detalhamento reconstruído.`);
+    if (falhas) toast.error(`${falhas} índice(s) não puderam ser reconstruídos.`);
+  }
   const excluir = useExcluirIndice(municipioId);
   const [aExcluir, setAExcluir] = useState<IndiceSalvo | null>(null);
   const [detalhe, setDetalhe] = useState<IndiceSalvo | null>(null);
@@ -241,9 +280,26 @@ export function HistoricoIndices({
   return (
     <Card className="no-print">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <History className="h-4 w-4" /> Histórico de índices ({registros.length})
-        </CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <History className="h-4 w-4" /> Histórico de índices ({registros.length})
+          </CardTitle>
+          {pendentes.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={revalidar.lote.isPending}
+              onClick={revalidarTodos}
+            >
+              {revalidar.lote.isPending ? (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-3.5 w-3.5" />
+              )}
+              Revalidar pendentes ({pendentes.length})
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading && <p className="text-sm text-muted-foreground">Carregando histórico…</p>}
@@ -383,6 +439,7 @@ export function HistoricoIndices({
                     <TableHead className="text-right">Valor líquido</TableHead>
                     <TableHead>Arquivo</TableHead>
                     <TableHead>Crédito próprio</TableHead>
+                    <TableHead className="w-40">Detalhamento</TableHead>
                     <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
@@ -431,6 +488,34 @@ export function HistoricoIndices({
                               ? "Arquivo de retorno"
                               : "Ausente no retorno"}
                           </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-xs">
+                        {situacoes.get(r.id) === "pronto" && (
+                          <Badge className="bg-emerald-600 hover:bg-emerald-600">Pronto</Badge>
+                        )}
+                        {situacoes.get(r.id) === "reconstruivel" && (
+                          <div className="flex items-center gap-1">
+                            <Badge className="bg-amber-500 hover:bg-amber-500">Reconstruível</Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={revalidar.um.isPending || revalidar.lote.isPending}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                revalidarUm(r);
+                              }}
+                              aria-label="Revalidar detalhamento"
+                              title="Revalidar detalhamento"
+                            >
+                              <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        )}
+                        {situacoes.get(r.id) === "faltando" && (
+                          <Badge variant="destructive" title="Recarregue o arquivo e salve de novo">
+                            Faltando
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
