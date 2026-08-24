@@ -68,6 +68,9 @@ export function useSalvarIndice() {
     mutationFn: async (d: DadosSalvarIndice) => {
       const { data: userData } = await supabase.auth.getUser();
       const a = d.apuracao;
+      // retornos mensais podem trazer período vazio/zerado — só grava data ISO válida
+      const dataValida = (v: string | null | undefined) =>
+        v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) ? v : null;
 
       // vincula à carga mensal da mesma competência, quando existir
       let cargaId: string | null = null;
