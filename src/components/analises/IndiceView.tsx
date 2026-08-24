@@ -283,7 +283,7 @@ export default function PaginaIndice() {
     return (codigo: string) => mapa.get(codigo.padStart(3, "0")) ?? "—";
   }, [municipios]);
 
-  const apuracao = useMemo<ApuracaoIndice | null>(() => {
+  const apuracaoArquivo = useMemo<ApuracaoIndice | null>(() => {
     if (!texto) return null;
     try {
       if (possuiIndice(texto)) return apurarIndice(texto);
