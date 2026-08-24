@@ -21,9 +21,12 @@ import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
 import {
   apuracaoDoHistorico,
+  baixarDetalhamento,
   useSalvarIndice,
+  type DetalhamentoIndice,
   type IndiceSalvo,
 } from "@/hooks/useIndicesHistorico";
+import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
@@ -257,6 +260,8 @@ export default function PaginaIndice() {
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
   const [perguntar, setPerguntar] = useState(false);
   const [registroHistorico, setRegistroHistorico] = useState<IndiceSalvo | null>(null);
+  const [detalheHistorico, setDetalheHistorico] = useState<DetalhamentoIndice | null>(null);
+  const [carregandoDetalhe, setCarregandoDetalhe] = useState(false);
 
 
   // calibração é guardada por prefeitura, para não misturar referências ao trocar
@@ -285,7 +290,11 @@ export default function PaginaIndice() {
     const mapa = new Map(
       municipios.map((m) => [String(m.codigo_sef).padStart(3, "0"), `${m.nome}/${m.uf}`]),
     );
-    return (codigo: string) => mapa.get(codigo.padStart(3, "0")) ?? "—";
+    return (codigo: string) => {
+      const chave = codigo.padStart(3, "0");
+      // prefeituras cadastradas primeiro; senão a relação oficial da SEF-MG
+      return mapa.get(chave) ?? (nomeMunicipioSef(chave) ? `${nomeMunicipioSef(chave)}/MG` : "—");
+    };
   }, [municipios]);
 
   const apuracaoArquivo = useMemo<ApuracaoIndice | null>(() => {
@@ -311,9 +320,10 @@ export default function PaginaIndice() {
         ? apuracaoDoHistorico(
             registroHistorico,
             municipio?.codigo_sef ? String(municipio.codigo_sef).padStart(3, "0") : "",
+            detalheHistorico,
           )
         : null,
-    [registroHistorico, municipio?.codigo_sef],
+    [registroHistorico, municipio?.codigo_sef, detalheHistorico],
   );
 
   const apuracao = apuracaoHistorico ?? apuracaoArquivo;
@@ -329,15 +339,28 @@ export default function PaginaIndice() {
     setPlanilha(null);
     setPerguntar(false);
     setRegistroHistorico(null);
+    setDetalheHistorico(null);
   }, [municipioId]);
 
-  function carregarDoHistorico(r: IndiceSalvo) {
+  async function carregarDoHistorico(r: IndiceSalvo) {
     setArquivo(null);
     setTexto(null);
     setErro(null);
     setPlanilha(null);
     setPerguntar(false);
+    setDetalheHistorico(null);
     setRegistroHistorico(r);
+
+    if (r.detalhamento_path) {
+      setCarregandoDetalhe(true);
+      try {
+        const detalhe = await baixarDetalhamento(r.detalhamento_path);
+        setDetalheHistorico(detalhe);
+        if (detalhe?.planilha) setPlanilha(detalhe.planilha as ResumoCreditoPortal);
+      } finally {
+        setCarregandoDetalhe(false);
+      }
+    }
     if (r.vaf_estadual) setVafEstadualRef(String(Math.round(Number(r.vaf_estadual))));
     setFator(String(Number(r.fator_calibragem) || 1).replace(".", ","));
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -369,6 +392,7 @@ export default function PaginaIndice() {
 
   async function selecionar(file: File | null) {
     setRegistroHistorico(null);
+    setDetalheHistorico(null);
     setArquivo(file);
     setTexto(null);
     setErro(null);
@@ -481,6 +505,7 @@ export default function PaginaIndice() {
         competenciaMes: competencia.mes,
         competenciaAno: competencia.ano,
         arquivoNome: arquivo?.name ?? registroHistorico?.arquivo_nome ?? null,
+        planilha,
       });
       toast.success(
         r.substituido
