@@ -263,8 +263,12 @@
   body,
   #root,
   main,
-  main > div {
-    background: transparent !important;
+  main > div,
+  [class*="bg-background"],
+  [class*="bg-card"],
+  [class*="bg-white"] {
+    background-color: transparent !important;
+    background-image: none !important;
   }
 
   #relatorio-indice {
@@ -332,13 +336,13 @@
 
   /* tabelas mais compactas para caber a largura da página */
   .timbrado-tabela > tbody table {
-    font-size: 7.5px !important;
+    font-size: 7px !important;
   }
 
   .timbrado-tabela > tbody table th,
   .timbrado-tabela > tbody table td {
-    padding: 2px 4px !important;
-    font-size: 7.5px !important;
+    padding: 1px 3px !important;
+    font-size: 7px !important;
   }
 
   /* fundos transparentes para a marca d'água aparecer atrás do conteúdo */
