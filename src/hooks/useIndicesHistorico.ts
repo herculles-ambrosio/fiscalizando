@@ -31,8 +31,31 @@ export type IndiceSalvo = {
   origem_credito_proprio: string | null;
   /** nome do CSV do Portal do VAF usado na projeção */
   arquivo_credito_proprio: string | null;
+  /** arquivo JSON no bucket "uploads" com o detalhamento completo da apuração */
+  detalhamento_path: string | null;
   criado_em: string;
 };
+
+/** Listas de detalhamento gravadas junto com o índice (bucket "uploads"). */
+export type DetalhamentoIndice = {
+  creditosExternos?: ApuracaoIndice["creditosExternos"];
+  creditosPorMunicipio?: ApuracaoIndice["creditosPorMunicipio"];
+  debitosPorMunicipio?: ApuracaoIndice["debitosPorMunicipio"];
+  contribuintesVaf?: ApuracaoIndice["contribuintesVaf"];
+  simei?: ApuracaoIndice["simei"];
+  planilha?: unknown;
+};
+
+/** Baixa o detalhamento salvo de um índice do histórico. */
+export async function baixarDetalhamento(path: string): Promise<DetalhamentoIndice | null> {
+  const { data, error } = await supabase.storage.from("uploads").download(path);
+  if (error || !data) return null;
+  try {
+    return JSON.parse(await data.text()) as DetalhamentoIndice;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Reconstrói uma apuração de índice a partir do registro salvo, para
