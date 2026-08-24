@@ -34,11 +34,12 @@ import {
   useExcluirEvolucao,
   useSalvarEvolucao,
 } from "@/hooks/useEvolucoesSalvas";
-import { formatarCnpj, formatarMoeda } from "@/lib/format";
+import { formatarCnpj, formatarMoeda, formatarValorGrid } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { decodificarArquivo } from "@/lib/vaf/parser";
 import { anoDoArquivo, codigoMunicipioDoArquivo, remessaDoArquivo, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
 import { detectarMunicipioRetorno, normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
+import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { formatarIndice } from "@/lib/vaf/indice";
 import {
   analisarArquivo,
@@ -72,7 +73,7 @@ function rotuloArquivo(a: ArquivoEvolucao): string {
 function formatarValor(valor: number, formato: LinhaEvolucao["formato"]): string {
   if (formato === "indice") return `${formatarIndice(valor)} %`;
   if (formato === "inteiro") return valor.toLocaleString("pt-BR");
-  return formatarMoeda(valor);
+  return formatarValorGrid(valor);
 }
 
 function Variacao({ pct }: { pct: number | null }) {
@@ -193,18 +194,37 @@ function TabelaMovimentos({
   colunaAtual,
   vazio,
   nomeArquivo,
+  ocultarOrigem = false,
+  porPagina,
 }: {
   linhas: MovimentoDeclarante[];
   colunaBase: string;
   colunaAtual: string;
   vazio: string;
   nomeArquivo: string;
+  /** Esconde a coluna "Origem do cadastro" (a exportação continua trazendo o dado). */
+  ocultarOrigem?: boolean;
+  /** Quando informado, pagina a tabela com navegação página a página. */
+  porPagina?: number;
 }) {
   const [soIncompletos, setSoIncompletos] = useState(false);
+  const [pagina, setPagina] = useState(1);
   const incompletos = useMemo(() => linhas.filter((d) => d.cadastroIncompleto).length, [linhas]);
   const visiveis = soIncompletos ? linhas.filter((d) => d.cadastroIncompleto) : linhas;
 
-  // exporta exatamente as linhas visíveis (mesmo filtro e mesmo limite da tabela)
+  const totalPaginas = porPagina ? Math.max(1, Math.ceil(visiveis.length / porPagina)) : 1;
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const naTela = porPagina
+    ? visiveis.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina)
+    : visiveis;
+
+  useEffect(() => {
+    setPagina(1);
+  }, [linhas, soIncompletos]);
+
+  const colunas = ocultarOrigem ? 7 : 8;
+
+  // exporta exatamente as linhas visíveis (mesmo filtro da tabela, todas as páginas)
   function exportar() {
     baixarCsv(
       nomeArquivo,
@@ -272,34 +292,36 @@ function TabelaMovimentos({
             <TableHead>Inscrição estadual</TableHead>
             <TableHead>CNPJ</TableHead>
             <TableHead>Contribuinte</TableHead>
-            <TableHead>Origem do cadastro</TableHead>
-            <TableHead className="text-right">{colunaBase}</TableHead>
-            <TableHead className="text-right">{colunaAtual}</TableHead>
-            <TableHead className="text-right">Diferença</TableHead>
-            <TableHead className="w-28 text-right">Variação</TableHead>
+            {!ocultarOrigem && <TableHead>Origem do cadastro</TableHead>}
+            <TableHead className="text-right">{colunaBase} (R$)</TableHead>
+            <TableHead className="text-right">{colunaAtual} (R$)</TableHead>
+            <TableHead className="text-right">Diferença (R$)</TableHead>
+            <TableHead className="w-24 text-right">Variação</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {visiveis.map((d) => (
+          {naTela.map((d) => (
             <TableRow key={d.inscricao_estadual} className={d.cadastroIncompleto ? "bg-amber-500/5" : undefined}>
-              <TableCell className="font-mono text-xs">{d.inscricao_estadual}</TableCell>
-              <TableCell className="font-mono text-xs">{formatarCnpj(d.cnpj)}</TableCell>
+              <TableCell className="font-mono">{d.inscricao_estadual}</TableCell>
+              <TableCell className="font-mono">{formatarCnpj(d.cnpj)}</TableCell>
               <TableCell className="max-w-[20rem] truncate">{d.nome ?? "—"}</TableCell>
-              <TableCell className="text-xs text-muted-foreground">
-                {d.cadastroIncompleto ? (
-                  <MarcaCadastro d={d} />
-                ) : (
-                  <span title={`Nome: ${rotuloOrigem(d.origemNome)} · CNPJ: ${rotuloOrigem(d.origemCnpj)}`}>
-                    {d.origemNome ?? "—"}/{d.origemCnpj ?? "—"}
-                  </span>
-                )}
-              </TableCell>
-              <TableCell className="text-right font-mono">{formatarMoeda(d.vafBase)}</TableCell>
-              <TableCell className="text-right font-mono">{formatarMoeda(d.vafAtual)}</TableCell>
+              {!ocultarOrigem && (
+                <TableCell className="text-muted-foreground">
+                  {d.cadastroIncompleto ? (
+                    <MarcaCadastro d={d} />
+                  ) : (
+                    <span title={`Nome: ${rotuloOrigem(d.origemNome)} · CNPJ: ${rotuloOrigem(d.origemCnpj)}`}>
+                      {d.origemNome ?? "—"}/{d.origemCnpj ?? "—"}
+                    </span>
+                  )}
+                </TableCell>
+              )}
+              <TableCell className="text-right font-mono">{formatarValorGrid(d.vafBase)}</TableCell>
+              <TableCell className="text-right font-mono">{formatarValorGrid(d.vafAtual)}</TableCell>
               <TableCell
                 className={`text-right font-mono ${d.diferenca < 0 ? "text-destructive" : d.diferenca > 0 ? "text-emerald-600" : ""}`}
               >
-                {formatarMoeda(d.diferenca)}
+                {formatarValorGrid(d.diferenca)}
               </TableCell>
               <TableCell className="text-right">
                 <Variacao pct={d.variacaoPct} />
@@ -308,13 +330,58 @@ function TabelaMovimentos({
           ))}
           {visiveis.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground">
+              <TableCell colSpan={colunas} className="text-center text-muted-foreground">
                 {soIncompletos ? "Nenhum contribuinte com cadastro incompleto." : vazio}
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
+      {porPagina && visiveis.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border p-3 text-xs text-muted-foreground">
+          <span>
+            Mostrando {(paginaAtual - 1) * porPagina + 1}–
+            {Math.min(paginaAtual * porPagina, visiveis.length)} de {visiveis.length} contribuintes
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPagina(1)}
+              disabled={paginaAtual === 1}
+            >
+              Primeira
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPagina((p) => Math.max(1, Math.min(p, totalPaginas) - 1))}
+              disabled={paginaAtual === 1}
+            >
+              Anterior
+            </Button>
+            <span className="tabular-nums">
+              Página {paginaAtual} de {totalPaginas}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPagina((p) => Math.min(totalPaginas, Math.min(p, totalPaginas) + 1))}
+              disabled={paginaAtual === totalPaginas}
+            >
+              Próxima
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPagina(totalPaginas)}
+              disabled={paginaAtual === totalPaginas}
+            >
+              Última
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -405,12 +472,17 @@ export default function PaginaEvolucao() {
   const salvarEvolucao = useSalvarEvolucao();
   const excluirEvolucao = useExcluirEvolucao(municipio?.id ?? null);
 
+  // Prefeituras cadastradas têm prioridade; o restante vem da tabela oficial da SEF-MG.
   const mapaMunicipiosPorCodigo = useMemo(() => {
     const mapa = new Map<string, string>();
     for (const m of municipios ?? []) {
-      if (m.codigo_sef) mapa.set(m.codigo_sef, m.nome);
+      const cod = normalizarCodigoSef(m.codigo_sef);
+      if (cod) mapa.set(cod, m.nome);
     }
-    return mapa;
+    return {
+      get: (codigo: string) =>
+        mapa.get(normalizarCodigoSef(codigo) ?? codigo) ?? nomeMunicipioSef(codigo) ?? undefined,
+    };
   }, [municipios]);
 
   async function carregar(file: File, alvo: "base" | "atual", forcar = false) {
@@ -1022,11 +1094,13 @@ export default function PaginaEvolucao() {
               <Card>
                 <CardContent className="p-0">
                   <TabelaMovimentos
-                    linhas={declarantes.todos.slice(0, 300)}
+                    linhas={declarantes.todos}
                     colunaBase="VAF anterior"
                     colunaAtual="VAF atual"
                     vazio="Sem contribuintes para comparar."
                     nomeArquivo={`${prefixoArquivo}-variacao-contribuintes.csv`}
+                    ocultarOrigem
+                    porPagina={20}
                   />
                 </CardContent>
               </Card>
@@ -1046,32 +1120,34 @@ export default function PaginaEvolucao() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="w-20">Código</TableHead>
+                            <TableHead className="w-16">Código</TableHead>
                             <TableHead>Município</TableHead>
-                            <TableHead className="text-right">Base</TableHead>
-                            <TableHead className="text-right">Atual</TableHead>
-                            <TableHead className="text-right">Diferença</TableHead>
+                            <TableHead className="text-right">Base (R$)</TableHead>
+                            <TableHead className="text-right">Atual (R$)</TableHead>
+                            <TableHead className="text-right">Diferença (R$)</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {bloco.linhas.slice(0, 100).map((m) => (
                             <TableRow key={m.codigo}>
-                              <TableCell className="font-mono text-xs">{m.codigo}</TableCell>
-                              <TableCell className="max-w-[12rem] truncate text-sm">
+                              <TableCell className="font-mono">{m.codigo}</TableCell>
+                              <TableCell className="max-w-[12rem] truncate">
                                 {m.nome ?? (
-                                  <span className="text-muted-foreground italic">Não cadastrado</span>
+                                  <span className="text-muted-foreground italic">
+                                    Código não encontrado na tabela SEF-MG
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell className="text-right font-mono">
-                                {formatarMoeda(m.base)}
+                                {formatarValorGrid(m.base)}
                               </TableCell>
                               <TableCell className="text-right font-mono">
-                                {formatarMoeda(m.atual)}
+                                {formatarValorGrid(m.atual)}
                               </TableCell>
                               <TableCell
                                 className={`text-right font-mono ${m.diferenca < 0 ? "text-destructive" : m.diferenca > 0 ? "text-emerald-600" : ""}`}
                               >
-                                {formatarMoeda(m.diferenca)}
+                                {formatarValorGrid(m.diferenca)}
                               </TableCell>
                             </TableRow>
                           ))}

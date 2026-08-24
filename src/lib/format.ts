@@ -7,6 +7,15 @@ export function formatarMoeda(valor: number | null | undefined): string {
   });
 }
 
+/** Valor monetário sem o símbolo R$ (para grids, onde o cabeçalho indica a unidade). */
+export function formatarValorGrid(valor: number | null | undefined): string {
+  if (valor == null) return "—";
+  return valor.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function formatarPercentual(valor: number | null | undefined): string {
   if (valor == null) return "—";
   const sinal = valor > 0 ? "+" : "";
