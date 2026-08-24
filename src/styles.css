@@ -225,6 +225,10 @@
 }
 
 @media print {
+  @page {
+    margin: 26mm 12mm 24mm;
+  }
+
   .no-print,
   aside,
   header {
@@ -255,38 +259,101 @@
     page-break-inside: avoid;
   }
 
-  .print-header {
+  /* ---- Papel timbrado H-Tech Minas ---- */
+  .timbrado-cabecalho {
     display: flex !important;
-    justify-content: center;
+    position: fixed;
+    top: -20mm;
+    left: 0;
+    right: 0;
     align-items: center;
-    border-bottom: 1px solid #d4d4d4;
-    padding-bottom: 8px;
-    margin-bottom: 14px;
+    justify-content: center;
+    gap: 10px;
   }
 
-  .print-header img {
-    height: 74px;
+  .timbrado-cabecalho img {
+    height: 15mm;
     width: auto;
     object-fit: contain;
   }
 
-  .print-footer {
-    display: flex !important;
+  .timbrado-marca-nome {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+    color: #58514e;
+  }
+
+  .timbrado-marca-nome strong {
+    font-weight: 700;
+    color: #4a4441;
+  }
+
+  .timbrado-marca-sub {
+    margin: 0;
+    font-size: 7.5px;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    color: #e2582a;
+  }
+
+  .timbrado-dagua {
+    display: block !important;
     position: fixed;
-    bottom: 0;
+    top: 45%;
     left: 0;
     right: 0;
-    justify-content: space-between;
-    gap: 12px;
-    border-top: 1px solid #d4d4d4;
-    padding: 4px 0;
-    font-size: 9px;
-    color: #444;
+    z-index: -1;
+    text-align: center;
+    transform: translateY(-50%);
+  }
+
+  .timbrado-dagua img {
+    width: 62%;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  .timbrado-rodape {
+    display: flex !important;
+    position: fixed;
+    bottom: -18mm;
+    left: 0;
+    right: 0;
+    align-items: stretch;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .timbrado-rodape-barra {
+    width: 16mm;
+    background: #e2582a;
+  }
+
+  .timbrado-rodape-texto {
+    flex: 1;
+    background: #4a4441;
+    padding: 2.5mm 4mm;
+    color: #fff;
+    font-size: 8.5px;
+    line-height: 1.35;
+  }
+
+  .timbrado-rodape-texto p {
+    margin: 0;
+  }
+
+  .timbrado-rodape-nota {
+    color: #d9d3d0;
+    font-size: 7.5px;
   }
 }
 
-.print-footer,
-.print-header {
+.timbrado-cabecalho,
+.timbrado-rodape,
+.timbrado-dagua {
   display: none;
 }
+
 

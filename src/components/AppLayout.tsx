@@ -19,8 +19,8 @@ import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { BrandFooter } from "@/components/BrandFooter";
-import { PrintFooter } from "@/components/PrintFooter";
-import { PrintHeader } from "@/components/PrintHeader";
+import { Timbrado } from "@/components/Timbrado";
+
 
 import {
   Select,
@@ -196,10 +196,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         )}
         <main className="min-w-0 flex-1 px-5 py-7 md:px-9 md:py-10">
-          <PrintHeader />
+          <Timbrado />
           {children}
-          <PrintFooter />
         </main>
+
 
       </div>
     </div>

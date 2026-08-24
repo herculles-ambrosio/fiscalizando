@@ -2,9 +2,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
-  Footer,
   HeadingLevel,
-  ImageRun,
   Packer,
   Paragraph,
   ShadingType,
@@ -14,9 +12,16 @@ import {
   TextRun,
   WidthType,
 } from "docx";
-import logoAsset from "@/assets/htechminas-logo.png.asset.json";
+import {
+  MARGENS_TIMBRADO,
+  cabecalhoTimbrado,
+  carregarImagensTimbrado,
+  rodapeTimbrado,
+  type ImagensTimbrado,
+} from "@/lib/reportTimbrado";
 import type { DiagnosticoEvolucao, FatorVariacao } from "./diagnostico";
 import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
+
 
 
 const FONTE = "Arial";
@@ -118,41 +123,12 @@ export function construirDocDiagnostico(
   atualNome: string,
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
-  logo?: ArrayBuffer | null,
+  imagens?: ImagensTimbrado,
 ): Document {
+  const timbrado: ImagensTimbrado = imagens ?? { marca: null, marcaDagua: null };
   const filhos: Array<Paragraph | Table> = [
-    ...(logo
-      ? [
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 60 },
-            children: [
-              new ImageRun({
-                type: "png",
-                data: logo,
-                transformation: { width: 200, height: 150 },
-                altText: {
-                  title: "H-Tech Minas",
-                  description: "H-Tech Minas — Consultoria Tributária e Desenvolvimento de Sistemas",
-                  name: "H-Tech Minas",
-                },
-              }),
-            ],
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 240 },
-            border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "CCCCCC", space: 6 } },
-            children: [
-              texto("H-Tech Minas — Consultoria Tributária · Desenvolvimento de Sistemas", {
-                size: 16,
-                color: "666666",
-              }),
-            ],
-          }),
-        ]
-      : []),
     new Paragraph({
+
       heading: HeadingLevel.HEADING_1,
       spacing: { after: 120 },
       children: [texto("Análise da variação do VAF — Por que variou", { bold: true, size: 30 })],
@@ -270,39 +246,17 @@ export function construirDocDiagnostico(
     styles: { default: { document: { run: { font: FONTE, size: 20 } } } },
     sections: [
       {
-        properties: {
-          page: { margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } },
-        },
+        properties: { page: { margin: MARGENS_TIMBRADO } },
+        headers: { default: cabecalhoTimbrado(timbrado) },
         footers: {
-          default: new Footer({
-            children: [
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 60 },
-                children: [
-                  texto("H-Tech Minas — Consultoria Tributária · Apura VAF 2.0", {
-                    size: 16,
-                    color: "666666",
-                  }),
-                ],
-              }),
-            ],
-          }),
+          default: rodapeTimbrado(
+            `Apura VAF 2.0 — relatório gerado em ${new Date().toLocaleDateString("pt-BR")}`,
+          ),
         },
         children: filhos,
       },
     ],
   });
-}
-
-async function carregarLogo(): Promise<ArrayBuffer | null> {
-  try {
-    const resp = await fetch(logoAsset.url);
-    if (!resp.ok) return null;
-    return await resp.arrayBuffer();
-  } catch {
-    return null;
-  }
 }
 
 export async function baixarDocDiagnostico(
@@ -312,8 +266,8 @@ export async function baixarDocDiagnostico(
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
 ): Promise<void> {
-  const logo = await carregarLogo();
-  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, logo);
+  const imagens = await carregarImagensTimbrado();
+  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, imagens);
 
   const blob = await Packer.toBlob(doc);
   const limpo = (s: string) => s.replace(/[^\w.-]+/g, "_").slice(0, 40);
@@ -324,3 +278,4 @@ export async function baixarDocDiagnostico(
   a.click();
   URL.revokeObjectURL(url);
 }
+
