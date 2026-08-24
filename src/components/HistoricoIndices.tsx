@@ -424,7 +424,10 @@ export function HistoricoIndices({ municipioId }: { municipioId: string | null }
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => setAExcluir(r)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAExcluir(r);
+                          }}
                           aria-label="Excluir registro do histórico"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
