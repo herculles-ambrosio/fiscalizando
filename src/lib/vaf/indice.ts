@@ -137,6 +137,22 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
   const creditosMapa = new Map<string, LinhaMunicipio>();
   const debitosMapa = new Map<string, LinhaMunicipio>();
 
+  /**
+   * Cadastro por inscrição estadual montado com os registros de declaração:
+   * 01 traz o nome e a data de entrega, 10 traz o CNPJ (numero_documento).
+   * Os registros 23 (VAF por contribuinte) não carregam nome nem CNPJ.
+   */
+  type Cadastro = { nome: string | null; cnpj: string | null; data: string | null };
+  const cadastro = new Map<string, Cadastro>();
+  const registrarCadastro = (ie: string, dados: Partial<Cadastro>) => {
+    if (!ie) return;
+    const atual = cadastro.get(ie) ?? { nome: null, cnpj: null, data: null };
+    if (dados.nome) atual.nome = dados.nome;
+    if (dados.cnpj) atual.cnpj = dados.cnpj;
+    if (dados.data) atual.data = dados.data;
+    cadastro.set(ie, atual);
+  };
+
   // Registros 12/13: 22-36 AF, 37-51 NFA, 52-66 NFE, 67-81 NFF, 82-96 total.
   const acumularMunicipio = (mapa: Map<string, LinhaMunicipio>, l: string) => {
     const codigo = texto(l, 19, 21);
@@ -218,6 +234,27 @@ function coletarDetalhamento(linhas: string[]): Detalhamento {
       somaVafDeclarado += sinal * num(l, 116, 129);
       const ex = num(l, 19, 22);
       if (ex > 1990) exercicios.set(ex, (exercicios.get(ex) ?? 0) + 1);
+      const cnpj = texto(l, 130, 143).replace(/[^0-9]/g, "").replace(/^0+/, "");
+      registrarCadastro(texto(l, 6, 18), {
+        cnpj: cnpj ? cnpj.padStart(14, "0") : null,
+        data: dataDdMmAaaa(texto(l, 23, 30)),
+      });
+    } else if (tipo === "01") {
+      registrarCadastro(texto(l, 6, 18), {
+        nome: texto(l, 23, 57) || null,
+        data: dataDdMmAaaa(texto(l, 58, 65)),
+      });
+    }
+  }
+
+  // completa nome/CNPJ/entrega das listas que não trazem cadastro no registro
+  for (const lista of [contribuintesVaf, simei, creditosExternos]) {
+    for (const linha of lista) {
+      const dados = cadastro.get(linha.inscricao_estadual);
+      if (!dados) continue;
+      linha.nome ??= dados.nome;
+      linha.cnpj ??= dados.cnpj;
+      linha.data ??= dados.data;
     }
   }
 
