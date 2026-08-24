@@ -126,7 +126,7 @@ export function cabecalhoTimbrado(imgs: ImagensTimbrado): Header {
 
 /** Rodapé com a faixa laranja/grafite do papel timbrado. */
 export function rodapeTimbrado(nota?: string): Footer {
-  const cols = [700, 8326];
+  const cols = [900, 9006];
   const linha = (t: string, opcoes: { size?: number; color?: string } = {}) =>
     new Paragraph({
       spacing: { after: 0 },
