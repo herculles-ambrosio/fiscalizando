@@ -655,7 +655,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     <ColunaHead coluna="vaf_atual" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF atual (R$)</ColunaHead>
                     <ColunaHead coluna="vaf_anterior" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF anterior (R$)</ColunaHead>
                     <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
-                    <ColunaHead coluna="data_entrega" ordem={ordem} onSort={ordenarPor}>Entrega</ColunaHead>
+                    
 
                     <TableHead>Situação cadastral</TableHead>
                     <TableHead title="Situação cadastral na Receita Federal (dados abertos do CNPJ)">
