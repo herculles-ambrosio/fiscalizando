@@ -96,6 +96,7 @@ export function useReceitaPorIe(
     cnpjDe,
     consultar,
     consultando: consulta.isPending,
+    progresso: consulta.progresso,
     totalCnpjs: cnpjs.length,
     semCnpj,
     consultados,
