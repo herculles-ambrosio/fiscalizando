@@ -210,6 +210,23 @@ export default function PlanoRecuperacao({
       .catch(() => toast.error("Não foi possível copiar."));
   }
 
+  async function baixarDocx() {
+    setBaixandoDocx(true);
+    try {
+      const { baixarDocPlano } = await import("@/lib/vaf/planoDocx");
+      await baixarDocPlano(acoes, {
+        municipio: municipio?.nome ?? null,
+        exercicio: exercicio ?? null,
+        referencia: referencia ?? null,
+      });
+      toast.success("Análise baixada em .docx (abre no Word e exporta em PDF).");
+    } catch {
+      toast.error("Não foi possível gerar o documento do plano.");
+    } finally {
+      setBaixandoDocx(false);
+    }
+  }
+
   return (
     <>
       <Card>
