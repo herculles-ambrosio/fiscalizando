@@ -320,7 +320,7 @@ function CodigosSef() {
                     <p className="text-muted-foreground">
                       {lote.itens
                         .slice(0, 3)
-                        .map((i) => `${i.codigo} ${i.nomeAnterior} → ${i.nomeAplicado}`)
+                        .map((i) => `${i.codigoAnterior} ${i.nomeAnterior} → ${i.nomeAplicado}`)
                         .join(" · ")}
                       {lote.itens.length > 3 ? ` · +${lote.itens.length - 3}` : ""}
                     </p>
