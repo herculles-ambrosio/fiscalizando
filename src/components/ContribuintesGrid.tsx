@@ -412,6 +412,22 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               </Button>
             </>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => consultarReceita(selecionados.length ? "selecionados" : "pagina")}
+            disabled={consulta.isPending || !linhasPagina.length}
+            aria-label="Consultar situação cadastral na Receita Federal"
+            title="Consulta gratuita nos dados abertos do CNPJ (Receita Federal)"
+          >
+            {consulta.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            Consultar Receita
+            {selecionados.length ? ` (${selecionados.length})` : " (página)"}
+          </Button>
           {carga && (
             <OficiosDialog
               cargaId={cargaId}
