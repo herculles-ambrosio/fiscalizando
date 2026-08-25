@@ -13,7 +13,11 @@ import {
 
 import { toast } from "sonner";
 import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
-import { BotaoConsultarReceita, ReceitaIeBadge } from "@/components/analises/ReceitaIe";
+import {
+  BotaoConsultarReceita,
+  BotaoReconsultarFalhas,
+  ReceitaIeBadge,
+} from "@/components/analises/ReceitaIe";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -291,6 +295,11 @@ export default function PlanoRecuperacao({
               totalCnpjs={receita.totalCnpjs}
               pendentes={receita.pendentes}
               semCnpj={receita.semCnpj}
+            />
+            <BotaoReconsultarFalhas
+              total={receita.semResposta}
+              onReconsultar={receita.reconsultarFalhas}
+              reconsultando={receita.reconsultando}
             />
             <Button variant="outline" size="sm" className="gap-2" onClick={copiar}>
               <ClipboardCopy className="h-3.5 w-3.5" />

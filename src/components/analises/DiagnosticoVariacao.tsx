@@ -25,7 +25,11 @@ import {
   type FatorVariacao,
 } from "@/lib/vaf/diagnostico";
 import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
-import { BotaoConsultarReceita, ReceitaIeBadge } from "@/components/analises/ReceitaIe";
+import {
+  BotaoConsultarReceita,
+  BotaoReconsultarFalhas,
+  ReceitaIeBadge,
+} from "@/components/analises/ReceitaIe";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 
 type ReceitaDe = (ie: string | null | undefined) => RegistroReceita | undefined;
@@ -255,6 +259,11 @@ export default function DiagnosticoVariacao({
             totalCnpjs={receita.totalCnpjs}
             pendentes={receita.pendentes}
             semCnpj={receita.semCnpj}
+          />
+          <BotaoReconsultarFalhas
+            total={receita.semResposta}
+            onReconsultar={receita.reconsultarFalhas}
+            reconsultando={receita.reconsultando}
           />
           <Button size="sm" variant="outline" onClick={copiar}>
             <ClipboardCopy className="h-4 w-4" />
