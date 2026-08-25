@@ -699,6 +699,24 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                           ) : null}
                         </TableCell>
                         <TableCell>
+                          {(() => {
+                            const reg = situacaoReceitaDe(c.cnpj);
+                            return (
+                              <>
+                                <SituacaoReceitaBadge
+                                  situacao={reg?.situacao ?? null}
+                                  motivo={reg?.motivo ?? null}
+                                />
+                                {reg?.motivo ? (
+                                  <span className="mt-1 block max-w-48 truncate text-xs text-muted-foreground">
+                                    {reg.motivo}
+                                  </span>
+                                ) : null}
+                              </>
+                            );
+                          })()}
+                        </TableCell>
+                        <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {(c.situacoes as string[]).map((s) => (
                               <SituacaoBadge key={s} situacao={s} />
@@ -708,19 +726,20 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       </TableRow>
                     );
                   })}
-                  {!data?.linhas.length && (
+                  {!linhasVisiveis.length && (
                     <TableRow>
-                      <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={12} className="py-10 text-center text-muted-foreground">
                         Nenhum contribuinte encontrado com esses filtros.
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
-                {!!data?.linhas.length && (
+                {!!linhasVisiveis.length && (
                   <TableFooter>
                     <TableRow>
                       <TableCell colSpan={5} className="font-medium">
-                        {data.linhas.length} contribuinte(s) nesta página · {data.total} no total
+                        {linhasVisiveis.length} contribuinte(s) nesta página · {data?.total ?? 0} no
+                        total
                       </TableCell>
                       <TableCell className="text-right font-medium whitespace-nowrap">
                         {formatarValorGrid(totalVafAtual)}
@@ -728,7 +747,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       <TableCell className="text-right font-medium whitespace-nowrap">
                         {formatarValorGrid(totalVafAnterior)}
                       </TableCell>
-                      <TableCell colSpan={4} />
+                      <TableCell colSpan={5} />
                     </TableRow>
                   </TableFooter>
                 )}
