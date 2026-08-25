@@ -1,3 +1,4 @@
+import { sufixoReceita, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 import {
   AlignmentType,
   BorderStyle,
@@ -125,7 +126,7 @@ export function construirDocDiagnostico(
   acoes?: AcaoRecuperacao[],
   imagens?: ImagensTimbrado,
   exercicio?: number | null,
-
+  situacoesReceita?: MapaReceitaPorIe | null,
 ): Document {
   const timbrado: ImagensTimbrado = imagens ?? { marca: null, marcaDagua: null };
   const filhos: Array<Paragraph | Table> = [
@@ -191,9 +192,11 @@ export function construirDocDiagnostico(
     filhos.push(paragrafo("Maiores quedas por contribuinte", { bold: true, size: 24 }));
     for (const c of d.topQuedas) {
       filhos.push(
-        paragrafo(`• ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}`, {
-          after: 40,
-        }),
+        paragrafo(
+          `• ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}` +
+            sufixoReceita(situacoesReceita, c.inscricao_estadual),
+          { after: 40 },
+        ),
       );
     }
     filhos.push(paragrafo("", { after: 120 }));
@@ -203,9 +206,11 @@ export function construirDocDiagnostico(
     filhos.push(paragrafo("Maiores altas por contribuinte", { bold: true, size: 24 }));
     for (const c of d.topAltas) {
       filhos.push(
-        paragrafo(`• ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}`, {
-          after: 40,
-        }),
+        paragrafo(
+          `• ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}` +
+            sufixoReceita(situacoesReceita, c.inscricao_estadual),
+          { after: 40 },
+        ),
       );
     }
     filhos.push(paragrafo("", { after: 120 }));
@@ -270,9 +275,19 @@ export async function baixarDocDiagnostico(
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
   exercicio?: number | null,
+  situacoesReceita?: MapaReceitaPorIe | null,
 ): Promise<void> {
   const imagens = await carregarImagensTimbrado();
-  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, imagens, exercicio);
+  const doc = construirDocDiagnostico(
+    d,
+    baseNome,
+    atualNome,
+    municipio,
+    acoes,
+    imagens,
+    exercicio,
+    situacoesReceita,
+  );
 
 
   const blob = await Packer.toBlob(doc);
