@@ -348,6 +348,13 @@ function NovaApuracao() {
       return;
     }
 
+    if (bloqueioNomeOficial) {
+      setErro(
+        `O código SEF ${codigoAtivo} está cadastrado como "${municipio?.nome}", mas o nome oficial da SEF-MG é "${resolucaoAtiva.nomeOficial}". Corrija o cadastro ou escolha manter o nome atual para liberar a gravação da carga.`,
+      );
+      return;
+    }
+
     if (precisaMotivo && motivoAjuste.trim().length < 5) {
       setErro(
         "Informe o motivo da correção manual da remessa (mínimo de 5 caracteres) para prosseguir.",
