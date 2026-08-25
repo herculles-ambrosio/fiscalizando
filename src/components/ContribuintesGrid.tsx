@@ -623,11 +623,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     <ColunaHead coluna="data_entrega" ordem={ordem} onSort={ordenarPor}>Entrega</ColunaHead>
 
                     <TableHead>Situação cadastral</TableHead>
+                    <TableHead title="Situação cadastral na Receita Federal (dados abertos do CNPJ)">
+                      Receita Federal
+                    </TableHead>
                     <TableHead>Situação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.linhas.map((c) => {
+                  {linhasVisiveis.map((c) => {
                     
                     const somenteRetorno = (c.situacoes as string[]).includes("SOMENTE_RETORNO");
                     return (
