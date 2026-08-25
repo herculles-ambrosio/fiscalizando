@@ -60,6 +60,13 @@ function CodigosSef() {
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [aplicandoLote, setAplicandoLote] = useState(false);
+  const [lotes, setLotes] = useState<CorrecaoSefLote[]>([]);
+  const [desfazendo, setDesfazendo] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLotes(lerLotesSef());
+  }, []);
+
 
   const podeEditar = !!perfil?.ehSuperadmin;
 
