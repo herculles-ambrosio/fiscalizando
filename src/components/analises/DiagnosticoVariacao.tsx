@@ -120,16 +120,20 @@ export default function DiagnosticoVariacao({
   rotuloBase,
   rotuloAtual,
   municipio,
+  exercicio,
 }: {
   base: ArquivoEvolucao;
   atual: ArquivoEvolucao;
   rotuloBase: string;
   rotuloAtual: string;
   municipio?: string | null;
+  exercicio?: number | null;
 }) {
   const [copiado, setCopiado] = useState(false);
-  const [baixando, setBaixando] = useState(false);
+  const [baixando, setBaixando] = useState<"docx" | "pdf" | null>(null);
   const d = useMemo(() => diagnosticarEvolucao(base, atual), [base, atual]);
+  // exercício e município vêm dos seletores da tela — o documento usa exatamente esses filtros
+  const exercicioAlvo = exercicio ?? atual.apuracao.anoBase ?? null;
 
   const copiar = async () => {
     try {
@@ -142,23 +146,52 @@ export default function DiagnosticoVariacao({
     }
   };
 
+  const montarAcoes = async () => {
+    const { compararDeclarantes } = await import("@/lib/vaf/evolucao");
+    const { montarPlanoRecuperacao } = await import("@/lib/vaf/recuperacao");
+    return montarPlanoRecuperacao(d, compararDeclarantes(base.declarantes, atual.declarantes), {
+      exercicio: exercicioAlvo,
+    });
+  };
+
   const baixar = async () => {
-    setBaixando(true);
+    setBaixando("docx");
     try {
       const { baixarDocDiagnostico } = await import("@/lib/vaf/diagnosticoDocx");
-      const { compararDeclarantes } = await import("@/lib/vaf/evolucao");
-      const { montarPlanoRecuperacao } = await import("@/lib/vaf/recuperacao");
-      const acoes = montarPlanoRecuperacao(
+      const acoes = await montarAcoes();
+      await baixarDocDiagnostico(
         d,
-        compararDeclarantes(base.declarantes, atual.declarantes),
-        { exercicio: atual.apuracao.anoBase },
+        rotuloBase,
+        rotuloAtual,
+        municipio ?? null,
+        acoes,
+        exercicioAlvo,
       );
-      await baixarDocDiagnostico(d, rotuloBase, rotuloAtual, municipio ?? null, acoes);
       toast.success("Análise baixada em .docx (abre no Word e exporta em PDF).");
     } catch {
       toast.error("Não foi possível gerar o documento da análise.");
     } finally {
-      setBaixando(false);
+      setBaixando(null);
+    }
+  };
+
+  const baixarPdf = async () => {
+    setBaixando("pdf");
+    try {
+      const { baixarPdfDiagnostico } = await import("@/lib/vaf/relatorioPdf");
+      const acoes = await montarAcoes();
+      await baixarPdfDiagnostico(
+        d,
+        rotuloBase,
+        rotuloAtual,
+        { municipio: municipio ?? null, exercicio: exercicioAlvo },
+        acoes,
+      );
+      toast.success("Análise baixada em .pdf com o papel timbrado.");
+    } catch {
+      toast.error("Não foi possível gerar o PDF da análise.");
+    } finally {
+      setBaixando(null);
     }
   };
 
@@ -171,21 +204,33 @@ export default function DiagnosticoVariacao({
             Por que variou
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Análise automática da diferença entre {rotuloBase} e {rotuloAtual}.
+            Análise automática da diferença entre {rotuloBase} e {rotuloAtual}
+            {municipio ? ` — ${municipio}` : ""}
+            {exercicioAlvo ? ` · exercício ${exercicioAlvo}` : ""}.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="no-print flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={copiar}>
             <ClipboardCopy className="h-4 w-4" />
             {copiado ? "Copiado" : "Copiar análise"}
           </Button>
-          <Button size="sm" onClick={baixar} disabled={baixando}>
+          <Button size="sm" onClick={baixar} disabled={baixando !== null}>
             <Download className="h-4 w-4" />
-            {baixando ? "Gerando..." : "Baixar análise (.docx)"}
+            {baixando === "docx" ? "Gerando..." : "Baixar análise (.docx)"}
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={baixarPdf}
+            disabled={baixando !== null}
+          >
+            <Download className="h-4 w-4" />
+            {baixando === "pdf" ? "Gerando..." : "Baixar análise (.pdf)"}
           </Button>
         </div>
 
       </CardHeader>
+
 
       <CardContent className="space-y-4">
         <p className="text-sm leading-relaxed">{d.resumo}</p>

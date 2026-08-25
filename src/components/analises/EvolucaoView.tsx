@@ -28,6 +28,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { useMunicipioAtivo, useMunicipios } from "@/hooks/useMunicipio";
 import {
   useEvolucoesSalvas,
@@ -544,8 +552,35 @@ export default function PaginaEvolucao() {
   }
 
 
+  // ---- Filtros do relatório (município e exercício usados nas exportações) ----
+  const [municipioRelatorioId, setMunicipioRelatorioId] = useState<string>("");
+  const [exercicioRelatorio, setExercicioRelatorio] = useState<string>("");
+
+  useEffect(() => {
+    if (municipio?.id) setMunicipioRelatorioId(municipio.id);
+  }, [municipio?.id]);
+
+  const anoDosArquivos = atualArq?.apuracao.anoBase ?? baseArq?.apuracao.anoBase ?? null;
+  useEffect(() => {
+    if (anoDosArquivos) setExercicioRelatorio(String(anoDosArquivos));
+  }, [anoDosArquivos]);
+
+  const municipioRelatorio =
+    municipiosPermitidos.find((m) => m.id === municipioRelatorioId) ?? municipio ?? null;
+  const exercicioSelecionado = Number(exercicioRelatorio) || anoDosArquivos || null;
+
+  const anosDisponiveis = useMemo(() => {
+    const atualAno = new Date().getFullYear();
+    const anos = new Set<number>();
+    for (let a = atualAno + 1; a >= atualAno - 6; a--) anos.add(a);
+    if (baseArq?.apuracao.anoBase) anos.add(baseArq.apuracao.anoBase);
+    if (atualArq?.apuracao.anoBase) anos.add(atualArq.apuracao.anoBase);
+    return [...anos].sort((a, b) => b - a);
+  }, [baseArq, atualArq]);
+
   const indicadores = useMemo(
     () => (base && atual ? linhasEvolucao(base.apuracao, atual.apuracao) : []),
+
     [base, atual],
   );
   const declarantes = useMemo(
@@ -585,8 +620,8 @@ export default function PaginaEvolucao() {
     [base, atual, mapaMunicipiosPorCodigo],
   );
 
-  // prefixo com a prefeitura ativa: arquivos baixados nunca se confundem entre municípios
-  const prefixoArquivo = `evolucao-vaf-${(municipio?.nome ?? "municipio")
+  // prefixo com o município escolhido: arquivos baixados nunca se confundem entre municípios
+  const prefixoArquivo = `evolucao-vaf-${(municipioRelatorio?.nome ?? "municipio")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -599,7 +634,7 @@ export default function PaginaEvolucao() {
     const analise = textoDiagnostico(diag, rotuloArquivo(base), rotuloArquivo(atual));
     const plano = textoPlanoRecuperacao(
       montarPlanoRecuperacao(diag, declarantes, {
-        exercicio: atual.apuracao.anoBase,
+        exercicio: exercicioSelecionado,
         situacoesCadastrais: situacoesCadastrais ?? null,
       }),
     );
@@ -620,6 +655,52 @@ export default function PaginaEvolucao() {
           <NotaRemessa className="ml-1" />
         </p>
       </div>
+
+      <Card className="no-print">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Filtros do relatório</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Município e exercício usados nos documentos exportados (.docx, .pdf e CSV).
+          </p>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Município</Label>
+            <Select
+              value={municipioRelatorioId}
+              onValueChange={setMunicipioRelatorioId}
+              disabled={municipiosPermitidos.length <= 1}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o município" />
+              </SelectTrigger>
+              <SelectContent>
+                {municipiosPermitidos.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Exercício</Label>
+            <Select value={exercicioRelatorio} onValueChange={setExercicioRelatorio}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o exercício" />
+              </SelectTrigger>
+              <SelectContent>
+                {anosDisponiveis.map((a) => (
+                  <SelectItem key={a} value={String(a)}>
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
 
       {bloqueio && (
         <BannerBloqueio
@@ -953,16 +1034,19 @@ export default function PaginaEvolucao() {
             atual={atual}
             rotuloBase={rotuloArquivo(base)}
             rotuloAtual={rotuloArquivo(atual)}
-            municipio={municipio?.nome ?? null}
+            municipio={municipioRelatorio?.nome ?? null}
+            exercicio={exercicioSelecionado}
           />
 
           <PlanoRecuperacao
             diagnostico={diagnosticarEvolucao(base, atual)}
             declarantes={declarantes}
-            exercicio={atual.apuracao.anoBase}
+            exercicio={exercicioSelecionado}
+            municipioNome={municipioRelatorio?.nome ?? null}
             referencia={`${base.nome}::${atual.nome}`}
             situacoesCadastrais={situacoesCadastrais ?? null}
           />
+
 
 
 

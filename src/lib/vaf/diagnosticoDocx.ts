@@ -124,6 +124,8 @@ export function construirDocDiagnostico(
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
   imagens?: ImagensTimbrado,
+  exercicio?: number | null,
+
 ): Document {
   const timbrado: ImagensTimbrado = imagens ?? { marca: null, marcaDagua: null };
   const filhos: Array<Paragraph | Table> = [
@@ -136,7 +138,9 @@ export function construirDocDiagnostico(
     paragrafo(`Arquivo base: ${baseNome}`),
     paragrafo(`Arquivo comparado/estimado: ${atualNome}`),
     ...(municipio ? [paragrafo(`Município: ${municipio}`)] : []),
+    ...(exercicio ? [paragrafo(`Exercício: ${exercicio}`)] : []),
     paragrafo(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, { after: 200 }),
+
 
 
     paragrafo("Resumo", { bold: true, size: 24 }),
@@ -265,9 +269,11 @@ export async function baixarDocDiagnostico(
   atualNome: string,
   municipio?: string | null,
   acoes?: AcaoRecuperacao[],
+  exercicio?: number | null,
 ): Promise<void> {
   const imagens = await carregarImagensTimbrado();
-  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, imagens);
+  const doc = construirDocDiagnostico(d, baseNome, atualNome, municipio, acoes, imagens, exercicio);
+
 
   const blob = await Packer.toBlob(doc);
   const limpo = (s: string) => s.replace(/[^\w.-]+/g, "_").slice(0, 40);
