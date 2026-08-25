@@ -1,0 +1,1 @@
+UPDATE public.municipios SET nome = 'São Pedro dos Ferros' WHERE codigo_sef = '641';

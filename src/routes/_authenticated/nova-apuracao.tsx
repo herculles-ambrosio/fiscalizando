@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { NotaRemessa } from "@/components/NotaRemessa";
+import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Building2, CheckCircle2, Loader2, Upload } from "lucide-react";
@@ -143,9 +144,17 @@ function NovaApuracao() {
   const municipioCadastrado = codigoArquivo
     ? (municipios.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ?? null)
     : null;
-  const rotuloArquivo = municipioArquivo.nome
-    ? `${municipioArquivo.nome} (código ${codigoArquivo})`
+  // O nome oficial da tabela SEF-MG vence o nome digitado no cadastro e o do arquivo:
+  // cadastros com nome errado não devem mais confundir a identificação da prefeitura.
+  const nomeOficialArquivo = nomeMunicipioSef(codigoArquivo);
+  const nomeArquivo = nomeOficialArquivo ?? municipioArquivo.nome;
+  const rotuloArquivo = nomeArquivo
+    ? `${nomeArquivo} (código ${codigoArquivo})`
     : `código ${codigoArquivo}`;
+  const nomeCadastroDivergente =
+    !!municipioCadastrado &&
+    !!nomeOficialArquivo &&
+    municipioCadastrado.nome.trim().toLowerCase() !== nomeOficialArquivo.toLowerCase();
 
 
   async function criarPrefeitura() {
@@ -572,14 +581,25 @@ function NovaApuracao() {
                   </p>
                   {municipioCadastrado ? (
                     podeTrocar ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => trocar(municipioCadastrado.id)}
-                      >
-                        Trocar para {municipioCadastrado.nome}
-                      </Button>
+                      <div className="space-y-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => trocar(municipioCadastrado.id)}
+                        >
+                          Trocar para {nomeArquivo ?? municipioCadastrado.nome} (código{" "}
+                          {codigoArquivo})
+                        </Button>
+                        {nomeCadastroDivergente && (
+                          <p className="text-xs">
+                            Atenção: essa prefeitura está cadastrada como{" "}
+                            <strong>{municipioCadastrado.nome}</strong>, mas o código{" "}
+                            {codigoArquivo} é de <strong>{nomeOficialArquivo}</strong> na tabela da
+                            SEF-MG. Corrija o nome em Configurações/Prefeituras.
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-xs">
                         Essa prefeitura já está cadastrada; peça à consultoria para processar o
@@ -592,12 +612,12 @@ function NovaApuracao() {
                       size="sm"
                       variant="secondary"
                       onClick={() => {
-                        setNovaPrefeituraNome(municipioArquivo.nome ?? "");
+                        setNovaPrefeituraNome(nomeArquivo ?? "");
                         setErroPrefeitura(null);
                         setDialogoPrefeitura(true);
                       }}
                     >
-                      Cadastrar prefeitura {municipioArquivo.nome ?? `código ${codigoArquivo}`}
+                      Cadastrar prefeitura {nomeArquivo ?? `código ${codigoArquivo}`}
                     </Button>
                   ) : (
                     <p className="text-xs">
