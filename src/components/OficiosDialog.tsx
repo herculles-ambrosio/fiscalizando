@@ -461,7 +461,7 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
                         variant="outline"
                         role="combobox"
                         aria-expanded={comboAberto}
-                        disabled={carregandoLista || !lista.length}
+                        disabled={carregandoLista || !listaFinal.length}
                         className="w-full justify-between font-normal"
                       >
                         <span className="truncate">
@@ -481,7 +481,7 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
                         <CommandList>
                           <CommandEmpty>Nenhum contribuinte encontrado.</CommandEmpty>
                           <CommandGroup>
-                            {lista.map((c) => (
+                            {listaFinal.map((c) => (
                               <CommandItem
                                 key={c.id}
                                 value={`${c.nome ?? ""} ${c.cnpj ?? ""} ${c.inscricao_estadual}`}
