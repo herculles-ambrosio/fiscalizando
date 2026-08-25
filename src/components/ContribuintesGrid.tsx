@@ -286,6 +286,54 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const todosMarcados =
     linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
 
+  // ---- Situação cadastral na Receita Federal (dados abertos do CNPJ) ----
+  const { data: receita } = useSituacoesReceita(linhasPagina.map((c) => c.cnpj));
+  const consulta = useConsultarReceita();
+
+  const situacaoReceitaDe = (cnpj: string | null) => {
+    const chave = limparCnpj(cnpj);
+    return chave ? (receita?.[chave] ?? null) : null;
+  };
+
+  const linhasVisiveis =
+    receitaFiltro === "TODOS"
+      ? linhasPagina
+      : linhasPagina.filter((c) => {
+          const reg = situacaoReceitaDe(c.cnpj);
+          return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
+        });
+
+  function consultarReceita(escopo: "pagina" | "selecionados", forcar = false) {
+    const alvo =
+      escopo === "selecionados"
+        ? linhasPagina.filter((c) => selecionados.includes(c.id))
+        : linhasPagina;
+    const cnpjs = alvo.map((c) => c.cnpj);
+    if (!cnpjs.some((c) => limparCnpj(c))) {
+      toast.error("Nenhum CNPJ válido no escopo escolhido.");
+      return;
+    }
+    consulta.mutate(
+      { cnpjs, forcar },
+      {
+        onSuccess: (r) =>
+          toast.success(`Receita consultada: ${r.atualizados} atualizado(s).`, {
+            description: [
+              r.cache ? `${r.cache} já estavam em cache` : null,
+              r.falhas.length ? `${r.falhas.length} sem retorno` : null,
+            ]
+              .filter(Boolean)
+              .join(" · "),
+          }),
+        onError: (erro) =>
+          toast.error("Falha ao consultar a Receita Federal.", {
+            description: erro instanceof Error ? erro.message : undefined,
+          }),
+      },
+    );
+  }
+
+
 
   function alternar(id: string, marcado: boolean) {
     setSelecionados((atual) =>
