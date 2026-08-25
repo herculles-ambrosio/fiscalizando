@@ -303,12 +303,45 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
         });
 
-  function consultarReceita(escopo: "pagina" | "selecionados", forcar = false) {
-    const alvo =
-      escopo === "selecionados"
-        ? linhasPagina.filter((c) => selecionados.includes(c.id))
-        : linhasPagina;
-    const cnpjs = alvo.map((c) => c.cnpj);
+  /** Monta a lista de CNPJs conforme a seleção; sem seleção, usa TODOS os contribuintes dos filtros atuais. */
+  async function cnpjsDoEscopo(): Promise<(string | null)[]> {
+    if (selecionados.length) {
+      const marcados = linhasPagina.filter((c) => selecionados.includes(c.id));
+      if (marcados.length === selecionados.length) return marcados.map((c) => c.cnpj);
+      const cnpjs: (string | null)[] = [];
+      for (let i = 0; i < selecionados.length; i += 300) {
+        const { data, error } = await supabase
+          .from("contribuintes_apurados")
+          .select("cnpj")
+          .in("id", selecionados.slice(i, i + 300));
+        if (error) throw error;
+        cnpjs.push(...(data ?? []).map((d) => d.cnpj));
+      }
+      return cnpjs;
+    }
+
+    let q = supabase.from("contribuintes_apurados").select("cnpj").eq("carga_id", cargaId);
+    if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+    else q = q.not("situacoes", "cs", "{SOMENTE_RETORNO}");
+    if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+    if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
+    if (termo)
+      q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
+    const { data, error } = await q.limit(20000);
+    if (error) throw error;
+    return (data ?? []).map((d) => d.cnpj);
+  }
+
+  async function consultarReceita(forcar = false) {
+    let cnpjs: (string | null)[];
+    try {
+      cnpjs = await cnpjsDoEscopo();
+    } catch (erro) {
+      toast.error("Não foi possível montar a lista de CNPJs.", {
+        description: erro instanceof Error ? erro.message : undefined,
+      });
+      return;
+    }
     if (!cnpjs.some((c) => limparCnpj(c))) {
       toast.error("Nenhum CNPJ válido no escopo escolhido.");
       return;
