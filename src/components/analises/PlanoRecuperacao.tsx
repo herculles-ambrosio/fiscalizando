@@ -424,6 +424,7 @@ export default function PlanoRecuperacao({
                 anexosPorChave={anexosPorChave}
                 salvarStatus={salvarStatus}
                 situacoesCadastrais={situacoesCadastrais ?? null}
+                receitaDe={receita.registroDe}
               />
 
 
