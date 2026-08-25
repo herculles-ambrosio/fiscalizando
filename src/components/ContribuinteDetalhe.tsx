@@ -258,6 +258,51 @@ export function ContribuinteDetalhe({
                 }
               />
               <Campo
+                rotulo="Receita Federal"
+                valor={
+                  <span className="flex flex-col gap-1">
+                    <SituacaoReceitaBadge
+                      situacao={registroReceita?.situacao ?? null}
+                      motivo={registroReceita?.motivo ?? null}
+                    />
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {registroReceita
+                        ? [
+                            registroReceita.situacao_data
+                              ? `desde ${formatarData(registroReceita.situacao_data)}`
+                              : null,
+                            registroReceita.motivo,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || registroReceita.fonte
+                        : "Clique em Consultar Receita"}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-fit"
+                      disabled={consultaReceita.isPending || !contribuinte.cnpj}
+                      onClick={() =>
+                        consultaReceita.mutate(
+                          { cnpjs: [contribuinte.cnpj], forcar: true },
+                          {
+                            onSuccess: () => toast.success("Situação atualizada na Receita."),
+                            onError: () => toast.error("Falha ao consultar a Receita Federal."),
+                          },
+                        )
+                      }
+                    >
+                      {consultaReceita.isPending ? (
+                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                      )}
+                      Consultar Receita
+                    </Button>
+                  </span>
+                }
+              />
+              <Campo
                 rotulo="Período de atividade"
                 valor={
                   contribuinte.mes_inicio_atividade || contribuinte.mes_fim_atividade
