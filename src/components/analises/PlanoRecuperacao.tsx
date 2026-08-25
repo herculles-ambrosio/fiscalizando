@@ -285,6 +285,13 @@ export default function PlanoRecuperacao({
             </p>
           </div>
           <div className="no-print flex flex-wrap gap-2">
+            <BotaoConsultarReceita
+              onConsultar={() => receita.consultar(false)}
+              consultando={receita.consultando}
+              totalCnpjs={receita.totalCnpjs}
+              pendentes={receita.pendentes}
+              semCnpj={receita.semCnpj}
+            />
             <Button variant="outline" size="sm" className="gap-2" onClick={copiar}>
               <ClipboardCopy className="h-3.5 w-3.5" />
               Copiar plano
