@@ -93,6 +93,8 @@ type Props = {
   diagnostico: DiagnosticoEvolucao;
   declarantes: ComparacaoDeclarantes;
   exercicio?: number | null;
+  /** Nome do município escolhido no seletor da tela (usado nos documentos exportados). */
+  municipioNome?: string | null;
   /** Identificador estável da análise (arquivos comparados) para gravar o acompanhamento. */
   referencia?: string | null;
   cargaId?: string | null;
@@ -106,6 +108,7 @@ export default function PlanoRecuperacao({
   diagnostico,
   declarantes,
   exercicio,
+  municipioNome,
   referencia,
   cargaId,
   situacoesCadastrais,
@@ -120,7 +123,10 @@ export default function PlanoRecuperacao({
   );
   const [filtroMotivo, setFiltroMotivo] = useState<string>("todos");
   const [baixandoDocx, setBaixandoDocx] = useState(false);
+  const [baixandoPdf, setBaixandoPdf] = useState(false);
   const { municipio } = useMunicipioAtivo();
+  const nomeMunicipioRelatorio = municipioNome ?? municipio?.nome ?? null;
+
 
   const motivoDe = (c: { inscricao_estadual: string }) =>
     (situacoesCadastrais?.[chaveIe(c.inscricao_estadual)] || "NAO_INFORMADA").toUpperCase();
@@ -213,15 +219,17 @@ export default function PlanoRecuperacao({
       .catch(() => toast.error("Não foi possível copiar."));
   }
 
+  const contextoRelatorio = () => ({
+    municipio: nomeMunicipioRelatorio,
+    exercicio: exercicio ?? null,
+    referencia: referencia ?? null,
+  });
+
   async function baixarDocx() {
     setBaixandoDocx(true);
     try {
       const { baixarDocPlano } = await import("@/lib/vaf/planoDocx");
-      await baixarDocPlano(acoes, {
-        municipio: municipio?.nome ?? null,
-        exercicio: exercicio ?? null,
-        referencia: referencia ?? null,
-      });
+      await baixarDocPlano(acoes, contextoRelatorio());
       toast.success("Análise baixada em .docx (abre no Word e exporta em PDF).");
     } catch {
       toast.error("Não foi possível gerar o documento do plano.");
@@ -229,6 +237,20 @@ export default function PlanoRecuperacao({
       setBaixandoDocx(false);
     }
   }
+
+  async function baixarPdf() {
+    setBaixandoPdf(true);
+    try {
+      const { baixarPdfPlano } = await import("@/lib/vaf/relatorioPdf");
+      await baixarPdfPlano(acoes, contextoRelatorio());
+      toast.success("Análise baixada em .pdf com o papel timbrado.");
+    } catch {
+      toast.error("Não foi possível gerar o PDF do plano.");
+    } finally {
+      setBaixandoPdf(false);
+    }
+  }
+
 
   return (
     <>
@@ -263,7 +285,22 @@ export default function PlanoRecuperacao({
               )}
               Baixar a Análise (.docx)
             </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="gap-2"
+              onClick={() => void baixarPdf()}
+              disabled={baixandoPdf}
+            >
+              {baixandoPdf ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              Baixar a Análise (.pdf)
+            </Button>
           </div>
+
         </CardHeader>
 
         <CardContent className="space-y-4">
