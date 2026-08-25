@@ -118,6 +118,8 @@ export default function PlanoRecuperacao({
     [diagnostico, declarantes, exercicio, situacoesCadastrais],
   );
   const [filtroMotivo, setFiltroMotivo] = useState<string>("todos");
+  const [baixandoDocx, setBaixandoDocx] = useState(false);
+  const { municipio } = useMunicipioAtivo();
 
   const motivoDe = (c: { inscricao_estadual: string }) =>
     (situacoesCadastrais?.[chaveIe(c.inscricao_estadual)] || "NAO_INFORMADA").toUpperCase();
