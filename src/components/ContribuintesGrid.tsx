@@ -763,7 +763,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                   })}
                   {!linhasVisiveis.length && (
                     <TableRow>
-                      <TableCell colSpan={12} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
                         Nenhum contribuinte encontrado com esses filtros.
                       </TableCell>
                     </TableRow>
@@ -782,7 +782,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       <TableCell className="text-right font-medium whitespace-nowrap">
                         {formatarValorGrid(totalVafAnterior)}
                       </TableCell>
-                      <TableCell colSpan={5} />
+                      <TableCell colSpan={4} />
                     </TableRow>
                   </TableFooter>
                 )}
