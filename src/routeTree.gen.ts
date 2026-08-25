@@ -30,6 +30,7 @@ import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedConsultoriaCodigosSefRouteImport } from './routes/_authenticated/consultoria/codigos-sef'
 import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './routes/_authenticated/consultoria/prefeituras'
 import { Route as AuthenticatedConsultoriaUsuariosRouteImport } from './routes/_authenticated/consultoria/usuarios'
+import { Route as ApiPublicHooksReceitaFilaRouteImport } from './routes/api/public/hooks/receita-fila'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -145,6 +146,12 @@ const AuthenticatedConsultoriaUsuariosRoute =
     path: '/usuarios',
     getParentRoute: () => AuthenticatedConsultoriaRouteRoute,
   } as any)
+const ApiPublicHooksReceitaFilaRoute =
+  ApiPublicHooksReceitaFilaRouteImport.update({
+    id: '/api/public/hooks/receita-fila',
+    path: '/api/public/hooks/receita-fila',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
+  '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -189,6 +197,7 @@ export interface FileRoutesByTo {
   '/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
+  '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -213,6 +222,7 @@ export interface FileRoutesById {
   '/_authenticated/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/_authenticated/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/_authenticated/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
+  '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/consultoria/codigos-sef'
     | '/consultoria/prefeituras'
     | '/consultoria/usuarios'
+    | '/api/public/hooks/receita-fila'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/consultoria/codigos-sef'
     | '/consultoria/prefeituras'
     | '/consultoria/usuarios'
+    | '/api/public/hooks/receita-fila'
   id:
     | '__root__'
     | '/'
@@ -282,11 +294,13 @@ export interface FileRouteTypes {
     | '/_authenticated/consultoria/codigos-sef'
     | '/_authenticated/consultoria/prefeituras'
     | '/_authenticated/consultoria/usuarios'
+    | '/api/public/hooks/receita-fila'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ApiPublicHooksReceitaFilaRoute: typeof ApiPublicHooksReceitaFilaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -438,6 +452,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConsultoriaUsuariosRouteImport
       parentRoute: typeof AuthenticatedConsultoriaRouteRoute
     }
+    '/api/public/hooks/receita-fila': {
+      id: '/api/public/hooks/receita-fila'
+      path: '/api/public/hooks/receita-fila'
+      fullPath: '/api/public/hooks/receita-fila'
+      preLoaderRoute: typeof ApiPublicHooksReceitaFilaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -507,6 +528,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ApiPublicHooksReceitaFilaRoute: ApiPublicHooksReceitaFilaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
