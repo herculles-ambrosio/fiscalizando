@@ -330,6 +330,21 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const { data: receita } = useSituacoesReceita(linhasPagina.map((c) => c.cnpj));
   const consulta = useConsultarReceita();
   const fila = useFilaReceita();
+  const prefColunas = usePreferencia<ColunaId[]>("contribuintes_grid_colunas", COLUNAS_PADRAO);
+  const colunasVisiveis = prefColunas.valor.filter((id) =>
+    COLUNAS.some((c) => c.id === id),
+  );
+  const visivel = (id: ColunaId) => colunasVisiveis.includes(id);
+  const colunasNaOrdem = COLUNAS.filter((c) => visivel(c.id));
+  const totalColunas = colunasNaOrdem.length + 1;
+
+  function alternarColuna(id: ColunaId, marcado: boolean) {
+    const proximo = marcado
+      ? COLUNAS_PADRAO.filter((c) => c === id || colunasVisiveis.includes(c))
+      : colunasVisiveis.filter((c) => c !== id);
+    if (!proximo.length) return;
+    prefColunas.definir(proximo);
+  }
 
   const situacaoReceitaDe = (cnpj: string | null) => {
     const chave = limparCnpj(cnpj);
@@ -539,6 +554,37 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
             onReconsultar={reconsultarSemResposta}
             reconsultando={fila.reconsultando}
           />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label="Escolher colunas visíveis no grid"
+                title="Escolha quais colunas ver no grid. A escolha fica gravada no seu usuário."
+              >
+                <Columns3 className="mr-2 h-4 w-4" />
+                Colunas ({colunasVisiveis.length}/{COLUNAS.length})
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Colunas do grid</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {COLUNAS.map((c) => (
+                <DropdownMenuCheckboxItem
+                  key={c.id}
+                  checked={visivel(c.id)}
+                  onCheckedChange={(v) => alternarColuna(c.id, v === true)}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  {c.rotulo}
+                </DropdownMenuCheckboxItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => prefColunas.definir(COLUNAS_PADRAO)}>
+                Restaurar todas
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {carga && (
             <OficiosDialog
               cargaId={cargaId}
