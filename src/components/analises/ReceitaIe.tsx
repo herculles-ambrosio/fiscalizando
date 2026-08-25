@@ -1,4 +1,4 @@
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
@@ -66,6 +66,36 @@ export function BotaoConsultarReceita({
       )}
       Consultar Receita
       {pendentes > 0 ? ` (${pendentes})` : ""}
+    </Button>
+  );
+}
+
+/** Reconsulta imediata apenas dos CNPJs que ficaram "sem resposta". */
+export function BotaoReconsultarFalhas({
+  total,
+  onReconsultar,
+  reconsultando,
+}: {
+  total: number;
+  onReconsultar: () => void;
+  reconsultando: boolean;
+}) {
+  if (total === 0) return null;
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      className="gap-2"
+      onClick={onReconsultar}
+      disabled={reconsultando}
+      title="Reconsulta agora apenas os CNPJs sem resposta das bases públicas. Eles também são reconsultados sozinhos, em horários escalonados."
+    >
+      {reconsultando ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <RotateCw className="h-3.5 w-3.5" />
+      )}
+      Reconsultar sem resposta ({total})
     </Button>
   );
 }
