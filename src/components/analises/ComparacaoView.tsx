@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda, formatarPercentual } from "@/lib/format";
+import { formatarCnae } from "@/lib/vaf/cnae";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -200,7 +201,7 @@ export default function Comparacao() {
       montarCsv(
         ["CNAE", ...colunas, "Variação (%)"],
         visiveisCnae.map((l) => [
-          l.cnae,
+          l.cnae === "Sem CNAE" ? l.cnae : formatarCnae(l.cnae),
           ...escolhidas.map((c) => l.valores[c.id] ?? 0),
           variacao(l.valores[ultimaId] ?? null, l.valores[base!.id] ?? null) ?? "",
         ]),
@@ -474,7 +475,9 @@ export default function Comparacao() {
                   <TableBody>
                     {visiveisCnae.map((l) => (
                       <TableRow key={l.cnae}>
-                        <TableCell className="font-medium">{l.cnae}</TableCell>
+                        <TableCell className="max-w-[22rem] font-medium">
+                          {l.cnae === "Sem CNAE" ? l.cnae : formatarCnae(l.cnae)}
+                        </TableCell>
                         {escolhidas.map((c) => (
                           <TableCell key={c.id} className="text-right">
                             {formatarMoeda(l.valores[c.id] ?? 0)}
