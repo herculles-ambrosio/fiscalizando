@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 
 import { toast } from "sonner";
+import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
+import { BotaoConsultarReceita, ReceitaIeBadge } from "@/components/analises/ReceitaIe";
+import type { RegistroReceita } from "@/lib/receita/normalizar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,6 +130,20 @@ export default function PlanoRecuperacao({
   const { municipio } = useMunicipioAtivo();
   const nomeMunicipioRelatorio = municipioNome ?? municipio?.nome ?? null;
 
+  /** situação cadastral na Receita Federal dos contribuintes citados no plano */
+  const entradasReceita = useMemo(() => {
+    const mapa = new Map<string, { inscricao_estadual: string; cnpj: string | null }>();
+    for (const a of acoes)
+      for (const c of [...a.contribuintes, ...a.ignorados])
+        if (!mapa.has(c.inscricao_estadual))
+          mapa.set(c.inscricao_estadual, {
+            inscricao_estadual: c.inscricao_estadual,
+            cnpj: c.cnpj,
+          });
+    return [...mapa.values()];
+  }, [acoes]);
+  const receita = useReceitaPorIe(municipio?.id ?? null, entradasReceita);
+
 
   const motivoDe = (c: { inscricao_estadual: string }) =>
     (situacoesCadastrais?.[chaveIe(c.inscricao_estadual)] || "NAO_INFORMADA").toUpperCase();
@@ -214,7 +231,7 @@ export default function PlanoRecuperacao({
 
   function copiar() {
     void navigator.clipboard
-      .writeText(textoPlanoRecuperacao(acoes))
+      .writeText(textoPlanoRecuperacao(acoes, receita.rotulosPorIe))
       .then(() => toast.success("Plano de recuperação copiado."))
       .catch(() => toast.error("Não foi possível copiar."));
   }
@@ -223,6 +240,7 @@ export default function PlanoRecuperacao({
     municipio: nomeMunicipioRelatorio,
     exercicio: exercicio ?? null,
     referencia: referencia ?? null,
+    situacoesReceita: receita.rotulosPorIe,
   });
 
   async function baixarDocx() {
@@ -481,6 +499,7 @@ function ItemAcao({
   anexosPorChave,
   salvarStatus,
   situacoesCadastrais,
+  receitaDe,
 }: {
   acao: AcaoRecuperacao;
   ordem: number;
@@ -493,6 +512,7 @@ function ItemAcao({
   anexosPorChave: Map<string, number>;
   salvarStatus: SalvarStatus;
   situacoesCadastrais: MapaSituacoesCadastrais | null;
+  receitaDe: (ie: string | null | undefined) => RegistroReceita | undefined;
 }) {
   const [aberto, setAberto] = useState(false);
   /** null = fechado; "" = anotação da ação; IE = anotação do contribuinte */
@@ -609,6 +629,7 @@ function ItemAcao({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Contribuinte</TableHead>
+                    <TableHead>Receita Federal</TableHead>
                     <TableHead className="text-right">VAF base</TableHead>
                     <TableHead className="text-right">Comparado/estimado</TableHead>
                     <TableHead className="text-right">Impacto</TableHead>
@@ -630,6 +651,9 @@ function ItemAcao({
                             {obsPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual))}
                           </p>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <ReceitaIeBadge registro={receitaDe(c.inscricao_estadual)} cnpj={c.cnpj} />
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
                         {formatarMoeda(c.vafBase)}
