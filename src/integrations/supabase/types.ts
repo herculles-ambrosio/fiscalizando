@@ -762,6 +762,57 @@ export type Database = {
           },
         ]
       }
+      situacoes_receita: {
+        Row: {
+          atualizado_em: string
+          cnae_principal: string | null
+          cnpj: string
+          consultado_em: string
+          criado_em: string
+          fonte: string
+          motivo: string | null
+          municipio: string | null
+          nome_fantasia: string | null
+          payload: Json | null
+          razao_social: string | null
+          situacao: string
+          situacao_data: string | null
+          uf: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          cnae_principal?: string | null
+          cnpj: string
+          consultado_em?: string
+          criado_em?: string
+          fonte: string
+          motivo?: string | null
+          municipio?: string | null
+          nome_fantasia?: string | null
+          payload?: Json | null
+          razao_social?: string | null
+          situacao: string
+          situacao_data?: string | null
+          uf?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          cnae_principal?: string | null
+          cnpj?: string
+          consultado_em?: string
+          criado_em?: string
+          fonte?: string
+          motivo?: string | null
+          municipio?: string | null
+          nome_fantasia?: string | null
+          payload?: Json | null
+          razao_social?: string | null
+          situacao?: string
+          situacao_data?: string | null
+          uf?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
