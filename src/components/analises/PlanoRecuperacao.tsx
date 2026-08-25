@@ -18,6 +18,7 @@ import {
   BotaoReconsultarFalhas,
   ReceitaIeBadge,
 } from "@/components/analises/ReceitaIe";
+import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -336,6 +337,7 @@ export default function PlanoRecuperacao({
           </div>
 
         </CardHeader>
+        <ProgressoConsultaReceita progresso={receita.progresso} />
 
         <CardContent className="space-y-4">
           <Alert>

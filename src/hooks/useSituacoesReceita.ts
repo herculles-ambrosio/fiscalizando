@@ -1,8 +1,10 @@
+import { useCallback, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { consultarSituacoesReceita } from "@/lib/receita/cnpj.functions";
 import { limparCnpj, type RegistroReceita } from "@/lib/receita/normalizar";
+import type { ProgressoReceita } from "@/components/receita/ProgressoConsultaReceita";
 
 export type MapaReceita = Record<string, RegistroReceita>;
 
@@ -36,14 +38,35 @@ const LOTE_CONSULTA = 300;
 /** Teto por clique, para o navegador não ficar minutos preso numa fila enorme. */
 const MAX_POR_CLIQUE = 3000;
 
+const PROGRESSO_ZERADO: ProgressoReceita = {
+  ativo: false,
+  total: 0,
+  processados: 0,
+  lote: 0,
+  lotes: 0,
+  atualizados: 0,
+  cache: 0,
+  falhas: 0,
+  naoEncontrados: 0,
+};
+
 export function useConsultarReceita() {
   const consultar = useServerFn(consultarSituacoesReceita);
   const queryClient = useQueryClient();
-  return useMutation({
+  const [progresso, setProgresso] = useState<ProgressoReceita>(PROGRESSO_ZERADO);
+  const limparProgresso = useCallback(() => setProgresso(PROGRESSO_ZERADO), []);
+  const mutation = useMutation({
     mutationFn: async (entrada: { cnpjs: (string | null | undefined)[]; forcar?: boolean }) => {
       const todos = [...new Set(entrada.cnpjs.map(limparCnpj).filter((c): c is string => !!c))];
       const alvo = todos.slice(0, MAX_POR_CLIQUE);
       const restantes = todos.length - alvo.length;
+      setProgresso({
+        ...PROGRESSO_ZERADO,
+        ativo: true,
+        total: alvo.length,
+        lote: alvo.length ? 1 : 0,
+        lotes: Math.ceil(alvo.length / LOTE_CONSULTA),
+      });
       const total = {
         atualizados: 0,
         cache: 0,
@@ -60,15 +83,29 @@ export function useConsultarReceita() {
         total.cache += r.cache;
         total.falhas.push(...(r.falhas ?? []));
         total.naoEncontrados.push(...(r.naoEncontrados ?? []));
+        const processados = Math.min(alvo.length, i + lote.length);
+        setProgresso({
+          ativo: true,
+          total: alvo.length,
+          processados,
+          lote: Math.min(Math.floor(i / LOTE_CONSULTA) + 2, Math.ceil(alvo.length / LOTE_CONSULTA)),
+          lotes: Math.ceil(alvo.length / LOTE_CONSULTA),
+          atualizados: total.atualizados,
+          cache: total.cache,
+          falhas: total.falhas.length,
+          naoEncontrados: total.naoEncontrados.length,
+        });
         if (i + LOTE_CONSULTA < alvo.length) {
           void queryClient.invalidateQueries({ queryKey: ["situacoes-receita"] });
         }
       }
       return total;
     },
-    onSuccess: () => {
+    onSettled: () => {
+      setProgresso(PROGRESSO_ZERADO);
       void queryClient.invalidateQueries({ queryKey: ["situacoes-receita"] });
     },
   });
+  return { ...mutation, progresso, limparProgresso };
 }
 
