@@ -122,20 +122,32 @@ function CodigosSef() {
     setAplicandoLote(true);
     let sucesso = 0;
     const falhas: string[] = [];
+    const desfazer: { id: string; codigoAnterior: string; nomeAnterior: string; nomeAplicado: string }[] = [];
     for (const alvo of alvos) {
       const { error } = await supabase
         .from("municipios")
         .update({ nome: alvo.oficial!, codigo_sef: alvo.codigo! })
         .eq("id", alvo.id);
       if (error) falhas.push(`${alvo.nome}: ${error.message}`);
-      else sucesso++;
+      else {
+        sucesso++;
+        desfazer.push({
+          id: alvo.id,
+          codigoAnterior: alvo.codigo_sef,
+          nomeAnterior: alvo.nome,
+          nomeAplicado: alvo.oficial!,
+        });
+      }
     }
     setAplicandoLote(false);
     setSelecionados([]);
     setRascunho({});
+    registrarLoteSef(desfazer);
+    setLotes(lerLotesSef());
     await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
     await queryClient.invalidateQueries({ queryKey: ["municipios"] });
     await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+
     if (sucesso > 0) {
       toast.success(
         `${sucesso} cadastro${sucesso > 1 ? "s" : ""} corrigido${sucesso > 1 ? "s" : ""} com o nome oficial da SEF-MG.`,
