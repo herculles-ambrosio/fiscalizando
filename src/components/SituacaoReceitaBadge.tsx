@@ -18,9 +18,8 @@ export function SituacaoReceitaBadge({
   situacao: string | null | undefined;
   motivo?: string | null;
 }) {
-  const chave = (situacao ?? "NAO_CONSULTADO") in CLASSES
-    ? (situacao as SituacaoReceita)
-    : "DESCONHECIDA";
+  const bruta = situacao ?? "NAO_CONSULTADO";
+  const chave = (bruta in CLASSES ? bruta : "DESCONHECIDA") as SituacaoReceita | "NAO_CONSULTADO";
   return (
     <span
       className={cn(
