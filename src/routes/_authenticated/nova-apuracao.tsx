@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { NotaRemessa } from "@/components/NotaRemessa";
+import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Building2, CheckCircle2, Loader2, Upload } from "lucide-react";
@@ -611,12 +612,12 @@ function NovaApuracao() {
                       size="sm"
                       variant="secondary"
                       onClick={() => {
-                        setNovaPrefeituraNome(municipioArquivo.nome ?? "");
+                        setNovaPrefeituraNome(nomeArquivo ?? "");
                         setErroPrefeitura(null);
                         setDialogoPrefeitura(true);
                       }}
                     >
-                      Cadastrar prefeitura {municipioArquivo.nome ?? `código ${codigoArquivo}`}
+                      Cadastrar prefeitura {nomeArquivo ?? `código ${codigoArquivo}`}
                     </Button>
                   ) : (
                     <p className="text-xs">
