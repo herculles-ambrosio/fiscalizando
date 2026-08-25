@@ -2,6 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { NotaRemessa } from "@/components/NotaRemessa";
 import { toast } from "sonner";
 import { resolverMunicipioDoArquivo } from "@/lib/vaf/resolverMunicipio";
+import { divergenciasSef } from "@/lib/vaf/precheckSef";
+import { registrarLoteSef } from "@/lib/vaf/correcoesSefUndo";
+
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Building2, CheckCircle2, Loader2, Upload } from "lucide-react";
@@ -167,7 +170,13 @@ function NovaApuracao() {
   // a carga não pode ser salva até o usuário corrigir ou aceitar explicitamente.
   const bloqueioNomeOficial = nomeAtivoDivergente && !nomeDivergenteAceito;
 
+  // Pré-check automático: todos os códigos SEF cadastrados com nome divergente
+  // do oficial da SEF-MG, com a ação sugerida antes de gravar a carga.
+  const precheck = useMemo(() => divergenciasSef(municipios), [municipios]);
+  const [corrigindoPrecheck, setCorrigindoPrecheck] = useState(false);
+
   async function corrigirNomeCadastro(id: string, nomeOficial: string) {
+    const anterior = municipios.find((m) => m.id === id);
     setCorrigindoNome(id);
     const { error } = await supabase.from("municipios").update({ nome: nomeOficial }).eq("id", id);
     setCorrigindoNome(null);
@@ -175,11 +184,65 @@ function NovaApuracao() {
       toast.error("Não foi possível corrigir o cadastro.", { description: error.message });
       return;
     }
+    if (anterior) {
+      registrarLoteSef([
+        {
+          id,
+          codigoAnterior: anterior.codigo_sef,
+          nomeAnterior: anterior.nome,
+          nomeAplicado: nomeOficial,
+        },
+      ]);
+    }
     toast.success(`Cadastro corrigido para ${nomeOficial}.`);
     await queryClient.invalidateQueries({ queryKey: ["municipios"] });
     await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
     await queryClient.invalidateQueries({ queryKey: ["carteira"] });
   }
+
+  async function corrigirPrecheckTodos() {
+    setCorrigindoPrecheck(true);
+    let sucesso = 0;
+    const falhas: string[] = [];
+    const desfazer: {
+      id: string;
+      codigoAnterior: string;
+      nomeAnterior: string;
+      nomeAplicado: string;
+    }[] = [];
+    for (const d of precheck) {
+      const { error } = await supabase
+        .from("municipios")
+        .update({ nome: d.nomeOficial })
+        .eq("id", d.id);
+      if (error) falhas.push(`${d.nomeCadastrado}: ${error.message}`);
+      else {
+        sucesso++;
+        desfazer.push({
+          id: d.id,
+          codigoAnterior: d.codigo,
+          nomeAnterior: d.nomeCadastrado,
+          nomeAplicado: d.nomeOficial,
+        });
+      }
+    }
+    setCorrigindoPrecheck(false);
+    registrarLoteSef(desfazer);
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
+    await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+    if (sucesso > 0) {
+      toast.success(
+        `${sucesso} código${sucesso > 1 ? "s" : ""} SEF corrigido${sucesso > 1 ? "s" : ""} com o nome oficial. Você pode desfazer em Códigos SEF.`,
+      );
+    }
+    if (falhas.length > 0) {
+      toast.error(`${falhas.length} cadastro(s) não puderam ser corrigidos.`, {
+        description: falhas.slice(0, 3).join(" · "),
+      });
+    }
+  }
+
 
 
   async function criarPrefeitura() {
@@ -738,6 +801,64 @@ function NovaApuracao() {
                 </AlertDescription>
               </Alert>
             )}
+
+            {(ativos || retorno) && precheck.length > 0 && (
+              <Alert variant={bloqueioNomeOficial ? "destructive" : "default"}>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>
+                  Pré-check de códigos SEF — {precheck.length} divergência
+                  {precheck.length > 1 ? "s" : ""} encontrada{precheck.length > 1 ? "s" : ""}
+                </AlertTitle>
+                <AlertDescription className="space-y-3">
+                  <p className="text-xs">
+                    Antes de gravar a carga, confira os códigos SEF cujo nome cadastrado difere do
+                    nome oficial da SEF-MG. Ação sugerida: aplicar o nome oficial.
+                  </p>
+                  <div className="max-h-48 space-y-1 overflow-auto rounded-md border p-2">
+                    {precheck.map((d) => (
+                      <div
+                        key={d.id}
+                        className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                      >
+                        <span>
+                          <strong>{d.codigo}</strong> · {d.nomeCadastrado} →{" "}
+                          <strong>{d.nomeOficial}</strong>
+                          {d.codigo === codigoAtivo ? " (prefeitura ativa)" : ""}
+                          {d.codigo === codigoArquivo ? " (código dos arquivos)" : ""}
+                        </span>
+                        <span className="text-muted-foreground">{d.acaoSugerida}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {perfil?.ehSuperadmin && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={corrigindoPrecheck}
+                        onClick={() => void corrigirPrecheckTodos()}
+                      >
+                        {corrigindoPrecheck && (
+                          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        )}
+                        Aplicar nome oficial a todos ({precheck.length})
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => navigate({ to: "/consultoria/codigos-sef" })}
+                      >
+                        Revisar ou desfazer em Códigos SEF
+                      </Button>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+
 
             {!municipioDivergente && codigoArquivo && municipio && (
               <p className="text-xs text-muted-foreground">

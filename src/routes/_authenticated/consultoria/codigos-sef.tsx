@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Loader2, Search, Wand2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Search, Undo2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "@/hooks/usePerfil";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -20,6 +21,13 @@ import {
 } from "@/components/ui/table";
 import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
+import {
+  lerLotesSef,
+  registrarLoteSef,
+  removerLoteSef,
+  type CorrecaoSefLote,
+} from "@/lib/vaf/correcoesSefUndo";
+
 
 export const Route = createFileRoute("/_authenticated/consultoria/codigos-sef")({
   head: () => ({
@@ -52,6 +60,13 @@ function CodigosSef() {
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [aplicandoLote, setAplicandoLote] = useState(false);
+  const [lotes, setLotes] = useState<CorrecaoSefLote[]>([]);
+  const [desfazendo, setDesfazendo] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLotes(lerLotesSef());
+  }, []);
+
 
   const podeEditar = !!perfil?.ehSuperadmin;
 
@@ -107,20 +122,32 @@ function CodigosSef() {
     setAplicandoLote(true);
     let sucesso = 0;
     const falhas: string[] = [];
+    const desfazer: { id: string; codigoAnterior: string; nomeAnterior: string; nomeAplicado: string }[] = [];
     for (const alvo of alvos) {
       const { error } = await supabase
         .from("municipios")
         .update({ nome: alvo.oficial!, codigo_sef: alvo.codigo! })
         .eq("id", alvo.id);
       if (error) falhas.push(`${alvo.nome}: ${error.message}`);
-      else sucesso++;
+      else {
+        sucesso++;
+        desfazer.push({
+          id: alvo.id,
+          codigoAnterior: alvo.codigo_sef,
+          nomeAnterior: alvo.nome,
+          nomeAplicado: alvo.oficial!,
+        });
+      }
     }
     setAplicandoLote(false);
     setSelecionados([]);
     setRascunho({});
+    registrarLoteSef(desfazer);
+    setLotes(lerLotesSef());
     await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
     await queryClient.invalidateQueries({ queryKey: ["municipios"] });
     await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+
     if (sucesso > 0) {
       toast.success(
         `${sucesso} cadastro${sucesso > 1 ? "s" : ""} corrigido${sucesso > 1 ? "s" : ""} com o nome oficial da SEF-MG.`,
@@ -132,6 +159,38 @@ function CodigosSef() {
       });
     }
   }
+
+  async function desfazerLote(lote: CorrecaoSefLote) {
+    setDesfazendo(lote.loteId);
+    let sucesso = 0;
+    const falhas: string[] = [];
+    for (const item of lote.itens) {
+      const { error } = await supabase
+        .from("municipios")
+        .update({ nome: item.nomeAnterior, codigo_sef: item.codigoAnterior })
+        .eq("id", item.id);
+      if (error) falhas.push(`${item.nomeAnterior}: ${error.message}`);
+      else sucesso++;
+    }
+    setDesfazendo(null);
+    if (falhas.length === 0) removerLoteSef(lote.loteId);
+    setLotes(lerLotesSef());
+    await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+    if (sucesso > 0) {
+      toast.success(
+        `Correção desfeita: ${sucesso} cadastro${sucesso > 1 ? "s" : ""} voltou ao nome anterior.`,
+      );
+    }
+    if (falhas.length > 0) {
+      toast.error(`${falhas.length} cadastro(s) não puderam ser restaurados.`, {
+        description: falhas.slice(0, 3).join(" · "),
+      });
+    }
+  }
+
+
 
   async function salvar(linha: (typeof linhas)[number], nome: string, codigoBruto: string) {
     const codigo = normalizarCodigoSef(codigoBruto);
@@ -237,6 +296,57 @@ function CodigosSef() {
           </div>
         )}
       </div>
+
+      {podeEditar && lotes.length > 0 && (
+        <Alert>
+          <Undo2 className="h-4 w-4" />
+          <AlertTitle>Correções em lote recentes</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p className="text-xs">
+              Você pode desfazer uma correção em lote e restaurar o nome cadastrado anterior de cada
+              prefeitura.
+            </p>
+            <div className="space-y-2">
+              {lotes.map((lote) => (
+                <div
+                  key={lote.loteId}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2"
+                >
+                  <div className="text-xs">
+                    <p className="font-medium">
+                      {new Date(lote.em).toLocaleString("pt-BR")} ·{" "}
+                      {lote.itens.length} cadastro{lote.itens.length > 1 ? "s" : ""}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {lote.itens
+                        .slice(0, 3)
+                        .map((i) => `${i.codigoAnterior} ${i.nomeAnterior} → ${i.nomeAplicado}`)
+                        .join(" · ")}
+                      {lote.itens.length > 3 ? ` · +${lote.itens.length - 3}` : ""}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={desfazendo === lote.loteId}
+                    onClick={() => void desfazerLote(lote)}
+                  >
+                    {desfazendo === lote.loteId ? (
+                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Undo2 className="mr-1 h-3.5 w-3.5" />
+                    )}
+                    Desfazer correção
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+
 
       <Card>
         <CardContent className="p-0">
