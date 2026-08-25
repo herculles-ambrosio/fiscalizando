@@ -544,7 +544,28 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           </SelectContent>
         </Select>
 
-
+        <Select
+          value={receitaFiltro}
+          onValueChange={(v) => setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO")}
+        >
+          <SelectTrigger
+            className="h-8 w-64"
+            aria-label="Filtrar por situação na Receita Federal (nesta página)"
+          >
+            <SelectValue placeholder="Situação na Receita" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Receita: todas</SelectItem>
+            <SelectItem value="NAO_CONSULTADO">
+              {ROTULO_SITUACAO_RECEITA["NAO_CONSULTADO"]}
+            </SelectItem>
+            {SITUACOES_RECEITA.map((sr) => (
+              <SelectItem key={sr} value={sr}>
+                Receita: {ROTULO_SITUACAO_RECEITA[sr]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <form
           className="ml-auto flex gap-2"
