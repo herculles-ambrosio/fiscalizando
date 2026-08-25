@@ -143,9 +143,17 @@ function NovaApuracao() {
   const municipioCadastrado = codigoArquivo
     ? (municipios.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ?? null)
     : null;
-  const rotuloArquivo = municipioArquivo.nome
-    ? `${municipioArquivo.nome} (código ${codigoArquivo})`
+  // O nome oficial da tabela SEF-MG vence o nome digitado no cadastro e o do arquivo:
+  // cadastros com nome errado não devem mais confundir a identificação da prefeitura.
+  const nomeOficialArquivo = nomeMunicipioSef(codigoArquivo);
+  const nomeArquivo = nomeOficialArquivo ?? municipioArquivo.nome;
+  const rotuloArquivo = nomeArquivo
+    ? `${nomeArquivo} (código ${codigoArquivo})`
     : `código ${codigoArquivo}`;
+  const nomeCadastroDivergente =
+    !!municipioCadastrado &&
+    !!nomeOficialArquivo &&
+    municipioCadastrado.nome.trim().toLowerCase() !== nomeOficialArquivo.toLowerCase();
 
 
   async function criarPrefeitura() {
