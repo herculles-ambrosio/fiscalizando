@@ -34,10 +34,23 @@ async function buscarEm(fonte: Fonte, cnpj: string): Promise<ResultadoConsulta |
   }
 }
 
-export async function consultarCnpj(cnpj: string): Promise<ResultadoConsulta> {
-  for (const fonte of FONTES) {
-    const resultado = await buscarEm(fonte, cnpj);
-    if (resultado) return resultado;
+export async function consultarCnpj(cnpj: string, tentativas = 3): Promise<ResultadoConsulta> {
+  // Cada rodada tenta todas as fontes; 404 de uma fonte não encerra a busca,
+  // porque as bases públicas não estão sempre igualmente atualizadas.
+  let algum404 = false;
+  for (let rodada = 0; rodada < tentativas; rodada++) {
+    for (const fonte of FONTES) {
+      const resultado = await buscarEm(fonte, cnpj);
+      if (resultado?.ok) return resultado;
+      if (resultado && !resultado.ok && resultado.naoEncontrado) algum404 = true;
+    }
+    if (algum404) break; // CNPJ realmente ausente das bases; não insistir
+    if (rodada < tentativas - 1) {
+      await new Promise((r) => setTimeout(r, 600 * (rodada + 1)));
+    }
+  }
+  if (algum404) {
+    return { cnpj, ok: false, naoEncontrado: true, erro: "CNPJ não encontrado na base pública." };
   }
   return {
     cnpj,
@@ -46,6 +59,8 @@ export async function consultarCnpj(cnpj: string): Promise<ResultadoConsulta> {
     erro: "Nenhuma das fontes públicas respondeu. Tente novamente em alguns minutos.",
   };
 }
+
+
 
 /** Consulta com concorrência limitada, para não ser bloqueado pelas fontes públicas. */
 export async function consultarLote(cnpjs: string[], concorrencia = 4) {

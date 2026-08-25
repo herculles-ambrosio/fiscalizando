@@ -16,7 +16,8 @@ export const consultarSituacoesReceita = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { consultarLote } = await import("./cnpj.server");
     const { cnpjs, forcar } = data;
-    if (!cnpjs.length) return { atualizados: 0, cache: 0, falhas: [] as string[] };
+    if (!cnpjs.length)
+      return { atualizados: 0, cache: 0, falhas: [] as string[], naoEncontrados: [] as string[] };
 
     // Cache global: só reconsulta o que ainda não existe (ou quando forçado).
     let pendentes = cnpjs;
@@ -30,13 +31,19 @@ export const consultarSituacoesReceita = createServerFn({ method: "POST" })
       cache = conhecidos.size;
       pendentes = cnpjs.filter((c) => !conhecidos.has(c));
     }
-    if (!pendentes.length) return { atualizados: 0, cache, falhas: [] as string[] };
+    if (!pendentes.length)
+      return { atualizados: 0, cache, falhas: [] as string[], naoEncontrados: [] as string[] };
 
     const resultados = await consultarLote(pendentes);
     const linhas = resultados
       .filter((r) => r.ok)
       .map((r) => ({ ...(r as { registro: Record<string, unknown> }).registro }));
-    const falhas = resultados.filter((r) => !r.ok).map((r) => r.cnpj);
+    const naoEncontrados = resultados
+      .filter((r) => !r.ok && (r as { naoEncontrado: boolean }).naoEncontrado)
+      .map((r) => r.cnpj);
+    const falhas = resultados
+      .filter((r) => !r.ok && !(r as { naoEncontrado: boolean }).naoEncontrado)
+      .map((r) => r.cnpj);
 
     if (linhas.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -49,5 +56,6 @@ export const consultarSituacoesReceita = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
 
-    return { atualizados: linhas.length, cache, falhas };
+    return { atualizados: linhas.length, cache, falhas, naoEncontrados };
   });
+

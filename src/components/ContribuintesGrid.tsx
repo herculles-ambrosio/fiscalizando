@@ -349,21 +349,35 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     consulta.mutate(
       { cnpjs, forcar },
       {
-        onSuccess: (r) =>
+        onSuccess: (r) => {
+          const semResposta = r.falhas.length;
+          const naoEncontrados = r.naoEncontrados?.length ?? 0;
+          const descricao = [
+            r.cache ? `${r.cache} já estavam em cache` : null,
+            naoEncontrados ? `${naoEncontrados} não constam nas bases públicas` : null,
+            semResposta
+              ? `${semResposta} sem resposta das bases agora — clique novamente em alguns minutos para consultar só esses`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          if (semResposta && !r.atualizados) {
+            toast.warning("As bases públicas não responderam agora.", {
+              description: descricao,
+            });
+            return;
+          }
           toast.success(`Receita consultada: ${r.atualizados} atualizado(s).`, {
-            description: [
-              r.cache ? `${r.cache} já estavam em cache` : null,
-              r.falhas.length ? `${r.falhas.length} sem retorno` : null,
-            ]
-              .filter(Boolean)
-              .join(" · "),
-          }),
+            description: descricao,
+          });
+        },
         onError: (erro) =>
           toast.error("Falha ao consultar a Receita Federal.", {
             description: erro instanceof Error ? erro.message : undefined,
           }),
       },
     );
+
   }
 
 
