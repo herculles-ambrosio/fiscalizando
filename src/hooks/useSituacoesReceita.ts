@@ -31,18 +31,44 @@ export function useSituacoesReceita(cnpjs: (string | null | undefined)[]) {
   });
 }
 
+/** Cada chamada ao servidor aceita no máximo 300 CNPJs (limite do handler). */
+const LOTE_CONSULTA = 300;
+/** Teto por clique, para o navegador não ficar minutos preso numa fila enorme. */
+const MAX_POR_CLIQUE = 3000;
+
 export function useConsultarReceita() {
   const consultar = useServerFn(consultarSituacoesReceita);
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (entrada: { cnpjs: (string | null | undefined)[]; forcar?: boolean }) => {
-      const cnpjs = [
-        ...new Set(entrada.cnpjs.map(limparCnpj).filter((c): c is string => !!c)),
-      ];
-      return consultar({ data: { cnpjs, forcar: entrada.forcar === true } });
+      const todos = [...new Set(entrada.cnpjs.map(limparCnpj).filter((c): c is string => !!c))];
+      const alvo = todos.slice(0, MAX_POR_CLIQUE);
+      const restantes = todos.length - alvo.length;
+      const total = {
+        atualizados: 0,
+        cache: 0,
+        falhas: [] as string[],
+        naoEncontrados: [] as string[],
+        restantes,
+      };
+      // O servidor trunca em 300 por chamada: processamos em lotes sequenciais
+      // para não descartar CNPJs silenciosamente.
+      for (let i = 0; i < alvo.length; i += LOTE_CONSULTA) {
+        const lote = alvo.slice(i, i + LOTE_CONSULTA);
+        const r = await consultar({ data: { cnpjs: lote, forcar: entrada.forcar === true } });
+        total.atualizados += r.atualizados;
+        total.cache += r.cache;
+        total.falhas.push(...(r.falhas ?? []));
+        total.naoEncontrados.push(...(r.naoEncontrados ?? []));
+        if (i + LOTE_CONSULTA < alvo.length) {
+          void queryClient.invalidateQueries({ queryKey: ["situacoes-receita"] });
+        }
+      }
+      return total;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["situacoes-receita"] });
     },
   });
 }
+

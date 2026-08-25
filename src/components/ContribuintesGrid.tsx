@@ -430,9 +430,13 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
             semResposta
               ? `${semResposta} sem resposta das bases agora — clique novamente em alguns minutos para consultar só esses`
               : null,
+            r.restantes
+              ? `${r.restantes} CNPJ(s) não entraram neste lote — clique novamente para continuar`
+              : null,
           ]
             .filter(Boolean)
             .join(" · ");
+
           if (semResposta && !r.atualizados) {
             toast.warning("As bases públicas não responderam agora.", {
               description: descricao,

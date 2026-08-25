@@ -78,7 +78,9 @@ export function useReceitaPorIe(
               ? [`${r.naoEncontrados.length} fora das bases públicas`]
               : []),
             ...(r.falhas.length ? [`${r.falhas.length} sem resposta (tente de novo)`] : []),
+            ...(r.restantes ? [`${r.restantes} restantes (clique novamente)`] : []),
           ];
+
           toast.success(`Receita Federal: ${partes.join(" · ")}.`);
 
         },
