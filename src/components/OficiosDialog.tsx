@@ -49,6 +49,16 @@ import { hojeIso } from "@/lib/oficios/texto";
 import { formatarCnpj } from "@/lib/format";
 import type { ContribuinteOficio } from "@/lib/oficios/zerados";
 import { cn } from "@/lib/utils";
+import { RefreshCw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
+import {
+  limparCnpj,
+  ROTULO_SITUACAO_RECEITA,
+  SITUACOES_RECEITA,
+  SITUACOES_RECEITA_ENCERRADAS,
+  type SituacaoReceita,
+} from "@/lib/receita/normalizar";
 
 type ContribuinteLista = ContribuinteOficio & { id: string };
 
