@@ -580,14 +580,25 @@ function NovaApuracao() {
                   </p>
                   {municipioCadastrado ? (
                     podeTrocar ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => trocar(municipioCadastrado.id)}
-                      >
-                        Trocar para {municipioCadastrado.nome}
-                      </Button>
+                      <div className="space-y-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => trocar(municipioCadastrado.id)}
+                        >
+                          Trocar para {nomeArquivo ?? municipioCadastrado.nome} (código{" "}
+                          {codigoArquivo})
+                        </Button>
+                        {nomeCadastroDivergente && (
+                          <p className="text-xs">
+                            Atenção: essa prefeitura está cadastrada como{" "}
+                            <strong>{municipioCadastrado.nome}</strong>, mas o código{" "}
+                            {codigoArquivo} é de <strong>{nomeOficialArquivo}</strong> na tabela da
+                            SEF-MG. Corrija o nome em Configurações/Prefeituras.
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-xs">
                         Essa prefeitura já está cadastrada; peça à consultoria para processar o
