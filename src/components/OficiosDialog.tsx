@@ -230,7 +230,7 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
     if (!config || !modelo) return;
     let ids: string[] = [];
     try {
-      const contribuintes = await buscarContribuintes();
+      const contribuintes = filtrarPorReceita(await buscarContribuintes());
       if (!contribuintes.length) {
         toast.error("Nenhum contribuinte para este modelo.");
         return;
