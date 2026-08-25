@@ -150,3 +150,47 @@ export async function processarFilaReceita(limite = 40): Promise<ResultadoFila> 
     await soltarTrava(chave);
   }
 }
+
+/** Reconsulta imediata de uma lista de CNPJs que estão na fila (ignora o horário). */
+export async function reconsultarPendentes(cnpjs: string[]): Promise<ResultadoFila> {
+  const alvo = [...new Set(cnpjs)].slice(0, 200);
+  if (!alvo.length) {
+    return { processados: 0, atualizados: 0, naoEncontrados: 0, falhas: 0, restantes: 0 };
+  }
+  const db = await admin();
+  const resultados = await consultarLote(alvo, 3);
+  const ok = resultados.filter((r) => r.ok);
+  const naoEncontrados = resultados
+    .filter((r) => !r.ok && (r as { naoEncontrado: boolean }).naoEncontrado)
+    .map((r) => r.cnpj);
+  const falhas = resultados
+    .filter((r) => !r.ok && !(r as { naoEncontrado: boolean }).naoEncontrado)
+    .map((r) => r.cnpj);
+
+  if (ok.length) {
+    const linhas = ok.map((r) => ({
+      ...(r as { registro: Record<string, unknown> }).registro,
+      consultado_em: new Date().toISOString(),
+    }));
+    const { error } = await db
+      .from("situacoes_receita")
+      .upsert(linhas as never, { onConflict: "cnpj" });
+    if (error) throw new Error(error.message);
+  }
+
+  await concluirFila([...ok.map((r) => r.cnpj), ...naoEncontrados]);
+  await enfileirarFalhas(falhas, "Sem resposta das bases públicas na reconsulta manual.");
+
+  const { count } = await db
+    .from("receita_fila")
+    .select("cnpj", { count: "exact", head: true })
+    .eq("status", "pendente");
+
+  return {
+    processados: alvo.length,
+    atualizados: ok.length,
+    naoEncontrados: naoEncontrados.length,
+    falhas: falhas.length,
+    restantes: count ?? 0,
+  };
+}
