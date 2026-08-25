@@ -672,31 +672,62 @@ function NovaApuracao() {
             )}
 
             {nomeAtivoDivergente && (
-              <Alert>
+              <Alert variant={bloqueioNomeOficial ? "destructive" : "default"}>
                 <Building2 className="h-4 w-4" />
-                <AlertTitle>Nome da prefeitura ativa divergente</AlertTitle>
+                <AlertTitle>
+                  {bloqueioNomeOficial
+                    ? "Código SEF com nome divergente — carga bloqueada"
+                    : "Nome da prefeitura ativa divergente"}
+                </AlertTitle>
                 <AlertDescription className="space-y-2">
                   <p className="text-xs">
                     Cadastro: <strong>{municipio!.nome}</strong> · Nome oficial do código{" "}
-                    {codigoAtivo} na SEF-MG: <strong>{resolucaoAtiva.nomeOficial}</strong>. Corrija
-                    antes de gravar a carga para o relatório sair com o município correto.
+                    {codigoAtivo} na SEF-MG: <strong>{resolucaoAtiva.nomeOficial}</strong>.
+                    {bloqueioNomeOficial
+                      ? " Escolha uma correção abaixo para liberar o processamento da carga."
+                      : " Você optou por manter o nome cadastrado nesta apuração."}
                   </p>
-                  {perfil?.ehSuperadmin && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={corrigindoNome === municipio!.id}
-                      onClick={() =>
-                        corrigirNomeCadastro(municipio!.id, resolucaoAtiva.nomeOficial!)
-                      }
-                    >
-                      {corrigindoNome === municipio!.id && (
-                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                      )}
-                      Corrigir cadastro para {resolucaoAtiva.nomeOficial}
-                    </Button>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {perfil?.ehSuperadmin && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={corrigindoNome === municipio!.id}
+                        onClick={() =>
+                          corrigirNomeCadastro(municipio!.id, resolucaoAtiva.nomeOficial!)
+                        }
+                      >
+                        {corrigindoNome === municipio!.id && (
+                          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        )}
+                        Corrigir cadastro para {resolucaoAtiva.nomeOficial}
+                      </Button>
+                    )}
+                    {perfil?.ehSuperadmin && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => navigate({ to: "/consultoria/codigos-sef" })}
+                      >
+                        Corrigir em lote nos Códigos SEF
+                      </Button>
+                    )}
+                    {bloqueioNomeOficial && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          setNomeDivergenteAceito(true);
+                          setErro(null);
+                        }}
+                      >
+                        Manter nome cadastrado e continuar
+                      </Button>
+                    )}
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
