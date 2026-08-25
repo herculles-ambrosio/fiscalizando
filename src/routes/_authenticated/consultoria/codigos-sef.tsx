@@ -83,8 +83,52 @@ function CodigosSef() {
       );
   }, [data, busca]);
 
-  const divergentes = linhas.filter((l) => l.divergente).length;
+  const linhasDivergentes = linhas.filter((l) => l.divergente);
+  const divergentes = linhasDivergentes.length;
   const semCodigo = linhas.filter((l) => !l.oficial).length;
+
+  const selecionadosVisiveis = linhasDivergentes.filter((l) => selecionados.includes(l.id));
+  const todosSelecionados =
+    linhasDivergentes.length > 0 && selecionadosVisiveis.length === linhasDivergentes.length;
+
+  function alternarSelecao(id: string) {
+    setSelecionados((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  }
+
+  async function aplicarOficialEmLote() {
+    const alvos = linhasDivergentes.filter((l) => selecionados.includes(l.id) && l.oficial);
+    if (alvos.length === 0) {
+      toast.error("Selecione ao menos um cadastro divergente.");
+      return;
+    }
+    setAplicandoLote(true);
+    let sucesso = 0;
+    const falhas: string[] = [];
+    for (const alvo of alvos) {
+      const { error } = await supabase
+        .from("municipios")
+        .update({ nome: alvo.oficial!, codigo_sef: alvo.codigo! })
+        .eq("id", alvo.id);
+      if (error) falhas.push(`${alvo.nome}: ${error.message}`);
+      else sucesso++;
+    }
+    setAplicandoLote(false);
+    setSelecionados([]);
+    setRascunho({});
+    await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+    if (sucesso > 0) {
+      toast.success(
+        `${sucesso} cadastro${sucesso > 1 ? "s" : ""} corrigido${sucesso > 1 ? "s" : ""} com o nome oficial da SEF-MG.`,
+      );
+    }
+    if (falhas.length > 0) {
+      toast.error(`${falhas.length} cadastro(s) não puderam ser corrigidos.`, {
+        description: falhas.slice(0, 3).join(" · "),
+      });
+    }
+  }
 
   async function salvar(linha: (typeof linhas)[number], nome: string, codigoBruto: string) {
     const codigo = normalizarCodigoSef(codigoBruto);
