@@ -34,10 +34,16 @@ async function buscarEm(fonte: Fonte, cnpj: string): Promise<ResultadoConsulta |
   }
 }
 
-export async function consultarCnpj(cnpj: string): Promise<ResultadoConsulta> {
-  for (const fonte of FONTES) {
-    const resultado = await buscarEm(fonte, cnpj);
-    if (resultado) return resultado;
+export async function consultarCnpj(cnpj: string, tentativas = 3): Promise<ResultadoConsulta> {
+  // Cada rodada tenta todas as fontes; entre rodadas espera um pouco (limite de uso).
+  for (let rodada = 0; rodada < tentativas; rodada++) {
+    for (const fonte of FONTES) {
+      const resultado = await buscarEm(fonte, cnpj);
+      if (resultado) return resultado;
+    }
+    if (rodada < tentativas - 1) {
+      await new Promise((r) => setTimeout(r, 600 * (rodada + 1)));
+    }
   }
   return {
     cnpj,
@@ -46,6 +52,7 @@ export async function consultarCnpj(cnpj: string): Promise<ResultadoConsulta> {
     erro: "Nenhuma das fontes públicas respondeu. Tente novamente em alguns minutos.",
   };
 }
+
 
 /** Consulta com concorrência limitada, para não ser bloqueado pelas fontes públicas. */
 export async function consultarLote(cnpjs: string[], concorrencia = 4) {
