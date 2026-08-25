@@ -802,6 +802,64 @@ function NovaApuracao() {
               </Alert>
             )}
 
+            {(ativos || retorno) && precheck.length > 0 && (
+              <Alert variant={bloqueioNomeOficial ? "destructive" : "default"}>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>
+                  Pré-check de códigos SEF — {precheck.length} divergência
+                  {precheck.length > 1 ? "s" : ""} encontrada{precheck.length > 1 ? "s" : ""}
+                </AlertTitle>
+                <AlertDescription className="space-y-3">
+                  <p className="text-xs">
+                    Antes de gravar a carga, confira os códigos SEF cujo nome cadastrado difere do
+                    nome oficial da SEF-MG. Ação sugerida: aplicar o nome oficial.
+                  </p>
+                  <div className="max-h-48 space-y-1 overflow-auto rounded-md border p-2">
+                    {precheck.map((d) => (
+                      <div
+                        key={d.id}
+                        className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                      >
+                        <span>
+                          <strong>{d.codigo}</strong> · {d.nomeCadastrado} →{" "}
+                          <strong>{d.nomeOficial}</strong>
+                          {d.codigo === codigoAtivo ? " (prefeitura ativa)" : ""}
+                          {d.codigo === codigoArquivo ? " (código dos arquivos)" : ""}
+                        </span>
+                        <span className="text-muted-foreground">{d.acaoSugerida}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {perfil?.ehSuperadmin && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={corrigindoPrecheck}
+                        onClick={() => void corrigirPrecheckTodos()}
+                      >
+                        {corrigindoPrecheck && (
+                          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        )}
+                        Aplicar nome oficial a todos ({precheck.length})
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => navigate({ to: "/consultoria/codigos-sef" })}
+                      >
+                        Revisar ou desfazer em Códigos SEF
+                      </Button>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+
+
             {!municipioDivergente && codigoArquivo && municipio && (
               <p className="text-xs text-muted-foreground">
                 Arquivos identificados como da prefeitura <strong>{municipio.nome}</strong> (código{" "}
