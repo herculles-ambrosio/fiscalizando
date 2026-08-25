@@ -46,6 +46,16 @@ import {
   type SituacaoCadastral,
 } from "@/lib/vaf/apurar";
 import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
+import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
+import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
+import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
+import {
+  limparCnpj,
+  ROTULO_SITUACAO_RECEITA,
+  SITUACOES_RECEITA,
+  type SituacaoReceita,
+} from "@/lib/receita/normalizar";
 
 const SITUACOES: Situacao[] = [
   "OMISSO",
