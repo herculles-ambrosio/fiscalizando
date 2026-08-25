@@ -46,7 +46,10 @@ const NAV_ANALISE = [
 const NAV_ADMIN = [{ to: "/configuracoes", rotulo: "Configurações", icone: Settings }];
 
 const NAV_CONSULTORIA = [{ to: "/consultoria/prefeituras", rotulo: "Prefeituras", icone: Building2 }];
-const NAV_SUPERADMIN = [{ to: "/consultoria/usuarios", rotulo: "Usuários", icone: Users }];
+const NAV_SUPERADMIN = [
+  { to: "/consultoria/usuarios", rotulo: "Usuários", icone: Users },
+  { to: "/consultoria/codigos-sef", rotulo: "Códigos SEF", icone: MapPin },
+];
 
 
 export function AppLayout({ children }: { children: ReactNode }) {
