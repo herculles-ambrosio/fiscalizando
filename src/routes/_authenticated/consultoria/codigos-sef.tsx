@@ -160,6 +160,38 @@ function CodigosSef() {
     }
   }
 
+  async function desfazerLote(lote: CorrecaoSefLote) {
+    setDesfazendo(lote.loteId);
+    let sucesso = 0;
+    const falhas: string[] = [];
+    for (const item of lote.itens) {
+      const { error } = await supabase
+        .from("municipios")
+        .update({ nome: item.nomeAnterior, codigo_sef: item.codigoAnterior })
+        .eq("id", item.id);
+      if (error) falhas.push(`${item.nomeAnterior}: ${error.message}`);
+      else sucesso++;
+    }
+    setDesfazendo(null);
+    if (falhas.length === 0) removerLoteSef(lote.loteId);
+    setLotes(lerLotesSef());
+    await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+    if (sucesso > 0) {
+      toast.success(
+        `Correção desfeita: ${sucesso} cadastro${sucesso > 1 ? "s" : ""} voltou ao nome anterior.`,
+      );
+    }
+    if (falhas.length > 0) {
+      toast.error(`${falhas.length} cadastro(s) não puderam ser restaurados.`, {
+        description: falhas.slice(0, 3).join(" · "),
+      });
+    }
+  }
+
+
+
   async function salvar(linha: (typeof linhas)[number], nome: string, codigoBruto: string) {
     const codigo = normalizarCodigoSef(codigoBruto);
     if (!codigo) {
