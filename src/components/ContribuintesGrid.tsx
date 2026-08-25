@@ -52,6 +52,16 @@ import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
 import { useFilaReceita } from "@/hooks/useFilaReceita";
 import { BotaoReconsultarFalhas } from "@/components/analises/ReceitaIe";
+import { usePreferencia } from "@/hooks/usePreferencia";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   limparCnpj,
   ROTULO_SITUACAO_RECEITA,
@@ -71,6 +81,34 @@ const SITUACOES: Situacao[] = [
 ];
 
 const POR_PAGINA = 20;
+
+type ColunaId =
+  | "nome"
+  | "cnpj"
+  | "inscricao_estadual"
+  | "cnae"
+  | "vaf_atual"
+  | "vaf_anterior"
+  | "variacao_pct"
+  | "situacao_cadastral"
+  | "receita_federal"
+  | "situacoes";
+
+const COLUNAS: { id: ColunaId; rotulo: string }[] = [
+  { id: "nome", rotulo: "Contribuinte" },
+  { id: "cnpj", rotulo: "CNPJ" },
+  { id: "inscricao_estadual", rotulo: "IE" },
+  { id: "cnae", rotulo: "CNAE" },
+  { id: "vaf_atual", rotulo: "VAF atual (R$)" },
+  { id: "vaf_anterior", rotulo: "VAF anterior (R$)" },
+  { id: "variacao_pct", rotulo: "Variação" },
+  { id: "situacao_cadastral", rotulo: "Situação cadastral" },
+  { id: "receita_federal", rotulo: "Receita Federal" },
+  { id: "situacoes", rotulo: "Situação" },
+];
+
+const COLUNAS_PADRAO: ColunaId[] = COLUNAS.map((c) => c.id);
+
 
 type Ordem = { coluna: ColunaOrdenavel; asc: boolean };
 
