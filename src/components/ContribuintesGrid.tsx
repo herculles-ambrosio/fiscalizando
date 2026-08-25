@@ -68,7 +68,7 @@ const SITUACOES: Situacao[] = [
   "SOMENTE_RETORNO",
 ];
 
-const POR_PAGINA = 50;
+const POR_PAGINA = 20;
 
 type Ordem = { coluna: ColunaOrdenavel; asc: boolean };
 
