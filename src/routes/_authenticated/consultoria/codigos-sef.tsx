@@ -49,6 +49,8 @@ function CodigosSef() {
   const [busca, setBusca] = useState("");
   const [rascunho, setRascunho] = useState<Record<string, { nome: string; codigo: string }>>({});
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [aplicandoLote, setAplicandoLote] = useState(false);
 
   const podeEditar = !!perfil?.ehSuperadmin;
 
