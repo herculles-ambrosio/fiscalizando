@@ -71,9 +71,13 @@ export function useReceitaPorIe(
             `${r.atualizados} consultado(s)`,
             `${r.cache} em cache`,
             ...(semCnpj ? [`${semCnpj} sem CNPJ`] : []),
-            ...(r.falhas.length ? [`${r.falhas.length} falha(s)`] : []),
+            ...(r.naoEncontrados?.length
+              ? [`${r.naoEncontrados.length} fora das bases públicas`]
+              : []),
+            ...(r.falhas.length ? [`${r.falhas.length} sem resposta (tente de novo)`] : []),
           ];
           toast.success(`Receita Federal: ${partes.join(" · ")}.`);
+
         },
         onError: (e) =>
           toast.error(e instanceof Error ? e.message : "Falha ao consultar a Receita Federal."),
