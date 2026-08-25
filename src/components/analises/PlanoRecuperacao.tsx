@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useModelos } from "@/hooks/useModelos";
 import { baixarBlob, gerarZipOficios, nomeZip, type ProgressoOficios } from "@/lib/oficios/pacote";
 import { ROTULO_SITUACAO, type ModeloOficio } from "@/lib/oficios/modelos";
@@ -118,6 +119,8 @@ export default function PlanoRecuperacao({
     [diagnostico, declarantes, exercicio, situacoesCadastrais],
   );
   const [filtroMotivo, setFiltroMotivo] = useState<string>("todos");
+  const [baixandoDocx, setBaixandoDocx] = useState(false);
+  const { municipio } = useMunicipioAtivo();
 
   const motivoDe = (c: { inscricao_estadual: string }) =>
     (situacoesCadastrais?.[chaveIe(c.inscricao_estadual)] || "NAO_INFORMADA").toUpperCase();
@@ -210,6 +213,23 @@ export default function PlanoRecuperacao({
       .catch(() => toast.error("Não foi possível copiar."));
   }
 
+  async function baixarDocx() {
+    setBaixandoDocx(true);
+    try {
+      const { baixarDocPlano } = await import("@/lib/vaf/planoDocx");
+      await baixarDocPlano(acoes, {
+        municipio: municipio?.nome ?? null,
+        exercicio: exercicio ?? null,
+        referencia: referencia ?? null,
+      });
+      toast.success("Análise baixada em .docx (abre no Word e exporta em PDF).");
+    } catch {
+      toast.error("Não foi possível gerar o documento do plano.");
+    } finally {
+      setBaixandoDocx(false);
+    }
+  }
+
   return (
     <>
       <Card>
@@ -224,10 +244,26 @@ export default function PlanoRecuperacao({
               potencialmente recuperável.
             </p>
           </div>
-          <Button variant="outline" size="sm" className="gap-2" onClick={copiar}>
-            <ClipboardCopy className="h-3.5 w-3.5" />
-            Copiar plano
-          </Button>
+          <div className="no-print flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={copiar}>
+              <ClipboardCopy className="h-3.5 w-3.5" />
+              Copiar plano
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => void baixarDocx()}
+              disabled={baixandoDocx}
+            >
+              {baixandoDocx ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              Baixar a Análise (.docx)
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
