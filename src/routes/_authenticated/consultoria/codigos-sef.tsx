@@ -247,6 +247,18 @@ function CodigosSef() {
             <Table className="text-xs">
               <TableHeader>
                 <TableRow>
+                  {podeEditar && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={todosSelecionados}
+                        disabled={linhasDivergentes.length === 0}
+                        onCheckedChange={(v) =>
+                          setSelecionados(v ? linhasDivergentes.map((l) => l.id) : [])
+                        }
+                        aria-label="Selecionar todos os divergentes"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead className="w-28">Código SEF</TableHead>
                   <TableHead>Nome cadastrado</TableHead>
                   <TableHead>Nome oficial (SEF-MG)</TableHead>
