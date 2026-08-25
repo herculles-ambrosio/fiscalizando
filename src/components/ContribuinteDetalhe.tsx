@@ -102,6 +102,10 @@ export function ContribuinteDetalhe({
   const [chaveModelo, setChaveModelo] = useState<string>("");
   const [reemitindoId, setReemitindoId] = useState<string | null>(null);
   const reemissao = useReemitirOficio();
+  const { data: receita } = useSituacoesReceita([contribuinte?.cnpj]);
+  const consultaReceita = useConsultarReceita();
+  const chaveCnpj = limparCnpj(contribuinte?.cnpj);
+  const registroReceita = chaveCnpj ? (receita?.[chaveCnpj] ?? null) : null;
 
   function reemitir(emissao: EmissaoRegistro) {
     setReemitindoId(emissao.id);
