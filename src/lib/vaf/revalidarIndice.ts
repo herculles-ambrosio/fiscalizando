@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { decodificarArquivo } from "./parser";
-import { apurarIndice, possuiIndice } from "./indice";
+import { apurarIndice, estimarIndiceProvisorio, possuiIndice } from "./indice";
 import type { DetalhamentoIndice, IndiceSalvo } from "@/hooks/useIndicesHistorico";
 
 type CargaRetorno = {
@@ -84,11 +84,19 @@ export async function revalidarDetalhamento(
   }
 
   const texto = decodificarArquivo(await data.arrayBuffer());
-  if (!possuiIndice(texto)) {
+  const a = possuiIndice(texto)
+    ? apurarIndice(texto)
+    : r.tipo_indice === "provisorio"
+      ? estimarIndiceProvisorio(texto, {
+          vafEstadualReferencia: Number(r.vaf_estadual) || 0,
+          fatorCalibragem: Number(r.fator_calibragem) || 1,
+        })
+      : null;
+
+  if (!a) {
     throw new Error("O arquivo guardado não contém os registros de apuração do índice.");
   }
 
-  const a = apurarIndice(texto);
   const detalhe: DetalhamentoIndice = {
     creditosExternos: a.creditosExternos,
     creditosPorMunicipio: a.creditosPorMunicipio,
