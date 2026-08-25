@@ -141,7 +141,7 @@ export function construirDocPlano(
       if (a.contribuintes.length) {
         const lista = a.contribuintes
           .slice(0, 30)
-          .map((c) => `${c.nome ?? "(sem nome)"} (IE ${c.inscricaoEstadual})`)
+          .map((c) => `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual})`)
           .join("; ");
         filhos.push(
           paragrafo(
