@@ -274,6 +274,16 @@ function CodigosSef() {
                   const alterado = nome !== m.nome || codigo !== (m.codigo ?? m.codigo_sef);
                   return (
                     <TableRow key={m.id}>
+                      {podeEditar && (
+                        <TableCell>
+                          <Checkbox
+                            checked={selecionados.includes(m.id)}
+                            disabled={!m.divergente}
+                            onCheckedChange={() => alternarSelecao(m.id)}
+                            aria-label={`Selecionar ${m.nome}`}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell>
                         {podeEditar ? (
                           <Input
