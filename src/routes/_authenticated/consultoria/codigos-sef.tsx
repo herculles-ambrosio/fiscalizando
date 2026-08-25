@@ -198,14 +198,43 @@ function CodigosSef() {
         </Card>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar por nome ou código"
-          className="pl-9"
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative max-w-sm flex-1 min-w-56">
+          <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar por nome ou código"
+            className="pl-9"
+          />
+        </div>
+        {podeEditar && divergentes > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setSelecionados(todosSelecionados ? [] : linhasDivergentes.map((l) => l.id))
+              }
+            >
+              {todosSelecionados ? "Limpar seleção" : `Selecionar divergentes (${divergentes})`}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void aplicarOficialEmLote()}
+              disabled={selecionadosVisiveis.length === 0 || aplicandoLote}
+            >
+              {aplicandoLote ? (
+                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Wand2 className="mr-1 h-3.5 w-3.5" />
+              )}
+              Aplicar nome oficial aos selecionados ({selecionadosVisiveis.length})
+            </Button>
+          </div>
+        )}
       </div>
 
       <Card>
