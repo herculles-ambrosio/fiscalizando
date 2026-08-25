@@ -386,9 +386,69 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                {carregandoLista ? "Contando…" : `${lista.length} contribuinte(s) neste escopo.`}
+                {carregandoLista
+                  ? "Contando…"
+                  : `${listaFinal.length} de ${lista.length} contribuinte(s) neste escopo (após o filtro da Receita).`}
               </p>
             </div>
+
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Situação na Receita Federal</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={consultaReceita.isPending || !lista.length}
+                  onClick={() =>
+                    consultaReceita.mutate(
+                      { cnpjs: lista.map((c) => c.cnpj) },
+                      {
+                        onSuccess: (r) =>
+                          toast.success(`Receita consultada: ${r.atualizados} atualizado(s).`),
+                        onError: () => toast.error("Falha ao consultar a Receita Federal."),
+                      },
+                    )
+                  }
+                >
+                  {consultaReceita.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                  )}
+                  Consultar Receita
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Marque para quais situações da Receita Federal o ofício deve ser emitido. Nada é
+                bloqueado automaticamente — a escolha é sua.
+              </p>
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {([...SITUACOES_RECEITA, "NAO_CONSULTADO"] as const).map((s) => (
+                  <label key={s} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={permitidas.includes(s)}
+                      onCheckedChange={(v) =>
+                        setPermitidas((atual) =>
+                          v === true ? [...new Set([...atual, s])] : atual.filter((x) => x !== s),
+                        )
+                      }
+                    />
+                    {ROTULO_SITUACAO_RECEITA[s]}
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      ({contagemReceita[s] ?? 0})
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {encerradasNaLista > 0 && (
+                <p className="text-xs text-destructive">
+                  Atenção: {encerradasNaLista} contribuinte(s) estão baixados ou com inscrição nula
+                  na Receita Federal.
+                </p>
+              )}
+            </div>
+
 
             <div className="space-y-2">
               <div className="flex items-end justify-between gap-2">
