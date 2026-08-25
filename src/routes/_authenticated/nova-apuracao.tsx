@@ -2,6 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { NotaRemessa } from "@/components/NotaRemessa";
 import { toast } from "sonner";
 import { resolverMunicipioDoArquivo } from "@/lib/vaf/resolverMunicipio";
+import { divergenciasSef } from "@/lib/vaf/precheckSef";
+import { registrarLoteSef } from "@/lib/vaf/correcoesSefUndo";
+
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Building2, CheckCircle2, Loader2, Upload } from "lucide-react";
