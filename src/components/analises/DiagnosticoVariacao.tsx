@@ -30,6 +30,7 @@ import {
   BotaoReconsultarFalhas,
   ReceitaIeBadge,
 } from "@/components/analises/ReceitaIe";
+import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 
 type ReceitaDe = (ie: string | null | undefined) => RegistroReceita | undefined;
