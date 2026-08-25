@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { NotaRemessa } from "@/components/NotaRemessa";
-import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
+import { toast } from "sonner";
+import { resolverMunicipioDoArquivo } from "@/lib/vaf/resolverMunicipio";
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Building2, CheckCircle2, Loader2, Upload } from "lucide-react";
@@ -105,6 +106,7 @@ function NovaApuracao() {
   const [novaPrefeituraNome, setNovaPrefeituraNome] = useState("");
   const [salvandoPrefeitura, setSalvandoPrefeitura] = useState(false);
   const [erroPrefeitura, setErroPrefeitura] = useState<string | null>(null);
+  const [corrigindoNome, setCorrigindoNome] = useState<string | null>(null);
 
   const processando = progresso !== null && progresso.percentual < 100;
 
@@ -141,20 +143,35 @@ function NovaApuracao() {
   const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
   const municipioDivergente =
     !arquivosDeMunicipiosDiferentes && !!codigoArquivo && !!codigoAtivo && codigoArquivo !== codigoAtivo;
-  const municipioCadastrado = codigoArquivo
-    ? (municipios.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ?? null)
-    : null;
   // O nome oficial da tabela SEF-MG vence o nome digitado no cadastro e o do arquivo:
   // cadastros com nome errado não devem mais confundir a identificação da prefeitura.
-  const nomeOficialArquivo = nomeMunicipioSef(codigoArquivo);
-  const nomeArquivo = nomeOficialArquivo ?? municipioArquivo.nome;
-  const rotuloArquivo = nomeArquivo
-    ? `${nomeArquivo} (código ${codigoArquivo})`
-    : `código ${codigoArquivo}`;
-  const nomeCadastroDivergente =
-    !!municipioCadastrado &&
-    !!nomeOficialArquivo &&
-    municipioCadastrado.nome.trim().toLowerCase() !== nomeOficialArquivo.toLowerCase();
+  const resolucaoArquivo = resolverMunicipioDoArquivo({
+    codigo: codigoArquivo,
+    nomeArquivo: municipioArquivo.nome,
+    municipios,
+  });
+  const municipioCadastrado = resolucaoArquivo.cadastrado;
+  const nomeOficialArquivo = resolucaoArquivo.nomeOficial;
+  const nomeArquivo = resolucaoArquivo.nomeExibicao;
+  const rotuloArquivo = resolucaoArquivo.rotulo ?? `código ${codigoArquivo}`;
+  const nomeCadastroDivergente = resolucaoArquivo.nomeDivergente;
+  // Prefeitura ativa com nome diferente do oficial do próprio código SEF.
+  const resolucaoAtiva = resolverMunicipioDoArquivo({ codigo: codigoAtivo, municipios });
+  const nomeAtivoDivergente = resolucaoAtiva.nomeDivergente && !!municipio;
+
+  async function corrigirNomeCadastro(id: string, nomeOficial: string) {
+    setCorrigindoNome(id);
+    const { error } = await supabase.from("municipios").update({ nome: nomeOficial }).eq("id", id);
+    setCorrigindoNome(null);
+    if (error) {
+      toast.error("Não foi possível corrigir o cadastro.", { description: error.message });
+      return;
+    }
+    toast.success(`Cadastro corrigido para ${nomeOficial}.`);
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
+    await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+  }
 
 
   async function criarPrefeitura() {
@@ -592,12 +609,29 @@ function NovaApuracao() {
                           {codigoArquivo})
                         </Button>
                         {nomeCadastroDivergente && (
-                          <p className="text-xs">
-                            Atenção: essa prefeitura está cadastrada como{" "}
-                            <strong>{municipioCadastrado.nome}</strong>, mas o código{" "}
-                            {codigoArquivo} é de <strong>{nomeOficialArquivo}</strong> na tabela da
-                            SEF-MG. Corrija o nome em Configurações/Prefeituras.
-                          </p>
+                          <div className="space-y-1.5">
+                            <p className="text-xs">
+                              Cadastro: <strong>{municipioCadastrado.nome}</strong> · Nome oficial do
+                              código {codigoArquivo} na SEF-MG:{" "}
+                              <strong>{nomeOficialArquivo}</strong>.
+                            </p>
+                            {perfil?.ehSuperadmin && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={corrigindoNome === municipioCadastrado.id}
+                                onClick={() =>
+                                  corrigirNomeCadastro(municipioCadastrado.id, nomeOficialArquivo!)
+                                }
+                              >
+                                {corrigindoNome === municipioCadastrado.id && (
+                                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                )}
+                                Corrigir cadastro para {nomeOficialArquivo}
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     ) : (
@@ -624,6 +658,36 @@ function NovaApuracao() {
                       Essa prefeitura ainda não está cadastrada. Solicite o cadastro ao
                       administrador.
                     </p>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {nomeAtivoDivergente && (
+              <Alert>
+                <Building2 className="h-4 w-4" />
+                <AlertTitle>Nome da prefeitura ativa divergente</AlertTitle>
+                <AlertDescription className="space-y-2">
+                  <p className="text-xs">
+                    Cadastro: <strong>{municipio!.nome}</strong> · Nome oficial do código{" "}
+                    {codigoAtivo} na SEF-MG: <strong>{resolucaoAtiva.nomeOficial}</strong>. Corrija
+                    antes de gravar a carga para o relatório sair com o município correto.
+                  </p>
+                  {perfil?.ehSuperadmin && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={corrigindoNome === municipio!.id}
+                      onClick={() =>
+                        corrigirNomeCadastro(municipio!.id, resolucaoAtiva.nomeOficial!)
+                      }
+                    >
+                      {corrigindoNome === municipio!.id && (
+                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      )}
+                      Corrigir cadastro para {resolucaoAtiva.nomeOficial}
+                    </Button>
                   )}
                 </AlertDescription>
               </Alert>

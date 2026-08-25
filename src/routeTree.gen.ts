@@ -27,6 +27,7 @@ import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authent
 import { Route as AuthenticatedOficiosRouteImport } from './routes/_authenticated/oficios'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
+import { Route as AuthenticatedConsultoriaCodigosSefRouteImport } from './routes/_authenticated/consultoria/codigos-sef'
 import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './routes/_authenticated/consultoria/prefeituras'
 import { Route as AuthenticatedConsultoriaUsuariosRouteImport } from './routes/_authenticated/consultoria/usuarios'
 
@@ -126,6 +127,12 @@ const AuthenticatedCargasCargaIdRoute =
     path: '/cargas/$cargaId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedConsultoriaCodigosSefRoute =
+  AuthenticatedConsultoriaCodigosSefRouteImport.update({
+    id: '/codigos-sef',
+    path: '/codigos-sef',
+    getParentRoute: () => AuthenticatedConsultoriaRouteRoute,
+  } as any)
 const AuthenticatedConsultoriaPrefeiturasRoute =
   AuthenticatedConsultoriaPrefeiturasRouteImport.update({
     id: '/prefeituras',
@@ -157,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/oficios': typeof AuthenticatedOficiosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
+  '/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
@@ -178,6 +186,7 @@ export interface FileRoutesByTo {
   '/oficios': typeof AuthenticatedOficiosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
+  '/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
@@ -201,6 +210,7 @@ export interface FileRoutesById {
   '/_authenticated/oficios': typeof AuthenticatedOficiosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
+  '/_authenticated/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/_authenticated/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/_authenticated/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
 }
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/oficios'
     | '/trocar-senha'
     | '/cargas/$cargaId'
+    | '/consultoria/codigos-sef'
     | '/consultoria/prefeituras'
     | '/consultoria/usuarios'
   fileRoutesByTo: FileRoutesByTo
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/oficios'
     | '/trocar-senha'
     | '/cargas/$cargaId'
+    | '/consultoria/codigos-sef'
     | '/consultoria/prefeituras'
     | '/consultoria/usuarios'
   id:
@@ -267,6 +279,7 @@ export interface FileRouteTypes {
     | '/_authenticated/oficios'
     | '/_authenticated/trocar-senha'
     | '/_authenticated/cargas/$cargaId'
+    | '/_authenticated/consultoria/codigos-sef'
     | '/_authenticated/consultoria/prefeituras'
     | '/_authenticated/consultoria/usuarios'
   fileRoutesById: FileRoutesById
@@ -404,6 +417,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCargasCargaIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/consultoria/codigos-sef': {
+      id: '/_authenticated/consultoria/codigos-sef'
+      path: '/codigos-sef'
+      fullPath: '/consultoria/codigos-sef'
+      preLoaderRoute: typeof AuthenticatedConsultoriaCodigosSefRouteImport
+      parentRoute: typeof AuthenticatedConsultoriaRouteRoute
+    }
     '/_authenticated/consultoria/prefeituras': {
       id: '/_authenticated/consultoria/prefeituras'
       path: '/prefeituras'
@@ -422,12 +442,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedConsultoriaRouteRouteChildren {
+  AuthenticatedConsultoriaCodigosSefRoute: typeof AuthenticatedConsultoriaCodigosSefRoute
   AuthenticatedConsultoriaPrefeiturasRoute: typeof AuthenticatedConsultoriaPrefeiturasRoute
   AuthenticatedConsultoriaUsuariosRoute: typeof AuthenticatedConsultoriaUsuariosRoute
 }
 
 const AuthenticatedConsultoriaRouteRouteChildren: AuthenticatedConsultoriaRouteRouteChildren =
   {
+    AuthenticatedConsultoriaCodigosSefRoute:
+      AuthenticatedConsultoriaCodigosSefRoute,
     AuthenticatedConsultoriaPrefeiturasRoute:
       AuthenticatedConsultoriaPrefeiturasRoute,
     AuthenticatedConsultoriaUsuariosRoute:
