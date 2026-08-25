@@ -241,10 +241,26 @@ export default function PlanoRecuperacao({
               potencialmente recuperável.
             </p>
           </div>
-          <Button variant="outline" size="sm" className="gap-2" onClick={copiar}>
-            <ClipboardCopy className="h-3.5 w-3.5" />
-            Copiar plano
-          </Button>
+          <div className="no-print flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={copiar}>
+              <ClipboardCopy className="h-3.5 w-3.5" />
+              Copiar plano
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => void baixarDocx()}
+              disabled={baixandoDocx}
+            >
+              {baixandoDocx ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              Baixar a Análise (.docx)
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
