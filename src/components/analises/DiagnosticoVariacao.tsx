@@ -289,6 +289,7 @@ export default function DiagnosticoVariacao({
 
 
       <CardContent className="space-y-4">
+        <ProgressoConsultaReceita progresso={receita.progresso} />
         <p className="text-sm leading-relaxed">{d.resumo}</p>
 
         <Tabs defaultValue="declarantes">

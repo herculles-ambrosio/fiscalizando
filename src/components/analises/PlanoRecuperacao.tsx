@@ -337,6 +337,7 @@ export default function PlanoRecuperacao({
           </div>
 
         </CardHeader>
+        <ProgressoConsultaReceita progresso={receita.progresso} />
 
         <CardContent className="space-y-4">
           <Alert>
