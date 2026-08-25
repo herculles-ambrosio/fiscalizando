@@ -49,11 +49,43 @@ function isErrorLike(value: unknown): value is Error {
   return value instanceof Error;
 }
 
+function errorCause(error: Error): unknown {
+  return (error as { cause?: unknown }).cause;
+}
+
+export function isBenignRequestAbort(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; depth < CAUSE_DEPTH_LIMIT && current != null; depth++) {
+    if (!(current instanceof Error)) return false;
+
+    const stack = current.stack ?? "";
+    const message = current.message.toLowerCase();
+    if (current.name === "AbortError") return true;
+    if (
+      message === "aborted" &&
+      (stack.includes("abortIncoming") ||
+        stack.includes("socketOnClose") ||
+        stack.includes("node:_http_server"))
+    ) {
+      return true;
+    }
+
+    current = errorCause(current);
+  }
+  return false;
+}
+
 // Wrap console.error so errors logged by any layer — including h3's internal
 // unhandled-error logging, which this file cannot hook directly — are both
 // recorded for consumeLastCapturedError and expanded before serialization.
 const originalConsoleError = console.error.bind(console);
 console.error = (...args: unknown[]) => {
+  if (args.some(isBenignRequestAbort)) {
+    args.forEach((arg) => {
+      if (isErrorLike(arg)) record(arg);
+    });
+    return;
+  }
   const expanded = args.map((arg) => {
     if (!isErrorLike(arg)) return arg;
     record(arg);
