@@ -61,7 +61,7 @@ function celula(
 }
 
 function tabelaResumo(acoes: AcaoRecuperacao[]): Table {
-  const cols = [4400, 1600, 1500, 1526];
+  const cols = [4100, 1500, 1400, 2026];
   return new Table({
     width: { size: LARGURA, type: WidthType.DXA },
     columnWidths: cols,
