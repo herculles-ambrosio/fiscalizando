@@ -158,6 +158,9 @@ function NovaApuracao() {
   // Prefeitura ativa com nome diferente do oficial do próprio código SEF.
   const resolucaoAtiva = resolverMunicipioDoArquivo({ codigo: codigoAtivo, municipios });
   const nomeAtivoDivergente = resolucaoAtiva.nomeDivergente && !!municipio;
+  // Bloqueio de gravação: enquanto o nome cadastrado divergir do oficial da SEF-MG,
+  // a carga não pode ser salva até o usuário corrigir ou aceitar explicitamente.
+  const bloqueioNomeOficial = nomeAtivoDivergente && !nomeDivergenteAceito;
 
   async function corrigirNomeCadastro(id: string, nomeOficial: string) {
     setCorrigindoNome(id);
