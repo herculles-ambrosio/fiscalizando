@@ -217,7 +217,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         )}
         <main className="min-w-0 flex-1 px-5 py-7 md:px-9 md:py-10">
-          <Timbrado>{children}</Timbrado>
+          <Timbrado>
+            <div key={municipioId ?? "sem-municipio"} className="contents">
+              {children}
+            </div>
+          </Timbrado>
         </main>
 
 
