@@ -50,6 +50,7 @@ import { toast } from "sonner";
 import { Columns3, RefreshCw } from "lucide-react";
 import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
+import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
 import { useFilaReceita } from "@/hooks/useFilaReceita";
 import { BotaoReconsultarFalhas } from "@/components/analises/ReceitaIe";
 import { usePreferencia } from "@/hooks/usePreferencia";
@@ -497,6 +498,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
   return (
     <div className="space-y-6">
+      <ProgressoConsultaReceita progresso={consulta.progresso} />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{titulo ?? "Contribuintes apurados"}</h1>
