@@ -37,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarCnpj, formatarData, formatarPercentual, formatarValorGrid } from "@/lib/format";
+import { formatarCnpj, formatarPercentual, formatarValorGrid } from "@/lib/format";
 import {
   ROTULO_SITUACAO,
   ROTULO_SITUACAO_CADASTRAL,
@@ -68,7 +68,7 @@ const SITUACOES: Situacao[] = [
   "SOMENTE_RETORNO",
 ];
 
-const POR_PAGINA = 50;
+const POR_PAGINA = 20;
 
 type Ordem = { coluna: ColunaOrdenavel; asc: boolean };
 
@@ -303,12 +303,45 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
         });
 
-  function consultarReceita(escopo: "pagina" | "selecionados", forcar = false) {
-    const alvo =
-      escopo === "selecionados"
-        ? linhasPagina.filter((c) => selecionados.includes(c.id))
-        : linhasPagina;
-    const cnpjs = alvo.map((c) => c.cnpj);
+  /** Monta a lista de CNPJs conforme a seleção; sem seleção, usa TODOS os contribuintes dos filtros atuais. */
+  async function cnpjsDoEscopo(): Promise<(string | null)[]> {
+    if (selecionados.length) {
+      const marcados = linhasPagina.filter((c) => selecionados.includes(c.id));
+      if (marcados.length === selecionados.length) return marcados.map((c) => c.cnpj);
+      const cnpjs: (string | null)[] = [];
+      for (let i = 0; i < selecionados.length; i += 300) {
+        const { data, error } = await supabase
+          .from("contribuintes_apurados")
+          .select("cnpj")
+          .in("id", selecionados.slice(i, i + 300));
+        if (error) throw error;
+        cnpjs.push(...(data ?? []).map((d) => d.cnpj));
+      }
+      return cnpjs;
+    }
+
+    let q = supabase.from("contribuintes_apurados").select("cnpj").eq("carga_id", cargaId);
+    if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+    else q = q.not("situacoes", "cs", "{SOMENTE_RETORNO}");
+    if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+    if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
+    if (termo)
+      q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
+    const { data, error } = await q.limit(20000);
+    if (error) throw error;
+    return (data ?? []).map((d) => d.cnpj);
+  }
+
+  async function consultarReceita(forcar = false) {
+    let cnpjs: (string | null)[];
+    try {
+      cnpjs = await cnpjsDoEscopo();
+    } catch (erro) {
+      toast.error("Não foi possível montar a lista de CNPJs.", {
+        description: erro instanceof Error ? erro.message : undefined,
+      });
+      return;
+    }
     if (!cnpjs.some((c) => limparCnpj(c))) {
       toast.error("Nenhum CNPJ válido no escopo escolhido.");
       return;
@@ -415,10 +448,10 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           <Button
             variant="outline"
             size="sm"
-            onClick={() => consultarReceita(selecionados.length ? "selecionados" : "pagina")}
-            disabled={consulta.isPending || !linhasPagina.length}
+            onClick={() => void consultarReceita()}
+            disabled={consulta.isPending || !data?.total}
             aria-label="Consultar situação cadastral na Receita Federal"
-            title="Consulta gratuita nos dados abertos do CNPJ (Receita Federal)"
+            title="Consulta gratuita nos dados abertos do CNPJ (Receita Federal). Sem seleção, consulta todos os contribuintes do filtro atual."
           >
             {consulta.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -426,7 +459,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
             Consultar Receita
-            {selecionados.length ? ` (${selecionados.length})` : " (página)"}
+            {selecionados.length
+              ? ` (${selecionados.length} selecionado(s))`
+              : ` (${data?.total ?? 0})`}
           </Button>
           {carga && (
             <OficiosDialog
@@ -620,7 +655,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     <ColunaHead coluna="vaf_atual" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF atual (R$)</ColunaHead>
                     <ColunaHead coluna="vaf_anterior" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF anterior (R$)</ColunaHead>
                     <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
-                    <ColunaHead coluna="data_entrega" ordem={ordem} onSort={ordenarPor}>Entrega</ColunaHead>
+                    
 
                     <TableHead>Situação cadastral</TableHead>
                     <TableHead title="Situação cadastral na Receita Federal (dados abertos do CNPJ)">
@@ -686,9 +721,6 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         <TableCell className="text-right whitespace-nowrap">
                           {formatarPercentual(c.variacao_pct)}
                         </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {formatarData(c.data_entrega)}
-                        </TableCell>
                         <TableCell>
                           <SituacaoCadastralBadge situacao={(c as any).situacao_cadastral} />
                           {(c as any).mes_fim_atividade &&
@@ -701,18 +733,15 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         <TableCell>
                           {(() => {
                             const reg = situacaoReceitaDe(c.cnpj);
+                            const motivo =
+                              typeof reg?.motivo === "string" && reg.motivo.trim()
+                                ? reg.motivo
+                                : null;
                             return (
-                              <>
-                                <SituacaoReceitaBadge
-                                  situacao={reg?.situacao ?? null}
-                                  motivo={reg?.motivo ?? null}
-                                />
-                                {reg?.motivo ? (
-                                  <span className="mt-1 block max-w-48 truncate text-xs text-muted-foreground">
-                                    {reg.motivo}
-                                  </span>
-                                ) : null}
-                              </>
+                              <SituacaoReceitaBadge
+                                situacao={reg?.situacao ?? null}
+                                motivo={motivo}
+                              />
                             );
                           })()}
                         </TableCell>
@@ -728,7 +757,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                   })}
                   {!linhasVisiveis.length && (
                     <TableRow>
-                      <TableCell colSpan={12} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
                         Nenhum contribuinte encontrado com esses filtros.
                       </TableCell>
                     </TableRow>
@@ -747,7 +776,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       <TableCell className="text-right font-medium whitespace-nowrap">
                         {formatarValorGrid(totalVafAnterior)}
                       </TableCell>
-                      <TableCell colSpan={5} />
+                      <TableCell colSpan={4} />
                     </TableRow>
                   </TableFooter>
                 )}
