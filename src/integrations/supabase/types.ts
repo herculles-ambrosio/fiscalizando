@@ -568,6 +568,24 @@ export type Database = {
           },
         ]
       }
+      jobs_lease: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          expira_em: string
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          expira_em: string
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          expira_em?: string
+        }
+        Relationships: []
+      }
       modelos_oficio: {
         Row: {
           ativo: boolean
@@ -761,6 +779,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      receita_fila: {
+        Row: {
+          atualizado_em: string
+          cnpj: string
+          criado_em: string
+          proxima_em: string
+          status: string
+          tentativas: number
+          ultimo_erro: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          cnpj: string
+          criado_em?: string
+          proxima_em?: string
+          status?: string
+          tentativas?: number
+          ultimo_erro?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          cnpj?: string
+          criado_em?: string
+          proxima_em?: string
+          status?: string
+          tentativas?: number
+          ultimo_erro?: string | null
+        }
+        Relationships: []
       }
       situacoes_receita: {
         Row: {

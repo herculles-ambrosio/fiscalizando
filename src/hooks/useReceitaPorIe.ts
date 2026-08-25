@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { toast } from "sonner";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
+import { useFilaReceita } from "@/hooks/useFilaReceita";
 import { limparCnpj, type RegistroReceita } from "@/lib/receita/normalizar";
 import { chaveIeReceita, rotuloSituacao, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 
@@ -32,6 +33,8 @@ export function useReceitaPorIe(
   const cnpjs = useMemo(() => [...new Set(Object.values(cnpjPorIe))], [cnpjPorIe]);
   const { data: situacoes } = useSituacoesReceita(cnpjs);
   const consulta = useConsultarReceita();
+  const fila = useFilaReceita(cnpjs);
+
 
   const registroPorIe = useMemo(() => {
     const mapa: Record<string, RegistroReceita | undefined> = {};
@@ -95,5 +98,22 @@ export function useReceitaPorIe(
     semCnpj,
     consultados,
     pendentes,
+    semResposta: fila.total,
+    reconsultarFalhas: () => {
+      fila.reconsultar(undefined, {
+        onSuccess: (r: {
+          atualizados: number;
+          naoEncontrados: number;
+          falhas: number;
+          restantes: number;
+        }) =>
+          toast.success(
+            `Reconsulta: ${r.atualizados} atualizado(s) · ${r.naoEncontrados} fora das bases · ${r.falhas} ainda sem resposta (na fila automática).`,
+          ),
+        onError: (e: unknown) =>
+          toast.error(e instanceof Error ? e.message : "Falha ao reconsultar a Receita Federal."),
+      });
+    },
+    reconsultando: fila.reconsultando,
   };
 }
