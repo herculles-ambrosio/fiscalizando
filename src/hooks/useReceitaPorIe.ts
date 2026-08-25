@@ -32,6 +32,8 @@ export function useReceitaPorIe(
   const cnpjs = useMemo(() => [...new Set(Object.values(cnpjPorIe))], [cnpjPorIe]);
   const { data: situacoes } = useSituacoesReceita(cnpjs);
   const consulta = useConsultarReceita();
+  const fila = useFilaReceita(cnpjs);
+
 
   const registroPorIe = useMemo(() => {
     const mapa: Record<string, RegistroReceita | undefined> = {};
