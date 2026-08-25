@@ -50,6 +50,8 @@ import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
+import { useFilaReceita } from "@/hooks/useFilaReceita";
+import { BotaoReconsultarFalhas } from "@/components/analises/ReceitaIe";
 import {
   limparCnpj,
   ROTULO_SITUACAO_RECEITA,
@@ -289,6 +291,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   // ---- Situação cadastral na Receita Federal (dados abertos do CNPJ) ----
   const { data: receita } = useSituacoesReceita(linhasPagina.map((c) => c.cnpj));
   const consulta = useConsultarReceita();
+  const fila = useFilaReceita();
 
   const situacaoReceitaDe = (cnpj: string | null) => {
     const chave = limparCnpj(cnpj);
@@ -330,6 +333,22 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     const { data, error } = await q.limit(20000);
     if (error) throw error;
     return (data ?? []).map((d) => d.cnpj);
+  }
+
+  function reconsultarSemResposta() {
+    fila.reconsultar(undefined, {
+      onSuccess: (r) =>
+        toast.success(
+          `Reconsulta: ${r.atualizados} atualizado(s) · ${r.naoEncontrados} fora das bases públicas · ${r.falhas} ainda sem resposta.`,
+          {
+            description: r.falhas
+              ? "Os que continuam sem resposta seguem na fila automática e serão reconsultados sozinhos mais tarde."
+              : undefined,
+          },
+        ),
+      onError: (e) =>
+        toast.error(e instanceof Error ? e.message : "Falha ao reconsultar a Receita Federal."),
+    });
   }
 
   async function consultarReceita(forcar = false) {
@@ -477,6 +496,11 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               ? ` (${selecionados.length} selecionado(s))`
               : ` (${data?.total ?? 0})`}
           </Button>
+          <BotaoReconsultarFalhas
+            total={fila.total}
+            onReconsultar={reconsultarSemResposta}
+            reconsultando={fila.reconsultando}
+          />
           {carga && (
             <OficiosDialog
               cargaId={cargaId}
