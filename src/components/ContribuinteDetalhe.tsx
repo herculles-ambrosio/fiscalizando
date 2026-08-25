@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, RefreshCw } from "lucide-react";
+import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
+import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
+import { limparCnpj } from "@/lib/receita/normalizar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SituacaoBadge } from "@/components/SituacaoBadge";
