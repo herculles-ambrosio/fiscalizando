@@ -448,10 +448,10 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           <Button
             variant="outline"
             size="sm"
-            onClick={() => consultarReceita(selecionados.length ? "selecionados" : "pagina")}
-            disabled={consulta.isPending || !linhasPagina.length}
+            onClick={() => void consultarReceita()}
+            disabled={consulta.isPending || !data?.total}
             aria-label="Consultar situação cadastral na Receita Federal"
-            title="Consulta gratuita nos dados abertos do CNPJ (Receita Federal)"
+            title="Consulta gratuita nos dados abertos do CNPJ (Receita Federal). Sem seleção, consulta todos os contribuintes do filtro atual."
           >
             {consulta.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -459,7 +459,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
             Consultar Receita
-            {selecionados.length ? ` (${selecionados.length})` : " (página)"}
+            {selecionados.length
+              ? ` (${selecionados.length} selecionado(s))`
+              : ` (${data?.total ?? 0})`}
           </Button>
           {carga && (
             <OficiosDialog
