@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
@@ -65,6 +65,23 @@ export function AppLayout({ children }: { children: ReactNode }) {
       navigate({ to: "/trocar-senha", replace: true });
     }
   }, [perfil?.precisa_trocar_senha, pathname, navigate]);
+
+  // Ao trocar a prefeitura ativa, nenhum dado da anterior pode continuar na
+  // tela: limpamos o cache e saímos de telas ligadas a uma apuração específica.
+  const municipioAnterior = useRef<string | null>(null);
+  useEffect(() => {
+    if (!municipioId) return;
+    const anterior = municipioAnterior.current;
+    municipioAnterior.current = municipioId;
+    if (!anterior || anterior === municipioId) return;
+
+    queryClient.removeQueries({
+      predicate: (q) => !["perfil", "municipios"].includes(String(q.queryKey[0])),
+    });
+    if (pathname.startsWith("/cargas/")) {
+      navigate({ to: "/historico", replace: true });
+    }
+  }, [municipioId, pathname, navigate, queryClient]);
 
   const grupos = [
     {
@@ -200,7 +217,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         )}
         <main className="min-w-0 flex-1 px-5 py-7 md:px-9 md:py-10">
-          <Timbrado>{children}</Timbrado>
+          <Timbrado>
+            <div key={municipioId ?? "sem-municipio"} className="contents">
+              {children}
+            </div>
+          </Timbrado>
         </main>
 
 
