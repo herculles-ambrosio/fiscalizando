@@ -47,11 +47,21 @@ import {
 } from "@/lib/vaf/apurar";
 import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 import { toast } from "sonner";
-import { RefreshCw } from "lucide-react";
+import { Columns3, RefreshCw } from "lucide-react";
 import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
 import { useFilaReceita } from "@/hooks/useFilaReceita";
 import { BotaoReconsultarFalhas } from "@/components/analises/ReceitaIe";
+import { usePreferencia } from "@/hooks/usePreferencia";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   limparCnpj,
   ROTULO_SITUACAO_RECEITA,
@@ -71,6 +81,34 @@ const SITUACOES: Situacao[] = [
 ];
 
 const POR_PAGINA = 20;
+
+type ColunaId =
+  | "nome"
+  | "cnpj"
+  | "inscricao_estadual"
+  | "cnae"
+  | "vaf_atual"
+  | "vaf_anterior"
+  | "variacao_pct"
+  | "situacao_cadastral"
+  | "receita_federal"
+  | "situacoes";
+
+const COLUNAS: { id: ColunaId; rotulo: string }[] = [
+  { id: "nome", rotulo: "Contribuinte" },
+  { id: "cnpj", rotulo: "CNPJ" },
+  { id: "inscricao_estadual", rotulo: "IE" },
+  { id: "cnae", rotulo: "CNAE" },
+  { id: "vaf_atual", rotulo: "VAF atual (R$)" },
+  { id: "vaf_anterior", rotulo: "VAF anterior (R$)" },
+  { id: "variacao_pct", rotulo: "Variação" },
+  { id: "situacao_cadastral", rotulo: "Situação cadastral" },
+  { id: "receita_federal", rotulo: "Receita Federal" },
+  { id: "situacoes", rotulo: "Situação" },
+];
+
+const COLUNAS_PADRAO: ColunaId[] = COLUNAS.map((c) => c.id);
+
 
 type Ordem = { coluna: ColunaOrdenavel; asc: boolean };
 
@@ -292,6 +330,21 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const { data: receita } = useSituacoesReceita(linhasPagina.map((c) => c.cnpj));
   const consulta = useConsultarReceita();
   const fila = useFilaReceita();
+  const prefColunas = usePreferencia<ColunaId[]>("contribuintes_grid_colunas", COLUNAS_PADRAO);
+  const colunasVisiveis = prefColunas.valor.filter((id) =>
+    COLUNAS.some((c) => c.id === id),
+  );
+  const visivel = (id: ColunaId) => colunasVisiveis.includes(id);
+  const colunasNaOrdem = COLUNAS.filter((c) => visivel(c.id));
+  const totalColunas = colunasNaOrdem.length + 1;
+
+  function alternarColuna(id: ColunaId, marcado: boolean) {
+    const proximo = marcado
+      ? COLUNAS_PADRAO.filter((c) => c === id || colunasVisiveis.includes(c))
+      : colunasVisiveis.filter((c) => c !== id);
+    if (!proximo.length) return;
+    prefColunas.definir(proximo);
+  }
 
   const situacaoReceitaDe = (cnpj: string | null) => {
     const chave = limparCnpj(cnpj);
@@ -501,6 +554,37 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
             onReconsultar={reconsultarSemResposta}
             reconsultando={fila.reconsultando}
           />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label="Escolher colunas visíveis no grid"
+                title="Escolha quais colunas ver no grid. A escolha fica gravada no seu usuário."
+              >
+                <Columns3 className="mr-2 h-4 w-4" />
+                Colunas ({colunasVisiveis.length}/{COLUNAS.length})
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Colunas do grid</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {COLUNAS.map((c) => (
+                <DropdownMenuCheckboxItem
+                  key={c.id}
+                  checked={visivel(c.id)}
+                  onCheckedChange={(v) => alternarColuna(c.id, v === true)}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  {c.rotulo}
+                </DropdownMenuCheckboxItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => prefColunas.definir(COLUNAS_PADRAO)}>
+                Restaurar todas
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {carga && (
             <OficiosDialog
               cargaId={cargaId}
@@ -686,20 +770,34 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       />
 
                     </TableHead>
-                    <ColunaHead coluna="nome" ordem={ordem} onSort={ordenarPor}>Contribuinte</ColunaHead>
-                    <ColunaHead coluna="cnpj" ordem={ordem} onSort={ordenarPor}>CNPJ</ColunaHead>
-                    <ColunaHead coluna="inscricao_estadual" ordem={ordem} onSort={ordenarPor}>IE</ColunaHead>
-                    <ColunaHead coluna="cnae" ordem={ordem} onSort={ordenarPor}>CNAE</ColunaHead>
-                    <ColunaHead coluna="vaf_atual" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF atual (R$)</ColunaHead>
-                    <ColunaHead coluna="vaf_anterior" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF anterior (R$)</ColunaHead>
-                    <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
-                    
-
-                    <TableHead>Situação cadastral</TableHead>
-                    <TableHead title="Situação cadastral na Receita Federal (dados abertos do CNPJ)">
-                      Receita Federal
-                    </TableHead>
-                    <TableHead>Situação</TableHead>
+                    {visivel("nome") && (
+                      <ColunaHead coluna="nome" ordem={ordem} onSort={ordenarPor}>Contribuinte</ColunaHead>
+                    )}
+                    {visivel("cnpj") && (
+                      <ColunaHead coluna="cnpj" ordem={ordem} onSort={ordenarPor}>CNPJ</ColunaHead>
+                    )}
+                    {visivel("inscricao_estadual") && (
+                      <ColunaHead coluna="inscricao_estadual" ordem={ordem} onSort={ordenarPor}>IE</ColunaHead>
+                    )}
+                    {visivel("cnae") && (
+                      <ColunaHead coluna="cnae" ordem={ordem} onSort={ordenarPor}>CNAE</ColunaHead>
+                    )}
+                    {visivel("vaf_atual") && (
+                      <ColunaHead coluna="vaf_atual" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF atual (R$)</ColunaHead>
+                    )}
+                    {visivel("vaf_anterior") && (
+                      <ColunaHead coluna="vaf_anterior" ordem={ordem} onSort={ordenarPor} alinhar="right">VAF anterior (R$)</ColunaHead>
+                    )}
+                    {visivel("variacao_pct") && (
+                      <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
+                    )}
+                    {visivel("situacao_cadastral") && <TableHead>Situação cadastral</TableHead>}
+                    {visivel("receita_federal") && (
+                      <TableHead title="Situação cadastral na Receita Federal (dados abertos do CNPJ)">
+                        Receita Federal
+                      </TableHead>
+                    )}
+                    {visivel("situacoes") && <TableHead>Situação</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -735,9 +833,16 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         </TableCell>
 
 
-                        <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
-                        <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
-                        <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
+                        {visivel("nome") && (
+                          <TableCell className="max-w-64 truncate font-medium">{c.nome}</TableCell>
+                        )}
+                        {visivel("cnpj") && (
+                          <TableCell className="whitespace-nowrap">{formatarCnpj(c.cnpj)}</TableCell>
+                        )}
+                        {visivel("inscricao_estadual") && (
+                          <TableCell className="whitespace-nowrap">{c.inscricao_estadual}</TableCell>
+                        )}
+                        {visivel("cnae") && (
                         <TableCell className="max-w-56">
                           {c.cnae ? (
                             <span
@@ -750,15 +855,23 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                             "—"
                           )}
                         </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
-                          {formatarValorGrid(c.vaf_atual)}
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
-                          {formatarValorGrid(c.vaf_anterior)}
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
-                          {formatarPercentual(c.variacao_pct)}
-                        </TableCell>
+                        )}
+                        {visivel("vaf_atual") && (
+                          <TableCell className="text-right whitespace-nowrap">
+                            {formatarValorGrid(c.vaf_atual)}
+                          </TableCell>
+                        )}
+                        {visivel("vaf_anterior") && (
+                          <TableCell className="text-right whitespace-nowrap">
+                            {formatarValorGrid(c.vaf_anterior)}
+                          </TableCell>
+                        )}
+                        {visivel("variacao_pct") && (
+                          <TableCell className="text-right whitespace-nowrap">
+                            {formatarPercentual(c.variacao_pct)}
+                          </TableCell>
+                        )}
+                        {visivel("situacao_cadastral") && (
                         <TableCell>
                           <SituacaoCadastralBadge situacao={(c as any).situacao_cadastral} />
                           {(c as any).mes_fim_atividade &&
@@ -768,6 +881,8 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                             </span>
                           ) : null}
                         </TableCell>
+                        )}
+                        {visivel("receita_federal") && (
                         <TableCell>
                           {(() => {
                             const reg = situacaoReceitaDe(c.cnpj);
@@ -783,19 +898,22 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                             );
                           })()}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {(c.situacoes as string[]).map((s) => (
-                              <SituacaoBadge key={s} situacao={s} />
-                            ))}
-                          </div>
-                        </TableCell>
+                        )}
+                        {visivel("situacoes") && (
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {(c.situacoes as string[]).map((s) => (
+                                <SituacaoBadge key={s} situacao={s} />
+                              ))}
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
                   {!linhasVisiveis.length && (
                     <TableRow>
-                      <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={totalColunas} className="py-10 text-center text-muted-foreground">
                         Nenhum contribuinte encontrado com esses filtros.
                       </TableCell>
                     </TableRow>
@@ -804,17 +922,35 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                 {!!linhasVisiveis.length && (
                   <TableFooter>
                     <TableRow>
-                      <TableCell colSpan={5} className="font-medium">
-                        {linhasVisiveis.length} contribuinte(s) nesta página · {data?.total ?? 0} no
-                        total
-                      </TableCell>
-                      <TableCell className="text-right font-medium whitespace-nowrap">
-                        {formatarValorGrid(totalVafAtual)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium whitespace-nowrap">
-                        {formatarValorGrid(totalVafAnterior)}
-                      </TableCell>
-                      <TableCell colSpan={4} />
+                      <TableCell />
+                      {colunasNaOrdem.map((col, i) => {
+                        if (col.id === "vaf_atual")
+                          return (
+                            <TableCell
+                              key={col.id}
+                              className="text-right font-medium whitespace-nowrap"
+                            >
+                              {formatarValorGrid(totalVafAtual)}
+                            </TableCell>
+                          );
+                        if (col.id === "vaf_anterior")
+                          return (
+                            <TableCell
+                              key={col.id}
+                              className="text-right font-medium whitespace-nowrap"
+                            >
+                              {formatarValorGrid(totalVafAnterior)}
+                            </TableCell>
+                          );
+                        if (i === 0)
+                          return (
+                            <TableCell key={col.id} className="font-medium">
+                              {linhasVisiveis.length} contribuinte(s) nesta página ·{" "}
+                              {data?.total ?? 0} no total
+                            </TableCell>
+                          );
+                        return <TableCell key={col.id} />;
+                      })}
                     </TableRow>
                   </TableFooter>
                 )}

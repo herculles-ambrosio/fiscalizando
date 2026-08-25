@@ -780,6 +780,30 @@ export type Database = {
           },
         ]
       }
+      preferencias_usuario: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          criado_em: string
+          usuario_id: string
+          valor: Json
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          criado_em?: string
+          usuario_id: string
+          valor: Json
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          criado_em?: string
+          usuario_id?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
       receita_fila: {
         Row: {
           atualizado_em: string
