@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Loader2, Search, Wand2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Search, Undo2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "@/hooks/usePerfil";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -20,6 +21,13 @@ import {
 } from "@/components/ui/table";
 import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
+import {
+  lerLotesSef,
+  registrarLoteSef,
+  removerLoteSef,
+  type CorrecaoSefLote,
+} from "@/lib/vaf/correcoesSefUndo";
+
 
 export const Route = createFileRoute("/_authenticated/consultoria/codigos-sef")({
   head: () => ({
