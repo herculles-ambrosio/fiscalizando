@@ -370,7 +370,7 @@ function CodigosSef() {
                 })}
                 {linhas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={podeEditar ? 5 : 4} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={podeEditar ? 6 : 4} className="py-10 text-center text-muted-foreground">
                       Nenhum cadastro encontrado.
                     </TableCell>
                   </TableRow>
