@@ -107,6 +107,11 @@ function NovaApuracao() {
   const [salvandoPrefeitura, setSalvandoPrefeitura] = useState(false);
   const [erroPrefeitura, setErroPrefeitura] = useState<string | null>(null);
   const [corrigindoNome, setCorrigindoNome] = useState<string | null>(null);
+  const [nomeDivergenteAceito, setNomeDivergenteAceito] = useState(false);
+
+  useEffect(() => {
+    setNomeDivergenteAceito(false);
+  }, [municipioId]);
 
   const processando = progresso !== null && progresso.percentual < 100;
 
@@ -158,6 +163,9 @@ function NovaApuracao() {
   // Prefeitura ativa com nome diferente do oficial do próprio código SEF.
   const resolucaoAtiva = resolverMunicipioDoArquivo({ codigo: codigoAtivo, municipios });
   const nomeAtivoDivergente = resolucaoAtiva.nomeDivergente && !!municipio;
+  // Bloqueio de gravação: enquanto o nome cadastrado divergir do oficial da SEF-MG,
+  // a carga não pode ser salva até o usuário corrigir ou aceitar explicitamente.
+  const bloqueioNomeOficial = nomeAtivoDivergente && !nomeDivergenteAceito;
 
   async function corrigirNomeCadastro(id: string, nomeOficial: string) {
     setCorrigindoNome(id);
@@ -336,6 +344,13 @@ function NovaApuracao() {
     if (municipioDivergente) {
       setErro(
         `Os arquivos são da prefeitura ${rotuloArquivo} e o município ativo é ${municipio?.nome}. Troque de prefeitura ou cadastre a prefeitura do arquivo antes de processar.`,
+      );
+      return;
+    }
+
+    if (bloqueioNomeOficial) {
+      setErro(
+        `O código SEF ${codigoAtivo} está cadastrado como "${municipio?.nome}", mas o nome oficial da SEF-MG é "${resolucaoAtiva.nomeOficial}". Corrija o cadastro ou escolha manter o nome atual para liberar a gravação da carga.`,
       );
       return;
     }
@@ -664,31 +679,62 @@ function NovaApuracao() {
             )}
 
             {nomeAtivoDivergente && (
-              <Alert>
+              <Alert variant={bloqueioNomeOficial ? "destructive" : "default"}>
                 <Building2 className="h-4 w-4" />
-                <AlertTitle>Nome da prefeitura ativa divergente</AlertTitle>
+                <AlertTitle>
+                  {bloqueioNomeOficial
+                    ? "Código SEF com nome divergente — carga bloqueada"
+                    : "Nome da prefeitura ativa divergente"}
+                </AlertTitle>
                 <AlertDescription className="space-y-2">
                   <p className="text-xs">
                     Cadastro: <strong>{municipio!.nome}</strong> · Nome oficial do código{" "}
-                    {codigoAtivo} na SEF-MG: <strong>{resolucaoAtiva.nomeOficial}</strong>. Corrija
-                    antes de gravar a carga para o relatório sair com o município correto.
+                    {codigoAtivo} na SEF-MG: <strong>{resolucaoAtiva.nomeOficial}</strong>.
+                    {bloqueioNomeOficial
+                      ? " Escolha uma correção abaixo para liberar o processamento da carga."
+                      : " Você optou por manter o nome cadastrado nesta apuração."}
                   </p>
-                  {perfil?.ehSuperadmin && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={corrigindoNome === municipio!.id}
-                      onClick={() =>
-                        corrigirNomeCadastro(municipio!.id, resolucaoAtiva.nomeOficial!)
-                      }
-                    >
-                      {corrigindoNome === municipio!.id && (
-                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                      )}
-                      Corrigir cadastro para {resolucaoAtiva.nomeOficial}
-                    </Button>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {perfil?.ehSuperadmin && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={corrigindoNome === municipio!.id}
+                        onClick={() =>
+                          corrigirNomeCadastro(municipio!.id, resolucaoAtiva.nomeOficial!)
+                        }
+                      >
+                        {corrigindoNome === municipio!.id && (
+                          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        )}
+                        Corrigir cadastro para {resolucaoAtiva.nomeOficial}
+                      </Button>
+                    )}
+                    {perfil?.ehSuperadmin && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => navigate({ to: "/consultoria/codigos-sef" })}
+                      >
+                        Corrigir em lote nos Códigos SEF
+                      </Button>
+                    )}
+                    {bloqueioNomeOficial && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          setNomeDivergenteAceito(true);
+                          setErro(null);
+                        }}
+                      >
+                        Manter nome cadastrado e continuar
+                      </Button>
+                    )}
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
@@ -773,7 +819,12 @@ function NovaApuracao() {
             <Button
               type="submit"
               className="w-full"
-              disabled={processando || municipioDivergente || arquivosDeMunicipiosDiferentes}
+              disabled={
+                processando ||
+                municipioDivergente ||
+                arquivosDeMunicipiosDiferentes ||
+                bloqueioNomeOficial
+              }
             >
               {processando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

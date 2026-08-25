@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -49,6 +50,8 @@ function CodigosSef() {
   const [busca, setBusca] = useState("");
   const [rascunho, setRascunho] = useState<Record<string, { nome: string; codigo: string }>>({});
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [aplicandoLote, setAplicandoLote] = useState(false);
 
   const podeEditar = !!perfil?.ehSuperadmin;
 
@@ -83,8 +86,52 @@ function CodigosSef() {
       );
   }, [data, busca]);
 
-  const divergentes = linhas.filter((l) => l.divergente).length;
+  const linhasDivergentes = linhas.filter((l) => l.divergente);
+  const divergentes = linhasDivergentes.length;
   const semCodigo = linhas.filter((l) => !l.oficial).length;
+
+  const selecionadosVisiveis = linhasDivergentes.filter((l) => selecionados.includes(l.id));
+  const todosSelecionados =
+    linhasDivergentes.length > 0 && selecionadosVisiveis.length === linhasDivergentes.length;
+
+  function alternarSelecao(id: string) {
+    setSelecionados((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  }
+
+  async function aplicarOficialEmLote() {
+    const alvos = linhasDivergentes.filter((l) => selecionados.includes(l.id) && l.oficial);
+    if (alvos.length === 0) {
+      toast.error("Selecione ao menos um cadastro divergente.");
+      return;
+    }
+    setAplicandoLote(true);
+    let sucesso = 0;
+    const falhas: string[] = [];
+    for (const alvo of alvos) {
+      const { error } = await supabase
+        .from("municipios")
+        .update({ nome: alvo.oficial!, codigo_sef: alvo.codigo! })
+        .eq("id", alvo.id);
+      if (error) falhas.push(`${alvo.nome}: ${error.message}`);
+      else sucesso++;
+    }
+    setAplicandoLote(false);
+    setSelecionados([]);
+    setRascunho({});
+    await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+    if (sucesso > 0) {
+      toast.success(
+        `${sucesso} cadastro${sucesso > 1 ? "s" : ""} corrigido${sucesso > 1 ? "s" : ""} com o nome oficial da SEF-MG.`,
+      );
+    }
+    if (falhas.length > 0) {
+      toast.error(`${falhas.length} cadastro(s) não puderam ser corrigidos.`, {
+        description: falhas.slice(0, 3).join(" · "),
+      });
+    }
+  }
 
   async function salvar(linha: (typeof linhas)[number], nome: string, codigoBruto: string) {
     const codigo = normalizarCodigoSef(codigoBruto);
@@ -152,14 +199,43 @@ function CodigosSef() {
         </Card>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar por nome ou código"
-          className="pl-9"
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative max-w-sm flex-1 min-w-56">
+          <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar por nome ou código"
+            className="pl-9"
+          />
+        </div>
+        {podeEditar && divergentes > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setSelecionados(todosSelecionados ? [] : linhasDivergentes.map((l) => l.id))
+              }
+            >
+              {todosSelecionados ? "Limpar seleção" : `Selecionar divergentes (${divergentes})`}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void aplicarOficialEmLote()}
+              disabled={selecionadosVisiveis.length === 0 || aplicandoLote}
+            >
+              {aplicandoLote ? (
+                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Wand2 className="mr-1 h-3.5 w-3.5" />
+              )}
+              Aplicar nome oficial aos selecionados ({selecionadosVisiveis.length})
+            </Button>
+          </div>
+        )}
       </div>
 
       <Card>
@@ -172,6 +248,18 @@ function CodigosSef() {
             <Table className="text-xs">
               <TableHeader>
                 <TableRow>
+                  {podeEditar && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={todosSelecionados}
+                        disabled={linhasDivergentes.length === 0}
+                        onCheckedChange={(v) =>
+                          setSelecionados(v ? linhasDivergentes.map((l) => l.id) : [])
+                        }
+                        aria-label="Selecionar todos os divergentes"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead className="w-28">Código SEF</TableHead>
                   <TableHead>Nome cadastrado</TableHead>
                   <TableHead>Nome oficial (SEF-MG)</TableHead>
@@ -187,6 +275,16 @@ function CodigosSef() {
                   const alterado = nome !== m.nome || codigo !== (m.codigo ?? m.codigo_sef);
                   return (
                     <TableRow key={m.id}>
+                      {podeEditar && (
+                        <TableCell>
+                          <Checkbox
+                            checked={selecionados.includes(m.id)}
+                            disabled={!m.divergente}
+                            onCheckedChange={() => alternarSelecao(m.id)}
+                            aria-label={`Selecionar ${m.nome}`}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell>
                         {podeEditar ? (
                           <Input
@@ -273,7 +371,7 @@ function CodigosSef() {
                 })}
                 {linhas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={podeEditar ? 5 : 4} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={podeEditar ? 6 : 4} className="py-10 text-center text-muted-foreground">
                       Nenhum cadastro encontrado.
                     </TableCell>
                   </TableRow>
