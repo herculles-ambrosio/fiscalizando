@@ -46,6 +46,16 @@ import {
   type SituacaoCadastral,
 } from "@/lib/vaf/apurar";
 import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
+import { toast } from "sonner";
+import { RefreshCw } from "lucide-react";
+import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
+import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
+import {
+  limparCnpj,
+  ROTULO_SITUACAO_RECEITA,
+  SITUACOES_RECEITA,
+  type SituacaoReceita,
+} from "@/lib/receita/normalizar";
 
 const SITUACOES: Situacao[] = [
   "OMISSO",
@@ -124,6 +134,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [selecionandoTodos, setSelecionandoTodos] = useState(false);
   const [detalhe, setDetalhe] = useState<ContribuinteLinha | null>(null);
+  const [receitaFiltro, setReceitaFiltro] = useState<SituacaoReceita | "TODOS" | "NAO_CONSULTADO">(
+    "TODOS",
+  );
 
   const [ordem, setOrdem] = useState<{ coluna: ColunaOrdenavel; asc: boolean }>({
     coluna: "vaf_atual",
@@ -273,6 +286,54 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const todosMarcados =
     linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
 
+  // ---- Situação cadastral na Receita Federal (dados abertos do CNPJ) ----
+  const { data: receita } = useSituacoesReceita(linhasPagina.map((c) => c.cnpj));
+  const consulta = useConsultarReceita();
+
+  const situacaoReceitaDe = (cnpj: string | null) => {
+    const chave = limparCnpj(cnpj);
+    return chave ? (receita?.[chave] ?? null) : null;
+  };
+
+  const linhasVisiveis =
+    receitaFiltro === "TODOS"
+      ? linhasPagina
+      : linhasPagina.filter((c) => {
+          const reg = situacaoReceitaDe(c.cnpj);
+          return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
+        });
+
+  function consultarReceita(escopo: "pagina" | "selecionados", forcar = false) {
+    const alvo =
+      escopo === "selecionados"
+        ? linhasPagina.filter((c) => selecionados.includes(c.id))
+        : linhasPagina;
+    const cnpjs = alvo.map((c) => c.cnpj);
+    if (!cnpjs.some((c) => limparCnpj(c))) {
+      toast.error("Nenhum CNPJ válido no escopo escolhido.");
+      return;
+    }
+    consulta.mutate(
+      { cnpjs, forcar },
+      {
+        onSuccess: (r) =>
+          toast.success(`Receita consultada: ${r.atualizados} atualizado(s).`, {
+            description: [
+              r.cache ? `${r.cache} já estavam em cache` : null,
+              r.falhas.length ? `${r.falhas.length} sem retorno` : null,
+            ]
+              .filter(Boolean)
+              .join(" · "),
+          }),
+        onError: (erro) =>
+          toast.error("Falha ao consultar a Receita Federal.", {
+            description: erro instanceof Error ? erro.message : undefined,
+          }),
+      },
+    );
+  }
+
+
 
   function alternar(id: string, marcado: boolean) {
     setSelecionados((atual) =>
@@ -351,6 +412,22 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               </Button>
             </>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => consultarReceita(selecionados.length ? "selecionados" : "pagina")}
+            disabled={consulta.isPending || !linhasPagina.length}
+            aria-label="Consultar situação cadastral na Receita Federal"
+            title="Consulta gratuita nos dados abertos do CNPJ (Receita Federal)"
+          >
+            {consulta.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            Consultar Receita
+            {selecionados.length ? ` (${selecionados.length})` : " (página)"}
+          </Button>
           {carga && (
             <OficiosDialog
               cargaId={cargaId}
@@ -467,7 +544,28 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           </SelectContent>
         </Select>
 
-
+        <Select
+          value={receitaFiltro}
+          onValueChange={(v) => setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO")}
+        >
+          <SelectTrigger
+            className="h-8 w-64"
+            aria-label="Filtrar por situação na Receita Federal (nesta página)"
+          >
+            <SelectValue placeholder="Situação na Receita" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODOS">Receita: todas</SelectItem>
+            <SelectItem value="NAO_CONSULTADO">
+              {ROTULO_SITUACAO_RECEITA["NAO_CONSULTADO"]}
+            </SelectItem>
+            {SITUACOES_RECEITA.map((sr) => (
+              <SelectItem key={sr} value={sr}>
+                Receita: {ROTULO_SITUACAO_RECEITA[sr]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <form
           className="ml-auto flex gap-2"
@@ -525,11 +623,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     <ColunaHead coluna="data_entrega" ordem={ordem} onSort={ordenarPor}>Entrega</ColunaHead>
 
                     <TableHead>Situação cadastral</TableHead>
+                    <TableHead title="Situação cadastral na Receita Federal (dados abertos do CNPJ)">
+                      Receita Federal
+                    </TableHead>
                     <TableHead>Situação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.linhas.map((c) => {
+                  {linhasVisiveis.map((c) => {
                     
                     const somenteRetorno = (c.situacoes as string[]).includes("SOMENTE_RETORNO");
                     return (
@@ -598,6 +699,24 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                           ) : null}
                         </TableCell>
                         <TableCell>
+                          {(() => {
+                            const reg = situacaoReceitaDe(c.cnpj);
+                            return (
+                              <>
+                                <SituacaoReceitaBadge
+                                  situacao={reg?.situacao ?? null}
+                                  motivo={reg?.motivo ?? null}
+                                />
+                                {reg?.motivo ? (
+                                  <span className="mt-1 block max-w-48 truncate text-xs text-muted-foreground">
+                                    {reg.motivo}
+                                  </span>
+                                ) : null}
+                              </>
+                            );
+                          })()}
+                        </TableCell>
+                        <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {(c.situacoes as string[]).map((s) => (
                               <SituacaoBadge key={s} situacao={s} />
@@ -607,19 +726,20 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       </TableRow>
                     );
                   })}
-                  {!data?.linhas.length && (
+                  {!linhasVisiveis.length && (
                     <TableRow>
-                      <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={12} className="py-10 text-center text-muted-foreground">
                         Nenhum contribuinte encontrado com esses filtros.
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
-                {!!data?.linhas.length && (
+                {!!linhasVisiveis.length && (
                   <TableFooter>
                     <TableRow>
                       <TableCell colSpan={5} className="font-medium">
-                        {data.linhas.length} contribuinte(s) nesta página · {data.total} no total
+                        {linhasVisiveis.length} contribuinte(s) nesta página · {data?.total ?? 0} no
+                        total
                       </TableCell>
                       <TableCell className="text-right font-medium whitespace-nowrap">
                         {formatarValorGrid(totalVafAtual)}
@@ -627,7 +747,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                       <TableCell className="text-right font-medium whitespace-nowrap">
                         {formatarValorGrid(totalVafAnterior)}
                       </TableCell>
-                      <TableCell colSpan={4} />
+                      <TableCell colSpan={5} />
                     </TableRow>
                   </TableFooter>
                 )}
