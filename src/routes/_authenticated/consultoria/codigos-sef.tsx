@@ -297,6 +297,57 @@ function CodigosSef() {
         )}
       </div>
 
+      {podeEditar && lotes.length > 0 && (
+        <Alert>
+          <Undo2 className="h-4 w-4" />
+          <AlertTitle>Correções em lote recentes</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p className="text-xs">
+              Você pode desfazer uma correção em lote e restaurar o nome cadastrado anterior de cada
+              prefeitura.
+            </p>
+            <div className="space-y-2">
+              {lotes.map((lote) => (
+                <div
+                  key={lote.loteId}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2"
+                >
+                  <div className="text-xs">
+                    <p className="font-medium">
+                      {new Date(lote.em).toLocaleString("pt-BR")} ·{" "}
+                      {lote.itens.length} cadastro{lote.itens.length > 1 ? "s" : ""}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {lote.itens
+                        .slice(0, 3)
+                        .map((i) => `${i.codigo} ${i.nomeAnterior} → ${i.nomeAplicado}`)
+                        .join(" · ")}
+                      {lote.itens.length > 3 ? ` · +${lote.itens.length - 3}` : ""}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={desfazendo === lote.loteId}
+                    onClick={() => void desfazerLote(lote)}
+                  >
+                    {desfazendo === lote.loteId ? (
+                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Undo2 className="mr-1 h-3.5 w-3.5" />
+                    )}
+                    Desfazer correção
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+
+
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
