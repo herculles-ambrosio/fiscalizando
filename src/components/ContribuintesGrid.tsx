@@ -37,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarCnpj, formatarData, formatarPercentual, formatarValorGrid } from "@/lib/format";
+import { formatarCnpj, formatarPercentual, formatarValorGrid } from "@/lib/format";
 import {
   ROTULO_SITUACAO,
   ROTULO_SITUACAO_CADASTRAL,
