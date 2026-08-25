@@ -107,6 +107,11 @@ function NovaApuracao() {
   const [salvandoPrefeitura, setSalvandoPrefeitura] = useState(false);
   const [erroPrefeitura, setErroPrefeitura] = useState<string | null>(null);
   const [corrigindoNome, setCorrigindoNome] = useState<string | null>(null);
+  const [nomeDivergenteAceito, setNomeDivergenteAceito] = useState(false);
+
+  useEffect(() => {
+    setNomeDivergenteAceito(false);
+  }, [municipioId]);
 
   const processando = progresso !== null && progresso.percentual < 100;
 
