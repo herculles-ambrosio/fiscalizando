@@ -66,6 +66,23 @@ export function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [perfil?.precisa_trocar_senha, pathname, navigate]);
 
+  // Ao trocar a prefeitura ativa, nenhum dado da anterior pode continuar na
+  // tela: limpamos o cache e saímos de telas ligadas a uma apuração específica.
+  const municipioAnterior = useRef<string | null>(null);
+  useEffect(() => {
+    if (!municipioId) return;
+    const anterior = municipioAnterior.current;
+    municipioAnterior.current = municipioId;
+    if (!anterior || anterior === municipioId) return;
+
+    queryClient.removeQueries({
+      predicate: (q) => !["perfil", "municipios"].includes(String(q.queryKey[0])),
+    });
+    if (pathname.startsWith("/cargas/")) {
+      navigate({ to: "/historico", replace: true });
+    }
+  }, [municipioId, pathname, navigate, queryClient]);
+
   const grupos = [
     {
       rotulo: "Operação",
