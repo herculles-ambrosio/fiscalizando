@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/table";
 import { formatarCnpj, formatarMoeda } from "@/lib/format";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useModelos } from "@/hooks/useModelos";
 import { baixarBlob, gerarZipOficios, nomeZip, type ProgressoOficios } from "@/lib/oficios/pacote";
 import { ROTULO_SITUACAO, type ModeloOficio } from "@/lib/oficios/modelos";
