@@ -93,7 +93,37 @@ export function OficiosDialog({ cargaId, exercicio, selecionados }: Props) {
   const modelo: ModeloOficio | null =
     ativos.find((m) => m.chave === chaveModelo) ?? ativos[0] ?? null;
   const configOk = !!config?.nome_prefeitura && !!config?.cidade_data;
-  const alvo = lista.find((c) => c.id === alvoId) ?? lista[0] ?? null;
+
+  // ---- Situação na Receita Federal: você escolhe para quais emitir ----
+  const { data: receita } = useSituacoesReceita(lista.map((c) => c.cnpj));
+  const consultaReceita = useConsultarReceita();
+  const [permitidas, setPermitidas] = useState<(SituacaoReceita | "NAO_CONSULTADO")[]>([
+    ...SITUACOES_RECEITA,
+    "NAO_CONSULTADO",
+  ]);
+
+  const chaveReceita = (cnpj: string | null): SituacaoReceita | "NAO_CONSULTADO" => {
+    const c = limparCnpj(cnpj);
+    const reg = c ? receita?.[c] : null;
+    return reg?.situacao ?? "NAO_CONSULTADO";
+  };
+
+  const contagemReceita = lista.reduce<Record<string, number>>((acc, c) => {
+    const k = chaveReceita(c.cnpj);
+    acc[k] = (acc[k] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  function filtrarPorReceita<T extends { cnpj: string | null }>(itens: T[]): T[] {
+    return itens.filter((c) => permitidas.includes(chaveReceita(c.cnpj)));
+  }
+
+  const listaFinal = filtrarPorReceita(lista);
+  const encerradasNaLista = SITUACOES_RECEITA_ENCERRADAS.reduce(
+    (s, k) => s + (contagemReceita[k] ?? 0),
+    0,
+  );
+  const alvo = listaFinal.find((c) => c.id === alvoId) ?? listaFinal[0] ?? null;
 
   useEffect(() => {
     if (!previaBlob || !previaRef.current) return;
