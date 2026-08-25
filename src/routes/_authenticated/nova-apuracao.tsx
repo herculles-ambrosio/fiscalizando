@@ -170,7 +170,13 @@ function NovaApuracao() {
   // a carga não pode ser salva até o usuário corrigir ou aceitar explicitamente.
   const bloqueioNomeOficial = nomeAtivoDivergente && !nomeDivergenteAceito;
 
+  // Pré-check automático: todos os códigos SEF cadastrados com nome divergente
+  // do oficial da SEF-MG, com a ação sugerida antes de gravar a carga.
+  const precheck = useMemo(() => divergenciasSef(municipios), [municipios]);
+  const [corrigindoPrecheck, setCorrigindoPrecheck] = useState(false);
+
   async function corrigirNomeCadastro(id: string, nomeOficial: string) {
+    const anterior = municipios.find((m) => m.id === id);
     setCorrigindoNome(id);
     const { error } = await supabase.from("municipios").update({ nome: nomeOficial }).eq("id", id);
     setCorrigindoNome(null);
@@ -178,11 +184,65 @@ function NovaApuracao() {
       toast.error("Não foi possível corrigir o cadastro.", { description: error.message });
       return;
     }
+    if (anterior) {
+      registrarLoteSef([
+        {
+          id,
+          codigoAnterior: anterior.codigo_sef,
+          nomeAnterior: anterior.nome,
+          nomeAplicado: nomeOficial,
+        },
+      ]);
+    }
     toast.success(`Cadastro corrigido para ${nomeOficial}.`);
     await queryClient.invalidateQueries({ queryKey: ["municipios"] });
     await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
     await queryClient.invalidateQueries({ queryKey: ["carteira"] });
   }
+
+  async function corrigirPrecheckTodos() {
+    setCorrigindoPrecheck(true);
+    let sucesso = 0;
+    const falhas: string[] = [];
+    const desfazer: {
+      id: string;
+      codigoAnterior: string;
+      nomeAnterior: string;
+      nomeAplicado: string;
+    }[] = [];
+    for (const d of precheck) {
+      const { error } = await supabase
+        .from("municipios")
+        .update({ nome: d.nomeOficial })
+        .eq("id", d.id);
+      if (error) falhas.push(`${d.nomeCadastrado}: ${error.message}`);
+      else {
+        sucesso++;
+        desfazer.push({
+          id: d.id,
+          codigoAnterior: d.codigo,
+          nomeAnterior: d.nomeCadastrado,
+          nomeAplicado: d.nomeOficial,
+        });
+      }
+    }
+    setCorrigindoPrecheck(false);
+    registrarLoteSef(desfazer);
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
+    await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+    if (sucesso > 0) {
+      toast.success(
+        `${sucesso} código${sucesso > 1 ? "s" : ""} SEF corrigido${sucesso > 1 ? "s" : ""} com o nome oficial. Você pode desfazer em Códigos SEF.`,
+      );
+    }
+    if (falhas.length > 0) {
+      toast.error(`${falhas.length} cadastro(s) não puderam ser corrigidos.`, {
+        description: falhas.slice(0, 3).join(" · "),
+      });
+    }
+  }
+
 
 
   async function criarPrefeitura() {
