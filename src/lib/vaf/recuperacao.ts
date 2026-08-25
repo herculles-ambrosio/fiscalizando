@@ -1,3 +1,4 @@
+import { sufixoReceita, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 import type { ComparacaoDeclarantes, MovimentoDeclarante } from "./evolucao";
 import type { DiagnosticoEvolucao } from "./diagnostico";
 import type { SituacaoOficio } from "@/lib/oficios/modelos";
@@ -286,7 +287,10 @@ export const ROTULO_PRIORIDADE: Record<PrioridadeAcao, string> = {
 };
 
 /** Texto corrido do plano, para copiar, anexar ao CSV ou ao relatório .docx. */
-export function textoPlanoRecuperacao(acoes: AcaoRecuperacao[]): string {
+export function textoPlanoRecuperacao(
+  acoes: AcaoRecuperacao[],
+  situacoesReceita?: MapaReceitaPorIe | null,
+): string {
   const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
   const linhas = [
     "Plano de recuperação do VAF",
@@ -301,7 +305,15 @@ export function textoPlanoRecuperacao(acoes: AcaoRecuperacao[]): string {
     linhas.push(`   Motivo: ${a.motivo}`);
     linhas.push(`   Como fazer: ${a.comoFazer}`);
     linhas.push(`   Prazo: ${a.prazoSugerido}`);
-    if (a.contribuintes.length) linhas.push(`   Contribuintes envolvidos: ${a.contribuintes.length}`);
+    if (a.contribuintes.length) {
+      linhas.push(`   Contribuintes envolvidos: ${a.contribuintes.length}`);
+      for (const c of a.contribuintes.slice(0, 25))
+        linhas.push(
+          `     - ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual})` +
+            sufixoReceita(situacoesReceita, c.inscricao_estadual),
+        );
+      if (a.contribuintes.length > 25) linhas.push("     - …");
+    }
     if (a.ignorados.length)
       linhas.push(
         `   Ignorados por situação cadastral (cancelado/baixado/bloqueado): ${a.ignorados.length}`,

@@ -24,8 +24,13 @@ import {
   textoDiagnostico,
   type FatorVariacao,
 } from "@/lib/vaf/diagnostico";
+import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
+import { BotaoConsultarReceita, ReceitaIeBadge } from "@/components/analises/ReceitaIe";
+import type { RegistroReceita } from "@/lib/receita/normalizar";
 
-function Barra({ fator }: { fator: FatorVariacao }) {
+type ReceitaDe = (ie: string | null | undefined) => RegistroReceita | undefined;
+
+function Barra({ fator, receitaDe }: { fator: FatorVariacao; receitaDe: ReceitaDe }) {
   const [aberto, setAberto] = useState(false);
   const positivo = fator.sentido === "aumentou";
   const Icone = fator.sentido === "neutro" ? Minus : positivo ? ArrowUpRight : ArrowDownRight;
@@ -36,6 +41,8 @@ function Barra({ fator }: { fator: FatorVariacao }) {
       : "text-destructive";
   const fundo = positivo ? "bg-emerald-500/70" : "bg-destructive/70";
   const temDetalhe = fator.itens.length > 0;
+  /** fatores por declarante trazem a IE em `sub` — só neles a situação da Receita faz sentido */
+  const porContribuinte = fator.itens.some((i) => i.sub?.startsWith("IE "));
   const ocultos = Math.max(0, fator.totalItens - fator.itens.length);
 
   return (
@@ -72,6 +79,9 @@ function Barra({ fator }: { fator: FatorVariacao }) {
             <thead className="bg-muted/60">
               <tr className="text-muted-foreground">
                 <th className="px-2 py-1.5 text-left font-medium">Item</th>
+                {porContribuinte && (
+                  <th className="px-2 py-1.5 text-left font-medium">Receita Federal</th>
+                )}
                 <th className="px-2 py-1.5 text-right font-medium">Base</th>
                 <th className="px-2 py-1.5 text-right font-medium">Comparado/estimado</th>
                 <th className="px-2 py-1.5 text-right font-medium">Impacto</th>
@@ -84,6 +94,11 @@ function Barra({ fator }: { fator: FatorVariacao }) {
                     <p className="truncate">{i.rotulo}</p>
                     {i.sub && <p className="font-mono text-[11px] text-muted-foreground">{i.sub}</p>}
                   </td>
+                  {porContribuinte && (
+                    <td className="px-2 py-1.5">
+                      <ReceitaIeBadge registro={receitaDe(i.chave)} />
+                    </td>
+                  )}
                   <td className="px-2 py-1.5 text-right font-mono tabular-nums">
                     {formatarMoeda(i.valorBase)}
                   </td>
@@ -120,6 +135,7 @@ export default function DiagnosticoVariacao({
   rotuloBase,
   rotuloAtual,
   municipio,
+  municipioId,
   exercicio,
 }: {
   base: ArquivoEvolucao;
@@ -127,6 +143,7 @@ export default function DiagnosticoVariacao({
   rotuloBase: string;
   rotuloAtual: string;
   municipio?: string | null;
+  municipioId?: string | null;
   exercicio?: number | null;
 }) {
   const [copiado, setCopiado] = useState(false);
@@ -135,9 +152,26 @@ export default function DiagnosticoVariacao({
   // exercício e município vêm dos seletores da tela — o documento usa exatamente esses filtros
   const exercicioAlvo = exercicio ?? atual.apuracao.anoBase ?? null;
 
+  /** todos os contribuintes citados no diagnóstico (fatores por declarante + tops) */
+  const entradasIe = useMemo(() => {
+    const mapa = new Map<string, { inscricao_estadual: string; cnpj?: string | null }>();
+    for (const c of [...d.topQuedas, ...d.topAltas])
+      mapa.set(c.inscricao_estadual, { inscricao_estadual: c.inscricao_estadual, cnpj: c.cnpj });
+    for (const f of d.fatoresDeclarantes)
+      for (const i of f.itens) {
+        if (!i.sub?.startsWith("IE ") || mapa.has(i.chave)) continue;
+        mapa.set(i.chave, { inscricao_estadual: i.chave });
+      }
+    return [...mapa.values()];
+  }, [d]);
+
+  const receita = useReceitaPorIe(municipioId ?? null, entradasIe);
+
   const copiar = async () => {
     try {
-      await navigator.clipboard.writeText(textoDiagnostico(d, rotuloBase, rotuloAtual));
+      await navigator.clipboard.writeText(
+        textoDiagnostico(d, rotuloBase, rotuloAtual, receita.rotulosPorIe),
+      );
       setCopiado(true);
       toast.success("Análise copiada para a área de transferência.");
       setTimeout(() => setCopiado(false), 2500);
@@ -166,6 +200,7 @@ export default function DiagnosticoVariacao({
         municipio ?? null,
         acoes,
         exercicioAlvo,
+        receita.rotulosPorIe,
       );
       toast.success("Análise baixada em .docx (abre no Word e exporta em PDF).");
     } catch {
@@ -184,7 +219,11 @@ export default function DiagnosticoVariacao({
         d,
         rotuloBase,
         rotuloAtual,
-        { municipio: municipio ?? null, exercicio: exercicioAlvo },
+        {
+          municipio: municipio ?? null,
+          exercicio: exercicioAlvo,
+          situacoesReceita: receita.rotulosPorIe,
+        },
         acoes,
       );
       toast.success("Análise baixada em .pdf com o papel timbrado.");
@@ -210,6 +249,13 @@ export default function DiagnosticoVariacao({
           </p>
         </div>
         <div className="no-print flex flex-wrap gap-2">
+          <BotaoConsultarReceita
+            onConsultar={() => receita.consultar(false)}
+            consultando={receita.consultando}
+            totalCnpjs={receita.totalCnpjs}
+            pendentes={receita.pendentes}
+            semCnpj={receita.semCnpj}
+          />
           <Button size="sm" variant="outline" onClick={copiar}>
             <ClipboardCopy className="h-4 w-4" />
             {copiado ? "Copiado" : "Copiar análise"}
@@ -246,7 +292,9 @@ export default function DiagnosticoVariacao({
             {d.fatoresDeclarantes.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sem movimentação relevante.</p>
             ) : (
-              d.fatoresDeclarantes.map((f) => <Barra key={f.chave} fator={f} />)
+              d.fatoresDeclarantes.map((f) => (
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} />
+              ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
               Soma dos fatores = variação total do valor líquido:{" "}
@@ -260,7 +308,9 @@ export default function DiagnosticoVariacao({
                 Nenhum componente do valor líquido variou.
               </p>
             ) : (
-              d.fatores.map((f) => <Barra key={f.chave} fator={f} />)
+              d.fatores.map((f) => (
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} />
+              ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
               Valor líquido = VAF próprio + crédito externo + crédito interno + crédito próprio −
@@ -287,6 +337,9 @@ export default function DiagnosticoVariacao({
                         IE {c.inscricao_estadual}
                         {c.situacao === "saiu" ? " · deixou de declarar" : ""}
                       </p>
+                      <div className="mt-1">
+                        <ReceitaIeBadge registro={receita.registroDe(c.inscricao_estadual)} />
+                      </div>
                     </div>
                     <span className="shrink-0 font-mono text-sm text-destructive">
                       {formatarMoeda(c.diferenca)}
@@ -313,6 +366,9 @@ export default function DiagnosticoVariacao({
                         IE {c.inscricao_estadual}
                         {c.situacao === "entrou" ? " · novo declarante" : ""}
                       </p>
+                      <div className="mt-1">
+                        <ReceitaIeBadge registro={receita.registroDe(c.inscricao_estadual)} />
+                      </div>
                     </div>
                     <span className="shrink-0 font-mono text-sm text-emerald-600">
                       {formatarMoeda(c.diferenca)}

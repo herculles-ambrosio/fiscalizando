@@ -1,3 +1,4 @@
+import { sufixoReceita, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 import { compararDeclarantes, type ArquivoEvolucao, type MovimentoDeclarante } from "./evolucao";
 
 /**
@@ -322,6 +323,7 @@ export function textoDiagnostico(
   d: DiagnosticoEvolucao,
   baseNome: string,
   atualNome: string,
+  situacoesReceita?: MapaReceitaPorIe | null,
 ): string {
   const linhas = [
     `Análise da variação do VAF — ${baseNome} → ${atualNome}`,
@@ -340,7 +342,9 @@ export function textoDiagnostico(
     linhas.push("", "Maiores quedas por contribuinte:");
     linhas.push(
       ...d.topQuedas.map(
-        (c) => `- ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}`,
+        (c) =>
+          `- ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}` +
+          sufixoReceita(situacoesReceita, c.inscricao_estadual),
       ),
     );
   }
@@ -348,7 +352,9 @@ export function textoDiagnostico(
     linhas.push("", "Maiores altas por contribuinte:");
     linhas.push(
       ...d.topAltas.map(
-        (c) => `- ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): +${moeda(c.diferenca)}`,
+        (c) =>
+          `- ${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): +${moeda(c.diferenca)}` +
+          sufixoReceita(situacoesReceita, c.inscricao_estadual),
       ),
     );
   }

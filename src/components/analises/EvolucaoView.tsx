@@ -1035,6 +1035,7 @@ export default function PaginaEvolucao() {
             rotuloBase={rotuloArquivo(base)}
             rotuloAtual={rotuloArquivo(atual)}
             municipio={municipioRelatorio?.nome ?? null}
+            municipioId={municipioRelatorio?.id ?? null}
             exercicio={exercicioSelecionado}
           />
 

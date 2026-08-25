@@ -1,3 +1,4 @@
+import { sufixoReceita, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 import jsPDF from "jspdf";
 import marcaAsset from "@/assets/timbrado-logo.png.asset.json";
 import marcaDaguaAsset from "@/assets/timbrado-dagua.png.asset.json";
@@ -231,9 +232,14 @@ export async function baixarPdfDiagnostico(
   d: DiagnosticoEvolucao,
   baseNome: string,
   atualNome: string,
-  contexto: { municipio?: string | null; exercicio?: number | null },
+  contexto: {
+    municipio?: string | null;
+    exercicio?: number | null;
+    situacoesReceita?: MapaReceitaPorIe | null;
+  },
   acoes?: AcaoRecuperacao[],
 ): Promise<void> {
+  const situacoesReceita = contexto.situacoesReceita ?? null;
   const blocos: Bloco[] = [
     { tipo: "titulo", texto: "Análise da variação do VAF — Por que variou" },
     { tipo: "texto", texto: `Arquivo base: ${baseNome}` },
@@ -296,7 +302,9 @@ export async function baixarPdfDiagnostico(
     blocos.push({
       tipo: "lista",
       itens: d.topQuedas.map(
-        (c) => `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}`,
+        (c) =>
+          `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}` +
+          sufixoReceita(situacoesReceita, c.inscricao_estadual),
       ),
     });
   }
@@ -305,7 +313,9 @@ export async function baixarPdfDiagnostico(
     blocos.push({
       tipo: "lista",
       itens: d.topAltas.map(
-        (c) => `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}`,
+        (c) =>
+          `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual}): ${moeda(c.diferenca)}` +
+          sufixoReceita(situacoesReceita, c.inscricao_estadual),
       ),
     });
   }
@@ -317,13 +327,16 @@ export async function baixarPdfDiagnostico(
   blocos.push({ tipo: "texto", texto: d.conclusao });
 
   if (acoes?.length) {
-    blocos.push(...blocosPlano(acoes));
+    blocos.push(...blocosPlano(acoes, situacoesReceita));
   }
 
   await gerarPdf(`analise-vaf_${limpo(baseNome)}_x_${limpo(atualNome)}.pdf`, blocos);
 }
 
-function blocosPlano(acoes: AcaoRecuperacao[]): Bloco[] {
+function blocosPlano(
+  acoes: AcaoRecuperacao[],
+  situacoesReceita?: MapaReceitaPorIe | null,
+): Bloco[] {
   const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
   const blocos: Bloco[] = [
     { tipo: "secao", texto: "Plano de recuperação" },
@@ -364,7 +377,11 @@ function blocosPlano(acoes: AcaoRecuperacao[]): Bloco[] {
         tipo: "texto",
         texto: `Contribuintes: ${a.contribuintes
           .slice(0, 30)
-          .map((c) => `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual})`)
+          .map(
+            (c) =>
+              `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual})` +
+              sufixoReceita(situacoesReceita, c.inscricao_estadual),
+          )
           .join("; ")}${a.contribuintes.length > 30 ? " …" : ""}`,
       });
     }
@@ -376,7 +393,12 @@ function blocosPlano(acoes: AcaoRecuperacao[]): Bloco[] {
 /** Plano de recuperação em PDF. */
 export async function baixarPdfPlano(
   acoes: AcaoRecuperacao[],
-  contexto: { municipio?: string | null; exercicio?: number | null; referencia?: string | null },
+  contexto: {
+    municipio?: string | null;
+    exercicio?: number | null;
+    referencia?: string | null;
+    situacoesReceita?: MapaReceitaPorIe | null;
+  },
 ): Promise<void> {
   const blocos: Bloco[] = [
     { tipo: "titulo", texto: "Plano de recuperação do VAF — o que fazer para recuperar" },
@@ -391,7 +413,7 @@ export async function baixarPdfPlano(
       : []),
     { tipo: "texto", texto: `Emitido em: ${new Date().toLocaleString("pt-BR")}` },
     ...(acoes.length
-      ? blocosPlano(acoes)
+      ? blocosPlano(acoes, contexto.situacoesReceita ?? null)
       : ([{ tipo: "texto", texto: "Nenhuma ação sugerida para esta análise." }] as Bloco[])),
   ];
   const sufixo = [contexto.municipio, contexto.exercicio ? String(contexto.exercicio) : null]

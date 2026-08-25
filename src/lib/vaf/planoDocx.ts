@@ -1,3 +1,4 @@
+import { sufixoReceita, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 import {
   AlignmentType,
   BorderStyle,
@@ -91,9 +92,15 @@ function tabelaResumo(acoes: AcaoRecuperacao[]): Table {
 
 export function construirDocPlano(
   acoes: AcaoRecuperacao[],
-  contexto: { municipio?: string | null; exercicio?: number | null; referencia?: string | null },
+  contexto: {
+    municipio?: string | null;
+    exercicio?: number | null;
+    referencia?: string | null;
+    situacoesReceita?: MapaReceitaPorIe | null;
+  },
   imagens?: ImagensTimbrado,
 ): Document {
+  const situacoesReceita = contexto.situacoesReceita ?? null;
   const timbrado: ImagensTimbrado = imagens ?? { marca: null, marcaDagua: null };
   const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
 
@@ -141,7 +148,11 @@ export function construirDocPlano(
       if (a.contribuintes.length) {
         const lista = a.contribuintes
           .slice(0, 30)
-          .map((c) => `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual})`)
+          .map(
+            (c) =>
+              `${c.nome ?? "(sem nome)"} (IE ${c.inscricao_estadual})` +
+              sufixoReceita(situacoesReceita, c.inscricao_estadual),
+          )
           .join("; ");
         filhos.push(
           paragrafo(
@@ -174,7 +185,12 @@ export function construirDocPlano(
 
 export async function baixarDocPlano(
   acoes: AcaoRecuperacao[],
-  contexto: { municipio?: string | null; exercicio?: number | null; referencia?: string | null },
+  contexto: {
+    municipio?: string | null;
+    exercicio?: number | null;
+    referencia?: string | null;
+    situacoesReceita?: MapaReceitaPorIe | null;
+  },
 ): Promise<void> {
   const imagens = await carregarImagensTimbrado();
   const doc = construirDocPlano(acoes, contexto, imagens);
