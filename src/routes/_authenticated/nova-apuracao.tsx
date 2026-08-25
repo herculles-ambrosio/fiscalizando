@@ -141,20 +141,35 @@ function NovaApuracao() {
   const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
   const municipioDivergente =
     !arquivosDeMunicipiosDiferentes && !!codigoArquivo && !!codigoAtivo && codigoArquivo !== codigoAtivo;
-  const municipioCadastrado = codigoArquivo
-    ? (municipios.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ?? null)
-    : null;
   // O nome oficial da tabela SEF-MG vence o nome digitado no cadastro e o do arquivo:
   // cadastros com nome errado não devem mais confundir a identificação da prefeitura.
-  const nomeOficialArquivo = nomeMunicipioSef(codigoArquivo);
-  const nomeArquivo = nomeOficialArquivo ?? municipioArquivo.nome;
-  const rotuloArquivo = nomeArquivo
-    ? `${nomeArquivo} (código ${codigoArquivo})`
-    : `código ${codigoArquivo}`;
-  const nomeCadastroDivergente =
-    !!municipioCadastrado &&
-    !!nomeOficialArquivo &&
-    municipioCadastrado.nome.trim().toLowerCase() !== nomeOficialArquivo.toLowerCase();
+  const resolucaoArquivo = resolverMunicipioDoArquivo({
+    codigo: codigoArquivo,
+    nomeArquivo: municipioArquivo.nome,
+    municipios,
+  });
+  const municipioCadastrado = resolucaoArquivo.cadastrado;
+  const nomeOficialArquivo = resolucaoArquivo.nomeOficial;
+  const nomeArquivo = resolucaoArquivo.nomeExibicao;
+  const rotuloArquivo = resolucaoArquivo.rotulo ?? `código ${codigoArquivo}`;
+  const nomeCadastroDivergente = resolucaoArquivo.nomeDivergente;
+  // Prefeitura ativa com nome diferente do oficial do próprio código SEF.
+  const resolucaoAtiva = resolverMunicipioDoArquivo({ codigo: codigoAtivo, municipios });
+  const nomeAtivoDivergente = resolucaoAtiva.nomeDivergente && !!municipio;
+
+  async function corrigirNomeCadastro(id: string, nomeOficial: string) {
+    setCorrigindoNome(id);
+    const { error } = await supabase.from("municipios").update({ nome: nomeOficial }).eq("id", id);
+    setCorrigindoNome(null);
+    if (error) {
+      toast.error("Não foi possível corrigir o cadastro.", { description: error.message });
+      return;
+    }
+    toast.success(`Cadastro corrigido para ${nomeOficial}.`);
+    await queryClient.invalidateQueries({ queryKey: ["municipios"] });
+    await queryClient.invalidateQueries({ queryKey: ["municipios-sef-admin"] });
+    await queryClient.invalidateQueries({ queryKey: ["carteira"] });
+  }
 
 
   async function criarPrefeitura() {
