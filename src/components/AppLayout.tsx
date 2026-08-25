@@ -7,6 +7,7 @@ import {
   FileSignature,
   PieChart,
   LogOut,
+  MapPin,
   Settings,
   TrendingUp,
   Users,
