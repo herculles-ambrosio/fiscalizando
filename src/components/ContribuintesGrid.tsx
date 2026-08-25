@@ -721,9 +721,6 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         <TableCell className="text-right whitespace-nowrap">
                           {formatarPercentual(c.variacao_pct)}
                         </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {formatarData(c.data_entrega)}
-                        </TableCell>
                         <TableCell>
                           <SituacaoCadastralBadge situacao={(c as any).situacao_cadastral} />
                           {(c as any).mes_fim_atividade &&
@@ -736,18 +733,15 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         <TableCell>
                           {(() => {
                             const reg = situacaoReceitaDe(c.cnpj);
+                            const motivo =
+                              typeof reg?.motivo === "string" && reg.motivo.trim()
+                                ? reg.motivo
+                                : null;
                             return (
-                              <>
-                                <SituacaoReceitaBadge
-                                  situacao={reg?.situacao ?? null}
-                                  motivo={reg?.motivo ?? null}
-                                />
-                                {reg?.motivo ? (
-                                  <span className="mt-1 block max-w-48 truncate text-xs text-muted-foreground">
-                                    {reg.motivo}
-                                  </span>
-                                ) : null}
-                              </>
+                              <SituacaoReceitaBadge
+                                situacao={reg?.situacao ?? null}
+                                motivo={motivo}
+                              />
                             );
                           })()}
                         </TableCell>
