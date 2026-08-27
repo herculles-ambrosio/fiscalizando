@@ -1122,7 +1122,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          Página {pagina + 1} de {totalPaginas}
+          Página {paginaAtual + 1} de {totalPaginas}
         </span>
         <div className="flex gap-2">
           <Button
