@@ -1128,8 +1128,8 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           <Button
             variant="outline"
             size="sm"
-            disabled={pagina === 0}
-            onClick={() => setPagina((p) => p - 1)}
+            disabled={paginaAtual === 0}
+            onClick={() => setPagina(paginaAtual - 1)}
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Anterior
@@ -1137,8 +1137,8 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           <Button
             variant="outline"
             size="sm"
-            disabled={pagina + 1 >= totalPaginas}
-            onClick={() => setPagina((p) => p + 1)}
+            disabled={paginaAtual + 1 >= totalPaginas}
+            onClick={() => setPagina(paginaAtual + 1)}
           >
             Próxima
             <ChevronRight className="ml-1 h-4 w-4" />
