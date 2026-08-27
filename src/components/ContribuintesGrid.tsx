@@ -1106,7 +1106,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                           return (
                             <TableCell key={col.id} className="font-medium">
                               {linhasVisiveis.length} contribuinte(s) nesta página ·{" "}
-                              {data?.total ?? 0} no total
+                              {totalRegistros} no total
                             </TableCell>
                           );
                         return <TableCell key={col.id} />;
