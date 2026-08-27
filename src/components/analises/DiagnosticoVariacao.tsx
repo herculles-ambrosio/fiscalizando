@@ -329,7 +329,7 @@ export default function DiagnosticoVariacao({
               <p className="text-sm text-muted-foreground">Sem movimentação relevante.</p>
             ) : (
               d.fatoresDeclarantes.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} />
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} sel={sel} />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -345,7 +345,7 @@ export default function DiagnosticoVariacao({
               </p>
             ) : (
               d.fatores.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} />
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} sel={sel} />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
