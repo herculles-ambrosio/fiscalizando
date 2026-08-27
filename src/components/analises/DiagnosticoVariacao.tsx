@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ClipboardCopy,
   Download,
-
   Info,
   Lightbulb,
   Minus,
@@ -20,11 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatarMoeda } from "@/lib/format";
 import type { ArquivoEvolucao } from "@/lib/vaf/evolucao";
-import {
-  diagnosticarEvolucao,
-  textoDiagnostico,
-  type FatorVariacao,
-} from "@/lib/vaf/diagnostico";
+import { diagnosticarEvolucao, textoDiagnostico, type FatorVariacao } from "@/lib/vaf/diagnostico";
 import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
 import {
   BarraSelecaoReceita,
@@ -56,16 +51,16 @@ function Barra({
   origemDe: (ie: string | null | undefined) => "cadastro" | "retorno" | null;
   sel: SelecaoIes;
 }) {
-
   const [aberto, setAberto] = useState(false);
   const [ordemData, setOrdemData] = useState<"asc" | "desc" | null>(null);
   const positivo = fator.sentido === "aumentou";
   const Icone = fator.sentido === "neutro" ? Minus : positivo ? ArrowUpRight : ArrowDownRight;
-  const cor = fator.sentido === "neutro"
-    ? "text-muted-foreground"
-    : positivo
-      ? "text-emerald-600"
-      : "text-destructive";
+  const cor =
+    fator.sentido === "neutro"
+      ? "text-muted-foreground"
+      : positivo
+        ? "text-emerald-600"
+        : "text-destructive";
   const fundo = positivo ? "bg-emerald-500/70" : "bg-destructive/70";
   const temDetalhe = fator.itens.length > 0;
   /** fatores por declarante trazem a IE em `sub` — só neles a situação da Receita faz sentido */
@@ -84,7 +79,6 @@ function Barra({
     });
   }, [fator.itens, ordemData, porContribuinte, receitaDe]);
 
-
   return (
     <Collapsible open={aberto} onOpenChange={setAberto} className="space-y-1">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
@@ -98,7 +92,10 @@ function Barra({
         </p>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div className={`h-full rounded-full ${fundo}`} style={{ width: `${Math.min(100, fator.peso)}%` }} />
+        <div
+          className={`h-full rounded-full ${fundo}`}
+          style={{ width: `${Math.min(100, fator.peso)}%` }}
+        />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">{fator.detalhe}</p>
@@ -133,7 +130,9 @@ function Barra({
                       type="button"
                       className="inline-flex items-center gap-1 font-medium hover:text-foreground"
                       title="Ordenar pela data da situação cadastral informada pela Receita Federal"
-                      onClick={() => setOrdemData((o) => (o === "desc" ? "asc" : o === "asc" ? null : "desc"))}
+                      onClick={() =>
+                        setOrdemData((o) => (o === "desc" ? "asc" : o === "asc" ? null : "desc"))
+                      }
                     >
                       Data da situação (RF)
                       <ArrowUpDown className="h-3 w-3" />
@@ -156,7 +155,9 @@ function Barra({
                   )}
                   <td className="px-2 py-1.5">
                     <p className="truncate">{i.rotulo}</p>
-                    {i.sub && <p className="font-mono text-[11px] text-muted-foreground">{i.sub}</p>}
+                    {i.sub && (
+                      <p className="font-mono text-[11px] text-muted-foreground">{i.sub}</p>
+                    )}
                   </td>
                   {porContribuinte && (
                     <td className="px-2 py-1.5">
@@ -193,8 +194,8 @@ function Barra({
 
           {ocultos > 0 && (
             <p className="border-t border-border bg-muted/40 px-2 py-1.5 text-[11px] text-muted-foreground">
-              Exibindo os {fator.itens.length} maiores impactos de {fator.totalItens} itens —
-              outros {ocultos} estão no CSV completo.
+              Exibindo os {fator.itens.length} maiores impactos de {fator.totalItens} itens — outros{" "}
+              {ocultos} estão no CSV completo.
             </p>
           )}
         </div>
@@ -202,7 +203,6 @@ function Barra({
     </Collapsible>
   );
 }
-
 
 export default function DiagnosticoVariacao({
   base,
@@ -346,19 +346,12 @@ export default function DiagnosticoVariacao({
             <Download className="h-4 w-4" />
             {baixando === "docx" ? "Gerando..." : "Baixar análise (.docx)"}
           </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={baixarPdf}
-            disabled={baixando !== null}
-          >
+          <Button size="sm" variant="secondary" onClick={baixarPdf} disabled={baixando !== null}>
             <Download className="h-4 w-4" />
             {baixando === "pdf" ? "Gerando..." : "Baixar análise (.pdf)"}
           </Button>
         </div>
-
       </CardHeader>
-
 
       <CardContent className="space-y-4">
         <ProgressoConsultaReceita progresso={receita.progresso} />
@@ -370,7 +363,6 @@ export default function DiagnosticoVariacao({
           onFecharResumo={receita.limparResumoSelecao}
         />
         <p className="text-sm leading-relaxed">{d.resumo}</p>
-
 
         <Tabs defaultValue="declarantes">
           <TabsList className="flex-wrap">
@@ -384,7 +376,14 @@ export default function DiagnosticoVariacao({
               <p className="text-sm text-muted-foreground">Sem movimentação relevante.</p>
             ) : (
               d.fatoresDeclarantes.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} cnpjDe={receita.cnpjDe} origemDe={receita.origemDe} sel={sel} />
+                <Barra
+                  key={f.chave}
+                  fator={f}
+                  receitaDe={receita.registroDe}
+                  cnpjDe={receita.cnpjDe}
+                  origemDe={receita.origemDe}
+                  sel={sel}
+                />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -400,7 +399,14 @@ export default function DiagnosticoVariacao({
               </p>
             ) : (
               d.fatores.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} cnpjDe={receita.cnpjDe} origemDe={receita.origemDe} sel={sel} />
+                <Barra
+                  key={f.chave}
+                  fator={f}
+                  receitaDe={receita.registroDe}
+                  cnpjDe={receita.cnpjDe}
+                  origemDe={receita.origemDe}
+                  sel={sel}
+                />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -424,7 +430,6 @@ export default function DiagnosticoVariacao({
                   >
                     <CaixaSelecaoIe ie={c.inscricao_estadual} sel={sel} rotulo={c.nome} />
                     <div className="min-w-0">
-
                       <p className="truncate text-sm">{c.nome ?? "(sem nome)"}</p>
                       <p className="font-mono text-xs text-muted-foreground">
                         IE {c.inscricao_estadual}
@@ -460,7 +465,6 @@ export default function DiagnosticoVariacao({
                   >
                     <CaixaSelecaoIe ie={c.inscricao_estadual} sel={sel} rotulo={c.nome} />
                     <div className="min-w-0">
-
                       <p className="truncate text-sm">{c.nome ?? "(sem nome)"}</p>
                       <p className="font-mono text-xs text-muted-foreground">
                         IE {c.inscricao_estadual}
@@ -516,7 +520,11 @@ export default function DiagnosticoVariacao({
           <Badge
             variant="outline"
             className={`font-mono text-xs ${
-              d.sentido === "reduziu" ? "text-destructive" : d.sentido === "aumentou" ? "text-emerald-600" : ""
+              d.sentido === "reduziu"
+                ? "text-destructive"
+                : d.sentido === "aumentou"
+                  ? "text-emerald-600"
+                  : ""
             }`}
           >
             Diferença: {formatarMoeda(d.diferenca)}

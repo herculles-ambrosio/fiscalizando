@@ -27,10 +27,7 @@ import {
   type SelecaoIes,
 } from "@/components/analises/ReceitaIe";
 import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
-import {
-  SITUACOES_RECEITA_ENCERRADAS,
-  type RegistroReceita,
-} from "@/lib/receita/normalizar";
+import { SITUACOES_RECEITA_ENCERRADAS, type RegistroReceita } from "@/lib/receita/normalizar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +78,11 @@ import {
   type MapaSituacoesCadastrais,
 } from "@/lib/vaf/recuperacao";
 import type { DiagnosticoEvolucao } from "@/lib/vaf/diagnostico";
-import { rotuloOrigem, type ComparacaoDeclarantes, type MovimentoDeclarante } from "@/lib/vaf/evolucao";
+import {
+  rotuloOrigem,
+  type ComparacaoDeclarantes,
+  type MovimentoDeclarante,
+} from "@/lib/vaf/evolucao";
 import {
   chaveStatus,
   useAcoesRecuperacao,
@@ -94,7 +95,6 @@ import {
 } from "@/hooks/useAcoesRecuperacao";
 import { useAnexosAcao } from "@/hooks/useAnexosAcao";
 import AnotacoesAcao from "./AnotacoesAcao";
-
 
 const ROTULO_MOTIVO_IGNORADO: Record<string, string> = {
   CANCELADO: "Cancelado",
@@ -162,8 +162,6 @@ export default function PlanoRecuperacao({
   const receita = useReceitaPorIe(municipio?.id ?? null, entradasReceita);
   const sel = useSelecaoIes();
 
-
-
   const motivoDe = (c: { inscricao_estadual: string }) =>
     (situacoesCadastrais?.[chaveIe(c.inscricao_estadual)] || "NAO_INFORMADA").toUpperCase();
 
@@ -187,7 +185,9 @@ export default function PlanoRecuperacao({
       acoes.map((a) => ({
         ...a,
         ignorados:
-          filtroMotivo === "todos" ? a.ignorados : a.ignorados.filter((c) => motivoDe(c) === filtroMotivo),
+          filtroMotivo === "todos"
+            ? a.ignorados
+            : a.ignorados.filter((c) => motivoDe(c) === filtroMotivo),
       })),
     [acoes, filtroMotivo, situacoesCadastrais],
   );
@@ -199,14 +199,14 @@ export default function PlanoRecuperacao({
   }, [acoesFiltradas]);
   const [acaoEmissao, setAcaoEmissao] = useState<AcaoRecuperacao | null>(null);
 
-
   const ref = referencia ?? null;
   const { data: registros } = useAcoesRecuperacao(ref);
   const salvar = useSalvarStatusAcao();
 
   const statusPorChave = useMemo(() => {
     const m = new Map<string, StatusAcao>();
-    for (const r of registros ?? []) m.set(chaveStatus(r.acao_chave, r.inscricao_estadual), r.status);
+    for (const r of registros ?? [])
+      m.set(chaveStatus(r.acao_chave, r.inscricao_estadual), r.status);
     return m;
   }, [registros]);
 
@@ -237,7 +237,6 @@ export default function PlanoRecuperacao({
       onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar."),
     });
   };
-
 
   const totalPotencial = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
   const concluidas = acoes.filter(
@@ -288,15 +287,13 @@ export default function PlanoRecuperacao({
     }
   }
 
-
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="h-4 w-4 text-primary" />
-              O que fazer para recuperar
+              <Target className="h-4 w-4 text-primary" />O que fazer para recuperar
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
               Ações sugeridas a partir dos fatores da variação, ordenadas por prioridade e valor
@@ -349,7 +346,6 @@ export default function PlanoRecuperacao({
               Baixar a Análise (.pdf)
             </Button>
           </div>
-
         </CardHeader>
         <ProgressoConsultaReceita progresso={receita.progresso} />
 
@@ -392,9 +388,7 @@ export default function PlanoRecuperacao({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">
-                    Todos os motivos ({contagemMotivos.total})
-                  </SelectItem>
+                  <SelectItem value="todos">Todos os motivos ({contagemMotivos.total})</SelectItem>
                   {[...contagemMotivos.porMotivo.entries()]
                     .sort((a, b) => b[1].size - a[1].size)
                     .map(([motivo, ies]) => (
@@ -449,7 +443,6 @@ export default function PlanoRecuperacao({
 
           <div className="space-y-3">
             {acoesFiltradas.map((acao, i) => (
-
               <ItemAcao
                 key={acao.chave}
                 acao={acao}
@@ -468,8 +461,6 @@ export default function PlanoRecuperacao({
                 origemDe={receita.origemDe}
                 sel={sel}
               />
-
-
             ))}
           </div>
         </CardContent>
@@ -495,12 +486,12 @@ export default function PlanoRecuperacao({
             ...acao.contribuintes
               .filter((c) => ies.includes(c.inscricao_estadual))
               .map((c) => ({
-              ...base,
-              inscricaoEstadual: c.inscricao_estadual,
-              nomeContribuinte: c.nome,
-              cnpj: c.cnpj,
-              valorRecuperavel: Math.abs(c.diferenca),
-            })),
+                ...base,
+                inscricaoEstadual: c.inscricao_estadual,
+                nomeContribuinte: c.nome,
+                cnpj: c.cnpj,
+                valorRecuperavel: Math.abs(c.diferenca),
+              })),
           ]);
         }}
       />
@@ -574,9 +565,9 @@ function ItemAcao({
   const [ignoradoAberto, setIgnoradoAberto] = useState<MovimentoDeclarante | null>(null);
   const temLista = acao.contribuintes.length > 0;
   const statusAcao = statusPorChave.get(chaveStatus(acao.chave)) ?? "prevista";
-  const contribuinteAnotado =
-    anotando ? acao.contribuintes.find((c) => c.inscricao_estadual === anotando) ?? null : null;
-
+  const contribuinteAnotado = anotando
+    ? (acao.contribuintes.find((c) => c.inscricao_estadual === anotando) ?? null)
+    : null;
 
   const visiveis = (() => {
     const base = acao.contribuintes.slice(0, 25);
@@ -656,7 +647,12 @@ function ItemAcao({
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {acao.situacaoOficio && temLista ? (
-          <Button size="sm" variant="secondary" className="h-7 gap-1 px-2 text-xs" onClick={onEmitir}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-7 gap-1 px-2 text-xs"
+            onClick={onEmitir}
+          >
             <FileText className="h-3.5 w-3.5" />
             Emitir ofícios ({acao.contribuintes.length})
           </Button>
@@ -680,7 +676,6 @@ function ItemAcao({
             ? ` (${anexosPorChave.get(chaveStatus(acao.chave))})`
             : ""}
         </Button>
-
 
         {temLista && (
           <Collapsible open={aberto} onOpenChange={setAberto}>
@@ -735,7 +730,7 @@ function ItemAcao({
                         <p className="font-medium">{c.nome ?? "(sem nome)"}</p>
                         <p className="text-muted-foreground">
                           IE {c.inscricao_estadual}
-                          {cnpjDe(c.inscricao_estadual) ?? c.cnpj
+                          {(cnpjDe(c.inscricao_estadual) ?? c.cnpj)
                             ? ` · ${formatarCnpj((cnpjDe(c.inscricao_estadual) ?? c.cnpj)!)}`
                             : ""}
                         </p>
@@ -802,8 +797,8 @@ function ItemAcao({
               </Table>
               {acao.contribuintes.length > 25 && (
                 <p className="border-t p-2 text-xs text-muted-foreground">
-                  Exibindo os 25 maiores de {acao.contribuintes.length} — a lista completa vai no CSV
-                  da evolução.
+                  Exibindo os 25 maiores de {acao.contribuintes.length} — a lista completa vai no
+                  CSV da evolução.
                 </p>
               )}
             </CollapsibleContent>
@@ -846,8 +841,6 @@ function ItemAcao({
             </div>
           </div>
         )}
-
-
       </div>
 
       <AnotacoesAcao
@@ -875,8 +868,7 @@ function ItemAcao({
                 }
               : { valorRecuperavel: acao.valorRecuperavel }),
             observacao: texto,
-            status:
-              statusPorChave.get(chaveStatus(acao.chave, anotando ?? "")) ?? "prevista",
+            status: statusPorChave.get(chaveStatus(acao.chave, anotando ?? "")) ?? "prevista",
           })
         }
       />
@@ -890,12 +882,11 @@ function ItemAcao({
         referencia={referencia}
         situacaoCadastral={
           ignoradoAberto
-            ? situacoesCadastrais?.[chaveIe(ignoradoAberto.inscricao_estadual)] ?? null
+            ? (situacoesCadastrais?.[chaveIe(ignoradoAberto.inscricao_estadual)] ?? null)
             : null
         }
       />
     </div>
-
   );
 }
 
@@ -919,9 +910,9 @@ function DetalheIgnorado({
 }) {
   const c = contribuinte;
   const motivoRotulo = c
-    ? ROTULO_MOTIVO_IGNORADO[(situacaoCadastral || "NAO_INFORMADA").toUpperCase()] ??
+    ? (ROTULO_MOTIVO_IGNORADO[(situacaoCadastral || "NAO_INFORMADA").toUpperCase()] ??
       situacaoCadastral ??
-      "Não informada"
+      "Não informada")
     : "";
   const origem =
     c?.situacao === "saiu"
@@ -1080,7 +1071,11 @@ function DialogEmissao({
       });
       baixarBlob(blob, nomeZip(modelo.chave, config.cidade_data, exercicioNum));
       toast.success(`${selecionadas.length} ofício(s) gerados.`);
-      onEmitido(acao, exercicioNum, selecionadas.map(({ c }) => c.inscricao_estadual));
+      onEmitido(
+        acao,
+        exercicioNum,
+        selecionadas.map(({ c }) => c.inscricao_estadual),
+      );
       onFechar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar os ofícios.");
@@ -1090,9 +1085,7 @@ function DialogEmissao({
   }
 
   const pct =
-    progresso && progresso.total > 0
-      ? Math.round((progresso.feitos / progresso.total) * 100)
-      : 0;
+    progresso && progresso.total > 0 ? Math.round((progresso.feitos / progresso.total) * 100) : 0;
 
   return (
     <Dialog open={!!acao} onOpenChange={(v) => !v && onFechar()}>

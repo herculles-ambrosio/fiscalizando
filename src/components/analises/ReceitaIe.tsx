@@ -110,9 +110,7 @@ export function BarraSelecaoReceita({
     <div className="no-print space-y-2">
       {sel.marcadas.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
-          <span className="font-medium">
-            {sel.marcadas.length} contribuinte(s) selecionado(s)
-          </span>
+          <span className="font-medium">{sel.marcadas.length} contribuinte(s) selecionado(s)</span>
           <Button
             size="sm"
             className="h-7 gap-1 px-2 text-xs"
@@ -139,8 +137,8 @@ export function BarraSelecaoReceita({
           aria-live="polite"
         >
           <span className="font-medium text-foreground">
-            Reconsulta dos selecionados ({resumo.selecionados} contribuinte(s) ·{" "}
-            {resumo.cnpjs} CNPJ(s)):
+            Reconsulta dos selecionados ({resumo.selecionados} contribuinte(s) · {resumo.cnpjs}{" "}
+            CNPJ(s)):
           </span>
           <span>{resumo.atualizados} atualizado(s)</span>
           <span>{resumo.cache} em cache</span>
@@ -162,7 +160,6 @@ export function BarraSelecaoReceita({
     </div>
   );
 }
-
 
 /** Etiqueta da situação na Receita Federal para uma inscrição estadual. */
 export function ReceitaIeBadge({
@@ -206,7 +203,6 @@ export function ReceitaIeBadge({
   ].filter(Boolean);
   return <SituacaoReceitaBadge situacao={registro.situacao} motivo={detalhes.join(" · ")} />;
 }
-
 
 export function BotaoConsultarReceita({
   onConsultar,
