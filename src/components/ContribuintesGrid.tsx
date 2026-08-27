@@ -261,6 +261,41 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     },
   });
 
+  /**
+   * O filtro de situação na Receita é resolvido no cliente (a situação não está
+   * na tabela). Para valer na apuração inteira — e não só na página — carregamos
+   * todos os contribuintes dos demais filtros quando esse filtro está ativo.
+   */
+  const filtroReceitaAtivo = receitaFiltro !== "TODOS";
+
+  const { data: todasLinhas, isFetching: carregandoTodas } = useQuery({
+    queryKey: ["contribuintes-todos", cargaId, filtro, cnae, cadastral, termo, ordem.coluna, ordem.asc],
+    enabled: filtroReceitaAtivo,
+    placeholderData: keepPreviousData,
+    queryFn: async () => {
+      let q = supabase
+        .from("contribuintes_apurados")
+        .select("*")
+        .eq("carga_id", cargaId)
+        .order(COLUNAS_SERVIDOR.has(ordem.coluna) ? ordem.coluna : "vaf_atual", {
+          ascending: COLUNAS_SERVIDOR.has(ordem.coluna) ? ordem.asc : false,
+          nullsFirst: false,
+        })
+        .order("id", { ascending: true })
+        .limit(20000);
+
+      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+      if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
+      if (termo)
+        q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
+
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
 
   const { data: cnaes } = useQuery({
     queryKey: ["contribuintes-cnaes", cargaId],
