@@ -987,13 +987,15 @@ function DetalheIgnorado({
 function DialogEmissao({
   acao,
   exercicio,
+  receitaDe,
   onFechar,
   onEmitido,
 }: {
   acao: AcaoRecuperacao | null;
   exercicio: number | null;
+  receitaDe: (ie: string | null | undefined) => RegistroReceita | undefined;
   onFechar: () => void;
-  onEmitido: (acao: AcaoRecuperacao, exercicio: number) => void;
+  onEmitido: (acao: AcaoRecuperacao, exercicio: number, ies: string[]) => void;
 }) {
   const { data: config } = useConfiguracao();
   const { data: modelos } = useModelos();
@@ -1001,6 +1003,37 @@ function DialogEmissao({
   const [dataOficio, setDataOficio] = useState(hojeIso());
   const [ano, setAno] = useState<string>(String(exercicio ?? new Date().getFullYear()));
   const [progresso, setProgresso] = useState<ProgressoOficios | null>(null);
+  /** data de referência do movimento: baixas anteriores a ela não recebem ofício */
+  const [dataMovimento, setDataMovimento] = useState<string>(
+    `${exercicio ?? new Date().getFullYear()}-12-31`,
+  );
+  /** IEs desmarcadas manualmente (o restante segue a sugestão automática) */
+  const [manuais, setManuais] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setManuais({});
+    setAno(String(exercicio ?? new Date().getFullYear()));
+    setDataMovimento(`${exercicio ?? new Date().getFullYear()}-12-31`);
+  }, [acao, exercicio]);
+
+  /** baixado/nulo com data da baixa anterior ao movimento → fora do ofício por padrão */
+  const encerradoAntes = (ie: string) => {
+    const reg = receitaDe(ie);
+    if (!reg || !SITUACOES_RECEITA_ENCERRADAS.includes(reg.situacao)) return false;
+    if (!reg.situacao_data) return true;
+    return reg.situacao_data < dataMovimento;
+  };
+
+  const linhasEmissao = (acao?.contribuintes ?? []).map((c) => {
+    const reg = receitaDe(c.inscricao_estadual);
+    const bloqueado = encerradoAntes(c.inscricao_estadual);
+    const marcado = manuais[c.inscricao_estadual] ?? !bloqueado;
+    return { c, reg, bloqueado, marcado };
+  });
+  const selecionadas = linhasEmissao.filter((l) => l.marcado);
+  const encerradosNaLista = linhasEmissao.filter(
+    (l) => l.reg && SITUACOES_RECEITA_ENCERRADAS.includes(l.reg.situacao),
+  ).length;
 
   const ativos = (modelos ?? []).filter((m) => m.ativo);
   const sugeridos = acao?.situacaoOficio
@@ -1018,10 +1051,14 @@ function DialogEmissao({
       toast.error("Informe um exercício válido.");
       return;
     }
+    if (!selecionadas.length) {
+      toast.error("Selecione ao menos um contribuinte para emitir o ofício.");
+      return;
+    }
     try {
-      setProgresso({ fase: "documentos", feitos: 0, total: acao.contribuintes.length });
+      setProgresso({ fase: "documentos", feitos: 0, total: selecionadas.length });
       const blob = await gerarZipOficios({
-        contribuintes: acao.contribuintes.map((c) => ({
+        contribuintes: selecionadas.map(({ c }) => ({
           nome: c.nome,
           cnpj: c.cnpj,
           inscricao_estadual: c.inscricao_estadual,
@@ -1035,8 +1072,8 @@ function DialogEmissao({
         onProgresso: setProgresso,
       });
       baixarBlob(blob, nomeZip(modelo.chave, config.cidade_data, exercicioNum));
-      toast.success(`${acao.contribuintes.length} ofício(s) gerados.`);
-      onEmitido(acao, exercicioNum);
+      toast.success(`${selecionadas.length} ofício(s) gerados.`);
+      onEmitido(acao, exercicioNum, selecionadas.map(({ c }) => c.inscricao_estadual));
       onFechar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar os ofícios.");
@@ -1056,7 +1093,7 @@ function DialogEmissao({
         <DialogHeader>
           <DialogTitle>Emitir ofícios — {acao?.titulo}</DialogTitle>
           <DialogDescription>
-            {acao?.contribuintes.length ?? 0} contribuinte(s) desta ação
+            {selecionadas.length} de {acao?.contribuintes.length ?? 0} contribuinte(s) desta ação
             {acao?.situacaoOficio
               ? ` · situação sugerida: ${ROTULO_SITUACAO[acao.situacaoOficio]}`
               : ""}
