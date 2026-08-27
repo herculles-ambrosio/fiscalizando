@@ -192,7 +192,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [selecionandoTodos, setSelecionandoTodos] = useState(false);
   const [detalhe, setDetalhe] = useState<ContribuinteLinha | null>(null);
-  const [receitaFiltro, setReceitaFiltro] = useState<SituacaoReceita | "TODOS" | "NAO_CONSULTADO">(
+  const [receitaFiltro, setReceitaFiltro] = useState<
+    SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES"
+  >(
     "TODOS",
   );
 
