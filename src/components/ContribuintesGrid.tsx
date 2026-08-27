@@ -1,5 +1,5 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, CheckSquare, ChevronLeft, ChevronRight, ChevronsUpDown, Loader2, Search, X } from "lucide-react";
 import {
   Command,
@@ -191,6 +191,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const [pagina, setPagina] = useState(0);
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [selecionandoTodos, setSelecionandoTodos] = useState(false);
+  const [selecionarPendentes, setSelecionarPendentes] = useState(false);
   const [detalhe, setDetalhe] = useState<ContribuinteLinha | null>(null);
   const [receitaFiltro, setReceitaFiltro] = useState<
     SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES"
@@ -258,6 +259,41 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
       const { data, error, count } = await q;
       if (error) throw error;
       return { linhas: data, total: count ?? 0 };
+    },
+  });
+
+  /**
+   * O filtro de situação na Receita é resolvido no cliente (a situação não está
+   * na tabela). Para valer na apuração inteira — e não só na página — carregamos
+   * todos os contribuintes dos demais filtros quando esse filtro está ativo.
+   */
+  const filtroReceitaAtivo = receitaFiltro !== "TODOS";
+
+  const { data: todasLinhas, isFetching: carregandoTodas } = useQuery({
+    queryKey: ["contribuintes-todos", cargaId, filtro, cnae, cadastral, termo, ordem.coluna, ordem.asc],
+    enabled: filtroReceitaAtivo,
+    placeholderData: keepPreviousData,
+    queryFn: async () => {
+      let q = supabase
+        .from("contribuintes_apurados")
+        .select("*")
+        .eq("carga_id", cargaId)
+        .order(COLUNAS_SERVIDOR.has(ordem.coluna) ? ordem.coluna : "vaf_atual", {
+          ascending: COLUNAS_SERVIDOR.has(ordem.coluna) ? ordem.asc : false,
+          nullsFirst: false,
+        })
+        .order("id", { ascending: true })
+        .limit(20000);
+
+      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+      if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
+      if (termo)
+        q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
+
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -352,15 +388,11 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   });
 
 
-  const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
-  const totalVafAtual = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
-  const totalVafAnterior = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_anterior ?? 0), 0);
-  const linhasPagina = data?.linhas ?? [];
-  const todosMarcados =
-    linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
+  /** Base de trabalho: a página do banco ou a apuração inteira (filtro da Receita ativo). */
+  const linhasBase = filtroReceitaAtivo ? (todasLinhas ?? []) : (data?.linhas ?? []);
 
   // ---- Situação cadastral na Receita Federal (dados abertos do CNPJ) ----
-  const { data: receita } = useSituacoesReceita(linhasPagina.map((c) => c.cnpj));
+  const { data: receita } = useSituacoesReceita(linhasBase.map((c) => c.cnpj));
   const consulta = useConsultarReceita();
   const fila = useFilaReceita();
   const prefColunas = usePreferencia<ColunaId[]>("contribuintes_grid_colunas", COLUNAS_PADRAO);
@@ -392,30 +424,17 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     return !reg || (chave ? semRespostaSet.has(chave) : false);
   };
 
-  const linhasFiltradas =
-    receitaFiltro === "TODOS"
-      ? linhasPagina
-      : receitaFiltro === "PENDENTES"
-        ? linhasPagina.filter(ehPendenteReceita)
-        : linhasPagina.filter((c) => {
-            const reg = situacaoReceitaDe(c.cnpj);
-            return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
-          });
-
-  /** Aplica o filtro de pendentes e já marca esses contribuintes para reconsulta. */
-  function marcarPendentesReceita() {
-    setReceitaFiltro("PENDENTES");
-    const ids = linhasPagina.filter(ehPendenteReceita).map((c) => c.id);
-    if (!ids.length) {
-      toast.info("Nenhum contribuinte pendente na Receita Federal nesta página.");
-      return;
-    }
-    setSelecionados((atual) => [...new Set([...atual, ...ids])]);
-    toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
-  }
+  const linhasFiltradas = !filtroReceitaAtivo
+    ? linhasBase
+    : receitaFiltro === "PENDENTES"
+      ? linhasBase.filter(ehPendenteReceita)
+      : linhasBase.filter((c) => {
+          const reg = situacaoReceitaDe(c.cnpj);
+          return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
+        });
 
   /** A situação da Receita não está na tabela: ordena as linhas já carregadas. */
-  const linhasVisiveis =
+  const linhasOrdenadas =
     ordem.coluna === "receita_federal"
       ? [...linhasFiltradas].sort((a, b) => {
           const ra = situacaoReceitaDe(a.cnpj)?.situacao ?? "";
@@ -424,6 +443,45 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           return ordem.asc ? cmp : -cmp;
         })
       : linhasFiltradas;
+
+  /** Com filtro da Receita ativo a paginação passa a ser feita aqui. */
+  const totalRegistros = filtroReceitaAtivo ? linhasOrdenadas.length : (data?.total ?? 0);
+  const totalPaginas = Math.max(1, Math.ceil(totalRegistros / POR_PAGINA));
+  const paginaAtual = Math.min(pagina, totalPaginas - 1);
+  const linhasVisiveis = filtroReceitaAtivo
+    ? linhasOrdenadas.slice(paginaAtual * POR_PAGINA, paginaAtual * POR_PAGINA + POR_PAGINA)
+    : linhasOrdenadas;
+
+  const totalVafAtual = linhasVisiveis.reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
+  const totalVafAnterior = linhasVisiveis.reduce((s, c) => s + (c.vaf_anterior ?? 0), 0);
+  const linhasPagina = linhasVisiveis;
+  const todosMarcados =
+    linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
+
+  /** Aplica o filtro de pendentes; a seleção acontece quando a lista completa chega. */
+  function marcarPendentesReceita() {
+    setReceitaFiltro("PENDENTES");
+    setPagina(0);
+    setSelecionarPendentes(true);
+  }
+
+  useEffect(() => {
+    if (!selecionarPendentes) return;
+    if (receitaFiltro !== "PENDENTES") return;
+    if (!todasLinhas || carregandoTodas) return;
+    setSelecionarPendentes(false);
+    const ids = linhasFiltradas.map((c) => c.id);
+    if (!ids.length) {
+      toast.info("Nenhum contribuinte pendente na Receita Federal com os filtros atuais.");
+      return;
+    }
+    setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+    toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selecionarPendentes, receitaFiltro, todasLinhas, carregandoTodas, receita]);
+
+
+
 
   /** Monta a lista de CNPJs conforme a seleção; sem seleção, usa TODOS os contribuintes dos filtros atuais. */
   async function cnpjsDoEscopo(): Promise<(string | null)[]> {
@@ -441,6 +499,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
       }
       return cnpjs;
     }
+
+    // Com filtro da Receita ativo, o escopo é exatamente o que está filtrado na tela.
+    if (filtroReceitaAtivo) return linhasOrdenadas.map((c) => c.cnpj);
 
     let q = supabase.from("contribuintes_apurados").select("cnpj").eq("carga_id", cargaId);
     if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
@@ -531,6 +592,12 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   }
 
   async function selecionarTodos() {
+    // Com filtro da Receita ativo, seleciona exatamente o conjunto filtrado na tela.
+    if (filtroReceitaAtivo) {
+      const ids = linhasOrdenadas.map((c) => c.id);
+      setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+      return;
+    }
     setSelecionandoTodos(true);
     try {
       let q = supabase
@@ -568,13 +635,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         <div>
           <h1 className="text-2xl font-semibold">{titulo ?? "Contribuintes apurados"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {data ? `${data.total} registros encontrados` : "Carregando…"}
+            {data ? `${totalRegistros} registros encontrados` : "Carregando…"}
+            {filtroReceitaAtivo && data ? ` (filtro da Receita · ${data.total} sem esse filtro)` : ""}
             {selecionados.length ? ` · ${selecionados.length} selecionado(s)` : ""}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <AtualizarRegimes cargaId={cargaId} />
-          {data && data.total > 0 && (
+          {totalRegistros > 0 && (
             <>
               <Button
                 variant="outline"
@@ -606,7 +674,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
             variant="outline"
             size="sm"
             onClick={() => void consultarReceita()}
-            disabled={consulta.isPending || !data?.total}
+            disabled={consulta.isPending || !totalRegistros}
             aria-label="Consultar situação cadastral na Receita Federal"
             title="Consulta gratuita nos dados abertos do CNPJ (Receita Federal). Sem seleção, consulta todos os contribuintes do filtro atual."
           >
@@ -618,14 +686,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
             Consultar Receita
             {selecionados.length
               ? ` (${selecionados.length} selecionado(s))`
-              : ` (${data?.total ?? 0})`}
+              : ` (${totalRegistros})`}
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={marcarPendentesReceita}
             aria-label="Filtrar e selecionar contribuintes pendentes na Receita Federal"
-            title="Mostra apenas os contribuintes sem consulta ou sem resposta da Receita Federal nesta página e já os seleciona."
+            title="Mostra apenas os contribuintes sem consulta ou sem resposta da Receita Federal em toda a apuração e já os seleciona."
           >
             <CheckSquare className="mr-2 h-4 w-4" />
             Pendentes na Receita
@@ -784,13 +852,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
         <Select
           value={receitaFiltro}
-          onValueChange={(v) =>
-            setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES")
-          }
+          onValueChange={(v) => {
+            setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES");
+            setPagina(0);
+          }}
         >
           <SelectTrigger
             className="h-8 w-64"
-            aria-label="Filtrar por situação na Receita Federal (nesta página)"
+            aria-label="Filtrar por situação na Receita Federal (toda a apuração)"
           >
             <SelectValue placeholder="Situação na Receita" />
           </SelectTrigger>
@@ -830,7 +899,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
       <Card>
         <CardContent className="p-0">
-          {isFetching && !data ? (
+          {(isFetching && !data) || (filtroReceitaAtivo && carregandoTodas && !todasLinhas) ? (
             <div className="flex h-40 items-center justify-center text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
@@ -1038,7 +1107,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                           return (
                             <TableCell key={col.id} className="font-medium">
                               {linhasVisiveis.length} contribuinte(s) nesta página ·{" "}
-                              {data?.total ?? 0} no total
+                              {totalRegistros} no total
                             </TableCell>
                           );
                         return <TableCell key={col.id} />;
@@ -1054,14 +1123,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          Página {pagina + 1} de {totalPaginas}
+          Página {paginaAtual + 1} de {totalPaginas}
         </span>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            disabled={pagina === 0}
-            onClick={() => setPagina((p) => p - 1)}
+            disabled={paginaAtual === 0}
+            onClick={() => setPagina(paginaAtual - 1)}
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Anterior
@@ -1069,8 +1138,8 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           <Button
             variant="outline"
             size="sm"
-            disabled={pagina + 1 >= totalPaginas}
-            onClick={() => setPagina((p) => p + 1)}
+            disabled={paginaAtual + 1 >= totalPaginas}
+            onClick={() => setPagina(paginaAtual + 1)}
           >
             Próxima
             <ChevronRight className="ml-1 h-4 w-4" />
