@@ -396,7 +396,9 @@ export default function DiagnosticoVariacao({
                     key={`a-${c.inscricao_estadual}`}
                     className="flex items-center justify-between gap-3 rounded-md border border-border p-2"
                   >
+                    <CaixaSelecaoIe ie={c.inscricao_estadual} sel={sel} rotulo={c.nome} />
                     <div className="min-w-0">
+
                       <p className="truncate text-sm">{c.nome ?? "(sem nome)"}</p>
                       <p className="font-mono text-xs text-muted-foreground">
                         IE {c.inscricao_estadual}
