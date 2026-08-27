@@ -7,6 +7,7 @@ import {
   Download,
   FileText,
   Loader2,
+  ArrowUpDown,
   Paperclip,
   Target,
 } from "lucide-react";
@@ -19,6 +20,8 @@ import {
   BotaoReconsultarFalhas,
   CaixaSelecaoIe,
   CaixaSelecaoTodas,
+  chaveDataSituacao,
+  DataSituacaoRf,
   ReceitaIeBadge,
   useSelecaoIes,
   type SelecaoIes,
@@ -557,6 +560,8 @@ function ItemAcao({
   sel: SelecaoIes;
 }) {
   const [aberto, setAberto] = useState(false);
+  /** ordenação opcional da lista pela data da situação na Receita Federal */
+  const [ordemData, setOrdemData] = useState<"asc" | "desc" | null>(null);
   /** null = fechado; "" = anotação da ação; IE = anotação do contribuinte */
   const [anotando, setAnotando] = useState<string | null>(null);
   const [ignoradoAberto, setIgnoradoAberto] = useState<MovimentoDeclarante | null>(null);
@@ -565,6 +570,20 @@ function ItemAcao({
   const contribuinteAnotado =
     anotando ? acao.contribuintes.find((c) => c.inscricao_estadual === anotando) ?? null : null;
 
+
+  const visiveis = (() => {
+    const base = acao.contribuintes.slice(0, 25);
+    if (!ordemData) return base;
+    const sinal = ordemData === "asc" ? 1 : -1;
+    return [...base].sort((a, b) => {
+      const da = chaveDataSituacao(receitaDe(a.inscricao_estadual));
+      const db = chaveDataSituacao(receitaDe(b.inscricao_estadual));
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return sinal * da.localeCompare(db);
+    });
+  })();
 
   const baseEntrada = {
     referencia: referencia ?? "",
@@ -672,12 +691,26 @@ function ItemAcao({
                   <TableRow>
                     <TableHead className="w-8">
                       <CaixaSelecaoTodas
-                        ies={acao.contribuintes.slice(0, 25).map((c) => c.inscricao_estadual)}
+                        ies={visiveis.map((c) => c.inscricao_estadual)}
                         sel={sel}
                       />
                     </TableHead>
                     <TableHead>Contribuinte</TableHead>
                     <TableHead>Receita Federal</TableHead>
+                    <TableHead>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 font-medium hover:text-foreground"
+                        title="Ordenar pela data da situação cadastral informada pela Receita Federal"
+                        onClick={() =>
+                          setOrdemData((o) => (o === "desc" ? "asc" : o === "asc" ? null : "desc"))
+                        }
+                      >
+                        Data da situação (RF)
+                        <ArrowUpDown className="h-3 w-3" />
+                        {ordemData ? (ordemData === "asc" ? "↑" : "↓") : ""}
+                      </button>
+                    </TableHead>
                     <TableHead className="text-right">VAF base</TableHead>
                     <TableHead className="text-right">Comparado/estimado</TableHead>
                     <TableHead className="text-right">Impacto</TableHead>
@@ -686,7 +719,7 @@ function ItemAcao({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {acao.contribuintes.slice(0, 25).map((c) => (
+                  {visiveis.map((c) => (
                     <TableRow key={c.inscricao_estadual}>
                       <TableCell>
                         <CaixaSelecaoIe ie={c.inscricao_estadual} sel={sel} rotulo={c.nome} />
@@ -711,6 +744,9 @@ function ItemAcao({
                           cnpj={cnpjDe(c.inscricao_estadual) ?? c.cnpj}
                           origem={origemDe(c.inscricao_estadual)}
                         />
+                      </TableCell>
+                      <TableCell>
+                        <DataSituacaoRf registro={receitaDe(c.inscricao_estadual)} />
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
                         {formatarMoeda(c.vafBase)}
