@@ -457,40 +457,28 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const todosMarcados =
     linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
 
-  /** Aplica o filtro de pendentes e já marca esses contribuintes para reconsulta. */
-  async function marcarPendentesReceita() {
+  /** Aplica o filtro de pendentes; a seleção acontece quando a lista completa chega. */
+  function marcarPendentesReceita() {
     setReceitaFiltro("PENDENTES");
     setPagina(0);
+    setSelecionarPendentes(true);
+  }
 
-    // Sem o filtro ativo ainda não temos a lista completa carregada: busca agora.
-    let base = linhasBase as { id: string; cnpj: string | null }[];
-    if (!filtroReceitaAtivo) {
-      let q = supabase
-        .from("contribuintes_apurados")
-        .select("id, cnpj")
-        .eq("carga_id", cargaId)
-        .limit(20000);
-      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
-      if (cnae !== "TODOS") q = q.eq("cnae", cnae);
-      if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
-      if (termo)
-        q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
-      const { data: todos, error } = await q;
-      if (error) {
-        toast.error("Não foi possível carregar os contribuintes para marcar os pendentes.");
-        return;
-      }
-      base = todos ?? [];
-    }
-
-    const ids = base.filter(ehPendenteReceita).map((c) => c.id);
+  useEffect(() => {
+    if (!selecionarPendentes) return;
+    if (receitaFiltro !== "PENDENTES") return;
+    if (!todasLinhas || carregandoTodas) return;
+    setSelecionarPendentes(false);
+    const ids = linhasFiltradas.map((c) => c.id);
     if (!ids.length) {
       toast.info("Nenhum contribuinte pendente na Receita Federal com os filtros atuais.");
       return;
     }
     setSelecionados((atual) => [...new Set([...atual, ...ids])]);
     toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selecionarPendentes, receitaFiltro, todasLinhas, carregandoTodas, receita]);
+
 
 
 
