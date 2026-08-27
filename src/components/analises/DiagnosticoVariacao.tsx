@@ -97,6 +97,11 @@ function Barra({
           <table className="w-full text-xs">
             <thead className="bg-muted/60">
               <tr className="text-muted-foreground">
+                {porContribuinte && (
+                  <th className="w-8 px-2 py-1.5 text-left font-medium">
+                    <CaixaSelecaoTodas ies={fator.itens.map((i) => i.chave)} sel={sel} />
+                  </th>
+                )}
                 <th className="px-2 py-1.5 text-left font-medium">Item</th>
                 {porContribuinte && (
                   <th className="px-2 py-1.5 text-left font-medium">Receita Federal</th>
@@ -109,6 +114,11 @@ function Barra({
             <tbody>
               {fator.itens.map((i) => (
                 <tr key={i.chave} className="border-t border-border">
+                  {porContribuinte && (
+                    <td className="px-2 py-1.5">
+                      <CaixaSelecaoIe ie={i.chave} sel={sel} rotulo={i.rotulo} />
+                    </td>
+                  )}
                   <td className="px-2 py-1.5">
                     <p className="truncate">{i.rotulo}</p>
                     {i.sub && <p className="font-mono text-[11px] text-muted-foreground">{i.sub}</p>}
@@ -118,6 +128,7 @@ function Barra({
                       <ReceitaIeBadge registro={receitaDe(i.chave)} />
                     </td>
                   )}
+
                   <td className="px-2 py-1.5 text-right font-mono tabular-nums">
                     {formatarMoeda(i.valorBase)}
                   </td>
