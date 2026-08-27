@@ -153,6 +153,8 @@ export default function PlanoRecuperacao({
     return [...mapa.values()];
   }, [acoes]);
   const receita = useReceitaPorIe(municipio?.id ?? null, entradasReceita);
+  const sel = useSelecaoIes();
+
 
 
   const motivoDe = (c: { inscricao_estadual: string }) =>
