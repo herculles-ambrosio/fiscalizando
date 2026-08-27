@@ -45,6 +45,29 @@ export function limparCnpj(valor: string | null | undefined): string | null {
   return digitos.length === 14 ? digitos : null;
 }
 
+/** Valida os dígitos verificadores; arquivos de retorno trazem CNPJs inexistentes. */
+export function cnpjValido(valor: string | null | undefined): boolean {
+  const c = limparCnpj(valor);
+  if (!c || /^(\d)\1{13}$/.test(c)) return false;
+  const calc = (tamanho: number) => {
+    let soma = 0;
+    let peso = tamanho - 7;
+    for (let i = 0; i < tamanho; i++) {
+      soma += Number(c[i]) * peso;
+      peso = peso - 1 < 2 ? 9 : peso - 1;
+    }
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  return calc(12) === Number(c[12]) && calc(13) === Number(c[13]);
+}
+
+/** CNPJ limpo apenas quando válido. */
+export function cnpjUtil(valor: string | null | undefined): string | null {
+  return cnpjValido(valor) ? limparCnpj(valor) : null;
+}
+
+
 const MAPA: Record<string, SituacaoReceita> = {
   "1": "NULA",
   "2": "ATIVA",
