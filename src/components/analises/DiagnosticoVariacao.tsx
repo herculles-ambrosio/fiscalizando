@@ -55,6 +55,7 @@ function Barra({
 }) {
 
   const [aberto, setAberto] = useState(false);
+  const [ordemData, setOrdemData] = useState<"asc" | "desc" | null>(null);
   const positivo = fator.sentido === "aumentou";
   const Icone = fator.sentido === "neutro" ? Minus : positivo ? ArrowUpRight : ArrowDownRight;
   const cor = fator.sentido === "neutro"
@@ -67,6 +68,19 @@ function Barra({
   /** fatores por declarante trazem a IE em `sub` — só neles a situação da Receita faz sentido */
   const porContribuinte = fator.itens.some((i) => i.sub?.startsWith("IE "));
   const ocultos = Math.max(0, fator.totalItens - fator.itens.length);
+  const itens = useMemo(() => {
+    if (!ordemData || !porContribuinte) return fator.itens;
+    const sinal = ordemData === "asc" ? 1 : -1;
+    return [...fator.itens].sort((a, b) => {
+      const da = chaveDataSituacao(receitaDe(a.chave));
+      const db = chaveDataSituacao(receitaDe(b.chave));
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return sinal * da.localeCompare(db);
+    });
+  }, [fator.itens, ordemData, porContribuinte, receitaDe]);
+
 
   return (
     <Collapsible open={aberto} onOpenChange={setAberto} className="space-y-1">
