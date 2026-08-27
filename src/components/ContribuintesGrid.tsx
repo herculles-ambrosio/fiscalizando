@@ -458,10 +458,32 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
 
   /** Aplica o filtro de pendentes e já marca esses contribuintes para reconsulta. */
-  function marcarPendentesReceita() {
+  async function marcarPendentesReceita() {
     setReceitaFiltro("PENDENTES");
     setPagina(0);
-    const ids = linhasBase.filter(ehPendenteReceita).map((c) => c.id);
+
+    // Sem o filtro ativo ainda não temos a lista completa carregada: busca agora.
+    let base = linhasBase as { id: string; cnpj: string | null }[];
+    if (!filtroReceitaAtivo) {
+      let q = supabase
+        .from("contribuintes_apurados")
+        .select("id, cnpj")
+        .eq("carga_id", cargaId)
+        .limit(20000);
+      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (cnae !== "TODOS") q = q.eq("cnae", cnae);
+      if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
+      if (termo)
+        q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
+      const { data: todos, error } = await q;
+      if (error) {
+        toast.error("Não foi possível carregar os contribuintes para marcar os pendentes.");
+        return;
+      }
+      base = todos ?? [];
+    }
+
+    const ids = base.filter(ehPendenteReceita).map((c) => c.id);
     if (!ids.length) {
       toast.info("Nenhum contribuinte pendente na Receita Federal com os filtros atuais.");
       return;
@@ -469,6 +491,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     setSelecionados((atual) => [...new Set([...atual, ...ids])]);
     toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
   }
+
 
 
   /** Monta a lista de CNPJs conforme a seleção; sem seleção, usa TODOS os contribuintes dos filtros atuais. */
