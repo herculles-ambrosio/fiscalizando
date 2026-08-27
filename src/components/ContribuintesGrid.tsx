@@ -858,7 +858,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         >
           <SelectTrigger
             className="h-8 w-64"
-            aria-label="Filtrar por situação na Receita Federal (nesta página)"
+            aria-label="Filtrar por situação na Receita Federal (toda a apuração)"
           >
             <SelectValue placeholder="Situação na Receita" />
           </SelectTrigger>
