@@ -774,7 +774,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
         <Select
           value={receitaFiltro}
-          onValueChange={(v) => setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO")}
+          onValueChange={(v) =>
+            setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES")
+          }
         >
           <SelectTrigger
             className="h-8 w-64"
@@ -784,6 +786,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="TODOS">Receita: todas</SelectItem>
+            <SelectItem value="PENDENTES">Receita: pendentes (não consultado + falha)</SelectItem>
             <SelectItem value="NAO_CONSULTADO">
               {ROTULO_SITUACAO_RECEITA["NAO_CONSULTADO"]}
             </SelectItem>
