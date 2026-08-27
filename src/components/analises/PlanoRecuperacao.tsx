@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -7,6 +7,7 @@ import {
   Download,
   FileText,
   Loader2,
+  ArrowUpDown,
   Paperclip,
   Target,
 } from "lucide-react";
@@ -19,12 +20,14 @@ import {
   BotaoReconsultarFalhas,
   CaixaSelecaoIe,
   CaixaSelecaoTodas,
+  chaveDataSituacao,
+  DataSituacaoRf,
   ReceitaIeBadge,
   useSelecaoIes,
   type SelecaoIes,
 } from "@/components/analises/ReceitaIe";
 import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
-import type { RegistroReceita } from "@/lib/receita/normalizar";
+import { SITUACOES_RECEITA_ENCERRADAS, type RegistroReceita } from "@/lib/receita/normalizar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -74,7 +78,11 @@ import {
   type MapaSituacoesCadastrais,
 } from "@/lib/vaf/recuperacao";
 import type { DiagnosticoEvolucao } from "@/lib/vaf/diagnostico";
-import { rotuloOrigem, type ComparacaoDeclarantes, type MovimentoDeclarante } from "@/lib/vaf/evolucao";
+import {
+  rotuloOrigem,
+  type ComparacaoDeclarantes,
+  type MovimentoDeclarante,
+} from "@/lib/vaf/evolucao";
 import {
   chaveStatus,
   useAcoesRecuperacao,
@@ -87,7 +95,6 @@ import {
 } from "@/hooks/useAcoesRecuperacao";
 import { useAnexosAcao } from "@/hooks/useAnexosAcao";
 import AnotacoesAcao from "./AnotacoesAcao";
-
 
 const ROTULO_MOTIVO_IGNORADO: Record<string, string> = {
   CANCELADO: "Cancelado",
@@ -155,8 +162,6 @@ export default function PlanoRecuperacao({
   const receita = useReceitaPorIe(municipio?.id ?? null, entradasReceita);
   const sel = useSelecaoIes();
 
-
-
   const motivoDe = (c: { inscricao_estadual: string }) =>
     (situacoesCadastrais?.[chaveIe(c.inscricao_estadual)] || "NAO_INFORMADA").toUpperCase();
 
@@ -180,7 +185,9 @@ export default function PlanoRecuperacao({
       acoes.map((a) => ({
         ...a,
         ignorados:
-          filtroMotivo === "todos" ? a.ignorados : a.ignorados.filter((c) => motivoDe(c) === filtroMotivo),
+          filtroMotivo === "todos"
+            ? a.ignorados
+            : a.ignorados.filter((c) => motivoDe(c) === filtroMotivo),
       })),
     [acoes, filtroMotivo, situacoesCadastrais],
   );
@@ -192,14 +199,14 @@ export default function PlanoRecuperacao({
   }, [acoesFiltradas]);
   const [acaoEmissao, setAcaoEmissao] = useState<AcaoRecuperacao | null>(null);
 
-
   const ref = referencia ?? null;
   const { data: registros } = useAcoesRecuperacao(ref);
   const salvar = useSalvarStatusAcao();
 
   const statusPorChave = useMemo(() => {
     const m = new Map<string, StatusAcao>();
-    for (const r of registros ?? []) m.set(chaveStatus(r.acao_chave, r.inscricao_estadual), r.status);
+    for (const r of registros ?? [])
+      m.set(chaveStatus(r.acao_chave, r.inscricao_estadual), r.status);
     return m;
   }, [registros]);
 
@@ -230,7 +237,6 @@ export default function PlanoRecuperacao({
       onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar."),
     });
   };
-
 
   const totalPotencial = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
   const concluidas = acoes.filter(
@@ -281,15 +287,13 @@ export default function PlanoRecuperacao({
     }
   }
 
-
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="h-4 w-4 text-primary" />
-              O que fazer para recuperar
+              <Target className="h-4 w-4 text-primary" />O que fazer para recuperar
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">
               Ações sugeridas a partir dos fatores da variação, ordenadas por prioridade e valor
@@ -342,7 +346,6 @@ export default function PlanoRecuperacao({
               Baixar a Análise (.pdf)
             </Button>
           </div>
-
         </CardHeader>
         <ProgressoConsultaReceita progresso={receita.progresso} />
 
@@ -385,9 +388,7 @@ export default function PlanoRecuperacao({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">
-                    Todos os motivos ({contagemMotivos.total})
-                  </SelectItem>
+                  <SelectItem value="todos">Todos os motivos ({contagemMotivos.total})</SelectItem>
                   {[...contagemMotivos.porMotivo.entries()]
                     .sort((a, b) => b[1].size - a[1].size)
                     .map(([motivo, ies]) => (
@@ -442,7 +443,6 @@ export default function PlanoRecuperacao({
 
           <div className="space-y-3">
             {acoesFiltradas.map((acao, i) => (
-
               <ItemAcao
                 key={acao.chave}
                 acao={acao}
@@ -461,8 +461,6 @@ export default function PlanoRecuperacao({
                 origemDe={receita.origemDe}
                 sel={sel}
               />
-
-
             ))}
           </div>
         </CardContent>
@@ -471,8 +469,9 @@ export default function PlanoRecuperacao({
       <DialogEmissao
         acao={acaoEmissao}
         exercicio={exercicio ?? null}
+        receitaDe={receita.registroDe}
         onFechar={() => setAcaoEmissao(null)}
-        onEmitido={(acao, exercicioNum) => {
+        onEmitido={(acao, exercicioNum, ies) => {
           if (!ref) return;
           const base = {
             referencia: ref,
@@ -484,13 +483,15 @@ export default function PlanoRecuperacao({
           };
           salvarStatus([
             { ...base, valorRecuperavel: acao.valorRecuperavel },
-            ...acao.contribuintes.map((c) => ({
-              ...base,
-              inscricaoEstadual: c.inscricao_estadual,
-              nomeContribuinte: c.nome,
-              cnpj: c.cnpj,
-              valorRecuperavel: Math.abs(c.diferenca),
-            })),
+            ...acao.contribuintes
+              .filter((c) => ies.includes(c.inscricao_estadual))
+              .map((c) => ({
+                ...base,
+                inscricaoEstadual: c.inscricao_estadual,
+                nomeContribuinte: c.nome,
+                cnpj: c.cnpj,
+                valorRecuperavel: Math.abs(c.diferenca),
+              })),
           ]);
         }}
       />
@@ -557,14 +558,30 @@ function ItemAcao({
   sel: SelecaoIes;
 }) {
   const [aberto, setAberto] = useState(false);
+  /** ordenação opcional da lista pela data da situação na Receita Federal */
+  const [ordemData, setOrdemData] = useState<"asc" | "desc" | null>(null);
   /** null = fechado; "" = anotação da ação; IE = anotação do contribuinte */
   const [anotando, setAnotando] = useState<string | null>(null);
   const [ignoradoAberto, setIgnoradoAberto] = useState<MovimentoDeclarante | null>(null);
   const temLista = acao.contribuintes.length > 0;
   const statusAcao = statusPorChave.get(chaveStatus(acao.chave)) ?? "prevista";
-  const contribuinteAnotado =
-    anotando ? acao.contribuintes.find((c) => c.inscricao_estadual === anotando) ?? null : null;
+  const contribuinteAnotado = anotando
+    ? (acao.contribuintes.find((c) => c.inscricao_estadual === anotando) ?? null)
+    : null;
 
+  const visiveis = (() => {
+    const base = acao.contribuintes.slice(0, 25);
+    if (!ordemData) return base;
+    const sinal = ordemData === "asc" ? 1 : -1;
+    return [...base].sort((a, b) => {
+      const da = chaveDataSituacao(receitaDe(a.inscricao_estadual));
+      const db = chaveDataSituacao(receitaDe(b.inscricao_estadual));
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return sinal * da.localeCompare(db);
+    });
+  })();
 
   const baseEntrada = {
     referencia: referencia ?? "",
@@ -630,7 +647,12 @@ function ItemAcao({
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {acao.situacaoOficio && temLista ? (
-          <Button size="sm" variant="secondary" className="h-7 gap-1 px-2 text-xs" onClick={onEmitir}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-7 gap-1 px-2 text-xs"
+            onClick={onEmitir}
+          >
             <FileText className="h-3.5 w-3.5" />
             Emitir ofícios ({acao.contribuintes.length})
           </Button>
@@ -655,7 +677,6 @@ function ItemAcao({
             : ""}
         </Button>
 
-
         {temLista && (
           <Collapsible open={aberto} onOpenChange={setAberto}>
             <CollapsibleTrigger asChild>
@@ -672,12 +693,26 @@ function ItemAcao({
                   <TableRow>
                     <TableHead className="w-8">
                       <CaixaSelecaoTodas
-                        ies={acao.contribuintes.slice(0, 25).map((c) => c.inscricao_estadual)}
+                        ies={visiveis.map((c) => c.inscricao_estadual)}
                         sel={sel}
                       />
                     </TableHead>
                     <TableHead>Contribuinte</TableHead>
                     <TableHead>Receita Federal</TableHead>
+                    <TableHead>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 font-medium hover:text-foreground"
+                        title="Ordenar pela data da situação cadastral informada pela Receita Federal"
+                        onClick={() =>
+                          setOrdemData((o) => (o === "desc" ? "asc" : o === "asc" ? null : "desc"))
+                        }
+                      >
+                        Data da situação (RF)
+                        <ArrowUpDown className="h-3 w-3" />
+                        {ordemData ? (ordemData === "asc" ? "↑" : "↓") : ""}
+                      </button>
+                    </TableHead>
                     <TableHead className="text-right">VAF base</TableHead>
                     <TableHead className="text-right">Comparado/estimado</TableHead>
                     <TableHead className="text-right">Impacto</TableHead>
@@ -686,7 +721,7 @@ function ItemAcao({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {acao.contribuintes.slice(0, 25).map((c) => (
+                  {visiveis.map((c) => (
                     <TableRow key={c.inscricao_estadual}>
                       <TableCell>
                         <CaixaSelecaoIe ie={c.inscricao_estadual} sel={sel} rotulo={c.nome} />
@@ -695,7 +730,7 @@ function ItemAcao({
                         <p className="font-medium">{c.nome ?? "(sem nome)"}</p>
                         <p className="text-muted-foreground">
                           IE {c.inscricao_estadual}
-                          {cnpjDe(c.inscricao_estadual) ?? c.cnpj
+                          {(cnpjDe(c.inscricao_estadual) ?? c.cnpj)
                             ? ` · ${formatarCnpj((cnpjDe(c.inscricao_estadual) ?? c.cnpj)!)}`
                             : ""}
                         </p>
@@ -711,6 +746,9 @@ function ItemAcao({
                           cnpj={cnpjDe(c.inscricao_estadual) ?? c.cnpj}
                           origem={origemDe(c.inscricao_estadual)}
                         />
+                      </TableCell>
+                      <TableCell>
+                        <DataSituacaoRf registro={receitaDe(c.inscricao_estadual)} />
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
                         {formatarMoeda(c.vafBase)}
@@ -759,8 +797,8 @@ function ItemAcao({
               </Table>
               {acao.contribuintes.length > 25 && (
                 <p className="border-t p-2 text-xs text-muted-foreground">
-                  Exibindo os 25 maiores de {acao.contribuintes.length} — a lista completa vai no CSV
-                  da evolução.
+                  Exibindo os 25 maiores de {acao.contribuintes.length} — a lista completa vai no
+                  CSV da evolução.
                 </p>
               )}
             </CollapsibleContent>
@@ -803,8 +841,6 @@ function ItemAcao({
             </div>
           </div>
         )}
-
-
       </div>
 
       <AnotacoesAcao
@@ -832,8 +868,7 @@ function ItemAcao({
                 }
               : { valorRecuperavel: acao.valorRecuperavel }),
             observacao: texto,
-            status:
-              statusPorChave.get(chaveStatus(acao.chave, anotando ?? "")) ?? "prevista",
+            status: statusPorChave.get(chaveStatus(acao.chave, anotando ?? "")) ?? "prevista",
           })
         }
       />
@@ -847,12 +882,11 @@ function ItemAcao({
         referencia={referencia}
         situacaoCadastral={
           ignoradoAberto
-            ? situacoesCadastrais?.[chaveIe(ignoradoAberto.inscricao_estadual)] ?? null
+            ? (situacoesCadastrais?.[chaveIe(ignoradoAberto.inscricao_estadual)] ?? null)
             : null
         }
       />
     </div>
-
   );
 }
 
@@ -876,9 +910,9 @@ function DetalheIgnorado({
 }) {
   const c = contribuinte;
   const motivoRotulo = c
-    ? ROTULO_MOTIVO_IGNORADO[(situacaoCadastral || "NAO_INFORMADA").toUpperCase()] ??
+    ? (ROTULO_MOTIVO_IGNORADO[(situacaoCadastral || "NAO_INFORMADA").toUpperCase()] ??
       situacaoCadastral ??
-      "Não informada"
+      "Não informada")
     : "";
   const origem =
     c?.situacao === "saiu"
@@ -951,13 +985,15 @@ function DetalheIgnorado({
 function DialogEmissao({
   acao,
   exercicio,
+  receitaDe,
   onFechar,
   onEmitido,
 }: {
   acao: AcaoRecuperacao | null;
   exercicio: number | null;
+  receitaDe: (ie: string | null | undefined) => RegistroReceita | undefined;
   onFechar: () => void;
-  onEmitido: (acao: AcaoRecuperacao, exercicio: number) => void;
+  onEmitido: (acao: AcaoRecuperacao, exercicio: number, ies: string[]) => void;
 }) {
   const { data: config } = useConfiguracao();
   const { data: modelos } = useModelos();
@@ -965,6 +1001,37 @@ function DialogEmissao({
   const [dataOficio, setDataOficio] = useState(hojeIso());
   const [ano, setAno] = useState<string>(String(exercicio ?? new Date().getFullYear()));
   const [progresso, setProgresso] = useState<ProgressoOficios | null>(null);
+  /** data de referência do movimento: baixas anteriores a ela não recebem ofício */
+  const [dataMovimento, setDataMovimento] = useState<string>(
+    `${exercicio ?? new Date().getFullYear()}-12-31`,
+  );
+  /** IEs desmarcadas manualmente (o restante segue a sugestão automática) */
+  const [manuais, setManuais] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setManuais({});
+    setAno(String(exercicio ?? new Date().getFullYear()));
+    setDataMovimento(`${exercicio ?? new Date().getFullYear()}-12-31`);
+  }, [acao, exercicio]);
+
+  /** baixado/nulo com data da baixa anterior ao movimento → fora do ofício por padrão */
+  const encerradoAntes = (ie: string) => {
+    const reg = receitaDe(ie);
+    if (!reg || !SITUACOES_RECEITA_ENCERRADAS.includes(reg.situacao)) return false;
+    if (!reg.situacao_data) return true;
+    return reg.situacao_data < dataMovimento;
+  };
+
+  const linhasEmissao = (acao?.contribuintes ?? []).map((c) => {
+    const reg = receitaDe(c.inscricao_estadual);
+    const bloqueado = encerradoAntes(c.inscricao_estadual);
+    const marcado = manuais[c.inscricao_estadual] ?? !bloqueado;
+    return { c, reg, bloqueado, marcado };
+  });
+  const selecionadas = linhasEmissao.filter((l) => l.marcado);
+  const encerradosNaLista = linhasEmissao.filter(
+    (l) => l.reg && SITUACOES_RECEITA_ENCERRADAS.includes(l.reg.situacao),
+  ).length;
 
   const ativos = (modelos ?? []).filter((m) => m.ativo);
   const sugeridos = acao?.situacaoOficio
@@ -982,10 +1049,14 @@ function DialogEmissao({
       toast.error("Informe um exercício válido.");
       return;
     }
+    if (!selecionadas.length) {
+      toast.error("Selecione ao menos um contribuinte para emitir o ofício.");
+      return;
+    }
     try {
-      setProgresso({ fase: "documentos", feitos: 0, total: acao.contribuintes.length });
+      setProgresso({ fase: "documentos", feitos: 0, total: selecionadas.length });
       const blob = await gerarZipOficios({
-        contribuintes: acao.contribuintes.map((c) => ({
+        contribuintes: selecionadas.map(({ c }) => ({
           nome: c.nome,
           cnpj: c.cnpj,
           inscricao_estadual: c.inscricao_estadual,
@@ -999,8 +1070,12 @@ function DialogEmissao({
         onProgresso: setProgresso,
       });
       baixarBlob(blob, nomeZip(modelo.chave, config.cidade_data, exercicioNum));
-      toast.success(`${acao.contribuintes.length} ofício(s) gerados.`);
-      onEmitido(acao, exercicioNum);
+      toast.success(`${selecionadas.length} ofício(s) gerados.`);
+      onEmitido(
+        acao,
+        exercicioNum,
+        selecionadas.map(({ c }) => c.inscricao_estadual),
+      );
       onFechar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar os ofícios.");
@@ -1010,9 +1085,7 @@ function DialogEmissao({
   }
 
   const pct =
-    progresso && progresso.total > 0
-      ? Math.round((progresso.feitos / progresso.total) * 100)
-      : 0;
+    progresso && progresso.total > 0 ? Math.round((progresso.feitos / progresso.total) * 100) : 0;
 
   return (
     <Dialog open={!!acao} onOpenChange={(v) => !v && onFechar()}>
@@ -1020,7 +1093,7 @@ function DialogEmissao({
         <DialogHeader>
           <DialogTitle>Emitir ofícios — {acao?.titulo}</DialogTitle>
           <DialogDescription>
-            {acao?.contribuintes.length ?? 0} contribuinte(s) desta ação
+            {selecionadas.length} de {acao?.contribuintes.length ?? 0} contribuinte(s) desta ação
             {acao?.situacaoOficio
               ? ` · situação sugerida: ${ROTULO_SITUACAO[acao.situacaoOficio]}`
               : ""}
@@ -1072,6 +1145,67 @@ function DialogEmissao({
                   value={dataOficio}
                   onChange={(e) => setDataOficio(e.target.value)}
                 />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="data-movimento">Data de referência do movimento</Label>
+              <Input
+                id="data-movimento"
+                type="date"
+                value={dataMovimento}
+                onChange={(e) => setDataMovimento(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Contribuintes baixados ou nulos na Receita Federal com data da baixa{" "}
+                <strong>anterior</strong> a esta data já saem desmarcados (não recebem ofício). Se a
+                baixa for <strong>posterior</strong> ao movimento, o ofício continua marcado. Você
+                pode marcar ou desmarcar qualquer um manualmente.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Contribuintes do ofício</Label>
+                <span className="text-xs text-muted-foreground">
+                  {selecionadas.length}/{linhasEmissao.length} selecionado(s)
+                  {encerradosNaLista ? ` · ${encerradosNaLista} baixado(s)/nulo(s)` : ""}
+                </span>
+              </div>
+              <div className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-2">
+                {linhasEmissao.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum contribuinte nesta ação.</p>
+                ) : (
+                  linhasEmissao.map(({ c, reg, bloqueado, marcado }) => (
+                    <label
+                      key={c.inscricao_estadual}
+                      className="flex items-start gap-2 rounded-md px-1 py-1 text-xs hover:bg-muted/50"
+                    >
+                      <Checkbox
+                        checked={marcado}
+                        onCheckedChange={(v) =>
+                          setManuais((a) => ({ ...a, [c.inscricao_estadual]: v === true }))
+                        }
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{c.nome ?? "(sem nome)"}</span>
+                        <span className="block text-muted-foreground">
+                          IE {c.inscricao_estadual}
+                          {c.cnpj ? ` · ${formatarCnpj(c.cnpj)}` : ""}
+                        </span>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-2">
+                          <ReceitaIeBadge registro={reg} cnpj={c.cnpj} />
+                          <DataSituacaoRf registro={reg} />
+                          {bloqueado ? (
+                            <span className="text-destructive">
+                              baixa anterior ao movimento — fora do ofício e da análise
+                            </span>
+                          ) : null}
+                        </span>
+                      </span>
+                    </label>
+                  ))
+                )}
               </div>
             </div>
 
