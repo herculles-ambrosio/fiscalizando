@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 import { formatarData } from "@/lib/format";
-import { chaveIeReceita } from "@/lib/receita/porIe";
+import { chaveIeReceita, rotuloSituacao } from "@/lib/receita/porIe";
 import {
   ProgressoConsultaReceita,
   type ProgressoReceita,
@@ -273,4 +273,44 @@ export function BotaoReconsultarFalhas({
       Reconsultar sem resposta ({total})
     </Button>
   );
+}
+
+/** Data da situação cadastral na Receita Federal (com explicação no tooltip). */
+export function DataSituacaoRf({ registro }: { registro: RegistroReceita | undefined }) {
+  if (!registro) {
+    return (
+      <span
+        className="text-xs text-muted-foreground"
+        title="Sem consulta na Receita Federal para este contribuinte — use o botão Consultar Receita."
+      >
+        —
+      </span>
+    );
+  }
+  if (!registro.situacao_data) {
+    return (
+      <span
+        className="text-xs text-muted-foreground"
+        title="A Receita Federal não informou a data da situação cadastral deste CNPJ."
+      >
+        —
+      </span>
+    );
+  }
+  const detalhes = [
+    `Situação ${rotuloSituacao(registro.situacao)} desde ${formatarData(registro.situacao_data)}`,
+    registro.motivo ? `Motivo: ${registro.motivo}` : null,
+    registro.consultado_em ? `Consultado em ${formatarData(registro.consultado_em)}` : null,
+    registro.fonte ? `Fonte: ${registro.fonte}` : null,
+  ].filter(Boolean);
+  return (
+    <span className="whitespace-nowrap font-mono text-xs tabular-nums" title={detalhes.join(" · ")}>
+      {formatarData(registro.situacao_data)}
+    </span>
+  );
+}
+
+/** Chave ordenável (AAAA-MM-DD) da data da situação; vazio vai para o fim. */
+export function chaveDataSituacao(registro: RegistroReceita | undefined): string {
+  return registro?.situacao_data ?? "";
 }
