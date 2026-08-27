@@ -1057,10 +1057,15 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         <TableCell>
                           {(() => {
                             const reg = situacaoReceitaDe(c.cnpj);
-                            const motivo =
+                            const partes = [
                               typeof reg?.motivo === "string" && reg.motivo.trim()
                                 ? reg.motivo
-                                : null;
+                                : null,
+                              reg?.situacao_data
+                                ? `Situação desde ${formatarData(reg.situacao_data)}`
+                                : null,
+                            ].filter(Boolean);
+                            const motivo = partes.length ? partes.join(" · ") : null;
                             return (
                               <SituacaoReceitaBadge
                                 situacao={reg?.situacao ?? null}
