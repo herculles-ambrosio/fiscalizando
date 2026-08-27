@@ -110,13 +110,27 @@ function Barra({
                 {porContribuinte && (
                   <th className="px-2 py-1.5 text-left font-medium">Receita Federal</th>
                 )}
+                {porContribuinte && (
+                  <th className="px-2 py-1.5 text-left font-medium">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 font-medium hover:text-foreground"
+                      title="Ordenar pela data da situação cadastral informada pela Receita Federal"
+                      onClick={() => setOrdemData((o) => (o === "desc" ? "asc" : o === "asc" ? null : "desc"))}
+                    >
+                      Data da situação (RF)
+                      <ArrowUpDown className="h-3 w-3" />
+                      {ordemData ? (ordemData === "asc" ? "↑" : "↓") : ""}
+                    </button>
+                  </th>
+                )}
                 <th className="px-2 py-1.5 text-right font-medium">Base</th>
                 <th className="px-2 py-1.5 text-right font-medium">Comparado/estimado</th>
                 <th className="px-2 py-1.5 text-right font-medium">Impacto</th>
               </tr>
             </thead>
             <tbody>
-              {fator.itens.map((i) => (
+              {itens.map((i) => (
                 <tr key={i.chave} className="border-t border-border">
                   {porContribuinte && (
                     <td className="px-2 py-1.5">
@@ -134,6 +148,11 @@ function Barra({
                         cnpj={cnpjDe(i.chave)}
                         origem={origemDe(i.chave)}
                       />
+                    </td>
+                  )}
+                  {porContribuinte && (
+                    <td className="px-2 py-1.5">
+                      <DataSituacaoRf registro={receitaDe(i.chave)} />
                     </td>
                   )}
 
@@ -154,6 +173,7 @@ function Barra({
               ))}
             </tbody>
           </table>
+
           {ocultos > 0 && (
             <p className="border-t border-border bg-muted/40 px-2 py-1.5 text-[11px] text-muted-foreground">
               Exibindo os {fator.itens.length} maiores impactos de {fator.totalItens} itens —
