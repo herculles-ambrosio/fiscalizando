@@ -580,6 +580,12 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   }
 
   async function selecionarTodos() {
+    // Com filtro da Receita ativo, seleciona exatamente o conjunto filtrado na tela.
+    if (filtroReceitaAtivo) {
+      const ids = linhasOrdenadas.map((c) => c.id);
+      setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+      return;
+    }
     setSelecionandoTodos(true);
     try {
       let q = supabase
