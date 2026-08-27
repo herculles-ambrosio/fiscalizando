@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
@@ -122,7 +122,25 @@ export function useReceitaPorIe(
       toast.error("Nenhum CNPJ disponível nos contribuintes selecionados.");
       return;
     }
-    consulta.mutate({ cnpjs: lista, forcar }, { onSuccess: avisar, onError: aoFalhar });
+    setResumoSelecao(null);
+    consulta.mutate(
+      { cnpjs: lista, forcar },
+      {
+        onSuccess: (r) => {
+          avisar(r);
+          setResumoSelecao({
+            selecionados: ies.length,
+            cnpjs: lista.length,
+            atualizados: r.atualizados,
+            cache: r.cache,
+            naoEncontrados: r.naoEncontrados?.length ?? 0,
+            falhas: r.falhas.length,
+            restantes: r.restantes ?? 0,
+          });
+        },
+        onError: aoFalhar,
+      },
+    );
   };
 
 
