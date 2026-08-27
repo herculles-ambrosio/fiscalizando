@@ -37,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatarCnpj, formatarPercentual, formatarValorGrid } from "@/lib/format";
+import { formatarCnpj, formatarData, formatarPercentual, formatarValorGrid } from "@/lib/format";
 import {
   ROTULO_SITUACAO,
   ROTULO_SITUACAO_CADASTRAL,
@@ -93,6 +93,7 @@ type ColunaId =
   | "variacao_pct"
   | "situacao_cadastral"
   | "receita_federal"
+  | "receita_data"
   | "situacoes";
 
 const COLUNAS: { id: ColunaId; rotulo: string }[] = [
@@ -105,6 +106,7 @@ const COLUNAS: { id: ColunaId; rotulo: string }[] = [
   { id: "variacao_pct", rotulo: "Variação" },
   { id: "situacao_cadastral", rotulo: "Situação cadastral" },
   { id: "receita_federal", rotulo: "Receita Federal" },
+  { id: "receita_data", rotulo: "Data da situação (RF)" },
   { id: "situacoes", rotulo: "Situação" },
 ];
 
@@ -165,6 +167,7 @@ type ColunaOrdenavel =
   | "situacao_cadastral"
   | "situacoes"
   | "receita_federal"
+  | "receita_data"
   | "data_entrega";
 
 /** Colunas que o banco sabe ordenar; "receita_federal" é ordenada no cliente. */
@@ -218,7 +221,8 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               coluna === "inscricao_estadual" ||
               coluna === "situacao_cadastral" ||
               coluna === "situacoes" ||
-              coluna === "receita_federal",
+              coluna === "receita_federal" ||
+              coluna === "receita_data",
           },
     );
   };
@@ -435,11 +439,12 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
   /** A situação da Receita não está na tabela: ordena as linhas já carregadas. */
   const linhasOrdenadas =
-    ordem.coluna === "receita_federal"
+    ordem.coluna === "receita_federal" || ordem.coluna === "receita_data"
       ? [...linhasFiltradas].sort((a, b) => {
-          const ra = situacaoReceitaDe(a.cnpj)?.situacao ?? "";
-          const rb = situacaoReceitaDe(b.cnpj)?.situacao ?? "";
-          const cmp = ra.localeCompare(rb, "pt-BR");
+          const campo = ordem.coluna === "receita_data" ? "situacao_data" : "situacao";
+          const ra = situacaoReceitaDe(a.cnpj)?.[campo] ?? "";
+          const rb = situacaoReceitaDe(b.cnpj)?.[campo] ?? "";
+          const cmp = String(ra).localeCompare(String(rb), "pt-BR");
           return ordem.asc ? cmp : -cmp;
         })
       : linhasFiltradas;
@@ -954,6 +959,11 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         Receita Federal
                       </ColunaHead>
                     )}
+                    {visivel("receita_data") && (
+                      <ColunaHead coluna="receita_data" ordem={ordem} onSort={ordenarPor}>
+                        Data da situação (RF)
+                      </ColunaHead>
+                    )}
                     {visivel("situacoes") && (
                       <ColunaHead coluna="situacoes" ordem={ordem} onSort={ordenarPor}>
                         Situação
@@ -1047,10 +1057,15 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                         <TableCell>
                           {(() => {
                             const reg = situacaoReceitaDe(c.cnpj);
-                            const motivo =
+                            const partes = [
                               typeof reg?.motivo === "string" && reg.motivo.trim()
                                 ? reg.motivo
-                                : null;
+                                : null,
+                              reg?.situacao_data
+                                ? `Situação desde ${formatarData(reg.situacao_data)}`
+                                : null,
+                            ].filter(Boolean);
+                            const motivo = partes.length ? partes.join(" · ") : null;
                             return (
                               <SituacaoReceitaBadge
                                 situacao={reg?.situacao ?? null}
@@ -1059,6 +1074,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                             );
                           })()}
                         </TableCell>
+                        )}
+                        {visivel("receita_data") && (
+                          <TableCell className="whitespace-nowrap">
+                            {(() => {
+                              const reg = situacaoReceitaDe(c.cnpj);
+                              return reg?.situacao_data ? formatarData(reg.situacao_data) : "—";
+                            })()}
+                          </TableCell>
                         )}
                         {visivel("situacoes") && (
                           <TableCell>
