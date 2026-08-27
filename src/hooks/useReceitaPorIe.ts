@@ -164,6 +164,8 @@ export function useReceitaPorIe(
     cnpjDe,
     consultar,
     consultarIes,
+    resumoSelecao,
+    limparResumoSelecao: () => setResumoSelecao(null),
 
     consultando: consulta.isPending,
     progresso: consulta.progresso,
