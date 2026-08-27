@@ -693,7 +693,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
             size="sm"
             onClick={marcarPendentesReceita}
             aria-label="Filtrar e selecionar contribuintes pendentes na Receita Federal"
-            title="Mostra apenas os contribuintes sem consulta ou sem resposta da Receita Federal nesta página e já os seleciona."
+            title="Mostra apenas os contribuintes sem consulta ou sem resposta da Receita Federal em toda a apuração e já os seleciona."
           >
             <CheckSquare className="mr-2 h-4 w-4" />
             Pendentes na Receita
