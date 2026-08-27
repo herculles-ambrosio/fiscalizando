@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -27,7 +27,10 @@ import {
   type SelecaoIes,
 } from "@/components/analises/ReceitaIe";
 import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
-import type { RegistroReceita } from "@/lib/receita/normalizar";
+import {
+  SITUACOES_RECEITA_ENCERRADAS,
+  type RegistroReceita,
+} from "@/lib/receita/normalizar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +45,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -474,8 +478,9 @@ export default function PlanoRecuperacao({
       <DialogEmissao
         acao={acaoEmissao}
         exercicio={exercicio ?? null}
+        receitaDe={receita.registroDe}
         onFechar={() => setAcaoEmissao(null)}
-        onEmitido={(acao, exercicioNum) => {
+        onEmitido={(acao, exercicioNum, ies) => {
           if (!ref) return;
           const base = {
             referencia: ref,
@@ -487,7 +492,9 @@ export default function PlanoRecuperacao({
           };
           salvarStatus([
             { ...base, valorRecuperavel: acao.valorRecuperavel },
-            ...acao.contribuintes.map((c) => ({
+            ...acao.contribuintes
+              .filter((c) => ies.includes(c.inscricao_estadual))
+              .map((c) => ({
               ...base,
               inscricaoEstadual: c.inscricao_estadual,
               nomeContribuinte: c.nome,
@@ -1145,6 +1152,67 @@ function DialogEmissao({
                   value={dataOficio}
                   onChange={(e) => setDataOficio(e.target.value)}
                 />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="data-movimento">Data de referência do movimento</Label>
+              <Input
+                id="data-movimento"
+                type="date"
+                value={dataMovimento}
+                onChange={(e) => setDataMovimento(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Contribuintes baixados ou nulos na Receita Federal com data da baixa{" "}
+                <strong>anterior</strong> a esta data já saem desmarcados (não recebem ofício). Se a
+                baixa for <strong>posterior</strong> ao movimento, o ofício continua marcado. Você
+                pode marcar ou desmarcar qualquer um manualmente.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Contribuintes do ofício</Label>
+                <span className="text-xs text-muted-foreground">
+                  {selecionadas.length}/{linhasEmissao.length} selecionado(s)
+                  {encerradosNaLista ? ` · ${encerradosNaLista} baixado(s)/nulo(s)` : ""}
+                </span>
+              </div>
+              <div className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-2">
+                {linhasEmissao.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum contribuinte nesta ação.</p>
+                ) : (
+                  linhasEmissao.map(({ c, reg, bloqueado, marcado }) => (
+                    <label
+                      key={c.inscricao_estadual}
+                      className="flex items-start gap-2 rounded-md px-1 py-1 text-xs hover:bg-muted/50"
+                    >
+                      <Checkbox
+                        checked={marcado}
+                        onCheckedChange={(v) =>
+                          setManuais((a) => ({ ...a, [c.inscricao_estadual]: v === true }))
+                        }
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{c.nome ?? "(sem nome)"}</span>
+                        <span className="block text-muted-foreground">
+                          IE {c.inscricao_estadual}
+                          {c.cnpj ? ` · ${formatarCnpj(c.cnpj)}` : ""}
+                        </span>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-2">
+                          <ReceitaIeBadge registro={reg} cnpj={c.cnpj} />
+                          <DataSituacaoRf registro={reg} />
+                          {bloqueado ? (
+                            <span className="text-destructive">
+                              baixa anterior ao movimento — fora do ofício e da análise
+                            </span>
+                          ) : null}
+                        </span>
+                      </span>
+                    </label>
+                  ))
+                )}
               </div>
             </div>
 
