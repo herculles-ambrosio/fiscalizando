@@ -26,16 +26,30 @@ import {
 } from "@/lib/vaf/diagnostico";
 import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
 import {
+  BarraSelecaoReceita,
   BotaoConsultarReceita,
   BotaoReconsultarFalhas,
+  CaixaSelecaoIe,
+  CaixaSelecaoTodas,
   ReceitaIeBadge,
+  useSelecaoIes,
+  type SelecaoIes,
 } from "@/components/analises/ReceitaIe";
 import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 
 type ReceitaDe = (ie: string | null | undefined) => RegistroReceita | undefined;
 
-function Barra({ fator, receitaDe }: { fator: FatorVariacao; receitaDe: ReceitaDe }) {
+function Barra({
+  fator,
+  receitaDe,
+  sel,
+}: {
+  fator: FatorVariacao;
+  receitaDe: ReceitaDe;
+  sel: SelecaoIes;
+}) {
+
   const [aberto, setAberto] = useState(false);
   const positivo = fator.sentido === "aumentou";
   const Icone = fator.sentido === "neutro" ? Minus : positivo ? ArrowUpRight : ArrowDownRight;
@@ -83,6 +97,11 @@ function Barra({ fator, receitaDe }: { fator: FatorVariacao; receitaDe: ReceitaD
           <table className="w-full text-xs">
             <thead className="bg-muted/60">
               <tr className="text-muted-foreground">
+                {porContribuinte && (
+                  <th className="w-8 px-2 py-1.5 text-left font-medium">
+                    <CaixaSelecaoTodas ies={fator.itens.map((i) => i.chave)} sel={sel} />
+                  </th>
+                )}
                 <th className="px-2 py-1.5 text-left font-medium">Item</th>
                 {porContribuinte && (
                   <th className="px-2 py-1.5 text-left font-medium">Receita Federal</th>
@@ -95,6 +114,11 @@ function Barra({ fator, receitaDe }: { fator: FatorVariacao; receitaDe: ReceitaD
             <tbody>
               {fator.itens.map((i) => (
                 <tr key={i.chave} className="border-t border-border">
+                  {porContribuinte && (
+                    <td className="px-2 py-1.5">
+                      <CaixaSelecaoIe ie={i.chave} sel={sel} rotulo={i.rotulo} />
+                    </td>
+                  )}
                   <td className="px-2 py-1.5">
                     <p className="truncate">{i.rotulo}</p>
                     {i.sub && <p className="font-mono text-[11px] text-muted-foreground">{i.sub}</p>}
@@ -104,6 +128,7 @@ function Barra({ fator, receitaDe }: { fator: FatorVariacao; receitaDe: ReceitaD
                       <ReceitaIeBadge registro={receitaDe(i.chave)} />
                     </td>
                   )}
+
                   <td className="px-2 py-1.5 text-right font-mono tabular-nums">
                     {formatarMoeda(i.valorBase)}
                   </td>
@@ -153,6 +178,8 @@ export default function DiagnosticoVariacao({
 }) {
   const [copiado, setCopiado] = useState(false);
   const [baixando, setBaixando] = useState<"docx" | "pdf" | null>(null);
+  const sel = useSelecaoIes();
+
   const d = useMemo(() => diagnosticarEvolucao(base, atual), [base, atual]);
   // exercício e município vêm dos seletores da tela — o documento usa exatamente esses filtros
   const exercicioAlvo = exercicio ?? atual.apuracao.anoBase ?? null;
@@ -290,7 +317,13 @@ export default function DiagnosticoVariacao({
 
       <CardContent className="space-y-4">
         <ProgressoConsultaReceita progresso={receita.progresso} />
+        <BarraSelecaoReceita
+          sel={sel}
+          consultando={receita.consultando}
+          onConsultar={(ies) => receita.consultarIes(ies)}
+        />
         <p className="text-sm leading-relaxed">{d.resumo}</p>
+
 
         <Tabs defaultValue="declarantes">
           <TabsList className="flex-wrap">
@@ -304,7 +337,7 @@ export default function DiagnosticoVariacao({
               <p className="text-sm text-muted-foreground">Sem movimentação relevante.</p>
             ) : (
               d.fatoresDeclarantes.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} />
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} sel={sel} />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -320,7 +353,7 @@ export default function DiagnosticoVariacao({
               </p>
             ) : (
               d.fatores.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} />
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} sel={sel} />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -342,7 +375,9 @@ export default function DiagnosticoVariacao({
                     key={`q-${c.inscricao_estadual}`}
                     className="flex items-center justify-between gap-3 rounded-md border border-border p-2"
                   >
+                    <CaixaSelecaoIe ie={c.inscricao_estadual} sel={sel} rotulo={c.nome} />
                     <div className="min-w-0">
+
                       <p className="truncate text-sm">{c.nome ?? "(sem nome)"}</p>
                       <p className="font-mono text-xs text-muted-foreground">
                         IE {c.inscricao_estadual}
@@ -371,7 +406,9 @@ export default function DiagnosticoVariacao({
                     key={`a-${c.inscricao_estadual}`}
                     className="flex items-center justify-between gap-3 rounded-md border border-border p-2"
                   >
+                    <CaixaSelecaoIe ie={c.inscricao_estadual} sel={sel} rotulo={c.nome} />
                     <div className="min-w-0">
+
                       <p className="truncate text-sm">{c.nome ?? "(sem nome)"}</p>
                       <p className="font-mono text-xs text-muted-foreground">
                         IE {c.inscricao_estadual}
