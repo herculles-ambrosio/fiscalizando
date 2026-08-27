@@ -458,6 +458,7 @@ export default function PlanoRecuperacao({
                 situacoesCadastrais={situacoesCadastrais ?? null}
                 receitaDe={receita.registroDe}
                 cnpjDe={receita.cnpjDe}
+                origemDe={receita.origemDe}
                 sel={sel}
               />
 
@@ -536,6 +537,7 @@ function ItemAcao({
   situacoesCadastrais,
   receitaDe,
   cnpjDe,
+  origemDe,
   sel,
 }: {
   acao: AcaoRecuperacao;
@@ -551,6 +553,7 @@ function ItemAcao({
   situacoesCadastrais: MapaSituacoesCadastrais | null;
   receitaDe: (ie: string | null | undefined) => RegistroReceita | undefined;
   cnpjDe: (ie: string | null | undefined) => string | null;
+  origemDe: (ie: string | null | undefined) => "cadastro" | "retorno" | null;
   sel: SelecaoIes;
 }) {
   const [aberto, setAberto] = useState(false);
@@ -706,6 +709,7 @@ function ItemAcao({
                         <ReceitaIeBadge
                           registro={receitaDe(c.inscricao_estadual)}
                           cnpj={cnpjDe(c.inscricao_estadual) ?? c.cnpj}
+                          origem={origemDe(c.inscricao_estadual)}
                         />
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
