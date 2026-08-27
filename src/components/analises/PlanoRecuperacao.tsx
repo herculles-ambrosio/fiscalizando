@@ -351,6 +351,8 @@ export default function PlanoRecuperacao({
             sel={sel}
             consultando={receita.consultando}
             onConsultar={(ies) => receita.consultarIes(ies)}
+            resumo={receita.resumoSelecao}
+            onFecharResumo={receita.limparResumoSelecao}
           />
           <Alert>
             <AlertTriangle className="h-4 w-4" />
