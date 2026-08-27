@@ -61,6 +61,9 @@ export function useReceitaPorIe(
   const registroDe = (ie: string | null | undefined) => registroPorIe[chaveIeReceita(ie)];
   const cnpjDe = (ie: string | null | undefined) => cnpjPorIe[chaveIeReceita(ie)] ?? null;
 
+  const [resumoSelecao, setResumoSelecao] = useState<ResumoSelecaoReceita | null>(null);
+
+
   const avisar = (r: {
     atualizados: number;
     cache: number;
