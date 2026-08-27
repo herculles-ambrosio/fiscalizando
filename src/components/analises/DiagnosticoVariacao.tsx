@@ -317,7 +317,13 @@ export default function DiagnosticoVariacao({
 
       <CardContent className="space-y-4">
         <ProgressoConsultaReceita progresso={receita.progresso} />
+        <BarraSelecaoReceita
+          sel={sel}
+          consultando={receita.consultando}
+          onConsultar={(ies) => receita.consultarIes(ies)}
+        />
         <p className="text-sm leading-relaxed">{d.resumo}</p>
+
 
         <Tabs defaultValue="declarantes">
           <TabsList className="flex-wrap">
