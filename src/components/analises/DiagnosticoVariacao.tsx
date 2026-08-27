@@ -321,6 +321,8 @@ export default function DiagnosticoVariacao({
           sel={sel}
           consultando={receita.consultando}
           onConsultar={(ies) => receita.consultarIes(ies)}
+          resumo={receita.resumoSelecao}
+          onFecharResumo={receita.limparResumoSelecao}
         />
         <p className="text-sm leading-relaxed">{d.resumo}</p>
 
