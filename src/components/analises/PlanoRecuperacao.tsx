@@ -263,11 +263,24 @@ export default function PlanoRecuperacao({
     situacoesReceita: receita.rotulosPorIe,
   });
 
-  async function baixarDocx() {
+  /** aplica a seleção do diálogo: filtra contribuintes e recalcula o valor das ações afetadas */
+  function filtrarAcoesPorIes(ies: Set<string>): AcaoRecuperacao[] {
+    return acoes
+      .map((a) => {
+        if (!a.contribuintes.length) return a;
+        const mantidos = a.contribuintes.filter((c) => ies.has(c.inscricao_estadual));
+        if (mantidos.length === a.contribuintes.length) return a;
+        const valor = mantidos.reduce((s, c) => s + Math.abs(c.diferenca), 0);
+        return { ...a, contribuintes: mantidos, valorRecuperavel: valor };
+      })
+      .filter((a) => a.contribuintes.length > 0 || !acoes.find((o) => o.chave === a.chave)?.contribuintes.length);
+  }
+
+  async function baixarDocx(acoesRelatorio: AcaoRecuperacao[]) {
     setBaixandoDocx(true);
     try {
       const { baixarDocPlano } = await import("@/lib/vaf/planoDocx");
-      await baixarDocPlano(acoes, contextoRelatorio());
+      await baixarDocPlano(acoesRelatorio, contextoRelatorio());
       toast.success("Análise baixada em .docx (abre no Word e exporta em PDF).");
     } catch {
       toast.error("Não foi possível gerar o documento do plano.");
@@ -276,17 +289,30 @@ export default function PlanoRecuperacao({
     }
   }
 
-  async function baixarPdf() {
+  async function baixarPdf(acoesRelatorio: AcaoRecuperacao[]) {
     setBaixandoPdf(true);
     try {
       const { baixarPdfPlano } = await import("@/lib/vaf/relatorioPdf");
-      await baixarPdfPlano(acoes, contextoRelatorio());
+      await baixarPdfPlano(acoesRelatorio, contextoRelatorio());
       toast.success("Análise baixada em .pdf com o papel timbrado.");
     } catch {
       toast.error("Não foi possível gerar o PDF do plano.");
     } finally {
       setBaixandoPdf(false);
     }
+  }
+
+  function confirmarExportacao(ies: string[]) {
+    const formato = exportacaoPendente;
+    setExportacaoPendente(null);
+    if (!formato) return;
+    const acoesRelatorio = filtrarAcoesPorIes(new Set(ies));
+    if (!acoesRelatorio.length) {
+      toast.error("Nenhuma ação restante com a seleção feita — ajuste os contribuintes.");
+      return;
+    }
+    if (formato === "docx") void baixarDocx(acoesRelatorio);
+    else void baixarPdf(acoesRelatorio);
   }
 
   return (
