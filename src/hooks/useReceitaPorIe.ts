@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
 import { useFilaReceita } from "@/hooks/useFilaReceita";
-import { limparCnpj, type RegistroReceita } from "@/lib/receita/normalizar";
+import { cnpjUtil, type RegistroReceita } from "@/lib/receita/normalizar";
 import { chaveIeReceita, rotuloSituacao, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 
 export type EntradaIe = { inscricao_estadual: string; cnpj?: string | null };
@@ -35,7 +35,8 @@ export function useReceitaPorIe(
     for (const e of entradas) {
       const k = chaveIeReceita(e.inscricao_estadual);
       if (!k || mapa[k]) continue;
-      const cnpj = limparCnpj(e.cnpj) ?? limparCnpj(cadastro?.[k]?.cnpj);
+      // O cadastro apurado é a fonte confiável: o CNPJ do retorno vem inválido às vezes.
+      const cnpj = cnpjUtil(cadastro?.[k]?.cnpj) ?? cnpjUtil(e.cnpj);
       if (cnpj) mapa[k] = cnpj;
     }
     return mapa;
