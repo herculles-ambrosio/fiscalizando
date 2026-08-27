@@ -131,6 +131,8 @@ export function useReceitaPorIe(
     registroDe,
     cnpjDe,
     consultar,
+    consultarIes,
+
     consultando: consulta.isPending,
     progresso: consulta.progresso,
     totalCnpjs: cnpjs.length,
