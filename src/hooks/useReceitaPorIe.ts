@@ -61,6 +61,26 @@ export function useReceitaPorIe(
   const registroDe = (ie: string | null | undefined) => registroPorIe[chaveIeReceita(ie)];
   const cnpjDe = (ie: string | null | undefined) => cnpjPorIe[chaveIeReceita(ie)] ?? null;
 
+  const avisar = (r: {
+    atualizados: number;
+    cache: number;
+    naoEncontrados?: string[];
+    falhas: string[];
+    restantes?: number;
+  }) => {
+    const partes = [
+      `${r.atualizados} consultado(s)`,
+      `${r.cache} em cache`,
+      ...(r.naoEncontrados?.length ? [`${r.naoEncontrados.length} fora das bases públicas`] : []),
+      ...(r.falhas.length ? [`${r.falhas.length} sem resposta (tente de novo)`] : []),
+      ...(r.restantes ? [`${r.restantes} restantes (clique novamente)`] : []),
+    ];
+    toast.success(`Receita Federal: ${partes.join(" · ")}.`);
+  };
+
+  const aoFalhar = (e: unknown) =>
+    toast.error(e instanceof Error ? e.message : "Falha ao consultar a Receita Federal.");
+
   const consultar = (forcar = false) => {
     if (!cnpjs.length) {
       toast.error("Nenhum CNPJ disponível para consulta nesta lista.");
@@ -84,11 +104,27 @@ export function useReceitaPorIe(
           toast.success(`Receita Federal: ${partes.join(" · ")}.`);
 
         },
-        onError: (e) =>
-          toast.error(e instanceof Error ? e.message : "Falha ao consultar a Receita Federal."),
+        onError: aoFalhar,
       },
     );
   };
+
+  /** Reconsulta imediata apenas das inscrições estaduais marcadas na tela. */
+  const consultarIes = (ies: string[], forcar = true) => {
+    const lista = [
+      ...new Set(
+        ies
+          .map((ie) => cnpjPorIe[chaveIeReceita(ie)])
+          .filter((c): c is string => Boolean(c)),
+      ),
+    ];
+    if (!lista.length) {
+      toast.error("Nenhum CNPJ disponível nos contribuintes selecionados.");
+      return;
+    }
+    consulta.mutate({ cnpjs: lista, forcar }, { onSuccess: avisar, onError: aoFalhar });
+  };
+
 
   return {
     rotulosPorIe,
