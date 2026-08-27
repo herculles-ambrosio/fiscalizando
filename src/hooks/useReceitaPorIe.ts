@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
@@ -7,6 +7,17 @@ import { limparCnpj, type RegistroReceita } from "@/lib/receita/normalizar";
 import { chaveIeReceita, rotuloSituacao, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 
 export type EntradaIe = { inscricao_estadual: string; cnpj?: string | null };
+
+/** Resumo da última reconsulta feita apenas nos contribuintes selecionados. */
+export type ResumoSelecaoReceita = {
+  selecionados: number;
+  cnpjs: number;
+  atualizados: number;
+  cache: number;
+  naoEncontrados: number;
+  falhas: number;
+  restantes: number;
+};
 
 /**
  * Situação cadastral na Receita Federal indexada por inscrição estadual.
@@ -60,6 +71,9 @@ export function useReceitaPorIe(
 
   const registroDe = (ie: string | null | undefined) => registroPorIe[chaveIeReceita(ie)];
   const cnpjDe = (ie: string | null | undefined) => cnpjPorIe[chaveIeReceita(ie)] ?? null;
+
+  const [resumoSelecao, setResumoSelecao] = useState<ResumoSelecaoReceita | null>(null);
+
 
   const avisar = (r: {
     atualizados: number;
@@ -122,7 +136,25 @@ export function useReceitaPorIe(
       toast.error("Nenhum CNPJ disponível nos contribuintes selecionados.");
       return;
     }
-    consulta.mutate({ cnpjs: lista, forcar }, { onSuccess: avisar, onError: aoFalhar });
+    setResumoSelecao(null);
+    consulta.mutate(
+      { cnpjs: lista, forcar },
+      {
+        onSuccess: (r) => {
+          avisar(r);
+          setResumoSelecao({
+            selecionados: ies.length,
+            cnpjs: lista.length,
+            atualizados: r.atualizados,
+            cache: r.cache,
+            naoEncontrados: r.naoEncontrados?.length ?? 0,
+            falhas: r.falhas.length,
+            restantes: r.restantes ?? 0,
+          });
+        },
+        onError: aoFalhar,
+      },
+    );
   };
 
 
@@ -132,6 +164,8 @@ export function useReceitaPorIe(
     cnpjDe,
     consultar,
     consultarIes,
+    resumoSelecao,
+    limparResumoSelecao: () => setResumoSelecao(null),
 
     consultando: consulta.isPending,
     progresso: consulta.progresso,

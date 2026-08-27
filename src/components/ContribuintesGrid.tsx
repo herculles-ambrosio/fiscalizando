@@ -192,7 +192,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [selecionandoTodos, setSelecionandoTodos] = useState(false);
   const [detalhe, setDetalhe] = useState<ContribuinteLinha | null>(null);
-  const [receitaFiltro, setReceitaFiltro] = useState<SituacaoReceita | "TODOS" | "NAO_CONSULTADO">(
+  const [receitaFiltro, setReceitaFiltro] = useState<
+    SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES"
+  >(
     "TODOS",
   );
 
@@ -382,13 +384,35 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     return chave ? (receita?.[chave] ?? null) : null;
   };
 
+  const semRespostaSet = new Set(fila.semResposta);
+  /** "Pendentes" = ainda não consultado ou na fila de falhas (sem resposta). */
+  const ehPendenteReceita = (c: { cnpj: string | null }) => {
+    const reg = situacaoReceitaDe(c.cnpj);
+    const chave = limparCnpj(c.cnpj);
+    return !reg || (chave ? semRespostaSet.has(chave) : false);
+  };
+
   const linhasFiltradas =
     receitaFiltro === "TODOS"
       ? linhasPagina
-      : linhasPagina.filter((c) => {
-          const reg = situacaoReceitaDe(c.cnpj);
-          return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
-        });
+      : receitaFiltro === "PENDENTES"
+        ? linhasPagina.filter(ehPendenteReceita)
+        : linhasPagina.filter((c) => {
+            const reg = situacaoReceitaDe(c.cnpj);
+            return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
+          });
+
+  /** Aplica o filtro de pendentes e já marca esses contribuintes para reconsulta. */
+  function marcarPendentesReceita() {
+    setReceitaFiltro("PENDENTES");
+    const ids = linhasPagina.filter(ehPendenteReceita).map((c) => c.id);
+    if (!ids.length) {
+      toast.info("Nenhum contribuinte pendente na Receita Federal nesta página.");
+      return;
+    }
+    setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+    toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
+  }
 
   /** A situação da Receita não está na tabela: ordena as linhas já carregadas. */
   const linhasVisiveis =
@@ -596,6 +620,16 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               ? ` (${selecionados.length} selecionado(s))`
               : ` (${data?.total ?? 0})`}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={marcarPendentesReceita}
+            aria-label="Filtrar e selecionar contribuintes pendentes na Receita Federal"
+            title="Mostra apenas os contribuintes sem consulta ou sem resposta da Receita Federal nesta página e já os seleciona."
+          >
+            <CheckSquare className="mr-2 h-4 w-4" />
+            Pendentes na Receita
+          </Button>
           <BotaoReconsultarFalhas
             total={fila.total}
             onReconsultar={reconsultarSemResposta}
@@ -750,7 +784,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
         <Select
           value={receitaFiltro}
-          onValueChange={(v) => setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO")}
+          onValueChange={(v) =>
+            setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES")
+          }
         >
           <SelectTrigger
             className="h-8 w-64"
@@ -760,6 +796,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="TODOS">Receita: todas</SelectItem>
+            <SelectItem value="PENDENTES">Receita: pendentes (não consultado + falha)</SelectItem>
             <SelectItem value="NAO_CONSULTADO">
               {ROTULO_SITUACAO_RECEITA["NAO_CONSULTADO"]}
             </SelectItem>
