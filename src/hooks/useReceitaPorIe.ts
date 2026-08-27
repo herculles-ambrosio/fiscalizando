@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
 import { useFilaReceita } from "@/hooks/useFilaReceita";
-import { cnpjUtil, type RegistroReceita } from "@/lib/receita/normalizar";
+import { cnpjUtil, limparCnpj, type RegistroReceita } from "@/lib/receita/normalizar";
 import { chaveIeReceita, rotuloSituacao, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 
 export type EntradaIe = { inscricao_estadual: string; cnpj?: string | null };
@@ -91,6 +91,8 @@ export function useReceitaPorIe(
 
   const registroDe = (ie: string | null | undefined) => registroPorIe[chaveIeReceita(ie)];
   const cnpjDe = (ie: string | null | undefined) => cnpjPorIe[chaveIeReceita(ie)] ?? null;
+  const origemDe = (ie: string | null | undefined): "cadastro" | "retorno" | null =>
+    origemPorIe[chaveIeReceita(ie)] ?? null;
 
   const [resumoSelecao, setResumoSelecao] = useState<ResumoSelecaoReceita | null>(null);
 
@@ -182,6 +184,7 @@ export function useReceitaPorIe(
     rotulosPorIe,
     registroDe,
     cnpjDe,
+    origemDe,
     consultar,
     consultarIes,
     resumoSelecao,
