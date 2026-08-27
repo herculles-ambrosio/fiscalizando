@@ -178,6 +178,8 @@ export default function DiagnosticoVariacao({
 }) {
   const [copiado, setCopiado] = useState(false);
   const [baixando, setBaixando] = useState<"docx" | "pdf" | null>(null);
+  const sel = useSelecaoIes();
+
   const d = useMemo(() => diagnosticarEvolucao(base, atual), [base, atual]);
   // exercício e município vêm dos seletores da tela — o documento usa exatamente esses filtros
   const exercicioAlvo = exercicio ?? atual.apuracao.anoBase ?? null;
