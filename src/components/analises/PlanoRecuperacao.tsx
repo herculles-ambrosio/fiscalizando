@@ -349,8 +349,8 @@ export default function PlanoRecuperacao({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => void baixarDocx()}
-              disabled={baixandoDocx}
+              onClick={() => setExportacaoPendente("docx")}
+              disabled={baixandoDocx || baixandoPdf}
             >
               {baixandoDocx ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -363,8 +363,8 @@ export default function PlanoRecuperacao({
               variant="secondary"
               size="sm"
               className="gap-2"
-              onClick={() => void baixarPdf()}
-              disabled={baixandoPdf}
+              onClick={() => setExportacaoPendente("pdf")}
+              disabled={baixandoPdf || baixandoDocx}
             >
               {baixandoPdf ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
