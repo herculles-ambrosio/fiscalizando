@@ -494,6 +494,16 @@ export default function PlanoRecuperacao({
         </CardContent>
       </Card>
 
+      <DialogExportacaoRelatorio
+        formato={exportacaoPendente}
+        acoes={acoes}
+        exercicio={exercicio ?? null}
+        receitaDe={receita.registroDe}
+        baixando={baixandoDocx || baixandoPdf}
+        onFechar={() => setExportacaoPendente(null)}
+        onConfirmar={confirmarExportacao}
+      />
+
       <DialogEmissao
         acao={acaoEmissao}
         exercicio={exercicio ?? null}
