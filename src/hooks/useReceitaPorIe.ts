@@ -8,6 +8,17 @@ import { chaveIeReceita, rotuloSituacao, type MapaReceitaPorIe } from "@/lib/rec
 
 export type EntradaIe = { inscricao_estadual: string; cnpj?: string | null };
 
+/** Resumo da última reconsulta feita apenas nos contribuintes selecionados. */
+export type ResumoSelecaoReceita = {
+  selecionados: number;
+  cnpjs: number;
+  atualizados: number;
+  cache: number;
+  naoEncontrados: number;
+  falhas: number;
+  restantes: number;
+};
+
 /**
  * Situação cadastral na Receita Federal indexada por inscrição estadual.
  * O CNPJ vem do próprio registro (quando existe) ou do cadastro já apurado
