@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
 import { useFilaReceita } from "@/hooks/useFilaReceita";
-import { cnpjUtil, type RegistroReceita } from "@/lib/receita/normalizar";
+import { cnpjUtil, limparCnpj, type RegistroReceita } from "@/lib/receita/normalizar";
 import { chaveIeReceita, rotuloSituacao, type MapaReceitaPorIe } from "@/lib/receita/porIe";
 
 export type EntradaIe = { inscricao_estadual: string; cnpj?: string | null };
@@ -30,13 +30,31 @@ export function useReceitaPorIe(
 ) {
   const { data: cadastro } = useCadastroContribuintes(municipioId);
 
+  /** Origem do CNPJ usado na consulta, para explicar o status na tela. */
+  const origemPorIe = useMemo(() => {
+    const mapa: Record<string, "cadastro" | "retorno"> = {};
+    for (const e of entradas) {
+      const k = chaveIeReceita(e.inscricao_estadual);
+      if (!k || mapa[k]) continue;
+      // O cadastro apurado é a fonte confiável: o CNPJ do retorno vem inválido às vezes.
+      // Mesma cadeia de fallback do menu "Contribuintes" (que usa o CNPJ do cadastro sem
+      // exigir dígito verificador), para os dois lugares mostrarem sempre o mesmo status.
+      if (cnpjUtil(cadastro?.[k]?.cnpj) ?? limparCnpj(cadastro?.[k]?.cnpj)) mapa[k] = "cadastro";
+      else if (cnpjUtil(e.cnpj) ?? limparCnpj(e.cnpj)) mapa[k] = "retorno";
+    }
+    return mapa;
+  }, [entradas, cadastro]);
+
   const cnpjPorIe = useMemo(() => {
     const mapa: Record<string, string> = {};
     for (const e of entradas) {
       const k = chaveIeReceita(e.inscricao_estadual);
       if (!k || mapa[k]) continue;
-      // O cadastro apurado é a fonte confiável: o CNPJ do retorno vem inválido às vezes.
-      const cnpj = cnpjUtil(cadastro?.[k]?.cnpj) ?? cnpjUtil(e.cnpj);
+      const cnpj =
+        cnpjUtil(cadastro?.[k]?.cnpj) ??
+        limparCnpj(cadastro?.[k]?.cnpj) ??
+        cnpjUtil(e.cnpj) ??
+        limparCnpj(e.cnpj);
       if (cnpj) mapa[k] = cnpj;
     }
     return mapa;
@@ -53,6 +71,7 @@ export function useReceitaPorIe(
     for (const [ie, cnpj] of Object.entries(cnpjPorIe)) mapa[ie] = situacoes?.[cnpj];
     return mapa;
   }, [cnpjPorIe, situacoes]);
+
 
   const rotulosPorIe = useMemo<MapaReceitaPorIe>(() => {
     const mapa: MapaReceitaPorIe = {};
@@ -72,6 +91,8 @@ export function useReceitaPorIe(
 
   const registroDe = (ie: string | null | undefined) => registroPorIe[chaveIeReceita(ie)];
   const cnpjDe = (ie: string | null | undefined) => cnpjPorIe[chaveIeReceita(ie)] ?? null;
+  const origemDe = (ie: string | null | undefined): "cadastro" | "retorno" | null =>
+    origemPorIe[chaveIeReceita(ie)] ?? null;
 
   const [resumoSelecao, setResumoSelecao] = useState<ResumoSelecaoReceita | null>(null);
 
@@ -163,6 +184,7 @@ export function useReceitaPorIe(
     rotulosPorIe,
     registroDe,
     cnpjDe,
+    origemDe,
     consultar,
     consultarIes,
     resumoSelecao,

@@ -44,11 +44,13 @@ function Barra({
   fator,
   receitaDe,
   cnpjDe,
+  origemDe,
   sel,
 }: {
   fator: FatorVariacao;
   receitaDe: ReceitaDe;
   cnpjDe: (ie: string | null | undefined) => string | null;
+  origemDe: (ie: string | null | undefined) => "cadastro" | "retorno" | null;
   sel: SelecaoIes;
 }) {
 
@@ -127,7 +129,11 @@ function Barra({
                   </td>
                   {porContribuinte && (
                     <td className="px-2 py-1.5">
-                      <ReceitaIeBadge registro={receitaDe(i.chave)} cnpj={cnpjDe(i.chave)} />
+                      <ReceitaIeBadge
+                        registro={receitaDe(i.chave)}
+                        cnpj={cnpjDe(i.chave)}
+                        origem={origemDe(i.chave)}
+                      />
                     </td>
                   )}
 
@@ -341,7 +347,7 @@ export default function DiagnosticoVariacao({
               <p className="text-sm text-muted-foreground">Sem movimentação relevante.</p>
             ) : (
               d.fatoresDeclarantes.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} cnpjDe={receita.cnpjDe} sel={sel} />
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} cnpjDe={receita.cnpjDe} origemDe={receita.origemDe} sel={sel} />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -357,7 +363,7 @@ export default function DiagnosticoVariacao({
               </p>
             ) : (
               d.fatores.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} cnpjDe={receita.cnpjDe} sel={sel} />
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} cnpjDe={receita.cnpjDe} origemDe={receita.origemDe} sel={sel} />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -391,6 +397,7 @@ export default function DiagnosticoVariacao({
                         <ReceitaIeBadge
                           registro={receita.registroDe(c.inscricao_estadual)}
                           cnpj={receita.cnpjDe(c.inscricao_estadual)}
+                          origem={receita.origemDe(c.inscricao_estadual)}
                         />
                       </div>
                     </div>
@@ -425,6 +432,7 @@ export default function DiagnosticoVariacao({
                         <ReceitaIeBadge
                           registro={receita.registroDe(c.inscricao_estadual)}
                           cnpj={receita.cnpjDe(c.inscricao_estadual)}
+                          origem={receita.origemDe(c.inscricao_estadual)}
                         />
                       </div>
                     </div>

@@ -168,19 +168,32 @@ export function BarraSelecaoReceita({
 export function ReceitaIeBadge({
   registro,
   cnpj,
+  origem,
 }: {
   registro: RegistroReceita | undefined;
   cnpj?: string | null;
+  /** De onde veio o CNPJ usado na consulta: cadastro apurado ou arquivo de retorno do VAF. */
+  origem?: "cadastro" | "retorno" | null;
 }) {
+  const fonteCnpj =
+    origem === "cadastro"
+      ? "CNPJ obtido do cadastro apurado do município"
+      : origem === "retorno"
+        ? "CNPJ obtido do arquivo de retorno do VAF"
+        : null;
+
   if (!registro) {
     return (
       <SituacaoReceitaBadge
         situacao={null}
-        motivo={
+        motivo={[
           cnpj
             ? "CNPJ ainda não consultado na Receita Federal — use o botão Consultar Receita."
-            : "Sem CNPJ no cadastro apurado para consultar a Receita Federal."
-        }
+            : "Sem CNPJ no cadastro apurado nem no retorno do VAF para consultar a Receita Federal.",
+          fonteCnpj,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       />
     );
   }
@@ -189,9 +202,11 @@ export function ReceitaIeBadge({
     registro.motivo ? `Motivo: ${registro.motivo}` : null,
     registro.consultado_em ? `Consultado em ${formatarData(registro.consultado_em)}` : null,
     registro.fonte ? `Fonte: ${registro.fonte}` : null,
+    fonteCnpj,
   ].filter(Boolean);
   return <SituacaoReceitaBadge situacao={registro.situacao} motivo={detalhes.join(" · ")} />;
 }
+
 
 export function BotaoConsultarReceita({
   onConsultar,
