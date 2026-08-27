@@ -162,7 +162,24 @@ type ColunaOrdenavel =
   | "vaf_atual"
   | "vaf_anterior"
   | "variacao_pct"
+  | "situacao_cadastral"
+  | "situacoes"
+  | "receita_federal"
   | "data_entrega";
+
+/** Colunas que o banco sabe ordenar; "receita_federal" é ordenada no cliente. */
+const COLUNAS_SERVIDOR = new Set<ColunaOrdenavel>([
+  "nome",
+  "cnpj",
+  "inscricao_estadual",
+  "cnae",
+  "vaf_atual",
+  "vaf_anterior",
+  "variacao_pct",
+  "situacao_cadastral",
+  "situacoes",
+  "data_entrega",
+]);
 
 export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo?: string }) {
   const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
@@ -189,7 +206,17 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     setOrdem((atual) =>
       atual.coluna === coluna
         ? { coluna, asc: !atual.asc }
-        : { coluna, asc: coluna === "nome" || coluna === "cnae" || coluna === "cnpj" || coluna === "inscricao_estadual" },
+        : {
+            coluna,
+            asc:
+              coluna === "nome" ||
+              coluna === "cnae" ||
+              coluna === "cnpj" ||
+              coluna === "inscricao_estadual" ||
+              coluna === "situacao_cadastral" ||
+              coluna === "situacoes" ||
+              coluna === "receita_federal",
+          },
     );
   };
 
@@ -214,7 +241,10 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         .from("contribuintes_apurados")
         .select("*", { count: "exact" })
         .eq("carga_id", cargaId)
-        .order(ordem.coluna, { ascending: ordem.asc, nullsFirst: false })
+        .order(COLUNAS_SERVIDOR.has(ordem.coluna) ? ordem.coluna : "vaf_atual", {
+          ascending: COLUNAS_SERVIDOR.has(ordem.coluna) ? ordem.asc : false,
+          nullsFirst: false,
+        })
         .order("id", { ascending: true })
         .range(pagina * POR_PAGINA, pagina * POR_PAGINA + POR_PAGINA - 1);
 
@@ -352,13 +382,24 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     return chave ? (receita?.[chave] ?? null) : null;
   };
 
-  const linhasVisiveis =
+  const linhasFiltradas =
     receitaFiltro === "TODOS"
       ? linhasPagina
       : linhasPagina.filter((c) => {
           const reg = situacaoReceitaDe(c.cnpj);
           return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
         });
+
+  /** A situação da Receita não está na tabela: ordena as linhas já carregadas. */
+  const linhasVisiveis =
+    ordem.coluna === "receita_federal"
+      ? [...linhasFiltradas].sort((a, b) => {
+          const ra = situacaoReceitaDe(a.cnpj)?.situacao ?? "";
+          const rb = situacaoReceitaDe(b.cnpj)?.situacao ?? "";
+          const cmp = ra.localeCompare(rb, "pt-BR");
+          return ordem.asc ? cmp : -cmp;
+        })
+      : linhasFiltradas;
 
   /** Monta a lista de CNPJs conforme a seleção; sem seleção, usa TODOS os contribuintes dos filtros atuais. */
   async function cnpjsDoEscopo(): Promise<(string | null)[]> {
@@ -797,13 +838,21 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                     {visivel("variacao_pct") && (
                       <ColunaHead coluna="variacao_pct" ordem={ordem} onSort={ordenarPor} alinhar="right">Variação</ColunaHead>
                     )}
-                    {visivel("situacao_cadastral") && <TableHead>Situação cadastral</TableHead>}
-                    {visivel("receita_federal") && (
-                      <TableHead title="Situação cadastral na Receita Federal (dados abertos do CNPJ)">
-                        Receita Federal
-                      </TableHead>
+                    {visivel("situacao_cadastral") && (
+                      <ColunaHead coluna="situacao_cadastral" ordem={ordem} onSort={ordenarPor}>
+                        Situação cadastral
+                      </ColunaHead>
                     )}
-                    {visivel("situacoes") && <TableHead>Situação</TableHead>}
+                    {visivel("receita_federal") && (
+                      <ColunaHead coluna="receita_federal" ordem={ordem} onSort={ordenarPor}>
+                        Receita Federal
+                      </ColunaHead>
+                    )}
+                    {visivel("situacoes") && (
+                      <ColunaHead coluna="situacoes" ordem={ordem} onSort={ordenarPor}>
+                        Situação
+                      </ColunaHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
