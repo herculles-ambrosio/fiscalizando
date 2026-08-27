@@ -430,12 +430,13 @@ export default function DiagnosticoVariacao({
                         IE {c.inscricao_estadual}
                         {c.situacao === "saiu" ? " · deixou de declarar" : ""}
                       </p>
-                      <div className="mt-1">
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
                         <ReceitaIeBadge
                           registro={receita.registroDe(c.inscricao_estadual)}
                           cnpj={receita.cnpjDe(c.inscricao_estadual)}
                           origem={receita.origemDe(c.inscricao_estadual)}
                         />
+                        <DataSituacaoRf registro={receita.registroDe(c.inscricao_estadual)} />
                       </div>
                     </div>
                     <span className="shrink-0 font-mono text-sm text-destructive">
@@ -465,12 +466,13 @@ export default function DiagnosticoVariacao({
                         IE {c.inscricao_estadual}
                         {c.situacao === "entrou" ? " · novo declarante" : ""}
                       </p>
-                      <div className="mt-1">
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
                         <ReceitaIeBadge
                           registro={receita.registroDe(c.inscricao_estadual)}
                           cnpj={receita.cnpjDe(c.inscricao_estadual)}
                           origem={receita.origemDe(c.inscricao_estadual)}
                         />
+                        <DataSituacaoRf registro={receita.registroDe(c.inscricao_estadual)} />
                       </div>
                     </div>
                     <span className="shrink-0 font-mono text-sm text-emerald-600">
