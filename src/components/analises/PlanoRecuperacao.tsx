@@ -1020,6 +1020,164 @@ function DetalheIgnorado({
   );
 }
 
+/**
+ * Diálogo exibido antes de baixar a análise (DOCX/PDF): permite escolher, pela data da
+ * situação na Receita Federal, quais contribuintes baixados/nulos entram no relatório.
+ * Baixados com data da baixa anterior à data de referência do movimento já saem desmarcados.
+ */
+function DialogExportacaoRelatorio({
+  formato,
+  acoes,
+  exercicio,
+  receitaDe,
+  baixando,
+  onFechar,
+  onConfirmar,
+}: {
+  formato: "docx" | "pdf" | null;
+  acoes: AcaoRecuperacao[];
+  exercicio: number | null;
+  receitaDe: (ie: string | null | undefined) => RegistroReceita | undefined;
+  baixando: boolean;
+  onFechar: () => void;
+  onConfirmar: (ies: string[]) => void;
+}) {
+  const [dataMovimento, setDataMovimento] = useState<string>(
+    `${exercicio ?? new Date().getFullYear()}-12-31`,
+  );
+  /** IEs desmarcadas/marcadas manualmente (o restante segue a sugestão automática) */
+  const [manuais, setManuais] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!formato) return;
+    setManuais({});
+    setDataMovimento(`${exercicio ?? new Date().getFullYear()}-12-31`);
+  }, [formato, exercicio]);
+
+  /** contribuintes citados no plano, sem repetição de IE */
+  const linhas = useMemo(() => {
+    const mapa = new Map<string, MovimentoDeclarante>();
+    for (const a of acoes)
+      for (const c of a.contribuintes)
+        if (!mapa.has(c.inscricao_estadual)) mapa.set(c.inscricao_estadual, c);
+    return [...mapa.values()];
+  }, [acoes]);
+
+  const encerradoAntes = (ie: string) => {
+    const reg = receitaDe(ie);
+    if (!reg || !SITUACOES_RECEITA_ENCERRADAS.includes(reg.situacao)) return false;
+    if (!reg.situacao_data) return true;
+    return reg.situacao_data < dataMovimento;
+  };
+
+  const linhasRelatorio = linhas.map((c) => {
+    const reg = receitaDe(c.inscricao_estadual);
+    const bloqueado = encerradoAntes(c.inscricao_estadual);
+    const marcado = manuais[c.inscricao_estadual] ?? !bloqueado;
+    return { c, reg, bloqueado, marcado };
+  });
+  const selecionadas = linhasRelatorio.filter((l) => l.marcado);
+  const encerradosNaLista = linhasRelatorio.filter(
+    (l) => l.reg && SITUACOES_RECEITA_ENCERRADAS.includes(l.reg.situacao),
+  ).length;
+
+  return (
+    <Dialog open={!!formato} onOpenChange={(v) => !v && onFechar()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Baixar a análise (.{formato ?? "docx"})</DialogTitle>
+          <DialogDescription>
+            Escolha quais contribuintes entram no relatório. Baixados/nulos na Receita Federal
+            cuja baixa é anterior à data de referência do movimento já vêm desmarcados.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="data-movimento-relatorio">Data de referência do movimento</Label>
+            <Input
+              id="data-movimento-relatorio"
+              type="date"
+              value={dataMovimento}
+              onChange={(e) => setDataMovimento(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Se a data da baixa for <strong>anterior</strong> ao movimento, o contribuinte não
+              entra no relatório; se for <strong>posterior</strong>, ele permanece. Você pode
+              marcar ou desmarcar qualquer um manualmente.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <Label>Contribuintes no relatório</Label>
+              <span className="text-xs text-muted-foreground">
+                {selecionadas.length}/{linhasRelatorio.length} incluído(s)
+                {encerradosNaLista ? ` · ${encerradosNaLista} baixado(s)/nulo(s)` : ""}
+              </span>
+            </div>
+            <div className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-2">
+              {linhasRelatorio.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nenhum contribuinte listado nas ações deste plano.
+                </p>
+              ) : (
+                linhasRelatorio.map(({ c, reg, bloqueado, marcado }) => (
+                  <label
+                    key={c.inscricao_estadual}
+                    className="flex items-start gap-2 rounded-md px-1 py-1 text-xs hover:bg-muted/50"
+                  >
+                    <Checkbox
+                      checked={marcado}
+                      onCheckedChange={(v) =>
+                        setManuais((a) => ({ ...a, [c.inscricao_estadual]: v === true }))
+                      }
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{c.nome ?? "(sem nome)"}</span>
+                      <span className="block text-muted-foreground">
+                        IE {c.inscricao_estadual}
+                        {c.cnpj ? ` · ${formatarCnpj(c.cnpj)}` : ""}
+                      </span>
+                      <span className="mt-0.5 flex flex-wrap items-center gap-2">
+                        <ReceitaIeBadge registro={reg} cnpj={c.cnpj} />
+                        <DataSituacaoRf registro={reg} />
+                        {bloqueado ? (
+                          <span className="text-destructive">
+                            baixa anterior ao movimento — fora do relatório
+                          </span>
+                        ) : null}
+                      </span>
+                    </span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar} disabled={baixando}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => onConfirmar(selecionadas.map(({ c }) => c.inscricao_estadual))}
+            disabled={baixando || !selecionadas.length}
+            className="gap-2"
+          >
+            {baixando ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            Baixar {formato === "pdf" ? "PDF" : "DOCX"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function DialogEmissao({
   acao,
   exercicio,
