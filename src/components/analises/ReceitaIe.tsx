@@ -1,8 +1,125 @@
+import { useCallback, useMemo, useState } from "react";
 import { Loader2, RefreshCw, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 import { formatarData } from "@/lib/format";
+import { chaveIeReceita } from "@/lib/receita/porIe";
+
+/** Seleção de contribuintes (por inscrição estadual) para reconsulta imediata na Receita. */
+export type SelecaoIes = {
+  marcadas: string[];
+  esta: (ie: string | null | undefined) => boolean;
+  alternar: (ie: string | null | undefined, marcado: boolean) => void;
+  definir: (ies: (string | null | undefined)[], marcado: boolean) => void;
+  limpar: () => void;
+};
+
+export function useSelecaoIes(): SelecaoIes {
+  const [marcadas, setMarcadas] = useState<string[]>([]);
+
+  const alternar = useCallback((ie: string | null | undefined, marcado: boolean) => {
+    const k = chaveIeReceita(ie);
+    if (!k) return;
+    setMarcadas((a) => (marcado ? [...new Set([...a, k])] : a.filter((x) => x !== k)));
+  }, []);
+
+  const definir = useCallback((ies: (string | null | undefined)[], marcado: boolean) => {
+    const chaves = ies.map(chaveIeReceita).filter(Boolean);
+    setMarcadas((a) =>
+      marcado ? [...new Set([...a, ...chaves])] : a.filter((x) => !chaves.includes(x)),
+    );
+  }, []);
+
+  return useMemo(
+    () => ({
+      marcadas,
+      esta: (ie) => marcadas.includes(chaveIeReceita(ie)),
+      alternar,
+      definir,
+      limpar: () => setMarcadas([]),
+    }),
+    [marcadas, alternar, definir],
+  );
+}
+
+export function CaixaSelecaoIe({
+  ie,
+  sel,
+  rotulo,
+}: {
+  ie: string | null | undefined;
+  sel: SelecaoIes;
+  rotulo?: string | null;
+}) {
+  return (
+    <Checkbox
+      checked={sel.esta(ie)}
+      onCheckedChange={(v) => sel.alternar(ie, v === true)}
+      aria-label={`Selecionar ${rotulo ?? ie ?? "contribuinte"} para reconsultar na Receita Federal`}
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+}
+
+/** Caixa "marcar todos" de uma lista de inscrições. */
+export function CaixaSelecaoTodas({
+  ies,
+  sel,
+}: {
+  ies: (string | null | undefined)[];
+  sel: SelecaoIes;
+}) {
+  const chaves = ies.map(chaveIeReceita).filter(Boolean);
+  const todas = chaves.length > 0 && chaves.every((k) => sel.marcadas.includes(k));
+  return (
+    <Checkbox
+      checked={todas}
+      disabled={chaves.length === 0}
+      onCheckedChange={(v) => sel.definir(ies, v === true)}
+      aria-label="Selecionar todos os contribuintes desta lista"
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+}
+
+/** Barra de ação que aparece quando há contribuintes marcados. */
+export function BarraSelecaoReceita({
+  sel,
+  onConsultar,
+  consultando,
+}: {
+  sel: SelecaoIes;
+  onConsultar: (ies: string[]) => void;
+  consultando: boolean;
+}) {
+  if (sel.marcadas.length === 0) return null;
+  return (
+    <div className="no-print flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+      <span className="font-medium">
+        {sel.marcadas.length} contribuinte(s) selecionado(s)
+      </span>
+      <Button
+        size="sm"
+        className="h-7 gap-1 px-2 text-xs"
+        disabled={consultando}
+        onClick={() => onConsultar(sel.marcadas)}
+      >
+        {consultando ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <RefreshCw className="h-3.5 w-3.5" />
+        )}
+        Consultar Receita dos selecionados
+      </Button>
+      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={sel.limpar}>
+        Limpar seleção
+      </Button>
+    </div>
+  );
+}
+
 
 /** Etiqueta da situação na Receita Federal para uma inscrição estadual. */
 export function ReceitaIeBadge({
