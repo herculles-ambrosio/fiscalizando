@@ -144,6 +144,8 @@ export default function PlanoRecuperacao({
   const [filtroMotivo, setFiltroMotivo] = useState<string>("todos");
   const [baixandoDocx, setBaixandoDocx] = useState(false);
   const [baixandoPdf, setBaixandoPdf] = useState(false);
+  /** formato pendente de confirmação no diálogo de seleção (baixados por data) */
+  const [exportacaoPendente, setExportacaoPendente] = useState<"docx" | "pdf" | null>(null);
   const { municipio } = useMunicipioAtivo();
   const nomeMunicipioRelatorio = municipioNome ?? municipio?.nome ?? null;
 
