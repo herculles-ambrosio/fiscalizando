@@ -635,13 +635,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         <div>
           <h1 className="text-2xl font-semibold">{titulo ?? "Contribuintes apurados"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {data ? `${data.total} registros encontrados` : "Carregando…"}
+            {data ? `${totalRegistros} registros encontrados` : "Carregando…"}
+            {filtroReceitaAtivo && data ? ` (filtro da Receita · ${data.total} sem esse filtro)` : ""}
             {selecionados.length ? ` · ${selecionados.length} selecionado(s)` : ""}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <AtualizarRegimes cargaId={cargaId} />
-          {data && data.total > 0 && (
+          {totalRegistros > 0 && (
             <>
               <Button
                 variant="outline"
