@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   ArrowDownRight,
+  ArrowUpDown,
   ArrowUpRight,
   ChevronDown,
   ClipboardCopy,
@@ -31,6 +32,8 @@ import {
   BotaoReconsultarFalhas,
   CaixaSelecaoIe,
   CaixaSelecaoTodas,
+  chaveDataSituacao,
+  DataSituacaoRf,
   ReceitaIeBadge,
   useSelecaoIes,
   type SelecaoIes,
