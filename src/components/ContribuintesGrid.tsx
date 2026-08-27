@@ -852,9 +852,10 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
         <Select
           value={receitaFiltro}
-          onValueChange={(v) =>
-            setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES")
-          }
+          onValueChange={(v) => {
+            setReceitaFiltro(v as SituacaoReceita | "TODOS" | "NAO_CONSULTADO" | "PENDENTES");
+            setPagina(0);
+          }}
         >
           <SelectTrigger
             className="h-8 w-64"
