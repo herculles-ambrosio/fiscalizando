@@ -14,9 +14,14 @@ import {
 import { toast } from "sonner";
 import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
 import {
+  BarraSelecaoReceita,
   BotaoConsultarReceita,
   BotaoReconsultarFalhas,
+  CaixaSelecaoIe,
+  CaixaSelecaoTodas,
   ReceitaIeBadge,
+  useSelecaoIes,
+  type SelecaoIes,
 } from "@/components/analises/ReceitaIe";
 import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
@@ -340,6 +345,11 @@ export default function PlanoRecuperacao({
         <ProgressoConsultaReceita progresso={receita.progresso} />
 
         <CardContent className="space-y-4">
+          <BarraSelecaoReceita
+            sel={sel}
+            consultando={receita.consultando}
+            onConsultar={(ies) => receita.consultarIes(ies)}
+          />
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Potencial mapeado: {formatarMoeda(totalPotencial)}</AlertTitle>
@@ -443,6 +453,7 @@ export default function PlanoRecuperacao({
                 salvarStatus={salvarStatus}
                 situacoesCadastrais={situacoesCadastrais ?? null}
                 receitaDe={receita.registroDe}
+                sel={sel}
               />
 
 
@@ -519,6 +530,7 @@ function ItemAcao({
   salvarStatus,
   situacoesCadastrais,
   receitaDe,
+  sel,
 }: {
   acao: AcaoRecuperacao;
   ordem: number;
@@ -532,6 +544,7 @@ function ItemAcao({
   salvarStatus: SalvarStatus;
   situacoesCadastrais: MapaSituacoesCadastrais | null;
   receitaDe: (ie: string | null | undefined) => RegistroReceita | undefined;
+  sel: SelecaoIes;
 }) {
   const [aberto, setAberto] = useState(false);
   /** null = fechado; "" = anotação da ação; IE = anotação do contribuinte */
@@ -647,6 +660,12 @@ function ItemAcao({
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-8">
+                      <CaixaSelecaoTodas
+                        ies={acao.contribuintes.slice(0, 25).map((c) => c.inscricao_estadual)}
+                        sel={sel}
+                      />
+                    </TableHead>
                     <TableHead>Contribuinte</TableHead>
                     <TableHead>Receita Federal</TableHead>
                     <TableHead className="text-right">VAF base</TableHead>
@@ -659,6 +678,9 @@ function ItemAcao({
                 <TableBody>
                   {acao.contribuintes.slice(0, 25).map((c) => (
                     <TableRow key={c.inscricao_estadual}>
+                      <TableCell>
+                        <CaixaSelecaoIe ie={c.inscricao_estadual} sel={sel} rotulo={c.nome} />
+                      </TableCell>
                       <TableCell className="text-xs">
                         <p className="font-medium">{c.nome ?? "(sem nome)"}</p>
                         <p className="text-muted-foreground">
