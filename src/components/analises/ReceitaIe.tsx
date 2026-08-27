@@ -6,6 +6,11 @@ import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 import { formatarData } from "@/lib/format";
 import { chaveIeReceita } from "@/lib/receita/porIe";
+import {
+  ProgressoConsultaReceita,
+  type ProgressoReceita,
+} from "@/components/receita/ProgressoConsultaReceita";
+import type { ResumoSelecaoReceita } from "@/hooks/useReceitaPorIe";
 
 /** Seleção de contribuintes (por inscrição estadual) para reconsulta imediata na Receita. */
 export type SelecaoIes = {
