@@ -488,6 +488,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
       return cnpjs;
     }
 
+    // Com filtro da Receita ativo, o escopo é exatamente o que está filtrado na tela.
+    if (filtroReceitaAtivo) return linhasOrdenadas.map((c) => c.cnpj);
+
     let q = supabase.from("contribuintes_apurados").select("cnpj").eq("carga_id", cargaId);
     if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
     else q = q.not("situacoes", "cs", "{SOMENTE_RETORNO}");
