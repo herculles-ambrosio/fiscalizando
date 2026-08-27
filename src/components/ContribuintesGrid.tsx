@@ -387,15 +387,11 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   });
 
 
-  const totalPaginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA));
-  const totalVafAtual = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
-  const totalVafAnterior = (data?.linhas ?? []).reduce((s, c) => s + (c.vaf_anterior ?? 0), 0);
-  const linhasPagina = data?.linhas ?? [];
-  const todosMarcados =
-    linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
+  /** Base de trabalho: a página do banco ou a apuração inteira (filtro da Receita ativo). */
+  const linhasBase = filtroReceitaAtivo ? (todasLinhas ?? []) : (data?.linhas ?? []);
 
   // ---- Situação cadastral na Receita Federal (dados abertos do CNPJ) ----
-  const { data: receita } = useSituacoesReceita(linhasPagina.map((c) => c.cnpj));
+  const { data: receita } = useSituacoesReceita(linhasBase.map((c) => c.cnpj));
   const consulta = useConsultarReceita();
   const fila = useFilaReceita();
   const prefColunas = usePreferencia<ColunaId[]>("contribuintes_grid_colunas", COLUNAS_PADRAO);
@@ -427,30 +423,17 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     return !reg || (chave ? semRespostaSet.has(chave) : false);
   };
 
-  const linhasFiltradas =
-    receitaFiltro === "TODOS"
-      ? linhasPagina
-      : receitaFiltro === "PENDENTES"
-        ? linhasPagina.filter(ehPendenteReceita)
-        : linhasPagina.filter((c) => {
-            const reg = situacaoReceitaDe(c.cnpj);
-            return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
-          });
-
-  /** Aplica o filtro de pendentes e já marca esses contribuintes para reconsulta. */
-  function marcarPendentesReceita() {
-    setReceitaFiltro("PENDENTES");
-    const ids = linhasPagina.filter(ehPendenteReceita).map((c) => c.id);
-    if (!ids.length) {
-      toast.info("Nenhum contribuinte pendente na Receita Federal nesta página.");
-      return;
-    }
-    setSelecionados((atual) => [...new Set([...atual, ...ids])]);
-    toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
-  }
+  const linhasFiltradas = !filtroReceitaAtivo
+    ? linhasBase
+    : receitaFiltro === "PENDENTES"
+      ? linhasBase.filter(ehPendenteReceita)
+      : linhasBase.filter((c) => {
+          const reg = situacaoReceitaDe(c.cnpj);
+          return receitaFiltro === "NAO_CONSULTADO" ? !reg : reg?.situacao === receitaFiltro;
+        });
 
   /** A situação da Receita não está na tabela: ordena as linhas já carregadas. */
-  const linhasVisiveis =
+  const linhasOrdenadas =
     ordem.coluna === "receita_federal"
       ? [...linhasFiltradas].sort((a, b) => {
           const ra = situacaoReceitaDe(a.cnpj)?.situacao ?? "";
@@ -459,6 +442,34 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           return ordem.asc ? cmp : -cmp;
         })
       : linhasFiltradas;
+
+  /** Com filtro da Receita ativo a paginação passa a ser feita aqui. */
+  const totalRegistros = filtroReceitaAtivo ? linhasOrdenadas.length : (data?.total ?? 0);
+  const totalPaginas = Math.max(1, Math.ceil(totalRegistros / POR_PAGINA));
+  const paginaAtual = Math.min(pagina, totalPaginas - 1);
+  const linhasVisiveis = filtroReceitaAtivo
+    ? linhasOrdenadas.slice(paginaAtual * POR_PAGINA, paginaAtual * POR_PAGINA + POR_PAGINA)
+    : linhasOrdenadas;
+
+  const totalVafAtual = linhasVisiveis.reduce((s, c) => s + (c.vaf_atual ?? 0), 0);
+  const totalVafAnterior = linhasVisiveis.reduce((s, c) => s + (c.vaf_anterior ?? 0), 0);
+  const linhasPagina = linhasVisiveis;
+  const todosMarcados =
+    linhasPagina.length > 0 && linhasPagina.every((c) => selecionados.includes(c.id));
+
+  /** Aplica o filtro de pendentes e já marca esses contribuintes para reconsulta. */
+  function marcarPendentesReceita() {
+    setReceitaFiltro("PENDENTES");
+    setPagina(0);
+    const ids = linhasBase.filter(ehPendenteReceita).map((c) => c.id);
+    if (!ids.length) {
+      toast.info("Nenhum contribuinte pendente na Receita Federal com os filtros atuais.");
+      return;
+    }
+    setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+    toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
+  }
+
 
   /** Monta a lista de CNPJs conforme a seleção; sem seleção, usa TODOS os contribuintes dos filtros atuais. */
   async function cnpjsDoEscopo(): Promise<(string | null)[]> {
