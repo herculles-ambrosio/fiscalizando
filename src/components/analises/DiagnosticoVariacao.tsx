@@ -26,16 +26,30 @@ import {
 } from "@/lib/vaf/diagnostico";
 import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
 import {
+  BarraSelecaoReceita,
   BotaoConsultarReceita,
   BotaoReconsultarFalhas,
+  CaixaSelecaoIe,
+  CaixaSelecaoTodas,
   ReceitaIeBadge,
+  useSelecaoIes,
+  type SelecaoIes,
 } from "@/components/analises/ReceitaIe";
 import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
 import type { RegistroReceita } from "@/lib/receita/normalizar";
 
 type ReceitaDe = (ie: string | null | undefined) => RegistroReceita | undefined;
 
-function Barra({ fator, receitaDe }: { fator: FatorVariacao; receitaDe: ReceitaDe }) {
+function Barra({
+  fator,
+  receitaDe,
+  sel,
+}: {
+  fator: FatorVariacao;
+  receitaDe: ReceitaDe;
+  sel: SelecaoIes;
+}) {
+
   const [aberto, setAberto] = useState(false);
   const positivo = fator.sentido === "aumentou";
   const Icone = fator.sentido === "neutro" ? Minus : positivo ? ArrowUpRight : ArrowDownRight;
