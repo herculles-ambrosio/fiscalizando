@@ -43,10 +43,12 @@ type ReceitaDe = (ie: string | null | undefined) => RegistroReceita | undefined;
 function Barra({
   fator,
   receitaDe,
+  cnpjDe,
   sel,
 }: {
   fator: FatorVariacao;
   receitaDe: ReceitaDe;
+  cnpjDe: (ie: string | null | undefined) => string | null;
   sel: SelecaoIes;
 }) {
 
@@ -125,7 +127,7 @@ function Barra({
                   </td>
                   {porContribuinte && (
                     <td className="px-2 py-1.5">
-                      <ReceitaIeBadge registro={receitaDe(i.chave)} />
+                      <ReceitaIeBadge registro={receitaDe(i.chave)} cnpj={cnpjDe(i.chave)} />
                     </td>
                   )}
 
@@ -339,7 +341,7 @@ export default function DiagnosticoVariacao({
               <p className="text-sm text-muted-foreground">Sem movimentação relevante.</p>
             ) : (
               d.fatoresDeclarantes.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} sel={sel} />
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} cnpjDe={receita.cnpjDe} sel={sel} />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -355,7 +357,7 @@ export default function DiagnosticoVariacao({
               </p>
             ) : (
               d.fatores.map((f) => (
-                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} sel={sel} />
+                <Barra key={f.chave} fator={f} receitaDe={receita.registroDe} cnpjDe={receita.cnpjDe} sel={sel} />
               ))
             )}
             <p className="border-t border-border pt-2 text-xs text-muted-foreground">
@@ -386,7 +388,10 @@ export default function DiagnosticoVariacao({
                         {c.situacao === "saiu" ? " · deixou de declarar" : ""}
                       </p>
                       <div className="mt-1">
-                        <ReceitaIeBadge registro={receita.registroDe(c.inscricao_estadual)} />
+                        <ReceitaIeBadge
+                          registro={receita.registroDe(c.inscricao_estadual)}
+                          cnpj={receita.cnpjDe(c.inscricao_estadual)}
+                        />
                       </div>
                     </div>
                     <span className="shrink-0 font-mono text-sm text-destructive">
@@ -417,7 +422,10 @@ export default function DiagnosticoVariacao({
                         {c.situacao === "entrou" ? " · novo declarante" : ""}
                       </p>
                       <div className="mt-1">
-                        <ReceitaIeBadge registro={receita.registroDe(c.inscricao_estadual)} />
+                        <ReceitaIeBadge
+                          registro={receita.registroDe(c.inscricao_estadual)}
+                          cnpj={receita.cnpjDe(c.inscricao_estadual)}
+                        />
                       </div>
                     </div>
                     <span className="shrink-0 font-mono text-sm text-emerald-600">

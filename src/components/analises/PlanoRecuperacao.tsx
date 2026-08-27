@@ -457,6 +457,7 @@ export default function PlanoRecuperacao({
                 salvarStatus={salvarStatus}
                 situacoesCadastrais={situacoesCadastrais ?? null}
                 receitaDe={receita.registroDe}
+                cnpjDe={receita.cnpjDe}
                 sel={sel}
               />
 
@@ -534,6 +535,7 @@ function ItemAcao({
   salvarStatus,
   situacoesCadastrais,
   receitaDe,
+  cnpjDe,
   sel,
 }: {
   acao: AcaoRecuperacao;
@@ -548,6 +550,7 @@ function ItemAcao({
   salvarStatus: SalvarStatus;
   situacoesCadastrais: MapaSituacoesCadastrais | null;
   receitaDe: (ie: string | null | undefined) => RegistroReceita | undefined;
+  cnpjDe: (ie: string | null | undefined) => string | null;
   sel: SelecaoIes;
 }) {
   const [aberto, setAberto] = useState(false);
@@ -689,7 +692,9 @@ function ItemAcao({
                         <p className="font-medium">{c.nome ?? "(sem nome)"}</p>
                         <p className="text-muted-foreground">
                           IE {c.inscricao_estadual}
-                          {c.cnpj ? ` · ${formatarCnpj(c.cnpj)}` : ""}
+                          {cnpjDe(c.inscricao_estadual) ?? c.cnpj
+                            ? ` · ${formatarCnpj((cnpjDe(c.inscricao_estadual) ?? c.cnpj)!)}`
+                            : ""}
                         </p>
                         {obsPorChave.get(chaveStatus(acao.chave, c.inscricao_estadual)) && (
                           <p className="mt-1 text-muted-foreground italic">
@@ -698,7 +703,10 @@ function ItemAcao({
                         )}
                       </TableCell>
                       <TableCell>
-                        <ReceitaIeBadge registro={receitaDe(c.inscricao_estadual)} cnpj={c.cnpj} />
+                        <ReceitaIeBadge
+                          registro={receitaDe(c.inscricao_estadual)}
+                          cnpj={cnpjDe(c.inscricao_estadual) ?? c.cnpj}
+                        />
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs tabular-nums">
                         {formatarMoeda(c.vafBase)}
