@@ -205,6 +205,29 @@ function normalizarIe(valor: string | undefined): string {
   return limparCampo(valor).replace(/\D/g, "").replace(/^0+/, "");
 }
 
+/** Raiz da IE (9 primeiros dígitos): identifica o produtor, sem o estabelecimento. */
+function raizIe(valor: string | undefined): string {
+  const digitos = limparCampo(valor).replace(/\D/g, "");
+  if (digitos.length < 9) return "";
+  return digitos.padStart(13, "0").slice(0, 9);
+}
+
+/**
+ * Nome do produtor pela IE. Quando o relatório de produtores não lista aquele
+ * estabelecimento (acontece com IEs encerradas ou abertas depois da extração),
+ * cai para a raiz da IE — mesmo produtor, outro estabelecimento.
+ */
+export function nomeDoProdutor(
+  produtores: ProdutoresPortal,
+  ie: string,
+): { nome: string; aproximado: boolean } | null {
+  const exato = produtores.nomes.get(normalizarIe(ie));
+  if (exato) return { nome: exato, aproximado: false };
+  const raiz = raizIe(ie);
+  const porRaiz = raiz ? produtores.porRaiz.get(raiz) : null;
+  return porRaiz ? { nome: porRaiz, aproximado: true } : null;
+}
+
 export type TipoPlanilhaPortal = "creditos" | "produtores" | "desconhecida";
 
 /** Identifica a planilha pelo cabeçalho (o nome do arquivo varia por município). */
