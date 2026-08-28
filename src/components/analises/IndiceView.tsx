@@ -374,7 +374,10 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     for (const [ie, nome] of produtores?.nomes ?? []) {
       if (!mapa.has(ie)) mapa.set(ie, nome);
     }
-    return (ie: string) => mapa.get(normalizar(ie)) ?? null;
+    return (ie: string) =>
+      mapa.get(normalizar(ie)) ??
+      // estabelecimento fora do relatório: usa a raiz da IE (mesmo produtor)
+      (produtores ? (nomeDoProdutor(produtores, ie)?.nome ?? null) : null);
   }, [apuracao, nomesGravados, produtores]);
 
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
