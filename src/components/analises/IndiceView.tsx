@@ -1236,7 +1236,10 @@ export default function PaginaIndice() {
                 </TabsContent>
 
                 <TabsContent value="contribuintes" className="mt-4">
-                  <TabelaContribuintes linhas={apuracao.contribuintesVaf.slice(0, 300)} />
+                  <TabelaContribuintes
+                    linhas={apuracao.contribuintesVaf.slice(0, 300)}
+                    nomePorIe={nomePorIe}
+                  />
                   {apuracao.contribuintesVaf.length > 300 && (
                     <p className="mt-2 text-xs text-muted-foreground">
                       Mostrando os 300 maiores. Use o CSV para a lista completa.
