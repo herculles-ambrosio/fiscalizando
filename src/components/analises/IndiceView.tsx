@@ -1290,6 +1290,7 @@ export default function PaginaIndice() {
                           <TableHead>Número / chave</TableHead>
                           <TableHead className="w-24">Saída</TableHead>
                           <TableHead>Remetente</TableHead>
+                          <TableHead>Nome do remetente</TableHead>
                           <TableHead>Produto</TableHead>
                           <TableHead className="text-right">Valor</TableHead>
                         </TableRow>
