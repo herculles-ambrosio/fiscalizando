@@ -160,12 +160,18 @@ export default function CreditoProprioPortal({
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-300">
               {pendente && <AlertTriangle className="h-4 w-4 shrink-0" />}
-              Crédito próprio (AF/SIARE)
+              {creditoNoArquivo && !planilha
+                ? "Nomes dos remetentes (produtor rural)"
+                : "Crédito próprio (AF/SIARE)"}
             </p>
             <p className="text-xs text-muted-foreground">
               {planilha
                 ? `Vindo da planilha ${planilha.arquivoNome} — ${planilha.totalNotasProprio} notas, ano base ${planilha.anoBase ?? "—"}.`
-                : "O arquivo de retorno não trouxe o crédito próprio. Selecione, na mesma pasta, o relatório de créditos do Portal do VAF (REL_CREDITO_...) e, se quiser os nomes dos remetentes, também o de produtores rurais (REL_PRODUTOR_RURAL_...)."}
+                : creditoNoArquivo
+                  ? produtores
+                    ? `Nomes de remetentes: ${produtores.total.toLocaleString("pt-BR")} produtores de ${produtores.arquivoNome}${produtores.anoBase != null ? ` (ano base ${produtores.anoBase})` : ""}.`
+                    : "Este arquivo de índice já traz o crédito próprio. Carregue apenas o relatório de produtores rurais do Portal do VAF (REL_PRODUTOR_RURAL_...) para exibir o nome dos remetentes."
+                  : "O arquivo de retorno não trouxe o crédito próprio. Selecione, na mesma pasta, o relatório de créditos do Portal do VAF (REL_CREDITO_...) e, se quiser os nomes dos remetentes, também o de produtores rurais (REL_PRODUTOR_RURAL_...)."}
             </p>
             {planilha &&
               (planilha.produtores ? (
