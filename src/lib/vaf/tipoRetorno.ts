@@ -82,9 +82,12 @@ export function ordemExercicioRemessa(
 
 /** Ano de competência a partir do nome padrão SEF-MG (P443RT1226 -> 2026). */
 export function anoDoArquivo(nome: string): number | null {
-  const m = /RT(\d{2})(\d{2})/i.exec(nome.replace(/\s+/g, ""));
-  if (!m) return null;
-  return 2000 + Number(m[2]);
+  const limpo = nome.replace(/[\s_]+/g, "");
+  const m = /RT(\d{2})(\d{2})/i.exec(limpo);
+  if (m) return 2000 + Number(m[2]);
+  // definitivo: P443RTINDICESDEFINITIVOS25.txt
+  const d = /indices?definitivos?[^0-9]*(\d{2})/i.exec(limpo.replace(/-/g, ""));
+  return d ? 2000 + Number(d[1]) : null;
 }
 
 /** Código do município no nome padrão SEF-MG (P443RT1226 -> "443"). */
