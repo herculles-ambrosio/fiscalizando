@@ -204,10 +204,23 @@ export default function CreditoProprioPortal({
               onClick={() => inputRef.current?.click()}
             >
               <FileUp className="mr-2 h-4 w-4" />
-              {planilha ? "Trocar planilha" : "Carregar planilha do Portal"}
+              {planilha
+                ? "Trocar planilha"
+                : creditoNoArquivo
+                  ? produtores
+                    ? "Trocar nomes de remetentes"
+                    : "Carregar nomes de remetentes"
+                  : "Carregar planilha do Portal"}
             </Button>
-            {planilha && (
-              <Button variant="ghost" size="sm" onClick={() => onPlanilha(null)}>
+            {(planilha || (creditoNoArquivo && produtores)) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (planilha) onPlanilha(null);
+                  else onProdutores?.(null);
+                }}
+              >
                 Remover
               </Button>
             )}
