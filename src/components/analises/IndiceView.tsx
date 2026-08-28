@@ -258,7 +258,13 @@ function TabelaContribuintes({
 
 const CHAVE_REF = "vaf_indice_referencia";
 
-export default function PaginaIndice() {
+export default function IndiceView() {
+  // "Nova análise" limpa a tela remontando o painel do zero
+  const [resetKey, setResetKey] = useState(0);
+  return <PaginaIndice key={resetKey} onNovaAnalise={() => setResetKey((k) => k + 1)} />;
+}
+
+function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const { municipio, municipioId, municipios } = useMunicipioAtivo();
   const salvarIndice = useSalvarIndice();
 
@@ -599,6 +605,9 @@ export default function PaginaIndice() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={onNovaAnalise}>
+            Nova análise
+          </Button>
           <input
             ref={inputRef}
             type="file"

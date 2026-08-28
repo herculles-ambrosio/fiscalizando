@@ -443,7 +443,13 @@ function BannerBloqueio({
   );
 }
 
-export default function PaginaEvolucao() {
+export default function EvolucaoView() {
+  // "Nova análise" limpa a tela remontando o painel do zero
+  const [resetKey, setResetKey] = useState(0);
+  return <PaginaEvolucao key={resetKey} onNovaAnalise={() => setResetKey((k) => k + 1)} />;
+}
+
+function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const { municipio, municipios: municipiosPermitidos, podeTrocar, trocar } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
   const [baseArq, setBase] = useState<ArquivoEvolucao | null>(null);
@@ -660,13 +666,18 @@ export default function PaginaEvolucao() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">Evolução do VAF</h1>
         <p className="text-sm text-muted-foreground">
           Compare duas remessas (mensal, índice provisório ou definitivo) e analise a evolução do
           líquido, dos componentes VAF A/B/C, das declarações e dos contribuintes declarantes.{" "}
           <NotaRemessa className="ml-1" />
         </p>
+        </div>
+        <Button variant="outline" className="no-print" onClick={onNovaAnalise}>
+          Nova análise
+        </Button>
       </div>
 
       <Card className="no-print">
