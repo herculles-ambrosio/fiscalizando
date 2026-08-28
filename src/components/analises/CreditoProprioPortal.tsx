@@ -149,9 +149,32 @@ export default function CreditoProprioPortal({
             <p className="text-xs text-muted-foreground">
               {planilha
                 ? `Vindo da planilha ${planilha.arquivoNome} — ${planilha.totalNotasProprio} notas, ano base ${planilha.anoBase ?? "—"}.`
-                : "O arquivo de retorno não trouxe o crédito próprio. Envie o relatório de créditos do Portal do VAF (CSV) para completar a projeção."}
+                : "O arquivo de retorno não trouxe o crédito próprio. Selecione, na mesma pasta, o relatório de créditos do Portal do VAF (REL_CREDITO_...) e, se quiser os nomes dos remetentes, também o de produtores rurais (REL_PRODUTOR_RURAL_...)."}
             </p>
+            {planilha &&
+              (planilha.produtores ? (
+                <p className="text-xs text-muted-foreground">
+                  Nomes de remetentes: {planilha.produtores.total.toLocaleString("pt-BR")} produtores
+                  de {planilha.produtores.arquivoNome} —{" "}
+                  {planilha.totalNotasProprio > 0
+                    ? Math.round(
+                        (planilha.produtores.notasIdentificadas / planilha.totalNotasProprio) * 100,
+                      )
+                    : 0}
+                  % das notas identificadas.
+                  {planilha.produtores.anoBase != null &&
+                    planilha.anoBase != null &&
+                    planilha.produtores.anoBase !== planilha.anoBase &&
+                    ` Atenção: ano base ${planilha.produtores.anoBase} difere do relatório de créditos (${planilha.anoBase}).`}
+                </p>
+              ) : (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Sem os nomes dos remetentes. Envie também o relatório de produtores rurais
+                  (REL_PRODUTOR_RURAL_...) — pode selecionar os dois CSVs juntos.
+                </p>
+              ))}
           </div>
+
           <div className="flex gap-2">
             <Button
               variant={pendente ? "default" : "outline"}
