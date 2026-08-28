@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { NotaRemessa } from "@/components/NotaRemessa";
 import { Download, FileUp, HelpCircle, Printer, Save, TrendingUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -261,6 +261,8 @@ function TabelaContribuintes({
 }
 
 const CHAVE_REF = "vaf_indice_referencia";
+
+const NOTAS_POR_PAGINA = 100;
 
 export default function IndiceView() {
   // "Nova análise" limpa a tela remontando o painel do zero
