@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { NotaRemessa } from "@/components/NotaRemessa";
 import { Download, FileUp, HelpCircle, Printer, Save, TrendingUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -48,7 +48,11 @@ import {
 } from "@/lib/vaf/indice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type ProdutoresPortal, type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import {
+  nomeDoProdutor,
+  type ProdutoresPortal,
+  type ResumoCreditoPortal,
+} from "@/lib/vaf/creditoPortal";
 import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 
 import { baixarCsv as baixarCsvArquivo, montarCsv } from "@/lib/csv";
@@ -258,6 +262,8 @@ function TabelaContribuintes({
 
 const CHAVE_REF = "vaf_indice_referencia";
 
+const NOTAS_POR_PAGINA = 100;
+
 export default function IndiceView() {
   // "Nova análise" limpa a tela remontando o painel do zero
   const [resetKey, setResetKey] = useState(0);
@@ -280,6 +286,9 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   // relatório de produtores rurais carregado sozinho (arquivos de índice já trazem o crédito)
   const [produtores, setProdutores] = useState<ProdutoresPortal | null>(null);
   const [perguntar, setPerguntar] = useState(false);
+  // detalhamento do crédito próprio: busca e paginação
+  const [buscaNotas, setBuscaNotas] = useState("");
+  const [paginaNotas, setPaginaNotas] = useState(1);
   const [registroHistorico, setRegistroHistorico] = useState<IndiceSalvo | null>(null);
   const [detalheHistorico, setDetalheHistorico] = useState<DetalhamentoIndice | null>(null);
   const [carregandoDetalhe, setCarregandoDetalhe] = useState(false);
@@ -374,8 +383,47 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     for (const [ie, nome] of produtores?.nomes ?? []) {
       if (!mapa.has(ie)) mapa.set(ie, nome);
     }
-    return (ie: string) => mapa.get(normalizar(ie)) ?? null;
+    return (ie: string) =>
+      mapa.get(normalizar(ie)) ??
+      // estabelecimento fora do relatório: usa a raiz da IE (mesmo produtor)
+      (produtores ? (nomeDoProdutor(produtores, ie)?.nome ?? null) : null);
   }, [apuracao, nomesGravados, produtores]);
+
+  // busca do detalhamento: adiada para não travar a digitação em milhares de notas
+  const buscaAdiada = useDeferredValue(buscaNotas);
+  const notasFiltradas = useMemo(() => {
+    const notas = planilha?.notas ?? [];
+    const termo = buscaAdiada.trim().toLowerCase();
+    if (!termo) return notas;
+    const digitos = termo.replace(/\D/g, "");
+    return notas.filter(
+      (n) =>
+        n.numero.toLowerCase().includes(termo) ||
+        n.descricao.toLowerCase().includes(termo) ||
+        (n.remetenteNome ?? nomePorIe(n.remetente) ?? "").toLowerCase().includes(termo) ||
+        (digitos.length > 0 && n.remetente.replace(/\D/g, "").includes(digitos)),
+    );
+  }, [planilha, buscaAdiada, nomePorIe]);
+  const totalFiltrado = useMemo(
+    () => notasFiltradas.reduce((s, n) => s + n.valor, 0),
+    [notasFiltradas],
+  );
+  const semNome = useMemo(
+    () =>
+      (planilha?.notas ?? []).filter((n) => !(n.remetenteNome ?? nomePorIe(n.remetente))).length,
+    [planilha, nomePorIe],
+  );
+  const totalPaginas = Math.max(1, Math.ceil(notasFiltradas.length / NOTAS_POR_PAGINA));
+  const paginaAtual = Math.min(paginaNotas, totalPaginas);
+  const notasPagina = useMemo(
+    () =>
+      notasFiltradas.slice((paginaAtual - 1) * NOTAS_POR_PAGINA, paginaAtual * NOTAS_POR_PAGINA),
+    [notasFiltradas, paginaAtual],
+  );
+  useEffect(() => {
+    setPaginaNotas(1);
+  }, [buscaAdiada, planilha]);
+
 
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
@@ -1336,6 +1384,24 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       </TableFooter>
                     </Table>
 
+                    <div className="flex flex-wrap items-center justify-between gap-2 no-print">
+                      <Input
+                        className="w-full sm:max-w-xs"
+                        placeholder="Buscar por remetente, IE, nota ou produto…"
+                        value={buscaNotas}
+                        onChange={(e) => setBuscaNotas(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {notasFiltradas.length.toLocaleString("pt-BR")} de{" "}
+                        {planilha.notas.length.toLocaleString("pt-BR")} notas ·{" "}
+                        <span className="font-medium text-foreground">
+                          {formatarMoeda(totalFiltrado)}
+                        </span>
+                        {semNome > 0 &&
+                          ` · ${semNome.toLocaleString("pt-BR")} sem nome de remetente`}
+                      </p>
+                    </div>
+
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -1349,7 +1415,7 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {planilha.notas.slice(0, 300).map((n, i) => (
+                        {notasPagina.map((n, i) => (
                           <TableRow key={`${n.numero}-${i}`}>
                             <TableCell className="text-xs">{n.tipoNota}</TableCell>
                             <TableCell className="max-w-[16rem] truncate font-mono text-xs">
@@ -1370,11 +1436,48 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                           </TableRow>
                         ))}
                       </TableBody>
+                      <TableFooter>
+                        <TableRow>
+                          <TableCell colSpan={6}>
+                            Total {buscaNotas.trim() ? "do filtro" : "geral"}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatarMoeda(totalFiltrado)}
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
                     </Table>
-                    {planilha.notas.length > 300 && (
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 no-print">
                       <p className="text-xs text-muted-foreground">
-                        Mostrando as 300 maiores de {planilha.notas.length.toLocaleString("pt-BR")}.
-                        Use “Exportar notas” para a lista completa.
+                        Página {paginaAtual} de {totalPaginas.toLocaleString("pt-BR")}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={paginaAtual <= 1}
+                          onClick={() => setPaginaNotas(paginaAtual - 1)}
+                        >
+                          Anterior
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={paginaAtual >= totalPaginas}
+                          onClick={() => setPaginaNotas(paginaAtual + 1)}
+                        >
+                          Próxima
+                        </Button>
+                      </div>
+                    </div>
+
+                    {semNome > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Remetentes sem nome são estabelecimentos que não constam no relatório de
+                        produtores rurais enviado (IE encerrada ou aberta depois da extração) —
+                        quando outro estabelecimento do mesmo produtor está no relatório, o nome é
+                        preenchido automaticamente pela raiz da inscrição estadual.
                       </p>
                     )}
                   </TabsContent>
@@ -1382,12 +1485,37 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
 
                 {!planilha && apuracao.creditoProprio > 0 && (
                   <TabsContent value="proprio" className="mt-4 space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      Este arquivo já traz o crédito próprio consolidado pela SEF-MG — ele não
-                      detalha os contribuintes. Para listar as notas por contribuinte (com o nome
-                      dos remetentes), envie acima o relatório de créditos do Portal do VAF
-                      (REL_CREDITO_...), junto com o de produtores rurais.
-                    </p>
+                    <Alert className="no-print">
+                      <AlertTitle>Sem a lista de contribuintes neste arquivo</AlertTitle>
+                      <AlertDescription>
+                        O arquivo de retorno trouxe o crédito próprio apenas consolidado
+                        (AF + SIARE = {formatarMoeda(apuracao.creditoProprio)}); a SEF-MG não
+                        detalha as notas nele. Para ver os contribuintes, anexe abaixo, do Portal
+                        do VAF:
+                        <span className="mt-1 block font-mono text-xs">
+                          REL_CREDITO_{(municipio?.nome ?? "MUNICIPIO").toUpperCase()}_….csv
+                        </span>
+                        <span className="block font-mono text-xs">
+                          REL_PRODUTOR_RURAL_{(municipio?.nome ?? "MUNICIPIO").toUpperCase()}_….csv
+                          (opcional — traz o nome dos remetentes)
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+
+                    {/* carga do CSV sem sair da análise */}
+                    <div className="no-print">
+                      <CreditoProprioPortal
+                        codigoSef={municipio?.codigo_sef ? String(municipio.codigo_sef) : ""}
+                        planilha={planilha}
+                        onPlanilha={setPlanilha}
+                        anoBaseArquivo={apuracao.anoBase}
+                        creditoInternoArquivo={apuracao.creditoInterno}
+                        contexto={arquivo ? `“${arquivo.name}”` : undefined}
+                        creditoNoArquivo
+                        produtores={produtores}
+                        onProdutores={setProdutores}
+                      />
+                    </div>
                     <Table>
                       <TableHeader>
                         <TableRow>

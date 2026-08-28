@@ -30,6 +30,12 @@ export type ProdutoresPortal = {
   anoBase: number | null;
   /** IE normalizada -> nome do produtor */
   nomes: Map<string, string>;
+  /**
+   * Raiz da IE (9 primeiros dígitos, sem o estabelecimento) -> nome, usada
+   * quando o relatório não lista aquele estabelecimento específico. Guarda
+   * `null` quando a mesma raiz tem produtores diferentes (não dá para inferir).
+   */
+  porRaiz: Map<string, string | null>;
   total: number;
 };
 
@@ -199,6 +205,29 @@ function normalizarIe(valor: string | undefined): string {
   return limparCampo(valor).replace(/\D/g, "").replace(/^0+/, "");
 }
 
+/** Raiz da IE (9 primeiros dígitos): identifica o produtor, sem o estabelecimento. */
+function raizIe(valor: string | undefined): string {
+  const digitos = limparCampo(valor).replace(/\D/g, "");
+  if (digitos.length < 9) return "";
+  return digitos.padStart(13, "0").slice(0, 9);
+}
+
+/**
+ * Nome do produtor pela IE. Quando o relatório de produtores não lista aquele
+ * estabelecimento (acontece com IEs encerradas ou abertas depois da extração),
+ * cai para a raiz da IE — mesmo produtor, outro estabelecimento.
+ */
+export function nomeDoProdutor(
+  produtores: ProdutoresPortal,
+  ie: string,
+): { nome: string; aproximado: boolean } | null {
+  const exato = produtores.nomes.get(normalizarIe(ie));
+  if (exato) return { nome: exato, aproximado: false };
+  const raiz = raizIe(ie);
+  const porRaiz = raiz ? produtores.porRaiz.get(raiz) : null;
+  return porRaiz ? { nome: porRaiz, aproximado: true } : null;
+}
+
 export type TipoPlanilhaPortal = "creditos" | "produtores" | "desconhecida";
 
 /** Identifica a planilha pelo cabeçalho (o nome do arquivo varia por município). */
@@ -226,6 +255,7 @@ export function lerProdutoresPortal(buffer: ArrayBuffer, arquivoNome: string): P
   }
 
   const nomes = new Map<string, string>();
+  const porRaiz = new Map<string, string | null>();
   const anos = new Map<number, number>();
   for (let i = 1; i < linhas.length; i++) {
     const c = linhas[i]!;
@@ -233,6 +263,11 @@ export function lerProdutoresPortal(buffer: ArrayBuffer, arquivoNome: string): P
     const nome = (c[iNome] ?? "").trim();
     if (!ie || !nome) continue;
     if (!nomes.has(ie)) nomes.set(ie, nome);
+    const raiz = raizIe(c[iIe]);
+    if (raiz) {
+      if (!porRaiz.has(raiz)) porRaiz.set(raiz, nome);
+      else if (porRaiz.get(raiz) !== nome) porRaiz.set(raiz, null);
+    }
     const ano = Number((c[iAno] ?? "").trim());
     if (ano > 1990) anos.set(ano, (anos.get(ano) ?? 0) + 1);
   }
@@ -241,6 +276,7 @@ export function lerProdutoresPortal(buffer: ArrayBuffer, arquivoNome: string): P
     arquivoNome,
     anoBase: [...anos.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
     nomes,
+    porRaiz,
     total: nomes.size,
   };
 }
@@ -255,9 +291,9 @@ export function aplicarNomesProdutores(
 ): ResumoCreditoPortal {
   let identificadas = 0;
   const notas = resumo.notas.map((n) => {
-    const nome = produtores.nomes.get(normalizarIe(n.remetente)) ?? null;
-    if (nome) identificadas += 1;
-    return nome ? { ...n, remetenteNome: n.remetenteNome ?? nome } : n;
+    const achado = nomeDoProdutor(produtores, n.remetente);
+    if (achado) identificadas += 1;
+    return achado ? { ...n, remetenteNome: n.remetenteNome ?? achado.nome } : n;
   });
 
   return {
