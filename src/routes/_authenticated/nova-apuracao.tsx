@@ -534,8 +534,8 @@ function NovaApuracao() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Sugerido pelo nome do arquivo (remessa 13 = índice definitivo). Ajuste se
-                necessário.
+                Sugerido pelo nome do arquivo (“INDICESDEFINITIVOS” = definitivo, arquivo 14 =
+                provisório, demais = mensal). Ajuste se necessário.
               </p>
             </div>
 
