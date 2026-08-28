@@ -420,14 +420,15 @@ export default function PaginaIndice() {
   function baixarCsvPlanilha() {
     if (!planilha) return;
     const csv = montarCsv(
-      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Inscricao remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
+      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Nome do remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
       planilha.notas.map((n) => [
         n.tipoNota,
         n.numero,
         n.data ?? "",
-        n.remetenteNome ?? nomePorIe(n.remetente) ?? "",
         n.remetente,
+        n.remetenteNome ?? nomePorIe(n.remetente) ?? "",
         n.municipioRemetente,
+
         n.destinatario,
         n.municipioDestinatario,
         n.descricao,
@@ -1289,6 +1290,7 @@ export default function PaginaIndice() {
                           <TableHead>Número / chave</TableHead>
                           <TableHead className="w-24">Saída</TableHead>
                           <TableHead>Remetente</TableHead>
+                          <TableHead>Nome do remetente</TableHead>
                           <TableHead>Produto</TableHead>
                           <TableHead className="text-right">Valor</TableHead>
                         </TableRow>
@@ -1301,21 +1303,13 @@ export default function PaginaIndice() {
                               {n.numero}
                             </TableCell>
                             <TableCell className="text-xs">{n.data ?? "—"}</TableCell>
-                            <TableCell className="max-w-[16rem] truncate">
-                              {(() => {
-                                const nome = n.remetenteNome ?? nomePorIe(n.remetente);
-                                return nome ? (
-                                  <>
-                                    <span>{nome}</span>
-                                    <span className="block font-mono text-[10px] text-muted-foreground">
-                                      {n.remetente}
-                                    </span>
-                                  </>
-                                ) : (
-                                  <span className="font-mono text-xs">{n.remetente}</span>
-                                );
-                              })()}
+                            <TableCell className="max-w-[12rem] truncate font-mono text-xs">
+                              {n.remetente}
                             </TableCell>
+                            <TableCell className="max-w-[16rem] truncate">
+                              {n.remetenteNome ?? nomePorIe(n.remetente) ?? "—"}
+                            </TableCell>
+
                             <TableCell className="max-w-[18rem] truncate">{n.descricao}</TableCell>
                             <TableCell className="text-right font-mono">
                               {formatarMoeda(n.valor)}
