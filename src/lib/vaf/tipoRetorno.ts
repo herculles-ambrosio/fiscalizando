@@ -34,6 +34,8 @@ export function remessaDoArquivo(nome: string): number | null {
 export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: number | null } {
   const remessa = remessaDoArquivo(nome);
   if (remessa === 13) return { tipo: "indice_definitivo", mes: 13 };
+  // o arquivo 14 é o índice provisório enviado após o fechamento
+  if (remessa === 14) return { tipo: "indice_provisorio", mes: 14 };
   return { tipo: "mensal", mes: remessa };
 }
 
