@@ -255,6 +255,7 @@ export function lerProdutoresPortal(buffer: ArrayBuffer, arquivoNome: string): P
   }
 
   const nomes = new Map<string, string>();
+  const porRaiz = new Map<string, string | null>();
   const anos = new Map<number, number>();
   for (let i = 1; i < linhas.length; i++) {
     const c = linhas[i]!;
@@ -262,6 +263,11 @@ export function lerProdutoresPortal(buffer: ArrayBuffer, arquivoNome: string): P
     const nome = (c[iNome] ?? "").trim();
     if (!ie || !nome) continue;
     if (!nomes.has(ie)) nomes.set(ie, nome);
+    const raiz = raizIe(c[iIe]);
+    if (raiz) {
+      if (!porRaiz.has(raiz)) porRaiz.set(raiz, nome);
+      else if (porRaiz.get(raiz) !== nome) porRaiz.set(raiz, null);
+    }
     const ano = Number((c[iAno] ?? "").trim());
     if (ano > 1990) anos.set(ano, (anos.get(ano) ?? 0) + 1);
   }
@@ -270,6 +276,7 @@ export function lerProdutoresPortal(buffer: ArrayBuffer, arquivoNome: string): P
     arquivoNome,
     anoBase: [...anos.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
     nomes,
+    porRaiz,
     total: nomes.size,
   };
 }
