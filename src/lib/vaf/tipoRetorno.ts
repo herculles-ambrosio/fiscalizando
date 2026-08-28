@@ -17,15 +17,18 @@ export function rotuloTipoRetorno(tipo: string | null | undefined): string {
   return ROTULO_TIPO_RETORNO[(tipo ?? "mensal") as TipoRetorno] ?? "Retorno mensal";
 }
 
+/** Maior número de remessa aceito pelo sistema (a SEF pode enviar mais de 13). */
+export const REMESSA_MAXIMA = 24;
+
 /**
- * Nome padrão da SEF-MG: P{codigo}RT{remessa}{ano}.txt — ex.: P443RT1226.
- * A remessa 13 é a que traz o fechamento (índice definitivo).
+ * Nome padrão da SEF-MG: P{codigo}RT{remessa}{ano}.txt — ex.: P443RT1426.
+ * A remessa 13 costuma trazer o fechamento, mas podem vir remessas posteriores.
  */
 export function remessaDoArquivo(nome: string): number | null {
   const m = /RT(\d{2})(\d{2})/i.exec(nome.replace(/\s+/g, ""));
   if (!m) return null;
   const remessa = Number(m[1]);
-  return remessa >= 1 && remessa <= 13 ? remessa : null;
+  return remessa >= 1 && remessa <= REMESSA_MAXIMA ? remessa : null;
 }
 
 export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: number | null } {
