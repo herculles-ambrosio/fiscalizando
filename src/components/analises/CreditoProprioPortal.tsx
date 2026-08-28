@@ -115,10 +115,12 @@ export default function CreditoProprioPortal({
         return;
       }
       if (arquivoProdutores) {
-        resumo = aplicarNomesProdutores(
-          resumo,
-          lerProdutoresPortal(arquivoProdutores.buffer, arquivoProdutores.nome),
+        const lidosProdutores = lerProdutoresPortal(
+          arquivoProdutores.buffer,
+          arquivoProdutores.nome,
         );
+        onProdutores?.(lidosProdutores);
+        resumo = aplicarNomesProdutores(resumo, lidosProdutores);
       }
       onPlanilha(resumo);
       toast.success(
