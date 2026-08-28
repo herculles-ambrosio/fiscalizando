@@ -131,7 +131,8 @@ export default function CreditoProprioPortal({
     }
   }
 
-  const pendente = !planilha;
+  // em arquivos de índice o crédito já vem do retorno: nada fica pendente
+  const pendente = !planilha && !creditoNoArquivo;
 
   return (
     <>
