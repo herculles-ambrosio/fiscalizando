@@ -912,7 +912,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
       <Card>
         <CardContent className="p-0">
-          {(isFetching && !data) || (filtroReceitaAtivo && carregandoTodas && !todasLinhas) ? (
+          {(isFetching && !data) ||
+          (filtroReceitaAtivo && carregandoTodas && !todasLinhas) ||
+          (filtroReceitaAtivo && !receitaPronta) ? (
             <div className="flex h-40 items-center justify-center text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
