@@ -258,7 +258,13 @@ function TabelaContribuintes({
 
 const CHAVE_REF = "vaf_indice_referencia";
 
-export default function PaginaIndice() {
+export default function IndiceView() {
+  // "Nova análise" limpa a tela remontando o painel do zero
+  const [resetKey, setResetKey] = useState(0);
+  return <PaginaIndice key={resetKey} onNovaAnalise={() => setResetKey((k) => k + 1)} />;
+}
+
+function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const { municipio, municipioId, municipios } = useMunicipioAtivo();
   const salvarIndice = useSalvarIndice();
 
@@ -599,6 +605,9 @@ export default function PaginaIndice() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={onNovaAnalise}>
+            Nova análise
+          </Button>
           <input
             ref={inputRef}
             type="file"
@@ -1374,9 +1383,10 @@ export default function PaginaIndice() {
                 {!planilha && apuracao.creditoProprio > 0 && (
                   <TabsContent value="proprio" className="mt-4 space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Este arquivo já traz o crédito próprio consolidado pela SEF-MG. Para ver as
-                      notas (e o nome dos remetentes), envie o relatório de créditos do Portal do
-                      VAF acima.
+                      Este arquivo já traz o crédito próprio consolidado pela SEF-MG — ele não
+                      detalha os contribuintes. Para listar as notas por contribuinte (com o nome
+                      dos remetentes), envie acima o relatório de créditos do Portal do VAF
+                      (REL_CREDITO_...), junto com o de produtores rurais.
                     </p>
                     <Table>
                       <TableHeader>

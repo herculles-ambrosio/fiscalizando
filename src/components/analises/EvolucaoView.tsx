@@ -443,7 +443,13 @@ function BannerBloqueio({
   );
 }
 
-export default function PaginaEvolucao() {
+export default function EvolucaoView() {
+  // "Nova análise" limpa a tela remontando o painel do zero
+  const [resetKey, setResetKey] = useState(0);
+  return <PaginaEvolucao key={resetKey} onNovaAnalise={() => setResetKey((k) => k + 1)} />;
+}
+
+function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const { municipio, municipios: municipiosPermitidos, podeTrocar, trocar } = useMunicipioAtivo();
   const { data: municipios } = useMunicipios();
   const [baseArq, setBase] = useState<ArquivoEvolucao | null>(null);
@@ -529,11 +535,11 @@ export default function PaginaEvolucao() {
       );
       if (alvo === "base") setBase(analise);
       else setAtual(analise);
-      // Índice definitivo/provisório já traz o VAF estadual: preenche o parâmetro
-      // de projeção automaticamente para as próximas comparações.
+      // Índice definitivo/provisório já traz o VAF estadual: o parâmetro de
+      // projeção segue sempre o ARQUIVO ATUAL (exercício em análise).
       const estadualArquivo =
         analise.apuracao.origemVafEstadual === "arquivo" ? analise.apuracao.vafEstadual : 0;
-      if (estadualArquivo > 0) {
+      if (alvo === "atual" && estadualArquivo > 0) {
         setVafReferencia(
           estadualArquivo.toLocaleString("pt-BR", { maximumFractionDigits: 0 }),
         );
@@ -570,10 +576,13 @@ export default function PaginaEvolucao() {
     if (municipio?.id) setMunicipioRelatorioId(municipio.id);
   }, [municipio?.id]);
 
+  // o exercício do relatório é sempre o do ARQUIVO ATUAL (remessa a comparar)
   const anoDosArquivos = atualArq?.apuracao.anoBase ?? baseArq?.apuracao.anoBase ?? null;
+  const anoDoAtual = atualArq?.apuracao.anoBase ?? null;
   useEffect(() => {
-    if (anoDosArquivos) setExercicioRelatorio(String(anoDosArquivos));
-  }, [anoDosArquivos]);
+    if (anoDoAtual) setExercicioRelatorio(String(anoDoAtual));
+    else if (anoDosArquivos) setExercicioRelatorio(String(anoDosArquivos));
+  }, [anoDoAtual, anoDosArquivos, atualArq]);
 
   const municipioRelatorio =
     municipiosPermitidos.find((m) => m.id === municipioRelatorioId) ?? municipio ?? null;
@@ -657,13 +666,18 @@ export default function PaginaEvolucao() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">Evolução do VAF</h1>
         <p className="text-sm text-muted-foreground">
           Compare duas remessas (mensal, índice provisório ou definitivo) e analise a evolução do
           líquido, dos componentes VAF A/B/C, das declarações e dos contribuintes declarantes.{" "}
           <NotaRemessa className="ml-1" />
         </p>
+        </div>
+        <Button variant="outline" className="no-print" onClick={onNovaAnalise}>
+          Nova análise
+        </Button>
       </div>
 
       <Card className="no-print">

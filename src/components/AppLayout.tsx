@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
@@ -59,6 +59,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // qualquer clique no menu lateral limpa as apurações abertas na tela
+  const [navVersao, setNavVersao] = useState(0);
+  const limparTela = () => setNavVersao((v) => v + 1);
 
   useEffect(() => {
     if (perfil?.precisa_trocar_senha && pathname !== "/trocar-senha") {
@@ -156,6 +159,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <Link
                     key={item.to}
                     to={item.to}
+                    onClick={limparTela}
                     className={cn(
                       "flex items-center gap-3 rounded-full px-3 py-2 text-sm transition-all",
                       ativo
@@ -190,7 +194,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <Logo compacto />
           <nav className="flex flex-wrap justify-end gap-3">
             {nav.map((item) => (
-              <Link key={item.to} to={item.to} className="text-xs text-muted-foreground">
+              <Link key={item.to} to={item.to} onClick={limparTela} className="text-xs text-muted-foreground">
                 {item.rotulo}
               </Link>
             ))}
@@ -218,7 +222,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         )}
         <main className="min-w-0 flex-1 px-5 py-7 md:px-9 md:py-10">
           <Timbrado>
-            <div key={municipioId ?? "sem-municipio"} className="contents">
+            <div key={`${municipioId ?? "sem-municipio"}-${navVersao}`} className="contents">
               {children}
             </div>
           </Timbrado>

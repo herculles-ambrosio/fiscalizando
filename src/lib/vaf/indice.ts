@@ -352,7 +352,8 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
     estimado: false,
     origemVafEstadual: "arquivo",
     codigoMunicipio: texto(linhaIndice, 3, 5),
-    anoBase: anoTexto ? Number(anoTexto) : d.exercicio,
+    // o exercício declarado no arquivo manda; o período só serve de reserva
+    anoBase: d.exercicio ?? (anoTexto ? Number(anoTexto) : null),
     periodoInicio,
     periodoFim,
     ...valores,
