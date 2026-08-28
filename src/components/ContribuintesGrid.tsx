@@ -396,7 +396,12 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const linhasBase = filtroReceitaAtivo ? (todasLinhas ?? []) : (data?.linhas ?? []);
 
   // ---- Situação cadastral na Receita Federal (dados abertos do CNPJ) ----
-  const { data: receita } = useSituacoesReceita(linhasBase.map((c) => c.cnpj));
+  const { data: receita, isFetching: carregandoReceita } = useSituacoesReceita(
+    linhasBase.map((c) => c.cnpj),
+  );
+  /** Enquanto o cache de situações não chega, toda linha pareceria "pendente". */
+  const receitaPronta =
+    !carregandoReceita && (!!receita || !linhasBase.some((c) => !!limparCnpj(c.cnpj)));
   const consulta = useConsultarReceita();
   const fila = useFilaReceita();
   const prefColunas = usePreferencia<ColunaId[]>("contribuintes_grid_colunas", COLUNAS_PADRAO);
