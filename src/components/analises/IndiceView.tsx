@@ -1216,7 +1216,10 @@ export default function PaginaIndice() {
                 </TabsList>
 
                 <TabsContent value="externos" className="mt-4">
-                  <TabelaContribuintes linhas={apuracao.creditosExternos} />
+                  <TabelaContribuintes
+                    linhas={apuracao.creditosExternos}
+                    nomePorIe={nomePorIe}
+                  />
                 </TabsContent>
 
                 <TabsContent value="municipios" className="mt-4 space-y-6">
