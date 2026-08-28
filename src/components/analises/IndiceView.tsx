@@ -1383,9 +1383,10 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 {!planilha && apuracao.creditoProprio > 0 && (
                   <TabsContent value="proprio" className="mt-4 space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Este arquivo já traz o crédito próprio consolidado pela SEF-MG. Para ver as
-                      notas (e o nome dos remetentes), envie o relatório de créditos do Portal do
-                      VAF acima.
+                      Este arquivo já traz o crédito próprio consolidado pela SEF-MG — ele não
+                      detalha os contribuintes. Para listar as notas por contribuinte (com o nome
+                      dos remetentes), envie acima o relatório de créditos do Portal do VAF
+                      (REL_CREDITO_...), junto com o de produtores rurais.
                     </p>
                     <Table>
                       <TableHeader>
