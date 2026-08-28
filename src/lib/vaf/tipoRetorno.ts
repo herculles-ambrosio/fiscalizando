@@ -31,21 +31,28 @@ export function remessaDoArquivo(nome: string): number | null {
   return remessa >= 1 && remessa <= REMESSA_MAXIMA ? remessa : null;
 }
 
+/**
+ * Índice definitivo: a SEF-MG nomeia o arquivo com "INDICESDEFINITIVOS"
+ * (ex.: P443RTINDICESDEFINITIVOS25.txt). O arquivo 13 é remessa mensal comum.
+ */
+export function ehArquivoDefinitivo(nome: string): boolean {
+  return /indices?definitivos?/i.test(nome.replace(/[\s_-]+/g, ""));
+}
+
 export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: number | null } {
+  if (ehArquivoDefinitivo(nome)) return { tipo: "indice_definitivo", mes: null };
   const remessa = remessaDoArquivo(nome);
-  if (remessa === 13) return { tipo: "indice_definitivo", mes: 13 };
   // o arquivo 14 é o índice provisório enviado após o fechamento
   if (remessa === 14) return { tipo: "indice_provisorio", mes: 14 };
   return { tipo: "mensal", mes: remessa };
 }
 
 /**
- * Rótulo da remessa (número do arquivo enviado pela SEF), de 1 a 13.
+ * Rótulo da remessa (número do arquivo enviado pela SEF).
  * Não é mês de competência: o layout do retorno não traz mês, só o exercício.
  */
 export function rotuloRemessa(remessa: number | null | undefined): string {
   if (!remessa) return "—";
-  if (remessa === 13) return "Arquivo 13 · fechamento";
   if (remessa === 14) return "Arquivo 14 · provisório";
   return `Arquivo ${String(remessa).padStart(2, "0")}`;
 }
@@ -57,7 +64,7 @@ export function rotuloExercicioRemessa(
   tipo?: string | null,
 ): string {
   if (!exercicio) return "—";
-  if (tipo === "indice_definitivo" || remessa === 13) return `${exercicio} · Definitivo`;
+  if (tipo === "indice_definitivo") return `${exercicio} · Definitivo`;
   if ((tipo === "indice_provisorio" && !remessa) || remessa === 14)
     return `${exercicio} · Provisório`;
   if (!remessa || remessa < 1 || remessa > REMESSA_MAXIMA) return String(exercicio);
@@ -75,9 +82,12 @@ export function ordemExercicioRemessa(
 
 /** Ano de competência a partir do nome padrão SEF-MG (P443RT1226 -> 2026). */
 export function anoDoArquivo(nome: string): number | null {
-  const m = /RT(\d{2})(\d{2})/i.exec(nome.replace(/\s+/g, ""));
-  if (!m) return null;
-  return 2000 + Number(m[2]);
+  const limpo = nome.replace(/[\s_]+/g, "");
+  const m = /RT(\d{2})(\d{2})/i.exec(limpo);
+  if (m) return 2000 + Number(m[2]);
+  // definitivo: P443RTINDICESDEFINITIVOS25.txt
+  const d = /indices?definitivos?[^0-9]*(\d{2})/i.exec(limpo.replace(/-/g, ""));
+  return d ? 2000 + Number(d[1]) : null;
 }
 
 /** Código do município no nome padrão SEF-MG (P443RT1226 -> "443"). */
@@ -166,10 +176,16 @@ export function validarCompetencia(params: {
         mensagem: `O arquivo indica a remessa ${String(remessa).padStart(2, "0")}; informe o número da remessa.`,
       });
     }
-  } else if (competenciaMes && competenciaMes < 13 && competenciaMes !== remessa) {
+  } else if (tipoRetorno === "indice_provisorio" && competenciaMes && competenciaMes !== 14) {
     alertas.push({
       nivel: "aviso",
-      mensagem: `Retornos de índice ${tipoRetorno === "indice_definitivo" ? "definitivo" : "provisório"} costumam vir na remessa 13 — a remessa ${String(competenciaMes).padStart(2, "0")} foi informada.`,
+      mensagem: `O índice provisório costuma vir no arquivo 14 — a remessa ${String(competenciaMes).padStart(2, "0")} foi informada.`,
+    });
+  } else if (tipoRetorno === "indice_definitivo" && !ehArquivoDefinitivo(nomeRetorno ?? "")) {
+    alertas.push({
+      nivel: "aviso",
+      mensagem:
+        "O arquivo de índice definitivo normalmente traz “INDICESDEFINITIVOS” no nome. Confirme se este é o arquivo correto.",
     });
   }
 

@@ -534,8 +534,8 @@ function NovaApuracao() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Sugerido pelo nome do arquivo (remessa 13 = índice definitivo). Ajuste se
-                necessário.
+                Sugerido pelo nome do arquivo (“INDICESDEFINITIVOS” = definitivo, arquivo 14 =
+                provisório, demais = mensal). Ajuste se necessário.
               </p>
             </div>
 
@@ -587,8 +587,8 @@ function NovaApuracao() {
 
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  O arquivo de retorno não traz mês: o número é o da entrega feita pela SEF. A 13
-                  costuma ser o fechamento, mas podem vir remessas posteriores (14, 15…).
+                  O arquivo de retorno não traz mês: o número é o da entrega feita pela SEF. Podem
+                  vir remessas além da 13 (14, 15…).
                 </p>
               </div>
 
