@@ -420,14 +420,15 @@ export default function PaginaIndice() {
   function baixarCsvPlanilha() {
     if (!planilha) return;
     const csv = montarCsv(
-      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Inscricao remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
+      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Nome do remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
       planilha.notas.map((n) => [
         n.tipoNota,
         n.numero,
         n.data ?? "",
-        n.remetenteNome ?? nomePorIe(n.remetente) ?? "",
         n.remetente,
+        n.remetenteNome ?? nomePorIe(n.remetente) ?? "",
         n.municipioRemetente,
+
         n.destinatario,
         n.municipioDestinatario,
         n.descricao,
