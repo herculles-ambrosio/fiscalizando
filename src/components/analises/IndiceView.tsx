@@ -284,6 +284,9 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   // relatório de produtores rurais carregado sozinho (arquivos de índice já trazem o crédito)
   const [produtores, setProdutores] = useState<ProdutoresPortal | null>(null);
   const [perguntar, setPerguntar] = useState(false);
+  // detalhamento do crédito próprio: busca e paginação
+  const [buscaNotas, setBuscaNotas] = useState("");
+  const [paginaNotas, setPaginaNotas] = useState(1);
   const [registroHistorico, setRegistroHistorico] = useState<IndiceSalvo | null>(null);
   const [detalheHistorico, setDetalheHistorico] = useState<DetalhamentoIndice | null>(null);
   const [carregandoDetalhe, setCarregandoDetalhe] = useState(false);
