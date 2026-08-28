@@ -387,6 +387,42 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
       (produtores ? (nomeDoProdutor(produtores, ie)?.nome ?? null) : null);
   }, [apuracao, nomesGravados, produtores]);
 
+  // busca do detalhamento: adiada para não travar a digitação em milhares de notas
+  const buscaAdiada = useDeferredValue(buscaNotas);
+  const notasFiltradas = useMemo(() => {
+    const notas = planilha?.notas ?? [];
+    const termo = buscaAdiada.trim().toLowerCase();
+    if (!termo) return notas;
+    const digitos = termo.replace(/\D/g, "");
+    return notas.filter(
+      (n) =>
+        n.numero.toLowerCase().includes(termo) ||
+        n.descricao.toLowerCase().includes(termo) ||
+        (n.remetenteNome ?? nomePorIe(n.remetente) ?? "").toLowerCase().includes(termo) ||
+        (digitos.length > 0 && n.remetente.replace(/\D/g, "").includes(digitos)),
+    );
+  }, [planilha, buscaAdiada, nomePorIe]);
+  const totalFiltrado = useMemo(
+    () => notasFiltradas.reduce((s, n) => s + n.valor, 0),
+    [notasFiltradas],
+  );
+  const semNome = useMemo(
+    () =>
+      (planilha?.notas ?? []).filter((n) => !(n.remetenteNome ?? nomePorIe(n.remetente))).length,
+    [planilha, nomePorIe],
+  );
+  const totalPaginas = Math.max(1, Math.ceil(notasFiltradas.length / NOTAS_POR_PAGINA));
+  const paginaAtual = Math.min(paginaNotas, totalPaginas);
+  const notasPagina = useMemo(
+    () =>
+      notasFiltradas.slice((paginaAtual - 1) * NOTAS_POR_PAGINA, paginaAtual * NOTAS_POR_PAGINA),
+    [notasFiltradas, paginaAtual],
+  );
+  useEffect(() => {
+    setPaginaNotas(1);
+  }, [buscaAdiada, planilha]);
+
+
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
   useEffect(() => {
