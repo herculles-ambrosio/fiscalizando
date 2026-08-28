@@ -479,6 +479,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     if (!selecionarPendentes) return;
     if (receitaFiltro !== "PENDENTES") return;
     if (!todasLinhas || carregandoTodas) return;
+    // Só seleciona depois que as situações da Receita chegarem, senão tudo
+    // seria classificado como pendente.
+    if (!receitaPronta) return;
     setSelecionarPendentes(false);
     const ids = linhasFiltradas.map((c) => c.id);
     if (!ids.length) {
@@ -488,7 +491,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     setSelecionados((atual) => [...new Set([...atual, ...ids])]);
     toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selecionarPendentes, receitaFiltro, todasLinhas, carregandoTodas, receita]);
+  }, [selecionarPendentes, receitaFiltro, todasLinhas, carregandoTodas, receita, receitaPronta]);
 
 
 
