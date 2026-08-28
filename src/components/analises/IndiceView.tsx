@@ -1343,6 +1343,24 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       </TableFooter>
                     </Table>
 
+                    <div className="flex flex-wrap items-center justify-between gap-2 no-print">
+                      <Input
+                        className="w-full sm:max-w-xs"
+                        placeholder="Buscar por remetente, IE, nota ou produto…"
+                        value={buscaNotas}
+                        onChange={(e) => setBuscaNotas(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {notasFiltradas.length.toLocaleString("pt-BR")} de{" "}
+                        {planilha.notas.length.toLocaleString("pt-BR")} notas ·{" "}
+                        <span className="font-medium text-foreground">
+                          {formatarMoeda(totalFiltrado)}
+                        </span>
+                        {semNome > 0 &&
+                          ` · ${semNome.toLocaleString("pt-BR")} sem nome de remetente`}
+                      </p>
+                    </div>
+
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -1356,7 +1374,7 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {planilha.notas.slice(0, 300).map((n, i) => (
+                        {notasPagina.map((n, i) => (
                           <TableRow key={`${n.numero}-${i}`}>
                             <TableCell className="text-xs">{n.tipoNota}</TableCell>
                             <TableCell className="max-w-[16rem] truncate font-mono text-xs">
@@ -1377,11 +1395,48 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                           </TableRow>
                         ))}
                       </TableBody>
+                      <TableFooter>
+                        <TableRow>
+                          <TableCell colSpan={6}>
+                            Total {buscaNotas.trim() ? "do filtro" : "geral"}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatarMoeda(totalFiltrado)}
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
                     </Table>
-                    {planilha.notas.length > 300 && (
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 no-print">
                       <p className="text-xs text-muted-foreground">
-                        Mostrando as 300 maiores de {planilha.notas.length.toLocaleString("pt-BR")}.
-                        Use “Exportar notas” para a lista completa.
+                        Página {paginaAtual} de {totalPaginas.toLocaleString("pt-BR")}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={paginaAtual <= 1}
+                          onClick={() => setPaginaNotas(paginaAtual - 1)}
+                        >
+                          Anterior
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={paginaAtual >= totalPaginas}
+                          onClick={() => setPaginaNotas(paginaAtual + 1)}
+                        >
+                          Próxima
+                        </Button>
+                      </div>
+                    </div>
+
+                    {semNome > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Remetentes sem nome são estabelecimentos que não constam no relatório de
+                        produtores rurais enviado (IE encerrada ou aberta depois da extração) —
+                        quando outro estabelecimento do mesmo produtor está no relatório, o nome é
+                        preenchido automaticamente pela raiz da inscrição estadual.
                       </p>
                     )}
                   </TabsContent>
