@@ -396,7 +396,12 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const linhasBase = filtroReceitaAtivo ? (todasLinhas ?? []) : (data?.linhas ?? []);
 
   // ---- Situação cadastral na Receita Federal (dados abertos do CNPJ) ----
-  const { data: receita } = useSituacoesReceita(linhasBase.map((c) => c.cnpj));
+  const { data: receita, isFetching: carregandoReceita } = useSituacoesReceita(
+    linhasBase.map((c) => c.cnpj),
+  );
+  /** Enquanto o cache de situações não chega, toda linha pareceria "pendente". */
+  const receitaPronta =
+    !carregandoReceita && (!!receita || !linhasBase.some((c) => !!limparCnpj(c.cnpj)));
   const consulta = useConsultarReceita();
   const fila = useFilaReceita();
   const prefColunas = usePreferencia<ColunaId[]>("contribuintes_grid_colunas", COLUNAS_PADRAO);
@@ -474,6 +479,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     if (!selecionarPendentes) return;
     if (receitaFiltro !== "PENDENTES") return;
     if (!todasLinhas || carregandoTodas) return;
+    // Só seleciona depois que as situações da Receita chegarem, senão tudo
+    // seria classificado como pendente.
+    if (!receitaPronta) return;
     setSelecionarPendentes(false);
     const ids = linhasFiltradas.map((c) => c.id);
     if (!ids.length) {
@@ -483,7 +491,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     setSelecionados((atual) => [...new Set([...atual, ...ids])]);
     toast.success(`${ids.length} contribuinte(s) pendente(s) selecionado(s).`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selecionarPendentes, receitaFiltro, todasLinhas, carregandoTodas, receita]);
+  }, [selecionarPendentes, receitaFiltro, todasLinhas, carregandoTodas, receita, receitaPronta]);
 
 
 
@@ -904,7 +912,9 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
       <Card>
         <CardContent className="p-0">
-          {(isFetching && !data) || (filtroReceitaAtivo && carregandoTodas && !todasLinhas) ? (
+          {(isFetching && !data) ||
+          (filtroReceitaAtivo && carregandoTodas && !todasLinhas) ||
+          (filtroReceitaAtivo && !receitaPronta) ? (
             <div className="flex h-40 items-center justify-center text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
