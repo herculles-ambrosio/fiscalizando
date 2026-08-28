@@ -162,7 +162,7 @@ export function validarCompetencia(params: {
         mensagem: `O arquivo indica a remessa ${String(remessa).padStart(2, "0")}; informe o número da remessa.`,
       });
     }
-  } else if (competenciaMes && !(competenciaMes === 13 && remessa === 13)) {
+  } else if (competenciaMes && competenciaMes < 13 && competenciaMes !== remessa) {
     alertas.push({
       nivel: "aviso",
       mensagem: `Retornos de índice ${tipoRetorno === "indice_definitivo" ? "definitivo" : "provisório"} costumam vir na remessa 13 — a remessa ${String(competenciaMes).padStart(2, "0")} foi informada.`,

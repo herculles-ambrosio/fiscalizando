@@ -528,7 +528,7 @@ export default function PaginaIndice() {
       toast.error("Exercício inválido no arquivo. Verifique o retorno antes de salvar.");
       return;
     }
-    if (competencia.mes !== null && (competencia.mes < 1 || competencia.mes > 13)) {
+    if (competencia.mes !== null && (competencia.mes < 1 || competencia.mes > REMESSA_MAXIMA)) {
       toast.error("Remessa inválida (deve ser de 1 a 13). Verifique o nome do arquivo.");
       return;
     }
