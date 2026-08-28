@@ -1444,12 +1444,37 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
 
                 {!planilha && apuracao.creditoProprio > 0 && (
                   <TabsContent value="proprio" className="mt-4 space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      Este arquivo já traz o crédito próprio consolidado pela SEF-MG — ele não
-                      detalha os contribuintes. Para listar as notas por contribuinte (com o nome
-                      dos remetentes), envie acima o relatório de créditos do Portal do VAF
-                      (REL_CREDITO_...), junto com o de produtores rurais.
-                    </p>
+                    <Alert className="no-print">
+                      <AlertTitle>Sem a lista de contribuintes neste arquivo</AlertTitle>
+                      <AlertDescription>
+                        O arquivo de retorno trouxe o crédito próprio apenas consolidado
+                        (AF + SIARE = {formatarMoeda(apuracao.creditoProprio)}); a SEF-MG não
+                        detalha as notas nele. Para ver os contribuintes, anexe abaixo, do Portal
+                        do VAF:
+                        <span className="mt-1 block font-mono text-xs">
+                          REL_CREDITO_{(municipio?.nome ?? "MUNICIPIO").toUpperCase()}_….csv
+                        </span>
+                        <span className="block font-mono text-xs">
+                          REL_PRODUTOR_RURAL_{(municipio?.nome ?? "MUNICIPIO").toUpperCase()}_….csv
+                          (opcional — traz o nome dos remetentes)
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+
+                    {/* carga do CSV sem sair da análise */}
+                    <div className="no-print">
+                      <CreditoProprioPortal
+                        codigoSef={municipio?.codigo_sef ? String(municipio.codigo_sef) : ""}
+                        planilha={planilha}
+                        onPlanilha={setPlanilha}
+                        anoBaseArquivo={apuracao.anoBase}
+                        creditoInternoArquivo={apuracao.creditoInterno}
+                        contexto={arquivo ? `“${arquivo.name}”` : undefined}
+                        creditoNoArquivo
+                        produtores={produtores}
+                        onProdutores={setProdutores}
+                      />
+                    </div>
                     <Table>
                       <TableHeader>
                         <TableRow>
