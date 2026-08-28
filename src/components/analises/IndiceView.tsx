@@ -34,7 +34,7 @@ import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
-import { anoDoArquivo, remessaDoArquivo, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
+import { anoDoArquivo, remessaDoArquivo, rotuloRemessa, REMESSA_MAXIMA } from "@/lib/vaf/tipoRetorno";
 import {
   apurarIndice,
   conferirLiquido,
