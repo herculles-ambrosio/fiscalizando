@@ -230,7 +230,9 @@ function TabelaContribuintes({
           <TableRow key={`${l.inscricao_estadual}-${i}`}>
             <TableCell className="font-mono text-xs">{l.inscricao_estadual}</TableCell>
             <TableCell className="font-mono text-xs">{formatarCnpj(l.cnpj)}</TableCell>
-            <TableCell className="max-w-[22rem] truncate">{l.nome ?? "—"}</TableCell>
+            <TableCell className="max-w-[22rem] truncate">
+              {l.nome ?? nomePorIe?.(l.inscricao_estadual) ?? "—"}
+            </TableCell>
             <TableCell className="font-mono text-xs">{l.municipio}</TableCell>
             <TableCell className="text-xs">{formatarData(l.data)}</TableCell>
             <TableCell className="text-right font-mono">{formatarMoeda(l.valor)}</TableCell>
