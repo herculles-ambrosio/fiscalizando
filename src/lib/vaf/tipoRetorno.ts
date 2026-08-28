@@ -176,10 +176,16 @@ export function validarCompetencia(params: {
         mensagem: `O arquivo indica a remessa ${String(remessa).padStart(2, "0")}; informe o número da remessa.`,
       });
     }
-  } else if (competenciaMes && competenciaMes < 13 && competenciaMes !== remessa) {
+  } else if (tipoRetorno === "indice_provisorio" && competenciaMes && competenciaMes !== 14) {
     alertas.push({
       nivel: "aviso",
-      mensagem: `Retornos de índice ${tipoRetorno === "indice_definitivo" ? "definitivo" : "provisório"} costumam vir na remessa 13 — a remessa ${String(competenciaMes).padStart(2, "0")} foi informada.`,
+      mensagem: `O índice provisório costuma vir no arquivo 14 — a remessa ${String(competenciaMes).padStart(2, "0")} foi informada.`,
+    });
+  } else if (tipoRetorno === "indice_definitivo" && !ehArquivoDefinitivo(nomeRetorno ?? "")) {
+    alertas.push({
+      nivel: "aviso",
+      mensagem:
+        "O arquivo de índice definitivo normalmente traz “INDICESDEFINITIVOS” no nome. Confirme se este é o arquivo correto.",
     });
   }
 
