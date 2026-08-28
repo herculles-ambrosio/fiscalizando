@@ -309,6 +309,44 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
   const d = coletarDetalhamento(linhas);
   const anoTexto = periodoFim?.slice(0, 4);
 
+  /**
+   * O registro 16 do arquivo de índice provisório (remessa 14) vem em layout
+   * ESTENDIDO (~313 posições): cada bloco traz parcelas adicionais e o índice
+   * só começa na posição 229. O layout curto (195 posições) é o do registro 17.
+   */
+  const estendido = linhaIndice.trimEnd().length > 200;
+
+  const valores = estendido
+    ? {
+        vafProprio: num(linhaIndice, 19, 33),
+        creditoExterno: num(linhaIndice, 34, 48) + num(linhaIndice, 49, 63),
+        creditoInterno: num(linhaIndice, 64, 78) + num(linhaIndice, 79, 93),
+        creditoProprio: num(linhaIndice, 109, 123) + num(linhaIndice, 124, 138),
+        debito: num(linhaIndice, 139, 153) + num(linhaIndice, 154, 168),
+        acertoCredito: num(linhaIndice, 169, 183) + num(linhaIndice, 184, 198),
+        acertoDebito: num(linhaIndice, 199, 213),
+        valorLiquido: num(linhaIndice, 214, 228),
+        indice: num(linhaIndice, 229, 237) / 1e7,
+        vafEstadual: num(linhaIndice, 238, 253),
+        creditoProprioAf: num(linhaIndice, 269, 283),
+        creditoProprioSiare: num(linhaIndice, 284, 298),
+      }
+    : {
+        vafProprio: num(linhaIndice, 19, 33),
+        creditoExterno: num(linhaIndice, 34, 48),
+        creditoInterno: num(linhaIndice, 49, 63),
+        creditoProprio: num(linhaIndice, 64, 78),
+        debito: num(linhaIndice, 79, 93),
+        acertoCredito: num(linhaIndice, 94, 108),
+        acertoDebito: num(linhaIndice, 109, 123),
+        valorLiquido: num(linhaIndice, 124, 138),
+        // 9 dígitos com 7 casas decimais (ex.: 001033530 -> 0,103353)
+        indice: num(linhaIndice, 139, 147) / 1e7,
+        vafEstadual: num(linhaIndice, 148, 163),
+        creditoProprioAf: num(linhaIndice, 164, 178),
+        creditoProprioSiare: num(linhaIndice, 179, 193),
+      };
+
   return {
     tipoIndice,
     estimado: false,
@@ -317,20 +355,8 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
     anoBase: anoTexto ? Number(anoTexto) : d.exercicio,
     periodoInicio,
     periodoFim,
-    vafProprio: num(linhaIndice, 19, 33),
-    creditoExterno: num(linhaIndice, 34, 48),
-    creditoInterno: num(linhaIndice, 49, 63),
-    creditoProprio: num(linhaIndice, 64, 78),
+    ...valores,
     origemCreditoProprio: "arquivo",
-    debito: num(linhaIndice, 79, 93),
-    acertoCredito: num(linhaIndice, 94, 108),
-    acertoDebito: num(linhaIndice, 109, 123),
-    valorLiquido: num(linhaIndice, 124, 138),
-    // 9 dígitos com 7 casas decimais (ex.: 001033530 -> 0,103353)
-    indice: num(linhaIndice, 139, 147) / 1e7,
-    vafEstadual: num(linhaIndice, 148, 163),
-    creditoProprioAf: num(linhaIndice, 164, 178),
-    creditoProprioSiare: num(linhaIndice, 179, 193),
     creditosExternos: d.creditosExternos,
     creditosPorMunicipio: d.creditosPorMunicipio,
     debitosPorMunicipio: d.debitosPorMunicipio,
@@ -339,6 +365,7 @@ export function apurarIndice(textoRetorno: string): ApuracaoIndice {
     totalDeclaracoes: d.totalDeclaracoes,
   };
 }
+
 
 export type OpcoesEstimativa = {
   /** VAF estadual de referência (R$) usado quando o arquivo não traz o total do estado */
