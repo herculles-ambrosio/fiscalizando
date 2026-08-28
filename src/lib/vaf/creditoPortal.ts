@@ -30,6 +30,12 @@ export type ProdutoresPortal = {
   anoBase: number | null;
   /** IE normalizada -> nome do produtor */
   nomes: Map<string, string>;
+  /**
+   * Raiz da IE (9 primeiros dígitos, sem o estabelecimento) -> nome, usada
+   * quando o relatório não lista aquele estabelecimento específico. Guarda
+   * `null` quando a mesma raiz tem produtores diferentes (não dá para inferir).
+   */
+  porRaiz: Map<string, string | null>;
   total: number;
 };
 
