@@ -19,6 +19,7 @@ import {
   detectarTipoPlanilha,
   lerCreditoPortal,
   lerProdutoresPortal,
+  type ProdutoresPortal,
   type ResumoCreditoPortal,
 } from "@/lib/vaf/creditoPortal";
 import { decodificarArquivo } from "@/lib/vaf/parser";
@@ -37,6 +38,9 @@ export default function CreditoProprioPortal({
   perguntar,
   onPerguntarChange,
   contexto,
+  creditoNoArquivo,
+  produtores,
+  onProdutores,
 }: {
   codigoSef: string;
   planilha: ResumoCreditoPortal | null;
@@ -48,6 +52,11 @@ export default function CreditoProprioPortal({
   onPerguntarChange?: ((v: boolean) => void) | undefined;
   /** texto curto identificando de onde veio a pergunta */
   contexto?: string | undefined;
+  /** o próprio retorno (índice definitivo/provisório) já traz o crédito */
+  creditoNoArquivo?: boolean | undefined;
+  /** relatório de produtores rurais carregado sozinho (só nomes) */
+  produtores?: ProdutoresPortal | null | undefined;
+  onProdutores?: ((p: ProdutoresPortal | null) => void) | undefined;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -78,22 +87,26 @@ export default function CreditoProprioPortal({
         return;
       }
 
-      // só produtores: complementa os nomes da planilha já carregada
+      // só produtores: complementa os nomes (da planilha carregada ou do arquivo de índice)
       if (!arquivoCreditos) {
-        if (!planilha) {
+        if (!planilha && !creditoNoArquivo) {
           setErro(
             "Envie primeiro o relatório de créditos (REL_CREDITO_...). O de produtores rurais só complementa os nomes dos remetentes.",
           );
           return;
         }
-        const produtores = lerProdutoresPortal(arquivoProdutores!.buffer, arquivoProdutores!.nome);
-        const atualizado = aplicarNomesProdutores(planilha, produtores);
-        onPlanilha(atualizado);
+        const lidosProdutores = lerProdutoresPortal(
+          arquivoProdutores!.buffer,
+          arquivoProdutores!.nome,
+        );
+        onProdutores?.(lidosProdutores);
+        if (planilha) onPlanilha(aplicarNomesProdutores(planilha, lidosProdutores));
         toast.success(
-          `Nomes de remetentes carregados: ${produtores.total.toLocaleString("pt-BR")} produtores.`,
+          `Nomes de remetentes carregados: ${lidosProdutores.total.toLocaleString("pt-BR")} produtores.`,
         );
         return;
       }
+
 
       let resumo = lerCreditoPortal(arquivoCreditos.buffer, arquivoCreditos.nome, codigoSef);
       if (resumo.creditoProprio <= 0) {
@@ -102,10 +115,12 @@ export default function CreditoProprioPortal({
         return;
       }
       if (arquivoProdutores) {
-        resumo = aplicarNomesProdutores(
-          resumo,
-          lerProdutoresPortal(arquivoProdutores.buffer, arquivoProdutores.nome),
+        const lidosProdutores = lerProdutoresPortal(
+          arquivoProdutores.buffer,
+          arquivoProdutores.nome,
         );
+        onProdutores?.(lidosProdutores);
+        resumo = aplicarNomesProdutores(resumo, lidosProdutores);
       }
       onPlanilha(resumo);
       toast.success(
@@ -116,7 +131,8 @@ export default function CreditoProprioPortal({
     }
   }
 
-  const pendente = !planilha;
+  // em arquivos de índice o crédito já vem do retorno: nada fica pendente
+  const pendente = !planilha && !creditoNoArquivo;
 
   return (
     <>
@@ -144,12 +160,18 @@ export default function CreditoProprioPortal({
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-300">
               {pendente && <AlertTriangle className="h-4 w-4 shrink-0" />}
-              Crédito próprio (AF/SIARE)
+              {creditoNoArquivo && !planilha
+                ? "Nomes dos remetentes (produtor rural)"
+                : "Crédito próprio (AF/SIARE)"}
             </p>
             <p className="text-xs text-muted-foreground">
               {planilha
                 ? `Vindo da planilha ${planilha.arquivoNome} — ${planilha.totalNotasProprio} notas, ano base ${planilha.anoBase ?? "—"}.`
-                : "O arquivo de retorno não trouxe o crédito próprio. Selecione, na mesma pasta, o relatório de créditos do Portal do VAF (REL_CREDITO_...) e, se quiser os nomes dos remetentes, também o de produtores rurais (REL_PRODUTOR_RURAL_...)."}
+                : creditoNoArquivo
+                  ? produtores
+                    ? `Nomes de remetentes: ${produtores.total.toLocaleString("pt-BR")} produtores de ${produtores.arquivoNome}${produtores.anoBase != null ? ` (ano base ${produtores.anoBase})` : ""}.`
+                    : "Este arquivo de índice já traz o crédito próprio. Carregue apenas o relatório de produtores rurais do Portal do VAF (REL_PRODUTOR_RURAL_...) para exibir o nome dos remetentes."
+                  : "O arquivo de retorno não trouxe o crédito próprio. Selecione, na mesma pasta, o relatório de créditos do Portal do VAF (REL_CREDITO_...) e, se quiser os nomes dos remetentes, também o de produtores rurais (REL_PRODUTOR_RURAL_...)."}
             </p>
             {planilha &&
               (planilha.produtores ? (
@@ -182,10 +204,23 @@ export default function CreditoProprioPortal({
               onClick={() => inputRef.current?.click()}
             >
               <FileUp className="mr-2 h-4 w-4" />
-              {planilha ? "Trocar planilha" : "Carregar planilha do Portal"}
+              {planilha
+                ? "Trocar planilha"
+                : creditoNoArquivo
+                  ? produtores
+                    ? "Trocar nomes de remetentes"
+                    : "Carregar nomes de remetentes"
+                  : "Carregar planilha do Portal"}
             </Button>
-            {planilha && (
-              <Button variant="ghost" size="sm" onClick={() => onPlanilha(null)}>
+            {(planilha || (creditoNoArquivo && produtores)) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (planilha) onPlanilha(null);
+                  else onProdutores?.(null);
+                }}
+              >
                 Remover
               </Button>
             )}

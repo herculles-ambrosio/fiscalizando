@@ -48,7 +48,7 @@ import {
 } from "@/lib/vaf/indice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import { type ProdutoresPortal, type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
 import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 
 import { baixarCsv as baixarCsvArquivo, montarCsv } from "@/lib/csv";
@@ -204,7 +204,14 @@ function TabelaMunicipios({
   );
 }
 
-function TabelaContribuintes({ linhas }: { linhas: LinhaContribuinte[] }) {
+function TabelaContribuintes({
+  linhas,
+  nomePorIe,
+}: {
+  linhas: LinhaContribuinte[];
+  /** complemento de nome quando o arquivo não traz (ex.: produtor rural) */
+  nomePorIe?: ((ie: string) => string | null) | undefined;
+}) {
   const total = linhas.reduce((s, l) => s + l.valor, 0);
   return (
     <Table>
@@ -223,7 +230,9 @@ function TabelaContribuintes({ linhas }: { linhas: LinhaContribuinte[] }) {
           <TableRow key={`${l.inscricao_estadual}-${i}`}>
             <TableCell className="font-mono text-xs">{l.inscricao_estadual}</TableCell>
             <TableCell className="font-mono text-xs">{formatarCnpj(l.cnpj)}</TableCell>
-            <TableCell className="max-w-[22rem] truncate">{l.nome ?? "—"}</TableCell>
+            <TableCell className="max-w-[22rem] truncate">
+              {l.nome ?? nomePorIe?.(l.inscricao_estadual) ?? "—"}
+            </TableCell>
             <TableCell className="font-mono text-xs">{l.municipio}</TableCell>
             <TableCell className="text-xs">{formatarData(l.data)}</TableCell>
             <TableCell className="text-right font-mono">{formatarMoeda(l.valor)}</TableCell>
@@ -262,6 +271,8 @@ export default function PaginaIndice() {
   const [fator, setFator] = useState<string>("1");
   const inputRef = useRef<HTMLInputElement>(null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
+  // relatório de produtores rurais carregado sozinho (arquivos de índice já trazem o crédito)
+  const [produtores, setProdutores] = useState<ProdutoresPortal | null>(null);
   const [perguntar, setPerguntar] = useState(false);
   const [registroHistorico, setRegistroHistorico] = useState<IndiceSalvo | null>(null);
   const [detalheHistorico, setDetalheHistorico] = useState<DetalhamentoIndice | null>(null);
@@ -353,8 +364,12 @@ export default function PaginaIndice() {
     for (const [ie, nome] of Object.entries(nomesGravados ?? {})) {
       if (!mapa.has(ie)) mapa.set(ie, nome);
     }
+    // relatório de produtores rurais do Portal (IE já normalizada na leitura)
+    for (const [ie, nome] of produtores?.nomes ?? []) {
+      if (!mapa.has(ie)) mapa.set(ie, nome);
+    }
     return (ie: string) => mapa.get(normalizar(ie)) ?? null;
-  }, [apuracao, nomesGravados]);
+  }, [apuracao, nomesGravados, produtores]);
 
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
@@ -365,6 +380,7 @@ export default function PaginaIndice() {
 
   useEffect(() => {
     setPlanilha(null);
+    setProdutores(null);
     setPerguntar(false);
     setRegistroHistorico(null);
     setDetalheHistorico(null);
@@ -375,6 +391,7 @@ export default function PaginaIndice() {
     setTexto(null);
     setErro(null);
     setPlanilha(null);
+    setProdutores(null);
     setPerguntar(false);
     setDetalheHistorico(null);
     setRegistroHistorico(r);
@@ -769,11 +786,31 @@ export default function PaginaIndice() {
               perguntar={perguntar}
               onPerguntarChange={setPerguntar}
               contexto={arquivo ? `“${arquivo.name}”` : undefined}
+              produtores={produtores}
+              onProdutores={setProdutores}
             />
 
           </CardContent>
         </Card>
       )}
+
+      {/* Índice definitivo/provisório: o crédito já vem do arquivo, só faltam os nomes */}
+      {!registroHistorico && apuracao && !apuracao.estimado && (
+        <div className="no-print">
+          <CreditoProprioPortal
+            codigoSef={municipio?.codigo_sef ? String(municipio.codigo_sef) : ""}
+            planilha={planilha}
+            onPlanilha={setPlanilha}
+            anoBaseArquivo={apuracao.anoBase}
+            creditoInternoArquivo={apuracao.creditoInterno}
+            contexto={arquivo ? `“${arquivo.name}”` : undefined}
+            creditoNoArquivo
+            produtores={produtores}
+            onProdutores={setProdutores}
+          />
+        </div>
+      )}
+
 
       {apuracao && !apuracao.estimado && planilha && (
         <Alert className="no-print">
@@ -1201,7 +1238,10 @@ export default function PaginaIndice() {
                 </TabsList>
 
                 <TabsContent value="externos" className="mt-4">
-                  <TabelaContribuintes linhas={apuracao.creditosExternos} />
+                  <TabelaContribuintes
+                    linhas={apuracao.creditosExternos}
+                    nomePorIe={nomePorIe}
+                  />
                 </TabsContent>
 
                 <TabsContent value="municipios" className="mt-4 space-y-6">
@@ -1218,7 +1258,10 @@ export default function PaginaIndice() {
                 </TabsContent>
 
                 <TabsContent value="contribuintes" className="mt-4">
-                  <TabelaContribuintes linhas={apuracao.contribuintesVaf.slice(0, 300)} />
+                  <TabelaContribuintes
+                    linhas={apuracao.contribuintesVaf.slice(0, 300)}
+                    nomePorIe={nomePorIe}
+                  />
                   {apuracao.contribuintesVaf.length > 300 && (
                     <p className="mt-2 text-xs text-muted-foreground">
                       Mostrando os 300 maiores. Use o CSV para a lista completa.

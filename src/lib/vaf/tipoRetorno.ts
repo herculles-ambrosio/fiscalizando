@@ -34,6 +34,8 @@ export function remessaDoArquivo(nome: string): number | null {
 export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: number | null } {
   const remessa = remessaDoArquivo(nome);
   if (remessa === 13) return { tipo: "indice_definitivo", mes: 13 };
+  // o arquivo 14 é o índice provisório enviado após o fechamento
+  if (remessa === 14) return { tipo: "indice_provisorio", mes: 14 };
   return { tipo: "mensal", mes: remessa };
 }
 
@@ -44,6 +46,7 @@ export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: numb
 export function rotuloRemessa(remessa: number | null | undefined): string {
   if (!remessa) return "—";
   if (remessa === 13) return "Arquivo 13 · fechamento";
+  if (remessa === 14) return "Arquivo 14 · provisório";
   return `Arquivo ${String(remessa).padStart(2, "0")}`;
 }
 
@@ -55,7 +58,8 @@ export function rotuloExercicioRemessa(
 ): string {
   if (!exercicio) return "—";
   if (tipo === "indice_definitivo" || remessa === 13) return `${exercicio} · Definitivo`;
-  if (tipo === "indice_provisorio" && !remessa) return `${exercicio} · Provisório`;
+  if ((tipo === "indice_provisorio" && !remessa) || remessa === 14)
+    return `${exercicio} · Provisório`;
   if (!remessa || remessa < 1 || remessa > REMESSA_MAXIMA) return String(exercicio);
   return `${exercicio} · Arquivo ${String(remessa).padStart(2, "0")}`;
 }
