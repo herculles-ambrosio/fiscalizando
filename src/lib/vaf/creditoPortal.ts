@@ -291,9 +291,9 @@ export function aplicarNomesProdutores(
 ): ResumoCreditoPortal {
   let identificadas = 0;
   const notas = resumo.notas.map((n) => {
-    const nome = produtores.nomes.get(normalizarIe(n.remetente)) ?? null;
-    if (nome) identificadas += 1;
-    return nome ? { ...n, remetenteNome: n.remetenteNome ?? nome } : n;
+    const achado = nomeDoProdutor(produtores, n.remetente);
+    if (achado) identificadas += 1;
+    return achado ? { ...n, remetenteNome: n.remetenteNome ?? achado.nome } : n;
   });
 
   return {
