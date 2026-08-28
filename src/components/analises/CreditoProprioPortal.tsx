@@ -38,6 +38,9 @@ export default function CreditoProprioPortal({
   perguntar,
   onPerguntarChange,
   contexto,
+  creditoNoArquivo,
+  produtores,
+  onProdutores,
 }: {
   codigoSef: string;
   planilha: ResumoCreditoPortal | null;
@@ -49,6 +52,11 @@ export default function CreditoProprioPortal({
   onPerguntarChange?: ((v: boolean) => void) | undefined;
   /** texto curto identificando de onde veio a pergunta */
   contexto?: string | undefined;
+  /** o próprio retorno (índice definitivo/provisório) já traz o crédito */
+  creditoNoArquivo?: boolean | undefined;
+  /** relatório de produtores rurais carregado sozinho (só nomes) */
+  produtores?: ProdutoresPortal | null | undefined;
+  onProdutores?: ((p: ProdutoresPortal | null) => void) | undefined;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [erro, setErro] = useState<string | null>(null);
