@@ -193,3 +193,81 @@ export function lerCreditoPortal(
     valorIgnoradoOutroMunicipio: Math.round(valorIgnorado * 100) / 100,
   };
 }
+
+/** IE em formato comparável entre os dois relatórios do Portal. */
+function normalizarIe(valor: string | undefined): string {
+  return limparCampo(valor).replace(/\D/g, "").replace(/^0+/, "");
+}
+
+export type TipoPlanilhaPortal = "creditos" | "produtores" | "desconhecida";
+
+/** Identifica a planilha pelo cabeçalho (o nome do arquivo varia por município). */
+export function detectarTipoPlanilha(texto: string): TipoPlanilhaPortal {
+  const cabecalho = (texto.replace(/^\uFEFF/, "").split(/\r?\n/)[0] ?? "")
+    .split(";")
+    .map((c) => c.trim());
+  if (COLUNAS_OBRIGATORIAS.every((c) => cabecalho.includes(c))) return "creditos";
+  if (cabecalho.includes("ie") && cabecalho.includes("nomeProdutor")) return "produtores";
+  return "desconhecida";
+}
+
+/** Lê o relatório de produtores rurais (colunas `ie` e `nomeProdutor`). */
+export function lerProdutoresPortal(buffer: ArrayBuffer, arquivoNome: string): ProdutoresPortal {
+  const texto = decodificarArquivo(buffer).replace(/^\uFEFF/, "");
+  const linhas = separarCsv(texto);
+  const cabecalho = (linhas[0] ?? []).map((c) => c.replace(/^\uFEFF/, "").trim());
+  const iIe = cabecalho.indexOf("ie");
+  const iNome = cabecalho.indexOf("nomeProdutor");
+  const iAno = cabecalho.indexOf("anoBase");
+  if (iIe < 0 || iNome < 0) {
+    throw new Error(
+      "Este CSV não parece ser o relatório de produtores rurais do Portal do VAF (colunas “ie” e “nomeProdutor” ausentes).",
+    );
+  }
+
+  const nomes = new Map<string, string>();
+  const anos = new Map<number, number>();
+  for (let i = 1; i < linhas.length; i++) {
+    const c = linhas[i]!;
+    const ie = normalizarIe(c[iIe]);
+    const nome = (c[iNome] ?? "").trim();
+    if (!ie || !nome) continue;
+    if (!nomes.has(ie)) nomes.set(ie, nome);
+    const ano = Number((c[iAno] ?? "").trim());
+    if (ano > 1990) anos.set(ano, (anos.get(ano) ?? 0) + 1);
+  }
+
+  return {
+    arquivoNome,
+    anoBase: [...anos.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
+    nomes,
+    total: nomes.size,
+  };
+}
+
+/**
+ * Cruza o relatório de produtores com as notas de crédito próprio pela IE do
+ * remetente, preenchendo o nome sem alterar nenhum valor apurado.
+ */
+export function aplicarNomesProdutores(
+  resumo: ResumoCreditoPortal,
+  produtores: ProdutoresPortal,
+): ResumoCreditoPortal {
+  let identificadas = 0;
+  const notas = resumo.notas.map((n) => {
+    const nome = produtores.nomes.get(normalizarIe(n.remetente)) ?? null;
+    if (nome) identificadas += 1;
+    return nome ? { ...n, remetenteNome: n.remetenteNome ?? nome } : n;
+  });
+
+  return {
+    ...resumo,
+    notas,
+    produtores: {
+      arquivoNome: produtores.arquivoNome,
+      anoBase: produtores.anoBase,
+      total: produtores.total,
+      notasIdentificadas: identificadas,
+    },
+  };
+}
