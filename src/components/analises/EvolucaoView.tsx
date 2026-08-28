@@ -1037,6 +1037,43 @@ export default function PaginaEvolucao() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardContent className="space-y-1 p-4">
+                <RotuloKpi
+                  titulo="VAF estadual"
+                  ajuda={
+                    <>
+                      <p>
+                        Total do VAF de Minas Gerais usado como denominador do índice de
+                        participação.
+                      </p>
+                      <p>
+                        Nos arquivos de índice (provisório ou definitivo) o valor vem do próprio
+                        arquivo da SEF-MG; em retornos mensais é usado o VAF estadual de
+                        referência informado no parâmetro de projeção.
+                      </p>
+                    </>
+                  }
+                />
+                <p className="break-words font-display text-lg font-semibold">
+                  {formatarMoeda(atual.apuracao.vafEstadual || base.apuracao.vafEstadual)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Origem:{" "}
+                  {(atual.apuracao.vafEstadual ? atual : base).apuracao.origemVafEstadual ===
+                  "arquivo"
+                    ? "arquivo da SEF-MG"
+                    : "referência informada"}
+                </p>
+                {base.apuracao.vafEstadual > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Base: {formatarMoeda(base.apuracao.vafEstadual)}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+
           </div>
 
           <DiagnosticoVariacao
