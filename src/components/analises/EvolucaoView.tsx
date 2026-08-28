@@ -529,6 +529,16 @@ export default function PaginaEvolucao() {
       );
       if (alvo === "base") setBase(analise);
       else setAtual(analise);
+      // Índice definitivo/provisório já traz o VAF estadual: preenche o parâmetro
+      // de projeção automaticamente para as próximas comparações.
+      const estadualArquivo =
+        analise.apuracao.origemVafEstadual === "arquivo" ? analise.apuracao.vafEstadual : 0;
+      if (estadualArquivo > 0) {
+        setVafReferencia(
+          estadualArquivo.toLocaleString("pt-BR", { maximumFractionDigits: 0 }),
+        );
+      }
+
       // Limpa bloqueio quando um arquivo da prefeitura ativa é carregado com sucesso.
       setBloqueio(null);
     } catch (e) {
