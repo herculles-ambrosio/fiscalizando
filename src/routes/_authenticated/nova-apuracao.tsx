@@ -48,6 +48,7 @@ import {
   anoDoArquivo,
   anoDoArquivoAtivos,
   rotuloRemessa,
+  REMESSA_MAXIMA,
   sugerirTipoRetorno,
   validarCompetencia,
 
@@ -117,6 +118,17 @@ function NovaApuracao() {
   }, [municipioId]);
 
   const processando = progresso !== null && progresso.percentual < 100;
+
+  // A SEF pode enviar remessas acima da 13; a lista acompanha o que o arquivo trouxer.
+  const opcoesRemessa = useMemo(() => {
+    const maior = Math.max(
+      13,
+      detectada.mes ?? 0,
+      competenciaMes ?? 0,
+      mesReferencia ?? 0,
+    );
+    return Array.from({ length: Math.min(maior, REMESSA_MAXIMA) }, (_, i) => i + 1);
+  }, [detectada.mes, competenciaMes, mesReferencia]);
 
   const [conferencia, setConferencia] = useState<ConferenciaArquivos | null>(null);
 
@@ -537,14 +549,14 @@ function NovaApuracao() {
                   id="mes-referencia"
                   type="number"
                   min={1}
-                  max={13}
+                  max={REMESSA_MAXIMA}
                   value={mesReferencia ?? ""}
                   onChange={(e) =>
                     setMesReferencia(e.target.value ? Number(e.target.value) : null)
                   }
                 />
                 <p className="text-xs text-muted-foreground">
-                  Número da entrega feita pela SEF (1 a 13) — não é mês de competência.
+                  Número da entrega feita pela SEF (detectado pelo nome do arquivo) — não é mês de competência.
                 </p>
               </div>
             )}
@@ -566,7 +578,7 @@ function NovaApuracao() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nenhum">Sem remessa (anual)</SelectItem>
-                    {Array.from({ length: 13 }, (_, i) => i + 1).map((m) => (
+                    {opcoesRemessa.map((m) => (
                       <SelectItem key={m} value={String(m)}>
                         {rotuloRemessa(m)}
                       </SelectItem>
@@ -575,8 +587,8 @@ function NovaApuracao() {
 
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  O arquivo de retorno não traz mês: 12 e 13 são o nº da entrega, e a 13 é o
-                  fechamento do exercício.
+                  O arquivo de retorno não traz mês: o número é o da entrega feita pela SEF. A 13
+                  costuma ser o fechamento, mas podem vir remessas posteriores (14, 15…).
                 </p>
               </div>
 

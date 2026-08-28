@@ -17,15 +17,18 @@ export function rotuloTipoRetorno(tipo: string | null | undefined): string {
   return ROTULO_TIPO_RETORNO[(tipo ?? "mensal") as TipoRetorno] ?? "Retorno mensal";
 }
 
+/** Maior número de remessa aceito pelo sistema (a SEF pode enviar mais de 13). */
+export const REMESSA_MAXIMA = 24;
+
 /**
- * Nome padrão da SEF-MG: P{codigo}RT{remessa}{ano}.txt — ex.: P443RT1226.
- * A remessa 13 é a que traz o fechamento (índice definitivo).
+ * Nome padrão da SEF-MG: P{codigo}RT{remessa}{ano}.txt — ex.: P443RT1426.
+ * A remessa 13 costuma trazer o fechamento, mas podem vir remessas posteriores.
  */
 export function remessaDoArquivo(nome: string): number | null {
   const m = /RT(\d{2})(\d{2})/i.exec(nome.replace(/\s+/g, ""));
   if (!m) return null;
   const remessa = Number(m[1]);
-  return remessa >= 1 && remessa <= 13 ? remessa : null;
+  return remessa >= 1 && remessa <= REMESSA_MAXIMA ? remessa : null;
 }
 
 export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: number | null } {
@@ -53,7 +56,7 @@ export function rotuloExercicioRemessa(
   if (!exercicio) return "—";
   if (tipo === "indice_definitivo" || remessa === 13) return `${exercicio} · Definitivo`;
   if (tipo === "indice_provisorio" && !remessa) return `${exercicio} · Provisório`;
-  if (!remessa || remessa < 1 || remessa > 13) return String(exercicio);
+  if (!remessa || remessa < 1 || remessa > REMESSA_MAXIMA) return String(exercicio);
   return `${exercicio} · Arquivo ${String(remessa).padStart(2, "0")}`;
 }
 
@@ -159,7 +162,7 @@ export function validarCompetencia(params: {
         mensagem: `O arquivo indica a remessa ${String(remessa).padStart(2, "0")}; informe o número da remessa.`,
       });
     }
-  } else if (competenciaMes && !(competenciaMes === 13 && remessa === 13)) {
+  } else if (competenciaMes && competenciaMes < 13 && competenciaMes !== remessa) {
     alertas.push({
       nivel: "aviso",
       mensagem: `Retornos de índice ${tipoRetorno === "indice_definitivo" ? "definitivo" : "provisório"} costumam vir na remessa 13 — a remessa ${String(competenciaMes).padStart(2, "0")} foi informada.`,

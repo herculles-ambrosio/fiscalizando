@@ -34,7 +34,7 @@ import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
-import { anoDoArquivo, remessaDoArquivo, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
+import { anoDoArquivo, remessaDoArquivo, rotuloRemessa, REMESSA_MAXIMA } from "@/lib/vaf/tipoRetorno";
 import {
   apurarIndice,
   conferirLiquido,
@@ -528,7 +528,7 @@ export default function PaginaIndice() {
       toast.error("Exercício inválido no arquivo. Verifique o retorno antes de salvar.");
       return;
     }
-    if (competencia.mes !== null && (competencia.mes < 1 || competencia.mes > 13)) {
+    if (competencia.mes !== null && (competencia.mes < 1 || competencia.mes > REMESSA_MAXIMA)) {
       toast.error("Remessa inválida (deve ser de 1 a 13). Verifique o nome do arquivo.");
       return;
     }
