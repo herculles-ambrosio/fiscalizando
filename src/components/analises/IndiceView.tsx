@@ -786,11 +786,31 @@ export default function PaginaIndice() {
               perguntar={perguntar}
               onPerguntarChange={setPerguntar}
               contexto={arquivo ? `“${arquivo.name}”` : undefined}
+              produtores={produtores}
+              onProdutores={setProdutores}
             />
 
           </CardContent>
         </Card>
       )}
+
+      {/* Índice definitivo/provisório: o crédito já vem do arquivo, só faltam os nomes */}
+      {!registroHistorico && apuracao && !apuracao.estimado && (
+        <div className="no-print">
+          <CreditoProprioPortal
+            codigoSef={municipio?.codigo_sef ? String(municipio.codigo_sef) : ""}
+            planilha={planilha}
+            onPlanilha={setPlanilha}
+            anoBaseArquivo={apuracao.anoBase}
+            creditoInternoArquivo={apuracao.creditoInterno}
+            contexto={arquivo ? `“${arquivo.name}”` : undefined}
+            creditoNoArquivo
+            produtores={produtores}
+            onProdutores={setProdutores}
+          />
+        </div>
+      )}
+
 
       {apuracao && !apuracao.estimado && planilha && (
         <Alert className="no-print">
