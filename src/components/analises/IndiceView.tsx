@@ -262,6 +262,8 @@ export default function PaginaIndice() {
   const [fator, setFator] = useState<string>("1");
   const inputRef = useRef<HTMLInputElement>(null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
+  // relatório de produtores rurais carregado sozinho (arquivos de índice já trazem o crédito)
+  const [produtores, setProdutores] = useState<ProdutoresPortal | null>(null);
   const [perguntar, setPerguntar] = useState(false);
   const [registroHistorico, setRegistroHistorico] = useState<IndiceSalvo | null>(null);
   const [detalheHistorico, setDetalheHistorico] = useState<DetalhamentoIndice | null>(null);
