@@ -25,6 +25,14 @@ export type NotaCredito = {
   valor: number;
 };
 
+export type ProdutoresPortal = {
+  arquivoNome: string;
+  anoBase: number | null;
+  /** IE normalizada -> nome do produtor */
+  nomes: Map<string, string>;
+  total: number;
+};
+
 export type ResumoCreditoPortal = {
   arquivoNome: string;
   anoBase: number | null;
@@ -43,7 +51,16 @@ export type ResumoCreditoPortal = {
   /** notas de crédito próprio ENTRA cujo município beneficiado é outro */
   ignoradasOutroMunicipio: number;
   valorIgnoradoOutroMunicipio: number;
+  /** relatório de produtores rurais cruzado pela IE, quando enviado */
+  produtores?: {
+    arquivoNome: string;
+    anoBase: number | null;
+    total: number;
+    /** notas de crédito próprio que ganharam nome pelo cruzamento */
+    notasIdentificadas: number;
+  };
 };
+
 
 function numeroBr(valor: string | undefined): number {
   if (!valor) return 0;
