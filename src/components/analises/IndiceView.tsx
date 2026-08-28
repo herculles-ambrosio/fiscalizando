@@ -1303,21 +1303,13 @@ export default function PaginaIndice() {
                               {n.numero}
                             </TableCell>
                             <TableCell className="text-xs">{n.data ?? "—"}</TableCell>
-                            <TableCell className="max-w-[16rem] truncate">
-                              {(() => {
-                                const nome = n.remetenteNome ?? nomePorIe(n.remetente);
-                                return nome ? (
-                                  <>
-                                    <span>{nome}</span>
-                                    <span className="block font-mono text-[10px] text-muted-foreground">
-                                      {n.remetente}
-                                    </span>
-                                  </>
-                                ) : (
-                                  <span className="font-mono text-xs">{n.remetente}</span>
-                                );
-                              })()}
+                            <TableCell className="max-w-[12rem] truncate font-mono text-xs">
+                              {n.remetente}
                             </TableCell>
+                            <TableCell className="max-w-[16rem] truncate">
+                              {n.remetenteNome ?? nomePorIe(n.remetente) ?? "—"}
+                            </TableCell>
+
                             <TableCell className="max-w-[18rem] truncate">{n.descricao}</TableCell>
                             <TableCell className="text-right font-mono">
                               {formatarMoeda(n.valor)}
