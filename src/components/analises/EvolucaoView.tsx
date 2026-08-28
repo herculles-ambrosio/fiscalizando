@@ -529,11 +529,11 @@ export default function PaginaEvolucao() {
       );
       if (alvo === "base") setBase(analise);
       else setAtual(analise);
-      // Índice definitivo/provisório já traz o VAF estadual: preenche o parâmetro
-      // de projeção automaticamente para as próximas comparações.
+      // Índice definitivo/provisório já traz o VAF estadual: o parâmetro de
+      // projeção segue sempre o ARQUIVO ATUAL (exercício em análise).
       const estadualArquivo =
         analise.apuracao.origemVafEstadual === "arquivo" ? analise.apuracao.vafEstadual : 0;
-      if (estadualArquivo > 0) {
+      if (alvo === "atual" && estadualArquivo > 0) {
         setVafReferencia(
           estadualArquivo.toLocaleString("pt-BR", { maximumFractionDigits: 0 }),
         );
