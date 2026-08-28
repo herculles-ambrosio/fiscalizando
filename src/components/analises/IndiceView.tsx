@@ -1230,9 +1230,10 @@ export default function PaginaIndice() {
                     VAF por contribuinte ({apuracao.contribuintesVaf.length})
                   </TabsTrigger>
                   <TabsTrigger value="simei">SIMEI ({apuracao.simei.length})</TabsTrigger>
-                  {planilha && (
+                  {(planilha || apuracao.creditoProprio > 0) && (
                     <TabsTrigger value="proprio">
-                      Crédito próprio ({planilha.totalNotasProprio})
+                      Crédito próprio
+                      {planilha ? ` (${planilha.totalNotasProprio})` : ""}
                     </TabsTrigger>
                   )}
                 </TabsList>
@@ -1367,6 +1368,46 @@ export default function PaginaIndice() {
                         Use “Exportar notas” para a lista completa.
                       </p>
                     )}
+                  </TabsContent>
+                )}
+
+                {!planilha && apuracao.creditoProprio > 0 && (
+                  <TabsContent value="proprio" className="mt-4 space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Este arquivo já traz o crédito próprio consolidado pela SEF-MG. Para ver as
+                      notas (e o nome dos remetentes), envie o relatório de créditos do Portal do
+                      VAF acima.
+                    </p>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Origem</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>Crédito próprio — AF</TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatarMoeda(apuracao.creditoProprioAf)}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Crédito próprio — SIARE</TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatarMoeda(apuracao.creditoProprioSiare)}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                      <TableFooter>
+                        <TableRow>
+                          <TableCell>Total</TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatarMoeda(apuracao.creditoProprio)}
+                          </TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    </Table>
                   </TabsContent>
                 )}
               </Tabs>
