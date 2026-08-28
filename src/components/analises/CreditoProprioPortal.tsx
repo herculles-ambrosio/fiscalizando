@@ -87,22 +87,26 @@ export default function CreditoProprioPortal({
         return;
       }
 
-      // só produtores: complementa os nomes da planilha já carregada
+      // só produtores: complementa os nomes (da planilha carregada ou do arquivo de índice)
       if (!arquivoCreditos) {
-        if (!planilha) {
+        if (!planilha && !creditoNoArquivo) {
           setErro(
             "Envie primeiro o relatório de créditos (REL_CREDITO_...). O de produtores rurais só complementa os nomes dos remetentes.",
           );
           return;
         }
-        const produtores = lerProdutoresPortal(arquivoProdutores!.buffer, arquivoProdutores!.nome);
-        const atualizado = aplicarNomesProdutores(planilha, produtores);
-        onPlanilha(atualizado);
+        const lidosProdutores = lerProdutoresPortal(
+          arquivoProdutores!.buffer,
+          arquivoProdutores!.nome,
+        );
+        onProdutores?.(lidosProdutores);
+        if (planilha) onPlanilha(aplicarNomesProdutores(planilha, lidosProdutores));
         toast.success(
-          `Nomes de remetentes carregados: ${produtores.total.toLocaleString("pt-BR")} produtores.`,
+          `Nomes de remetentes carregados: ${lidosProdutores.total.toLocaleString("pt-BR")} produtores.`,
         );
         return;
       }
+
 
       let resumo = lerCreditoPortal(arquivoCreditos.buffer, arquivoCreditos.nome, codigoSef);
       if (resumo.creditoProprio <= 0) {
