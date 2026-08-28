@@ -204,7 +204,14 @@ function TabelaMunicipios({
   );
 }
 
-function TabelaContribuintes({ linhas }: { linhas: LinhaContribuinte[] }) {
+function TabelaContribuintes({
+  linhas,
+  nomePorIe,
+}: {
+  linhas: LinhaContribuinte[];
+  /** complemento de nome quando o arquivo não traz (ex.: produtor rural) */
+  nomePorIe?: ((ie: string) => string | null) | undefined;
+}) {
   const total = linhas.reduce((s, l) => s + l.valor, 0);
   return (
     <Table>
