@@ -119,6 +119,17 @@ function NovaApuracao() {
 
   const processando = progresso !== null && progresso.percentual < 100;
 
+  // A SEF pode enviar remessas acima da 13; a lista acompanha o que o arquivo trouxer.
+  const opcoesRemessa = useMemo(() => {
+    const maior = Math.max(
+      13,
+      detectada.mes ?? 0,
+      competenciaMes ?? 0,
+      mesReferencia ?? 0,
+    );
+    return Array.from({ length: Math.min(maior, REMESSA_MAXIMA) }, (_, i) => i + 1);
+  }, [detectada.mes, competenciaMes, mesReferencia]);
+
   const [conferencia, setConferencia] = useState<ConferenciaArquivos | null>(null);
 
   useEffect(() => {
