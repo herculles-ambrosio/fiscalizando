@@ -1230,9 +1230,10 @@ export default function PaginaIndice() {
                     VAF por contribuinte ({apuracao.contribuintesVaf.length})
                   </TabsTrigger>
                   <TabsTrigger value="simei">SIMEI ({apuracao.simei.length})</TabsTrigger>
-                  {planilha && (
+                  {(planilha || apuracao.creditoProprio > 0) && (
                     <TabsTrigger value="proprio">
-                      Crédito próprio ({planilha.totalNotasProprio})
+                      Crédito próprio
+                      {planilha ? ` (${planilha.totalNotasProprio})` : ""}
                     </TabsTrigger>
                   )}
                 </TabsList>
