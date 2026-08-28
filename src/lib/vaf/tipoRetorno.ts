@@ -31,21 +31,28 @@ export function remessaDoArquivo(nome: string): number | null {
   return remessa >= 1 && remessa <= REMESSA_MAXIMA ? remessa : null;
 }
 
+/**
+ * Índice definitivo: a SEF-MG nomeia o arquivo com "INDICESDEFINITIVOS"
+ * (ex.: P443RTINDICESDEFINITIVOS25.txt). O arquivo 13 é remessa mensal comum.
+ */
+export function ehArquivoDefinitivo(nome: string): boolean {
+  return /indices?definitivos?/i.test(nome.replace(/[\s_-]+/g, ""));
+}
+
 export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: number | null } {
+  if (ehArquivoDefinitivo(nome)) return { tipo: "indice_definitivo", mes: null };
   const remessa = remessaDoArquivo(nome);
-  if (remessa === 13) return { tipo: "indice_definitivo", mes: 13 };
   // o arquivo 14 é o índice provisório enviado após o fechamento
   if (remessa === 14) return { tipo: "indice_provisorio", mes: 14 };
   return { tipo: "mensal", mes: remessa };
 }
 
 /**
- * Rótulo da remessa (número do arquivo enviado pela SEF), de 1 a 13.
+ * Rótulo da remessa (número do arquivo enviado pela SEF).
  * Não é mês de competência: o layout do retorno não traz mês, só o exercício.
  */
 export function rotuloRemessa(remessa: number | null | undefined): string {
   if (!remessa) return "—";
-  if (remessa === 13) return "Arquivo 13 · fechamento";
   if (remessa === 14) return "Arquivo 14 · provisório";
   return `Arquivo ${String(remessa).padStart(2, "0")}`;
 }
@@ -57,7 +64,7 @@ export function rotuloExercicioRemessa(
   tipo?: string | null,
 ): string {
   if (!exercicio) return "—";
-  if (tipo === "indice_definitivo" || remessa === 13) return `${exercicio} · Definitivo`;
+  if (tipo === "indice_definitivo") return `${exercicio} · Definitivo`;
   if ((tipo === "indice_provisorio" && !remessa) || remessa === 14)
     return `${exercicio} · Provisório`;
   if (!remessa || remessa < 1 || remessa > REMESSA_MAXIMA) return String(exercicio);
