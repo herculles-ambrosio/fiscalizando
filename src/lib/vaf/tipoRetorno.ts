@@ -58,7 +58,8 @@ export function rotuloExercicioRemessa(
 ): string {
   if (!exercicio) return "—";
   if (tipo === "indice_definitivo" || remessa === 13) return `${exercicio} · Definitivo`;
-  if (tipo === "indice_provisorio" || remessa === 14) return `${exercicio} · Provisório`;
+  if ((tipo === "indice_provisorio" && !remessa) || remessa === 14)
+    return `${exercicio} · Provisório`;
   if (!remessa || remessa < 1 || remessa > REMESSA_MAXIMA) return String(exercicio);
   return `${exercicio} · Arquivo ${String(remessa).padStart(2, "0")}`;
 }
