@@ -48,7 +48,11 @@ import {
 } from "@/lib/vaf/indice";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type ProdutoresPortal, type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import {
+  nomeDoProdutor,
+  type ProdutoresPortal,
+  type ResumoCreditoPortal,
+} from "@/lib/vaf/creditoPortal";
 import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 
 import { baixarCsv as baixarCsvArquivo, montarCsv } from "@/lib/csv";
