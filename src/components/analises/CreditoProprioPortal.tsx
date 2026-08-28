@@ -45,22 +45,66 @@ export default function CreditoProprioPortal({
   const inputRef = useRef<HTMLInputElement>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  async function selecionar(file: File | null) {
+  async function selecionar(files: File[]) {
     setErro(null);
-    if (!file) return;
+    if (files.length === 0) return;
     try {
-      const resumo = lerCreditoPortal(await file.arrayBuffer(), file.name, codigoSef);
+      const lidos = await Promise.all(
+        files.map(async (f) => ({
+          nome: f.name,
+          buffer: await f.arrayBuffer(),
+        })),
+      );
+      const classificados = lidos.map((f) => ({
+        ...f,
+        tipo: detectarTipoPlanilha(decodificarArquivo(f.buffer)),
+      }));
+
+      const arquivoCreditos = classificados.find((f) => f.tipo === "creditos");
+      const arquivoProdutores = classificados.find((f) => f.tipo === "produtores");
+      const desconhecidos = classificados.filter((f) => f.tipo === "desconhecida");
+
+      if (!arquivoCreditos && !arquivoProdutores) {
+        setErro(
+          `Nenhum dos arquivos é do Portal do VAF (${desconhecidos.map((f) => f.nome).join(", ")}).`,
+        );
+        return;
+      }
+
+      // só produtores: complementa os nomes da planilha já carregada
+      if (!arquivoCreditos) {
+        if (!planilha) {
+          setErro(
+            "Envie primeiro o relatório de créditos (REL_CREDITO_...). O de produtores rurais só complementa os nomes dos remetentes.",
+          );
+          return;
+        }
+        const produtores = lerProdutoresPortal(arquivoProdutores!.buffer, arquivoProdutores!.nome);
+        const atualizado = aplicarNomesProdutores(planilha, produtores);
+        onPlanilha(atualizado);
+        toast.success(
+          `Nomes de remetentes carregados: ${produtores.total.toLocaleString("pt-BR")} produtores.`,
+        );
+        return;
+      }
+
+      let resumo = lerCreditoPortal(arquivoCreditos.buffer, arquivoCreditos.nome, codigoSef);
       if (resumo.creditoProprio <= 0) {
         setErro("A planilha não trouxe notas de Crédito próprio com “ENTRA” para esta prefeitura.");
         onPlanilha(null);
         return;
+      }
+      if (arquivoProdutores) {
+        resumo = aplicarNomesProdutores(
+          resumo,
+          lerProdutoresPortal(arquivoProdutores.buffer, arquivoProdutores.nome),
+        );
       }
       onPlanilha(resumo);
       toast.success(
         `Crédito próprio carregado: ${formatarMoeda(resumo.creditoProprio)} (${resumo.totalNotasProprio} notas).`,
       );
     } catch (e) {
-      onPlanilha(null);
       setErro(e instanceof Error ? e.message : "Não foi possível ler a planilha.");
     }
   }
@@ -73,12 +117,14 @@ export default function CreditoProprioPortal({
         ref={inputRef}
         type="file"
         accept=".csv,text/csv"
+        multiple
         className="hidden"
         onChange={(e) => {
-          void selecionar(e.target.files?.[0] ?? null);
+          void selecionar([...(e.target.files ?? [])]);
           e.target.value = "";
         }}
       />
+
 
       <div
         className={
