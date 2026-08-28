@@ -14,7 +14,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatarMoeda } from "@/lib/format";
-import { lerCreditoPortal, type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import {
+  aplicarNomesProdutores,
+  detectarTipoPlanilha,
+  lerCreditoPortal,
+  lerProdutoresPortal,
+  type ResumoCreditoPortal,
+} from "@/lib/vaf/creditoPortal";
+import { decodificarArquivo } from "@/lib/vaf/parser";
 
 /**
  * Bloco destacado do Crédito próprio (AF/SIARE): avisa quando o retorno não
