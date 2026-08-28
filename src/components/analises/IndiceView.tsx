@@ -906,38 +906,67 @@ export default function PaginaIndice() {
           <div className="grid gap-4 lg:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">VAF A</CardTitle>
+                <div className="flex items-center gap-1.5">
+                  <CardTitle className="text-base">VAF A</CardTitle>
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-foreground"
+                          aria-label="Composição do VAF A"
+                        >
+                          <HelpCircle className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="space-y-1.5 text-xs">
+                          <p className="font-medium">Composição do VAF próprio</p>
+                          {apuracao.vafProprioNormal !== undefined ? (
+                            <>
+                              <div className="flex justify-between gap-4">
+                                <span>VAF A - 1 (regime normal)</span>
+                                <span className="font-mono">
+                                  {formatarMoeda(apuracao.vafProprioNormal ?? 0)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between gap-4">
+                                <span>VAF A - SN (Simples Nacional)</span>
+                                <span className="font-mono">
+                                  {formatarMoeda(apuracao.vafProprioSn ?? 0)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between gap-4">
+                                <span>SIMEI</span>
+                                <span className="font-mono">
+                                  {formatarMoeda(apuracao.vafProprioSimei ?? 0)}
+                                </span>
+                              </div>
+                              {(apuracao.vafProprioNaoCompoe ?? 0) > 0 && (
+                                <div className="flex justify-between gap-4">
+                                  <span>VAF negativo (não compõe o índice)</span>
+                                  <span className="font-mono">
+                                    −{formatarMoeda(apuracao.vafProprioNaoCompoe ?? 0)}
+                                  </span>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-muted-foreground">
+                              VAF próprio declarado (registro 07). VAF negativo não compõe o índice.
+                            </p>
+                          )}
+                          <p className="text-muted-foreground">
+                            Crédito externo: operações de entrada interestaduais (registros 11/35).
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </CardHeader>
               <CardContent>
                 <LinhaValor rotulo="VAF próprio" valor={apuracao.vafProprio} />
-                {apuracao.vafProprioNormal !== undefined && (
-                  <div className="mb-2 space-y-1 border-l-2 border-border pl-3 text-xs text-muted-foreground">
-                    <div className="flex justify-between">
-                      <span>VAF A - 1 (regime normal)</span>
-                      <span className="font-mono">
-                        {formatarMoeda(apuracao.vafProprioNormal ?? 0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>VAF A - SN (Simples Nacional)</span>
-                      <span className="font-mono">{formatarMoeda(apuracao.vafProprioSn ?? 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>SIMEI</span>
-                      <span className="font-mono">
-                        {formatarMoeda(apuracao.vafProprioSimei ?? 0)}
-                      </span>
-                    </div>
-                    {(apuracao.vafProprioNaoCompoe ?? 0) > 0 && (
-                      <div className="flex justify-between">
-                        <span>VAF negativo (não compõe o índice)</span>
-                        <span className="font-mono">
-                          −{formatarMoeda(apuracao.vafProprioNaoCompoe ?? 0)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
                 <LinhaValor rotulo="Crédito externo" valor={apuracao.creditoExterno} />
 
                 <div className="mt-3 flex justify-between border-t border-border pt-2 text-sm font-semibold">
@@ -951,17 +980,49 @@ export default function PaginaIndice() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">VAF B</CardTitle>
+                <div className="flex items-center gap-1.5">
+                  <CardTitle className="text-base">VAF B</CardTitle>
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-foreground"
+                          aria-label="Composição do VAF B"
+                        >
+                          <HelpCircle className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="space-y-1.5 text-xs">
+                          <p className="font-medium">Composição do VAF B</p>
+                          <p>
+                            <strong>Crédito interno:</strong> operações interestaduais com
+                            outros municípios (registro 12).
+                          </p>
+                          <p>
+                            <strong>Crédito próprio:</strong> AF/SIARE{" "}
+                            {apuracao.origemCreditoProprio === "planilha"
+                              ? `— origem: planilha do Portal do VAF${
+                                  apuracao.arquivoCreditoProprio
+                                    ? ` (${apuracao.arquivoCreditoProprio})`
+                                    : ""
+                                }`
+                              : "— origem: arquivo de retorno da SEF-MG"}
+                            .
+                          </p>
+                          <p>
+                            <strong>Débito:</strong> saídas interestaduais (registro 13).
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </CardHeader>
               <CardContent>
                 <LinhaValor rotulo="Crédito interno" valor={apuracao.creditoInterno} />
                 <LinhaValor rotulo="Crédito próprio" valor={apuracao.creditoProprio} />
-                {apuracao.origemCreditoProprio === "planilha" && (
-                  <p className="-mt-1 mb-2 text-[11px] text-muted-foreground">
-                    Origem: planilha do Portal do VAF
-                    {apuracao.arquivoCreditoProprio ? ` (${apuracao.arquivoCreditoProprio})` : ""}.
-                  </p>
-                )}
                 <LinhaValor rotulo="Débito" valor={apuracao.debito} negativo />
                 <div className="mt-3 flex justify-between border-t border-border pt-2 text-sm font-semibold">
                   <span>Subtotal</span>
@@ -976,7 +1037,35 @@ export default function PaginaIndice() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">VAF C</CardTitle>
+                <div className="flex items-center gap-1.5">
+                  <CardTitle className="text-base">VAF C</CardTitle>
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-foreground"
+                          aria-label="Composição do VAF C"
+                        >
+                          <HelpCircle className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="space-y-1.5 text-xs">
+                          <p className="font-medium">Composição do VAF C</p>
+                          <p>
+                            <strong>Acerto de crédito:</strong> ajuste de ofício aplicado pela
+                            SEF-MG que aumenta o valor líquido.
+                          </p>
+                          <p>
+                            <strong>Acerto de débito:</strong> ajuste de ofício aplicado pela
+                            SEF-MG que reduz o valor líquido.
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </CardHeader>
               <CardContent>
                 <LinhaValor rotulo="Acerto de crédito" valor={apuracao.acertoCredito} />
