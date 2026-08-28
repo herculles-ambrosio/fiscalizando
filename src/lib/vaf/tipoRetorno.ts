@@ -46,6 +46,7 @@ export function sugerirTipoRetorno(nome: string): { tipo: TipoRetorno; mes: numb
 export function rotuloRemessa(remessa: number | null | undefined): string {
   if (!remessa) return "—";
   if (remessa === 13) return "Arquivo 13 · fechamento";
+  if (remessa === 14) return "Arquivo 14 · provisório";
   return `Arquivo ${String(remessa).padStart(2, "0")}`;
 }
 
@@ -57,7 +58,7 @@ export function rotuloExercicioRemessa(
 ): string {
   if (!exercicio) return "—";
   if (tipo === "indice_definitivo" || remessa === 13) return `${exercicio} · Definitivo`;
-  if (tipo === "indice_provisorio" && !remessa) return `${exercicio} · Provisório`;
+  if (tipo === "indice_provisorio" || remessa === 14) return `${exercicio} · Provisório`;
   if (!remessa || remessa < 1 || remessa > REMESSA_MAXIMA) return String(exercicio);
   return `${exercicio} · Arquivo ${String(remessa).padStart(2, "0")}`;
 }
