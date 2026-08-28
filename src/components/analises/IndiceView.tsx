@@ -355,8 +355,12 @@ export default function PaginaIndice() {
     for (const [ie, nome] of Object.entries(nomesGravados ?? {})) {
       if (!mapa.has(ie)) mapa.set(ie, nome);
     }
+    // relatório de produtores rurais do Portal (IE já normalizada na leitura)
+    for (const [ie, nome] of produtores?.nomes ?? []) {
+      if (!mapa.has(ie)) mapa.set(ie, nome);
+    }
     return (ie: string) => mapa.get(normalizar(ie)) ?? null;
-  }, [apuracao, nomesGravados]);
+  }, [apuracao, nomesGravados, produtores]);
 
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
