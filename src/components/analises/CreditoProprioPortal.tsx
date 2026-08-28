@@ -19,6 +19,7 @@ import {
   detectarTipoPlanilha,
   lerCreditoPortal,
   lerProdutoresPortal,
+  type ProdutoresPortal,
   type ResumoCreditoPortal,
 } from "@/lib/vaf/creditoPortal";
 import { decodificarArquivo } from "@/lib/vaf/parser";
