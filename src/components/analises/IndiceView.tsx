@@ -380,6 +380,7 @@ export default function PaginaIndice() {
 
   useEffect(() => {
     setPlanilha(null);
+    setProdutores(null);
     setPerguntar(false);
     setRegistroHistorico(null);
     setDetalheHistorico(null);
@@ -390,6 +391,7 @@ export default function PaginaIndice() {
     setTexto(null);
     setErro(null);
     setPlanilha(null);
+    setProdutores(null);
     setPerguntar(false);
     setDetalheHistorico(null);
     setRegistroHistorico(r);
