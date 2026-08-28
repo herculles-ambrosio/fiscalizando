@@ -570,10 +570,13 @@ export default function PaginaEvolucao() {
     if (municipio?.id) setMunicipioRelatorioId(municipio.id);
   }, [municipio?.id]);
 
+  // o exercício do relatório é sempre o do ARQUIVO ATUAL (remessa a comparar)
   const anoDosArquivos = atualArq?.apuracao.anoBase ?? baseArq?.apuracao.anoBase ?? null;
+  const anoDoAtual = atualArq?.apuracao.anoBase ?? null;
   useEffect(() => {
-    if (anoDosArquivos) setExercicioRelatorio(String(anoDosArquivos));
-  }, [anoDosArquivos]);
+    if (anoDoAtual) setExercicioRelatorio(String(anoDoAtual));
+    else if (anoDosArquivos) setExercicioRelatorio(String(anoDosArquivos));
+  }, [anoDoAtual, anoDosArquivos, atualArq]);
 
   const municipioRelatorio =
     municipiosPermitidos.find((m) => m.id === municipioRelatorioId) ?? municipio ?? null;
