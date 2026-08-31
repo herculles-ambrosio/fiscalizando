@@ -345,6 +345,11 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     }
   }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
 
+  const outrasEntradas = useMemo(
+    () => (texto ? extrairOutrasEntradas(texto) : undefined),
+    [texto],
+  );
+
   // Índice reaberto a partir do histórico (sem o arquivo original)
   const apuracaoHistorico = useMemo<ApuracaoIndice | null>(
     () =>
