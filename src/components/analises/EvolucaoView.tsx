@@ -70,6 +70,7 @@ import { montarPlanoRecuperacao, textoPlanoRecuperacao } from "@/lib/vaf/recuper
 import { useSituacoesCadastrais } from "@/hooks/useSituacoesCadastrais";
 import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import OutrasReceitas from "@/components/analises/OutrasReceitas";
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
