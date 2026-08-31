@@ -1293,7 +1293,18 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       {planilha ? ` (${planilha.totalNotasProprio})` : ""}
                     </TabsTrigger>
                   )}
+                  <TabsTrigger value="outras-receitas">Outras receitas</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="outras-receitas" className="mt-4">
+                  <OutrasReceitas
+                    base={undefined}
+                    atual={outrasEntradas}
+                    rotuloBase="—"
+                    rotuloAtual={arquivo?.name ?? "arquivo atual"}
+                    nomeArquivoCsv="indice-outras-receitas.csv"
+                  />
+                </TabsContent>
 
                 <TabsContent value="externos" className="mt-4">
                   <TabelaContribuintes
