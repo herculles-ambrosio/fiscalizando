@@ -32,6 +32,8 @@ import {
 import { podeRevalidar } from "@/lib/vaf/revalidarIndice";
 import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
+import OutrasReceitas from "@/components/analises/OutrasReceitas";
+import { extrairOutrasEntradas } from "@/lib/vaf/outrasEntradas";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
 import { anoDoArquivo, remessaDoArquivo, rotuloRemessa, REMESSA_MAXIMA } from "@/lib/vaf/tipoRetorno";
