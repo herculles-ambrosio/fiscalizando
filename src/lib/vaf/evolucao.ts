@@ -1,4 +1,5 @@
 import { separarLinhas } from "./parser";
+import { extrairOutrasEntradas, type OutrasEntradasArquivo } from "./outrasEntradas";
 import {
   apurarIndice,
   estimarIndiceProvisorio,
