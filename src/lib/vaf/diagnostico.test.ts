@@ -50,6 +50,7 @@ const arq = (
   apuracao: apuracao(ap),
   declarantes,
   temIndiceFechado: false,
+  outrasEntradas: { contribuintes: [], total: 0, temDetalhamento: false },
 });
 
 describe("diagnosticarEvolucao", () => {

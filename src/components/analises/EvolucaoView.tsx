@@ -70,6 +70,7 @@ import { montarPlanoRecuperacao, textoPlanoRecuperacao } from "@/lib/vaf/recuper
 import { useSituacoesCadastrais } from "@/hooks/useSituacoesCadastrais";
 import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
+import OutrasReceitas from "@/components/analises/OutrasReceitas";
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
@@ -1120,7 +1121,19 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               <TabsTrigger value="entraram">Novos ({declarantes.entraram.length})</TabsTrigger>
               <TabsTrigger value="variacao">Variação por contribuinte</TabsTrigger>
               <TabsTrigger value="municipios">Municípios</TabsTrigger>
+              <TabsTrigger value="outras">Outras receitas</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="outras">
+              <OutrasReceitas
+                base={base.outrasEntradas}
+                atual={atual.outrasEntradas}
+                rotuloBase="Base"
+                rotuloAtual="Atual"
+                nomeArquivoCsv={`${prefixoArquivo}-outras-receitas.csv`}
+              />
+            </TabsContent>
+
 
             <TabsContent value="indicadores">
               <Card>

@@ -1,4 +1,5 @@
 import { separarLinhas } from "./parser";
+import { extrairOutrasEntradas, type OutrasEntradasArquivo } from "./outrasEntradas";
 import {
   apurarIndice,
   estimarIndiceProvisorio,
@@ -138,6 +139,8 @@ export type ArquivoEvolucao = {
   declarantes: Declarante[];
   /** true quando o arquivo trazia registro 16/17 (índice fechado pela SEF) */
   temIndiceFechado: boolean;
+  /** outras entradas (registros 07/08/14..23) */
+  outrasEntradas: OutrasEntradasArquivo;
 };
 
 export function analisarArquivo(
@@ -159,6 +162,7 @@ export function analisarArquivo(
     apuracao,
     declarantes: extrairDeclarantes(textoRetorno),
     temIndiceFechado,
+    outrasEntradas: extrairOutrasEntradas(textoRetorno),
   };
 }
 
