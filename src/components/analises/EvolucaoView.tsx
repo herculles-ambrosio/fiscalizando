@@ -1025,6 +1025,32 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
+                  titulo="Índice de participação - base"
+                  ajuda={
+                    <>
+                      <p>
+                        Participação do município no VAF estadual apurada no arquivo base (
+                        {rotuloArquivo(base)}).
+                      </p>
+                      <p>
+                        <strong>Índice</strong> = valor líquido do município ÷ VAF estadual × 100.
+                        Em retornos mensais o resultado é uma projeção, não o índice oficial.
+                      </p>
+                    </>
+                  }
+                />
+                <p className="break-words font-display text-lg font-semibold">
+                  {formatarIndice(base.apuracao.indice)}%
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Arquivo: {rotuloArquivo(base)}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="space-y-1 p-4">
+                <RotuloKpi
                   titulo="Índice de participação - comparado/estimado"
                   ajuda={
                     <>
