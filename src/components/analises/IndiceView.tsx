@@ -32,6 +32,8 @@ import {
 import { podeRevalidar } from "@/lib/vaf/revalidarIndice";
 import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
+import OutrasReceitas from "@/components/analises/OutrasReceitas";
+import { extrairOutrasEntradas } from "@/lib/vaf/outrasEntradas";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
 import { anoDoArquivo, remessaDoArquivo, rotuloRemessa, REMESSA_MAXIMA } from "@/lib/vaf/tipoRetorno";
@@ -344,6 +346,11 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
       return null;
     }
   }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
+
+  const outrasEntradas = useMemo(
+    () => (texto ? extrairOutrasEntradas(texto) : undefined),
+    [texto],
+  );
 
   // Índice reaberto a partir do histórico (sem o arquivo original)
   const apuracaoHistorico = useMemo<ApuracaoIndice | null>(
@@ -1293,7 +1300,18 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       {planilha ? ` (${planilha.totalNotasProprio})` : ""}
                     </TabsTrigger>
                   )}
+                  <TabsTrigger value="outras-receitas">Outras receitas</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="outras-receitas" className="mt-4">
+                  <OutrasReceitas
+                    base={undefined}
+                    atual={outrasEntradas}
+                    rotuloBase="—"
+                    rotuloAtual={arquivo?.name ?? "arquivo atual"}
+                    nomeArquivoCsv="indice-outras-receitas.csv"
+                  />
+                </TabsContent>
 
                 <TabsContent value="externos" className="mt-4">
                   <TabelaContribuintes
