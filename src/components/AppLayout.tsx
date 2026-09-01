@@ -61,9 +61,11 @@ const NAV_ICMS_OPERACAO = [
 ];
 const NAV_ICMS_ANALISE = [
   { to: "/icms/criterios", rotulo: "Critérios", icone: Scale },
+  { to: "/icms/metas", rotulo: "Metas", icone: Target },
   { to: "/icms/comparativo", rotulo: "Comparativo", icone: TrendingUp },
   { to: "/icms/plano", rotulo: "Plano de melhoria", icone: ListChecks },
 ];
+
 
 
 export function AppLayout({ children }: { children: ReactNode }) {
