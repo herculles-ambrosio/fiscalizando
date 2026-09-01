@@ -467,10 +467,114 @@ function ComparativoIcms() {
               qc.invalidateQueries({ queryKey: ["icms-comparativo"] });
               qc.invalidateQueries({ queryKey: ["icms-cargas"] });
               qc.invalidateQueries({ queryKey: ["icms-exercicios"] });
+              setAba("ranking");
             }}
           />
         </TabsContent>
+
+        <TabsContent value="salvos" className="mt-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Comparativos salvos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!salvos?.length ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Nenhum comparativo salvo ainda. Monte a comparação na aba Ranking e clique em
+                  “Salvar”.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead className="w-24">Exercício</TableHead>
+                      <TableHead className="w-28">Municípios</TableHead>
+                      <TableHead className="w-40 text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salvos.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell>
+                          <div className="font-medium">{s.nome}</div>
+                          {s.observacao && (
+                            <div className="text-xs text-muted-foreground">{s.observacao}</div>
+                          )}
+                        </TableCell>
+                        <TableCell>{s.exercicio}</TableCell>
+                        <TableCell>{s.municipios.length}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setExercicio(s.exercicio);
+                              if (s.criterio) setCriterio(s.criterio);
+                              setSalvoAberto({ id: s.id, municipios: s.municipios });
+                              setAba("ranking");
+                            }}
+                          >
+                            Abrir
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Excluir comparativo salvo"
+                            aria-label="Excluir comparativo salvo"
+                            onClick={() =>
+                              apagarSalvo.mutate(s.id, {
+                                onSuccess: () => {
+                                  setSalvoAberto((cur) => (cur?.id === s.id ? null : cur));
+                                  toast.success("Comparativo excluído.");
+                                },
+                              })
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      <Dialog open={dialogoSalvar} onOpenChange={setDialogoSalvar}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Salvar comparativo</DialogTitle>
+            <DialogDescription>
+              Guarda os municípios comparados, o exercício e o critério para você reabrir depois.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Nome do comparativo"
+              value={nomeSalvar}
+              onChange={(e) => setNomeSalvar(e.target.value)}
+            />
+            <Textarea
+              placeholder="Observação (opcional)"
+              value={obsSalvar}
+              onChange={(e) => setObsSalvar(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogoSalvar(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarSalvar} disabled={salvar.isPending}>
+              {salvar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
