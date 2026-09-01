@@ -176,7 +176,7 @@ function ComparativoIcms() {
       .map((x, i) => ({ ...x, posicao: i + 1 }));
     const termo = normalizarRotulo(busca);
     return termo ? lista.filter((x) => normalizarRotulo(x.nome).includes(termo)) : lista;
-  }, [linhas, busca, criterio]);
+  }, [linhas, busca, criterio, salvoAberto]);
 
   const dadosGrafico = useMemo(
     () =>
