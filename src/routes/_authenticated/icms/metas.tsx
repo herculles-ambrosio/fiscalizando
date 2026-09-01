@@ -16,6 +16,7 @@ import {
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
@@ -109,6 +110,7 @@ function MetasIcms() {
   }
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
@@ -271,5 +273,6 @@ function MetasIcms() {
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
