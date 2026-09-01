@@ -205,6 +205,41 @@ function ComparativoIcms() {
     );
   }
 
+  function confirmarSalvar() {
+    if (!exercicio || !ranking.length) return;
+    salvar.mutate(
+      {
+        nome: nomeSalvar.trim() || `Comparativo ${exercicio}`,
+        exercicio,
+        criterio: criterio || "total",
+        municipios: ranking.map((r) => r.nome),
+        observacao: obsSalvar.trim() || null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Comparativo salvo.");
+          setDialogoSalvar(false);
+          setNomeSalvar("");
+          setObsSalvar("");
+        },
+        onError: (e) =>
+          toast.error(e instanceof Error ? e.message : "Não consegui salvar o comparativo."),
+      },
+    );
+  }
+
+  function novoComparativo() {
+    if (!exercicio) return;
+    limparComparativo.mutate(exercicio, {
+      onSuccess: () => {
+        setSalvoAberto(null);
+        setBusca("");
+        setAba("buscar");
+        toast.success("Comparativo limpo. Escolha os municípios e sincronize novamente.");
+      },
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Não consegui limpar."),
+    });
+  }
 
   return (
     <div className="space-y-6">
