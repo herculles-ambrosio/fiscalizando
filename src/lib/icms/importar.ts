@@ -59,26 +59,40 @@ export async function importarExtrato(params: {
     return { tipo: lido.tipo, exercicio, registros: linhas.length, desconhecidos: [] };
   }
 
-  const campo = lido.tipo === "indice_anual" ? "indice" : "valor";
+  const ehIndice = lido.tipo === "indice_anual";
+
+  // Índice e valor vêm de arquivos diferentes: preservamos a coluna que este
+  // arquivo não traz, senão o upsert apagaria o que já estava gravado.
+  const { data: existentes } = await supabase
+    .from("icms_indices")
+    .select("mes, criterio, indice, valor")
+    .eq("municipio_id", municipioId)
+    .eq("exercicio", exercicio);
+  const anterior = new Map(
+    (existentes ?? []).map((r) => [`${r.criterio}|${r.mes}`, r as { indice: number | null; valor: number | null }]),
+  );
+
   const registros = lido.linhas.flatMap((l) =>
-    l.meses
-      .map((v, i) => ({
-        municipio_id: municipioId,
-        carga_id: carga.id,
-        exercicio,
-        mes: i + 1,
-        criterio: l.criterio,
-        indice: lido.tipo === "indice_anual" ? v : null,
-        valor: lido.tipo === "indice_anual" ? null : v,
-        fonte: params.origem ?? "upload",
-        atualizado_em: new Date().toISOString(),
-      }))
-      .filter((r) => r[campo] != null),
+    l.meses.flatMap((v, i) => {
+      if (v == null) return [];
+      const antes = anterior.get(`${l.criterio}|${i + 1}`);
+      return [
+        {
+          municipio_id: municipioId,
+          carga_id: carga.id,
+          exercicio,
+          mes: i + 1,
+          criterio: l.criterio,
+          indice: ehIndice ? v : (antes?.indice ?? null),
+          valor: ehIndice ? (antes?.valor ?? null) : v,
+          fonte: params.origem ?? "upload",
+          atualizado_em: new Date().toISOString(),
+        },
+      ];
+    }),
   );
 
   if (registros.length) {
-    // O upsert não pode zerar a outra coluna (índice x valor vêm de arquivos
-    // distintos), por isso usamos ignoreDuplicates: false com merge de campos.
     const { error } = await supabase
       .from("icms_indices")
       .upsert(registros, { onConflict: "municipio_id,exercicio,mes,criterio" });
