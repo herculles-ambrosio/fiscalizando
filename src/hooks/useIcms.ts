@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMunicipioAtivo } from "./useMunicipio";
 import { CRITERIO_POR_SLUG } from "@/lib/icms/criterios";
+import { reaplicarCarga } from "@/lib/icms/importar";
 
 export type RegistroIndice = {
   criterio: string;
