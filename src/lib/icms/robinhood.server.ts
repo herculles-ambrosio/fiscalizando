@@ -49,7 +49,7 @@ async function baixar(
       ...(init?.corpo ? { "content-type": "application/x-www-form-urlencoded" } : {}),
       ...(init?.referer ? { referer: init.referer } : {}),
     },
-    body: init?.corpo ? init.corpo.toString() : undefined,
+    ...(init?.corpo ? { body: init.corpo.toString() } : {}),
     redirect: "follow",
     signal: AbortSignal.timeout(25_000),
   });
