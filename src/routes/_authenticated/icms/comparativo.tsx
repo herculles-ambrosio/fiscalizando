@@ -253,7 +253,8 @@ function BuscarNoPortal({
     listarMunicipiosFjpFn()
       .then((r) => {
         if (!vivo) return;
-        setLista(r.map((m) => ({ id: m.id, nome: m.nome })));
+        setLista(r.municipios.map((m) => ({ id: m.id, nome: m.nome })));
+        setErroLista(r.erro);
         setCarregandoLista(false);
       })
       .catch((e: unknown) => {
@@ -261,6 +262,7 @@ function BuscarNoPortal({
         setErroLista(e instanceof Error ? e.message : "portal indisponível");
         setCarregandoLista(false);
       });
+
     return () => {
       vivo = false;
     };
