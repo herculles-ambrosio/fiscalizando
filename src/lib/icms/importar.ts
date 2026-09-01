@@ -26,7 +26,7 @@ export type PayloadCarga = {
 async function salvarPayload(cargaId: string, payload: PayloadCarga) {
   await supabase
     .from("icms_cargas")
-    .update({ payload: payload as unknown as Record<string, unknown> })
+    .update({ payload: JSON.parse(JSON.stringify(payload)) })
     .eq("id", cargaId);
 }
 
