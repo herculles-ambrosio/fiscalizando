@@ -412,6 +412,40 @@ function ComparativoIcms() {
                           <TableCell className="text-right font-semibold tabular-nums">
                             {formatarMoeda(r.total)}
                           </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title={`Remover ${r.nome} da comparação`}
+                              aria-label={`Remover ${r.nome} da comparação`}
+                              disabled={removerMunicipio.isPending || !exercicio}
+                              onClick={() => {
+                                if (!exercicio) return;
+                                removerMunicipio.mutate(
+                                  { exercicio, nome: r.nome },
+                                  {
+                                    onSuccess: () => {
+                                      setSalvoAberto((s) =>
+                                        s
+                                          ? {
+                                              ...s,
+                                              municipios: s.municipios.filter((n) => n !== r.nome),
+                                            }
+                                          : s,
+                                      );
+                                      toast.success(`${r.nome} removido da comparação.`);
+                                    },
+                                    onError: (e) =>
+                                      toast.error(
+                                        e instanceof Error ? e.message : "Não consegui remover.",
+                                      ),
+                                  },
+                                );
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
