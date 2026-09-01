@@ -33,6 +33,9 @@ import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './route
 import { Route as AuthenticatedConsultoriaUsuariosRouteImport } from './routes/_authenticated/consultoria/usuarios'
 import { Route as AuthenticatedIcmsIndexRouteImport } from './routes/_authenticated/icms/index'
 import { Route as AuthenticatedIcmsCargasRouteImport } from './routes/_authenticated/icms/cargas'
+import { Route as AuthenticatedIcmsComparativoRouteImport } from './routes/_authenticated/icms/comparativo'
+import { Route as AuthenticatedIcmsCriteriosRouteImport } from './routes/_authenticated/icms/criterios'
+import { Route as AuthenticatedIcmsPlanoRouteImport } from './routes/_authenticated/icms/plano'
 import { Route as ApiPublicHooksReceitaFilaRouteImport } from './routes/api/public/hooks/receita-fila'
 
 const IndexRoute = IndexRouteImport.update({
@@ -164,6 +167,23 @@ const AuthenticatedIcmsCargasRoute = AuthenticatedIcmsCargasRouteImport.update({
   path: '/cargas',
   getParentRoute: () => AuthenticatedIcmsRouteRoute,
 } as any)
+const AuthenticatedIcmsComparativoRoute =
+  AuthenticatedIcmsComparativoRouteImport.update({
+    id: '/comparativo',
+    path: '/comparativo',
+    getParentRoute: () => AuthenticatedIcmsRouteRoute,
+  } as any)
+const AuthenticatedIcmsCriteriosRoute =
+  AuthenticatedIcmsCriteriosRouteImport.update({
+    id: '/criterios',
+    path: '/criterios',
+    getParentRoute: () => AuthenticatedIcmsRouteRoute,
+  } as any)
+const AuthenticatedIcmsPlanoRoute = AuthenticatedIcmsPlanoRouteImport.update({
+  id: '/plano',
+  path: '/plano',
+  getParentRoute: () => AuthenticatedIcmsRouteRoute,
+} as any)
 const ApiPublicHooksReceitaFilaRoute =
   ApiPublicHooksReceitaFilaRouteImport.update({
     id: '/api/public/hooks/receita-fila',
@@ -194,6 +214,9 @@ export interface FileRoutesByFullPath {
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
   '/icms/cargas': typeof AuthenticatedIcmsCargasRoute
+  '/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
+  '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
+  '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
@@ -219,6 +242,9 @@ export interface FileRoutesByTo {
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
   '/icms/cargas': typeof AuthenticatedIcmsCargasRoute
+  '/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
+  '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
+  '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
@@ -247,6 +273,9 @@ export interface FileRoutesById {
   '/_authenticated/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
   '/_authenticated/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
   '/_authenticated/icms/cargas': typeof AuthenticatedIcmsCargasRoute
+  '/_authenticated/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
+  '/_authenticated/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
+  '/_authenticated/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
@@ -275,6 +304,9 @@ export interface FileRouteTypes {
     | '/consultoria/prefeituras'
     | '/consultoria/usuarios'
     | '/icms/cargas'
+    | '/icms/comparativo'
+    | '/icms/criterios'
+    | '/icms/plano'
     | '/icms/'
     | '/api/public/hooks/receita-fila'
   fileRoutesByTo: FileRoutesByTo
@@ -300,6 +332,9 @@ export interface FileRouteTypes {
     | '/consultoria/prefeituras'
     | '/consultoria/usuarios'
     | '/icms/cargas'
+    | '/icms/comparativo'
+    | '/icms/criterios'
+    | '/icms/plano'
     | '/icms'
     | '/api/public/hooks/receita-fila'
   id:
@@ -327,6 +362,9 @@ export interface FileRouteTypes {
     | '/_authenticated/consultoria/prefeituras'
     | '/_authenticated/consultoria/usuarios'
     | '/_authenticated/icms/cargas'
+    | '/_authenticated/icms/comparativo'
+    | '/_authenticated/icms/criterios'
+    | '/_authenticated/icms/plano'
     | '/_authenticated/icms/'
     | '/api/public/hooks/receita-fila'
   fileRoutesById: FileRoutesById
@@ -507,6 +545,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIcmsCargasRouteImport
       parentRoute: typeof AuthenticatedIcmsRouteRoute
     }
+    '/_authenticated/icms/comparativo': {
+      id: '/_authenticated/icms/comparativo'
+      path: '/comparativo'
+      fullPath: '/icms/comparativo'
+      preLoaderRoute: typeof AuthenticatedIcmsComparativoRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
+    '/_authenticated/icms/criterios': {
+      id: '/_authenticated/icms/criterios'
+      path: '/criterios'
+      fullPath: '/icms/criterios'
+      preLoaderRoute: typeof AuthenticatedIcmsCriteriosRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
+    '/_authenticated/icms/plano': {
+      id: '/_authenticated/icms/plano'
+      path: '/plano'
+      fullPath: '/icms/plano'
+      preLoaderRoute: typeof AuthenticatedIcmsPlanoRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
     '/api/public/hooks/receita-fila': {
       id: '/api/public/hooks/receita-fila'
       path: '/api/public/hooks/receita-fila'
@@ -540,12 +599,18 @@ const AuthenticatedConsultoriaRouteRouteWithChildren =
 
 interface AuthenticatedIcmsRouteRouteChildren {
   AuthenticatedIcmsCargasRoute: typeof AuthenticatedIcmsCargasRoute
+  AuthenticatedIcmsComparativoRoute: typeof AuthenticatedIcmsComparativoRoute
+  AuthenticatedIcmsCriteriosRoute: typeof AuthenticatedIcmsCriteriosRoute
+  AuthenticatedIcmsPlanoRoute: typeof AuthenticatedIcmsPlanoRoute
   AuthenticatedIcmsIndexRoute: typeof AuthenticatedIcmsIndexRoute
 }
 
 const AuthenticatedIcmsRouteRouteChildren: AuthenticatedIcmsRouteRouteChildren =
   {
     AuthenticatedIcmsCargasRoute: AuthenticatedIcmsCargasRoute,
+    AuthenticatedIcmsComparativoRoute: AuthenticatedIcmsComparativoRoute,
+    AuthenticatedIcmsCriteriosRoute: AuthenticatedIcmsCriteriosRoute,
+    AuthenticatedIcmsPlanoRoute: AuthenticatedIcmsPlanoRoute,
     AuthenticatedIcmsIndexRoute: AuthenticatedIcmsIndexRoute,
   }
 

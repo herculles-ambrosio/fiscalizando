@@ -52,6 +52,17 @@ const NAV_SUPERADMIN = [
   { to: "/consultoria/codigos-sef", rotulo: "Códigos SEF", icone: MapPin },
 ];
 
+// Módulo ICMS (Lei Robin Hood) — os 18 critérios de distribuição.
+const NAV_ICMS_OPERACAO = [
+  { to: "/icms", rotulo: "Painel do ICMS", icone: BarChart3 },
+  { to: "/icms/cargas", rotulo: "Cargas", icone: FileUp },
+];
+const NAV_ICMS_ANALISE = [
+  { to: "/icms/criterios", rotulo: "Critérios", icone: Scale },
+  { to: "/icms/comparativo", rotulo: "Comparativo", icone: TrendingUp },
+  { to: "/icms/plano", rotulo: "Plano de melhoria", icone: ListChecks },
+];
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: perfil } = usePerfil();
