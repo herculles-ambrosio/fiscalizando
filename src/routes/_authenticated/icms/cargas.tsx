@@ -91,12 +91,14 @@ function CargasIcms() {
       });
       if (!r.registros.length) {
         toast.warning(
-          r.tentativas[0]
-            ? `O portal Robin Hood não devolveu dados (${r.tentativas[0]}). Use a importação do arquivo.`
+          r.tentativas.length
+            ? `O portal Robin Hood não devolveu dados. Tentativas: ${r.tentativas.join(" | ")}. Use a importação do arquivo.`
             : "O portal Robin Hood não devolveu dados para este município.",
+          { duration: 12000 },
         );
         return;
       }
+
       const gravados = await importarColetaRobinHood({
         municipioId,
         exercicio,
