@@ -11,6 +11,8 @@ import {
   MapPin,
   Scale,
   Settings,
+  Target,
+
   TrendingUp,
   Users,
 } from "lucide-react";
