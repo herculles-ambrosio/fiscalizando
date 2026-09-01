@@ -203,6 +203,15 @@ export async function importarExtrato(params: {
   }
 
   await supabase.from("icms_cargas").update({ linhas: registros.length }).eq("id", carga.id);
+  await salvarPayload(carga.id, {
+    tipo: lido.tipo,
+    indices: registros.map((r) => ({
+      criterio: r.criterio,
+      mes: r.mes,
+      indice: r.indice,
+      valor: r.valor,
+    })),
+  });
 
   return {
     tipo: lido.tipo,
