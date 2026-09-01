@@ -148,6 +148,34 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </p>
         </div>
 
+        <div className="mt-6 flex gap-1 rounded-full bg-white/5 p-1">
+          <Link
+            to="/dashboard"
+            onClick={limparTela}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
+              produto === "vaf"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+            )}
+          >
+            Apura VAF
+          </Link>
+          <Link
+            to="/icms"
+            onClick={limparTela}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
+              produto === "icms"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+            )}
+          >
+            ICMS
+          </Link>
+        </div>
+
+
         {podeTrocar && (
           <div className="mt-6 rounded-xl border border-sidebar-border bg-white/5 p-2.5 shadow-soft">
             <p className="px-1 pb-1.5 text-[10px] tracking-[0.08em] text-sidebar-foreground/45 uppercase">
