@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Download, Loader2, Trash2, Upload } from "lucide-react";
+import { Download, Loader2, RotateCw, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
-import { useApagarCarga, useIcmsCargas } from "@/hooks/useIcms";
+import { useApagarCarga, useIcmsCargas, useRecarregarCarga } from "@/hooks/useIcms";
 import { decodificarExtrato, exercicioDoNome, ROTULO_TIPO } from "@/lib/icms/extrato";
 import { importarColetaRobinHood, importarExtrato } from "@/lib/icms/importar";
 import { sincronizarRobinHood } from "@/lib/icms/robinhood.functions";
@@ -45,6 +45,7 @@ function CargasIcms() {
   const { municipioId, municipio } = useMunicipioAtivo();
   const { data: cargas, isLoading } = useIcmsCargas();
   const apagar = useApagarCarga();
+  const recarregar = useRecarregarCarga();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState(false);
