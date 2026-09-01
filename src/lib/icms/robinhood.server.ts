@@ -34,37 +34,48 @@ const HISTORICO_BASES = [
   "http://robin-hood-historico.fjp.mg.gov.br",
 ];
 
-const UA = "ApuraVAF/2.0 (consulta publica de indices ICMS; contato via portal)";
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
 async function baixar(
   url: string,
   init?: { method?: string; corpo?: URLSearchParams; referer?: string },
 ): Promise<string> {
-  const resp = await fetch(url, {
-    method: init?.method ?? "GET",
-    headers: {
-      "user-agent": UA,
-      accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
-      "accept-language": "pt-BR,pt;q=0.9",
-      ...(init?.corpo ? { "content-type": "application/x-www-form-urlencoded" } : {}),
-      ...(init?.referer ? { referer: init.referer } : {}),
-    },
-    ...(init?.corpo ? { body: init.corpo.toString() } : {}),
-    redirect: "follow",
-    signal: AbortSignal.timeout(25_000),
-  });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const bytes = new Uint8Array(await resp.arrayBuffer());
-  const tipo = resp.headers.get("content-type") ?? "";
-  if (/charset=(iso-8859-1|windows-1252)/i.test(tipo)) {
-    return new TextDecoder("iso-8859-1").decode(bytes);
+  let ultimo: unknown = null;
+  // o portal da FJP costuma demorar/derrubar a primeira conexão: tenta duas vezes
+  for (let tentativa = 0; tentativa < 2; tentativa++) {
+    try {
+      const resp = await fetch(url, {
+        method: init?.method ?? "GET",
+        headers: {
+          "user-agent": UA,
+          accept: "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
+          "accept-language": "pt-BR,pt;q=0.9",
+          ...(init?.corpo ? { "content-type": "application/x-www-form-urlencoded" } : {}),
+          ...(init?.referer ? { referer: init.referer } : {}),
+        },
+        ...(init?.corpo ? { body: init.corpo.toString() } : {}),
+        redirect: "follow",
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const bytes = new Uint8Array(await resp.arrayBuffer());
+      const tipo = resp.headers.get("content-type") ?? "";
+      if (/charset=(iso-8859-1|windows-1252)/i.test(tipo)) {
+        return new TextDecoder("iso-8859-1").decode(bytes);
+      }
+      try {
+        return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+      } catch {
+        return new TextDecoder("iso-8859-1").decode(bytes);
+      }
+    } catch (e) {
+      ultimo = e;
+    }
   }
-  try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  } catch {
-    return new TextDecoder("iso-8859-1").decode(bytes);
-  }
+  throw ultimo instanceof Error ? ultimo : new Error("sem resposta");
 }
+
 
 function semTags(html: string): string {
   return html
