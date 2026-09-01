@@ -231,7 +231,30 @@ function CargasIcms() {
               <TableBody>
                 {cargas.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell className="max-w-[260px] truncate">{c.arquivo_nome}</TableCell>
+                    <TableCell className="max-w-[260px] truncate">
+                      {c.temPayload ? (
+                        <button
+                          type="button"
+                          className="text-left font-medium text-primary underline-offset-2 hover:underline disabled:opacity-60"
+                          disabled={recarregar.isPending}
+                          onClick={() =>
+                            recarregar.mutate(c.id, {
+                              onSuccess: (n) =>
+                                toast.success(`${n} valores recarregados a partir desta carga.`),
+                              onError: (e) =>
+                                toast.error(
+                                  e instanceof Error ? e.message : "Não consegui recarregar.",
+                                ),
+                            })
+                          }
+                          title="Clique para dar carga novamente nestes dados"
+                        >
+                          {c.arquivo_nome}
+                        </button>
+                      ) : (
+                        c.arquivo_nome
+                      )}
+                    </TableCell>
                     <TableCell>{ROTULO_TIPO[c.tipo as keyof typeof ROTULO_TIPO]}</TableCell>
                     <TableCell>{c.exercicio}</TableCell>
                     <TableCell>
