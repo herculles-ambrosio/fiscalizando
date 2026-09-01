@@ -140,7 +140,9 @@ function PainelIcms() {
                   ))}
                 </div>
                 <Button asChild size="sm" variant="outline" className="mt-2">
-                  <Link to="/icms/criterios">Ver o que fazer em cada critério</Link>
+                  <Link to="/icms/criterios" search={{ criterio: "" }}>
+                    Ver o que fazer em cada critério
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -211,8 +213,8 @@ function Kpi({
 }: {
   titulo: string;
   valor: string;
-  nota?: string;
-  alerta?: boolean;
+  nota?: string | undefined;
+  alerta?: boolean | undefined;
 }) {
   return (
     <Card className={alerta ? "border-gold/50" : undefined}>

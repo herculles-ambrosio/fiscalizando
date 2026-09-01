@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/icms/criterios")({
   validateSearch: (search: Record<string, unknown>) => ({
-    criterio: typeof search.criterio === "string" ? search.criterio : undefined,
+    criterio: typeof search["criterio"] === "string" ? (search["criterio"] as string) : "",
   }),
   head: () => ({
     meta: [
@@ -45,7 +45,7 @@ function CriteriosIcms() {
   const { criterio: slugUrl } = Route.useSearch();
   const { data: exercicios } = useIcmsExercicios();
   const [exercicio, setExercicio] = useState<number | null>(null);
-  const [slug, setSlug] = useState<string | null>(slugUrl ?? null);
+  const [slug, setSlug] = useState<string | null>(slugUrl || null);
 
   useEffect(() => {
     if (exercicios?.length && (!exercicio || !exercicios.includes(exercicio))) {
