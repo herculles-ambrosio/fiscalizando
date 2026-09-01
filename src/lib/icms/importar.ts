@@ -177,3 +177,54 @@ export async function importarColetaRobinHood(params: {
 
   return linhas.length;
 }
+
+/**
+ * Grava no comparativo os valores coletados direto do portal Robin Hood
+ * para vários municípios de uma vez.
+ */
+export async function importarComparativoFjp(params: {
+  municipioId: string;
+  exercicio: number;
+  resultados: {
+    nome: string;
+    registros: { criterio: string; mes: number; valor: number | null }[];
+  }[];
+}): Promise<number> {
+  const { municipioId, exercicio } = params;
+
+  const linhas = params.resultados.flatMap((r) =>
+    r.registros
+      .filter((x) => x.valor != null)
+      .map((x) => ({
+        municipio_id: municipioId,
+        exercicio,
+        mes: x.mes,
+        criterio: x.criterio,
+        municipio_nome: r.nome,
+        valor: x.valor,
+      })),
+  );
+  if (!linhas.length) return 0;
+
+  const { data: carga, error: erroCarga } = await supabase
+    .from("icms_cargas")
+    .insert({
+      municipio_id: municipioId,
+      tipo: "comparativo",
+      exercicio,
+      arquivo_nome: `Portal Robin Hood — comparativo ${exercicio} (${params.resultados.length} municípios)`,
+      origem: "fjp",
+      linhas: linhas.length,
+    })
+    .select("id")
+    .single();
+  if (erroCarga) throw erroCarga;
+
+  const comCarga = linhas.map((l) => ({ ...l, carga_id: carga.id }));
+  const { error } = await supabase
+    .from("icms_comparativo")
+    .upsert(comCarga, { onConflict: "municipio_id,exercicio,mes,criterio,municipio_nome" });
+  if (error) throw error;
+
+  return comCarga.length;
+}

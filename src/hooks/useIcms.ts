@@ -107,6 +107,7 @@ export type LinhaComparativoSalva = {
   municipio_nome: string;
   mes: number;
   valor: number | null;
+  criterio: string;
 };
 
 export function useIcmsComparativo(exercicio: number | null) {
@@ -117,7 +118,7 @@ export function useIcmsComparativo(exercicio: number | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("icms_comparativo")
-        .select("municipio_nome, mes, valor")
+        .select("municipio_nome, mes, valor, criterio")
         .eq("municipio_id", municipioId!)
         .eq("exercicio", exercicio!);
       if (error) throw error;
@@ -125,6 +126,7 @@ export function useIcmsComparativo(exercicio: number | null) {
     },
   });
 }
+
 
 export function useIcmsCargas() {
   const { municipioId } = useMunicipioAtivo();

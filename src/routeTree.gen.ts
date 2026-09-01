@@ -35,6 +35,7 @@ import { Route as AuthenticatedIcmsIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedIcmsCargasRouteImport } from './routes/_authenticated/icms/cargas'
 import { Route as AuthenticatedIcmsComparativoRouteImport } from './routes/_authenticated/icms/comparativo'
 import { Route as AuthenticatedIcmsCriteriosRouteImport } from './routes/_authenticated/icms/criterios'
+import { Route as AuthenticatedIcmsMetasRouteImport } from './routes/_authenticated/icms/metas'
 import { Route as AuthenticatedIcmsPlanoRouteImport } from './routes/_authenticated/icms/plano'
 import { Route as ApiPublicHooksReceitaFilaRouteImport } from './routes/api/public/hooks/receita-fila'
 import { Route as ApiPublicIcmsDiagRouteImport } from './routes/api/public/icms/diag'
@@ -180,6 +181,11 @@ const AuthenticatedIcmsCriteriosRoute =
     path: '/criterios',
     getParentRoute: () => AuthenticatedIcmsRouteRoute,
   } as any)
+const AuthenticatedIcmsMetasRoute = AuthenticatedIcmsMetasRouteImport.update({
+  id: '/metas',
+  path: '/metas',
+  getParentRoute: () => AuthenticatedIcmsRouteRoute,
+} as any)
 const AuthenticatedIcmsPlanoRoute = AuthenticatedIcmsPlanoRouteImport.update({
   id: '/plano',
   path: '/plano',
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/icms/cargas': typeof AuthenticatedIcmsCargasRoute
   '/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
+  '/icms/metas': typeof AuthenticatedIcmsMetasRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/icms/cargas': typeof AuthenticatedIcmsCargasRoute
   '/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
+  '/icms/metas': typeof AuthenticatedIcmsMetasRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/cargas': typeof AuthenticatedIcmsCargasRoute
   '/_authenticated/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/_authenticated/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
+  '/_authenticated/icms/metas': typeof AuthenticatedIcmsMetasRoute
   '/_authenticated/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
@@ -315,6 +324,7 @@ export interface FileRouteTypes {
     | '/icms/cargas'
     | '/icms/comparativo'
     | '/icms/criterios'
+    | '/icms/metas'
     | '/icms/plano'
     | '/icms/'
     | '/api/public/hooks/receita-fila'
@@ -344,6 +354,7 @@ export interface FileRouteTypes {
     | '/icms/cargas'
     | '/icms/comparativo'
     | '/icms/criterios'
+    | '/icms/metas'
     | '/icms/plano'
     | '/icms'
     | '/api/public/hooks/receita-fila'
@@ -375,6 +386,7 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/cargas'
     | '/_authenticated/icms/comparativo'
     | '/_authenticated/icms/criterios'
+    | '/_authenticated/icms/metas'
     | '/_authenticated/icms/plano'
     | '/_authenticated/icms/'
     | '/api/public/hooks/receita-fila'
@@ -572,6 +584,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIcmsCriteriosRouteImport
       parentRoute: typeof AuthenticatedIcmsRouteRoute
     }
+    '/_authenticated/icms/metas': {
+      id: '/_authenticated/icms/metas'
+      path: '/metas'
+      fullPath: '/icms/metas'
+      preLoaderRoute: typeof AuthenticatedIcmsMetasRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
     '/_authenticated/icms/plano': {
       id: '/_authenticated/icms/plano'
       path: '/plano'
@@ -621,6 +640,7 @@ interface AuthenticatedIcmsRouteRouteChildren {
   AuthenticatedIcmsCargasRoute: typeof AuthenticatedIcmsCargasRoute
   AuthenticatedIcmsComparativoRoute: typeof AuthenticatedIcmsComparativoRoute
   AuthenticatedIcmsCriteriosRoute: typeof AuthenticatedIcmsCriteriosRoute
+  AuthenticatedIcmsMetasRoute: typeof AuthenticatedIcmsMetasRoute
   AuthenticatedIcmsPlanoRoute: typeof AuthenticatedIcmsPlanoRoute
   AuthenticatedIcmsIndexRoute: typeof AuthenticatedIcmsIndexRoute
 }
@@ -630,6 +650,7 @@ const AuthenticatedIcmsRouteRouteChildren: AuthenticatedIcmsRouteRouteChildren =
     AuthenticatedIcmsCargasRoute: AuthenticatedIcmsCargasRoute,
     AuthenticatedIcmsComparativoRoute: AuthenticatedIcmsComparativoRoute,
     AuthenticatedIcmsCriteriosRoute: AuthenticatedIcmsCriteriosRoute,
+    AuthenticatedIcmsMetasRoute: AuthenticatedIcmsMetasRoute,
     AuthenticatedIcmsPlanoRoute: AuthenticatedIcmsPlanoRoute,
     AuthenticatedIcmsIndexRoute: AuthenticatedIcmsIndexRoute,
   }
