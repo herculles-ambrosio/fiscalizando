@@ -94,18 +94,30 @@ function ComparativoIcms() {
   }, [criteriosDisponiveis, criterio]);
 
   const ranking = useMemo(() => {
-    const mapa = new Map<string, number>();
+    const mapa = new Map<string, number[]>();
     for (const l of linhas ?? []) {
       if (criterio && l.criterio !== criterio) continue;
-      mapa.set(l.municipio_nome, (mapa.get(l.municipio_nome) ?? 0) + (l.valor ?? 0));
+      const arr = mapa.get(l.municipio_nome) ?? Array.from({ length: 12 }, () => 0);
+      if (l.mes >= 1 && l.mes <= 12) arr[l.mes - 1] = (arr[l.mes - 1] ?? 0) + (l.valor ?? 0);
+      mapa.set(l.municipio_nome, arr);
     }
     const lista = [...mapa.entries()]
-      .map(([nome, total]) => ({ nome, total }))
+      .map(([nome, meses]) => ({ nome, meses, total: meses.reduce((a, b) => a + b, 0) }))
       .sort((a, b) => b.total - a.total)
       .map((x, i) => ({ ...x, posicao: i + 1 }));
     const termo = normalizarRotulo(busca);
     return termo ? lista.filter((x) => normalizarRotulo(x.nome).includes(termo)) : lista;
   }, [linhas, busca, criterio]);
+
+  const dadosGrafico = useMemo(
+    () =>
+      MESES.map((rotulo, i) => {
+        const ponto: Record<string, string | number> = { mes: rotulo };
+        for (const r of ranking) ponto[r.nome] = r.meses[i] ?? 0;
+        return ponto;
+      }),
+    [ranking],
+  );
 
   const meu = normalizarRotulo(municipio?.nome ?? "");
 
@@ -113,11 +125,17 @@ function ComparativoIcms() {
     baixarCsv(
       `comparativo-icms-${exercicio}.csv`,
       montarCsv(
-        ["Posição", "Município", `Repasse no exercício (${nomeCriterio(criterio)})`],
-        ranking.map((r) => [r.posicao, r.nome, r.total.toFixed(2)]),
+        ["Posição", "Município", ...MESES, `Total (${nomeCriterio(criterio)})`],
+        ranking.map((r) => [
+          r.posicao,
+          r.nome,
+          ...r.meses.map((v) => v.toFixed(2)),
+          r.total.toFixed(2),
+        ]),
       ),
     );
   }
+
 
   return (
     <div className="space-y-6">
