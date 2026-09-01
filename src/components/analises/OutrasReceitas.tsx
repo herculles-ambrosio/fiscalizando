@@ -77,6 +77,7 @@ export default function OutrasReceitas({
   const visiveis = filtradas.slice((paginaAtual - 1) * POR_PAGINA, paginaAtual * POR_PAGINA);
 
   const diferenca = dados.totalAtual - dados.totalBase;
+  const comparar = base !== undefined;
 
   const exportar = () => {
     const csv = montarCsv(
@@ -87,9 +88,9 @@ export default function OutrasReceitas({
         "Classificacao",
         "Municipios",
         "Percentual",
-        "Outras entradas base",
+        ...(comparar ? ["Outras entradas base"] : []),
         "Outras entradas atual",
-        "Diferenca",
+        ...(comparar ? ["Diferenca"] : []),
       ],
       filtradas.map((l) => [
         l.inscricao_estadual,
@@ -98,9 +99,9 @@ export default function OutrasReceitas({
         l.classificacoes.map(rotuloClassificacao).join(" | "),
         l.municipios.map(municipio).join(" | "),
         l.percentual.toFixed(2).replace(".", ","),
-        l.base.toFixed(2).replace(".", ","),
+        ...(comparar ? [l.base.toFixed(2).replace(".", ",")] : []),
         l.atual.toFixed(2).replace(".", ","),
-        l.diferenca.toFixed(2).replace(".", ","),
+        ...(comparar ? [l.diferenca.toFixed(2).replace(".", ",")] : []),
       ]),
     );
     baixarCsv(nomeArquivoCsv, csv);
@@ -118,16 +119,30 @@ export default function OutrasReceitas({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className={`grid gap-4 ${comparar ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {[
-          { titulo: `Outras entradas — ${rotuloBase}`, valor: dados.totalBase, cor: "" },
+          ...(comparar
+            ? [{ titulo: `Outras entradas — ${rotuloBase}`, valor: dados.totalBase, cor: "" }]
+            : []),
           { titulo: `Outras entradas — ${rotuloAtual}`, valor: dados.totalAtual, cor: "" },
-          {
-            titulo: "Diferença",
-            valor: diferenca,
-            cor: diferenca < 0 ? "text-destructive" : diferenca > 0 ? "text-emerald-600" : "",
-          },
-        ].map((c) => (
+          ...(comparar
+            ? [
+                {
+                  titulo: "Diferença",
+                  valor: diferenca,
+                  cor:
+                    diferenca < 0 ? "text-destructive" : diferenca > 0 ? "text-emerald-600" : "",
+                },
+              ]
+            : [
+                {
+                  titulo: "Contribuintes com outras entradas",
+                  valor: dados.linhas.length,
+                  cor: "",
+                  contagem: true,
+                },
+              ]),
+        ].map((c: { titulo: string; valor: number; cor: string; contagem?: boolean }) => (
           <Card key={c.titulo}>
             <CardHeader className="pb-1">
               <CardTitle className="text-xs font-medium text-muted-foreground">
@@ -136,7 +151,9 @@ export default function OutrasReceitas({
             </CardHeader>
             <CardContent>
               <p className={`font-mono text-lg font-semibold ${c.cor}`}>
-                R$ {formatarValorGrid(c.valor)}
+                {c.contagem
+                  ? c.valor.toLocaleString("pt-BR")
+                  : `R$ ${formatarValorGrid(c.valor)}`}
               </p>
             </CardContent>
           </Card>
@@ -153,9 +170,11 @@ export default function OutrasReceitas({
               <TableRow>
                 <TableHead className="w-20">Código</TableHead>
                 <TableHead>Classificação</TableHead>
-                <TableHead className="text-right">{rotuloBase} (R$)</TableHead>
+                {comparar && (
+                  <TableHead className="text-right">{rotuloBase} (R$)</TableHead>
+                )}
                 <TableHead className="text-right">{rotuloAtual} (R$)</TableHead>
-                <TableHead className="text-right">Diferença (R$)</TableHead>
+                {comparar && <TableHead className="text-right">Diferença (R$)</TableHead>}
                 <TableHead className="w-28 text-right">Participação</TableHead>
               </TableRow>
             </TableHeader>
@@ -166,17 +185,21 @@ export default function OutrasReceitas({
                     {c.classificacao === "0" ? "—" : c.classificacao}
                   </TableCell>
                   <TableCell>{c.rotulo}</TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatarValorGrid(c.base)}
-                  </TableCell>
+                  {comparar && (
+                    <TableCell className="text-right font-mono">
+                      {formatarValorGrid(c.base)}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right font-mono">
                     {formatarValorGrid(c.atual)}
                   </TableCell>
-                  <TableCell
-                    className={`text-right font-mono ${c.diferenca < 0 ? "text-destructive" : c.diferenca > 0 ? "text-emerald-600" : ""}`}
-                  >
-                    {formatarValorGrid(c.diferenca)}
-                  </TableCell>
+                  {comparar && (
+                    <TableCell
+                      className={`text-right font-mono ${c.diferenca < 0 ? "text-destructive" : c.diferenca > 0 ? "text-emerald-600" : ""}`}
+                    >
+                      {formatarValorGrid(c.diferenca)}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right font-mono">
                     {c.participacao.toFixed(2).replace(".", ",")}%
                   </TableCell>
@@ -216,9 +239,11 @@ export default function OutrasReceitas({
                 <TableHead>IE</TableHead>
                 <TableHead>Contribuinte</TableHead>
                 <TableHead>Classificação</TableHead>
-                <TableHead className="text-right">{rotuloBase} (R$)</TableHead>
+                {comparar && (
+                  <TableHead className="text-right">{rotuloBase} (R$)</TableHead>
+                )}
                 <TableHead className="text-right">{rotuloAtual} (R$)</TableHead>
-                <TableHead className="text-right">Diferença (R$)</TableHead>
+                {comparar && <TableHead className="text-right">Diferença (R$)</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -248,18 +273,24 @@ export default function OutrasReceitas({
                       ))
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono">{formatarValorGrid(l.base)}</TableCell>
+                  {comparar && (
+                    <TableCell className="text-right font-mono">
+                      {formatarValorGrid(l.base)}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right font-mono">{formatarValorGrid(l.atual)}</TableCell>
-                  <TableCell
-                    className={`text-right font-mono ${l.diferenca < 0 ? "text-destructive" : l.diferenca > 0 ? "text-emerald-600" : ""}`}
-                  >
-                    {formatarValorGrid(l.diferenca)}
-                  </TableCell>
+                  {comparar && (
+                    <TableCell
+                      className={`text-right font-mono ${l.diferenca < 0 ? "text-destructive" : l.diferenca > 0 ? "text-emerald-600" : ""}`}
+                    >
+                      {formatarValorGrid(l.diferenca)}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {visiveis.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={comparar ? 6 : 4} className="py-6 text-center text-sm text-muted-foreground">
                     Nenhum contribuinte para a busca informada.
                   </TableCell>
                 </TableRow>
