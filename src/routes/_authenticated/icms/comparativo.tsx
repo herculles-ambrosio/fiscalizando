@@ -254,10 +254,11 @@ function ComparativoIcms() {
         <SeletorExercicio exercicios={exercicios ?? []} valor={exercicio} aoTrocar={setExercicio} />
       </header>
 
-      <Tabs defaultValue={linhas && linhas.length ? "ranking" : "buscar"}>
+      <Tabs value={aba} onValueChange={setAba}>
         <TabsList>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           <TabsTrigger value="buscar">Buscar no portal</TabsTrigger>
+          <TabsTrigger value="salvos">Salvos {salvos?.length ? `(${salvos.length})` : ""}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ranking" className="mt-4">
