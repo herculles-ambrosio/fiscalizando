@@ -71,6 +71,32 @@ export const Route = createFileRoute("/_authenticated/icms/comparativo")({
 
 type MunicipioFjp = { id: number; nome: string };
 
+const MESES = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
+const CORES = [
+  "hsl(var(--chart-1, 152 45% 35%))",
+  "hsl(210 70% 55%)",
+  "hsl(40 85% 50%)",
+  "hsl(0 65% 55%)",
+  "hsl(275 55% 55%)",
+  "hsl(180 45% 40%)",
+  "hsl(25 75% 50%)",
+  "hsl(330 55% 55%)",
+];
+
 function ComparativoIcms() {
   const { municipio, municipioId } = useMunicipioAtivo();
   const { data: exercicios } = useIcmsExercicios();
