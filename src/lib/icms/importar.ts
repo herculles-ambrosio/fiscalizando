@@ -287,6 +287,25 @@ export async function importarColetaRobinHood(params: {
     .upsert(linhas, { onConflict: "municipio_id,exercicio,mes,criterio" });
   if (error) throw error;
 
+  await salvarPayload(carga.id, {
+    tipo: "indice_anual",
+    indices: linhas.map((r) => ({
+      criterio: r.criterio,
+      mes: r.mes,
+      indice: r.indice,
+      valor: r.valor,
+    })),
+  });
+  if (params.substituir !== false) {
+    await substituirAnteriores({
+      municipioId,
+      exercicio,
+      tipo: "indice_anual",
+      origem: "fjp",
+      manter: carga.id,
+    });
+  }
+
   return linhas.length;
 }
 
