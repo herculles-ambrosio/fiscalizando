@@ -203,7 +203,7 @@ class Folha {
 
 const limpo = (s: string) => s.replace(/[^\w.-]+/g, "_").slice(0, 40);
 
-async function gerarPdf(nomeArquivo: string, blocos: Bloco[]): Promise<void> {
+export async function gerarPdf(nomeArquivo: string, blocos: Bloco[]): Promise<void> {
   const timbrado = await carregarTimbradoPdf();
   const folha = new Folha(
     timbrado,

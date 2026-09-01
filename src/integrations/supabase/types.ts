@@ -454,6 +454,220 @@ export type Database = {
           },
         ]
       }
+      icms_acoes: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          criado_por: string | null
+          criterio: string
+          descricao: string | null
+          exercicio: number
+          id: string
+          impacto_estimado: number | null
+          municipio_id: string
+          observacao: string | null
+          orgao: string | null
+          prazo: string | null
+          responsavel: string | null
+          status: string
+          titulo: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          criterio: string
+          descricao?: string | null
+          exercicio: number
+          id?: string
+          impacto_estimado?: number | null
+          municipio_id: string
+          observacao?: string | null
+          orgao?: string | null
+          prazo?: string | null
+          responsavel?: string | null
+          status?: string
+          titulo: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          criterio?: string
+          descricao?: string | null
+          exercicio?: number
+          id?: string
+          impacto_estimado?: number | null
+          municipio_id?: string
+          observacao?: string | null
+          orgao?: string | null
+          prazo?: string | null
+          responsavel?: string | null
+          status?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icms_acoes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      icms_cargas: {
+        Row: {
+          arquivo_nome: string
+          criado_em: string
+          criado_por: string | null
+          exercicio: number
+          id: string
+          linhas: number
+          municipio_id: string
+          origem: string
+          tipo: string
+        }
+        Insert: {
+          arquivo_nome: string
+          criado_em?: string
+          criado_por?: string | null
+          exercicio: number
+          id?: string
+          linhas?: number
+          municipio_id: string
+          origem?: string
+          tipo: string
+        }
+        Update: {
+          arquivo_nome?: string
+          criado_em?: string
+          criado_por?: string | null
+          exercicio?: number
+          id?: string
+          linhas?: number
+          municipio_id?: string
+          origem?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icms_cargas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      icms_comparativo: {
+        Row: {
+          carga_id: string | null
+          criado_em: string
+          criterio: string
+          exercicio: number
+          id: string
+          mes: number
+          municipio_id: string
+          municipio_nome: string
+          valor: number | null
+        }
+        Insert: {
+          carga_id?: string | null
+          criado_em?: string
+          criterio?: string
+          exercicio: number
+          id?: string
+          mes: number
+          municipio_id: string
+          municipio_nome: string
+          valor?: number | null
+        }
+        Update: {
+          carga_id?: string | null
+          criado_em?: string
+          criterio?: string
+          exercicio?: number
+          id?: string
+          mes?: number
+          municipio_id?: string
+          municipio_nome?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icms_comparativo_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "icms_cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "icms_comparativo_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      icms_indices: {
+        Row: {
+          atualizado_em: string
+          carga_id: string | null
+          criado_em: string
+          criterio: string
+          exercicio: number
+          fonte: string
+          id: string
+          indice: number | null
+          mes: number
+          municipio_id: string
+          valor: number | null
+        }
+        Insert: {
+          atualizado_em?: string
+          carga_id?: string | null
+          criado_em?: string
+          criterio: string
+          exercicio: number
+          fonte?: string
+          id?: string
+          indice?: number | null
+          mes: number
+          municipio_id: string
+          valor?: number | null
+        }
+        Update: {
+          atualizado_em?: string
+          carga_id?: string | null
+          criado_em?: string
+          criterio?: string
+          exercicio?: number
+          fonte?: string
+          id?: string
+          indice?: number | null
+          mes?: number
+          municipio_id?: string
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icms_indices_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "icms_cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "icms_indices_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       indices_apurados: {
         Row: {
           acerto_credito: number
