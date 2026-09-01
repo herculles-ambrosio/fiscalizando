@@ -50,22 +50,24 @@ type Tabela = { cabecalho: string[]; linhas: string[][]; ocultas: boolean[] };
 
 function extrairTabelas(html: string): Tabela[] {
   const tabelas: Tabela[] = [];
-  for (const [, corpo] of html.matchAll(/<table[^>]*>([\s\S]*?)<\/table>/gi)) {
+  for (const m of html.matchAll(/<table[^>]*>([\s\S]*?)<\/table>/gi)) {
+    const corpo = m[1] ?? "";
     const cabecalho: string[] = [];
     const linhas: string[][] = [];
     const ocultas: boolean[] = [];
 
     const cabRaw = corpo.match(/<thead[^>]*>([\s\S]*?)<\/thead>/i)?.[1] ?? "";
-    for (const [, celula] of cabRaw.matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi)) {
-      cabecalho.push(semTags(celula));
+    for (const c of cabRaw.matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi)) {
+      cabecalho.push(semTags(c[1] ?? ""));
     }
 
-    for (const [, linhaRaw] of corpo.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    for (const tr of corpo.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+      const linhaRaw = tr[1] ?? "";
       const celulas: string[] = [];
       let temTd = false;
-      for (const [, celula] of linhaRaw.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)) {
+      for (const c of linhaRaw.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)) {
         temTd = true;
-        celulas.push(semTags(celula));
+        celulas.push(semTags(c[1] ?? ""));
       }
 
       if (!temTd) continue;
@@ -177,7 +179,7 @@ export function decodificarExtrato(buffer: ArrayBuffer): string {
 export function exercicioDoNome(nome: string, padrao: number): number {
   const anos = [...nome.matchAll(/(19|20)\d{2}/g)].map((m) => Number(m[0]));
   const valido = anos.filter((a) => a >= 1991 && a <= padrao + 1);
-  return valido.length ? valido[valido.length - 1] : padrao;
+  return valido.at(-1) ?? padrao;
 }
 
 export const ROTULO_TIPO: Record<TipoExtrato, string> = {

@@ -79,8 +79,8 @@ export function useIcmsDados(exercicio: number | null) {
           };
           series.set(r.criterio, s);
         }
-        s.indices[r.mes - 1] = r.indice;
-        s.valores[r.mes - 1] = r.valor;
+        s.indices[r.mes - 1] = r.indice ?? null;
+        s.valores[r.mes - 1] = r.valor ?? null;
         if (r.indice != null || r.valor != null) mesesComDado.add(r.mes);
       }
 

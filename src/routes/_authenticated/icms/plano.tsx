@@ -58,7 +58,7 @@ function PlanoIcms() {
 
   useEffect(() => {
     if (exercicios?.length && (!exercicio || !exercicios.includes(exercicio))) {
-      setExercicio(exercicios[0]);
+      setExercicio(exercicios[0] ?? null);
     }
   }, [exercicios, exercicio]);
 

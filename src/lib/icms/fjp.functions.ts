@@ -73,12 +73,14 @@ export const buscarIndicesFjp = createServerFn({ method: "POST" })
     const exercicio = anoTexto ? Number(anoTexto) : data.exercicio;
 
     const tabela = html.match(/<table[\s\S]*?<\/table>/i)?.[0] ?? "";
-    const cabecalho = [...tabela.matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi)].map(([, c]) => semTags(c));
+    const cabecalho = [...tabela.matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi)].map((c) => semTags(c[1] ?? ""));
 
     const alvo = normalizarRotulo(data.municipio);
     let linhaAlvo: string[] | null = null;
-    for (const [, tr] of tabela.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
-      const celulas = [...tr.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(([, c]) => semTags(c));
+    for (const linha of tabela.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+      const celulas = [...(linha[1] ?? "").matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(
+        (c) => semTags(c[1] ?? ""),
+      );
       if (celulas.some((c) => normalizarRotulo(c) === alvo)) {
         linhaAlvo = celulas;
         break;

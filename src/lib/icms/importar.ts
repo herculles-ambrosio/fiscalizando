@@ -68,11 +68,12 @@ export async function importarExtrato(params: {
         exercicio,
         mes: i + 1,
         criterio: l.criterio,
-        [campo]: v,
+        indice: lido.tipo === "indice_anual" ? v : null,
+        valor: lido.tipo === "indice_anual" ? null : v,
         fonte: params.origem ?? "upload",
         atualizado_em: new Date().toISOString(),
       }))
-      .filter((r) => (r as Record<string, unknown>)[campo] != null),
+      .filter((r) => r[campo] != null),
   );
 
   if (registros.length) {
