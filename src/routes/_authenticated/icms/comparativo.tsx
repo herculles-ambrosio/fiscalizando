@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/icms/comparativo")({
       },
     ],
   }),
-  component: ComparativoIcms;
+  component: ComparativoIcms,
 });
 
 function ComparativoIcms() {
