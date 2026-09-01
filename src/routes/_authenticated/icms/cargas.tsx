@@ -181,6 +181,11 @@ function CargasIcms() {
               índices e valores, mês a mês — sem precisar do extrato. Se o portal estiver fora do
               ar, use a importação manual ao lado.
             </p>
+            <p className="text-xs text-muted-foreground">
+              Os dados sincronizados ficam salvos e substituem a sincronização anterior do mesmo
+              exercício. Depois é só clicar no nome do arquivo salvo na lista abaixo para dar carga
+              nele de novo.
+            </p>
             <div className="flex items-end gap-2">
               <div>
                 <label className="text-xs text-muted-foreground" htmlFor="ano-fjp">
