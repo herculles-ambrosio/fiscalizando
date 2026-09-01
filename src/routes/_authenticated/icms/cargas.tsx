@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useApagarCarga, useIcmsCargas } from "@/hooks/useIcms";
 import { decodificarExtrato, exercicioDoNome, ROTULO_TIPO } from "@/lib/icms/extrato";
-import { importarExtrato } from "@/lib/icms/importar";
-import { buscarIndicesFjp } from "@/lib/icms/fjp.functions";
+import { importarColetaRobinHood, importarExtrato } from "@/lib/icms/importar";
+import { sincronizarRobinHood } from "@/lib/icms/robinhood.functions";
 import { formatarDataHora } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/icms/cargas")({
@@ -85,60 +85,35 @@ function CargasIcms() {
     if (!municipioId || !municipio) return;
     setBuscando(true);
     try {
-      const r = await buscarIndicesFjp({
-        data: { municipio: municipio.nome, exercicio: Number(anoFjp) },
+      const exercicio = Number(anoFjp);
+      const r = await sincronizarRobinHood({
+        data: { municipio: municipio.nome, exercicio },
       });
-      if (!r.linhas.length) {
-        toast.warning(r.mensagem ?? "O portal da FJP não devolveu dados para este município.");
+      if (!r.registros.length) {
+        toast.warning(
+          r.tentativas[0]
+            ? `O portal Robin Hood não devolveu dados (${r.tentativas[0]}). Use a importação do arquivo.`
+            : "O portal Robin Hood não devolveu dados para este município.",
+        );
         return;
       }
-      const registros = r.linhas.flatMap((l) =>
-        l.indice == null
-          ? []
-          : [
-              {
-                criterio: l.criterio,
-                mes: r.mes,
-                indice: l.indice,
-              },
-            ],
+      const gravados = await importarColetaRobinHood({
+        municipioId,
+        exercicio,
+        registros: r.registros,
+        rotulo: `Portal Robin Hood — ${exercicio}${r.fonte === "historico" ? " (base histórica)" : ""}`,
+      });
+      toast.success(
+        `${gravados} valores de ${r.mesesComDados.length} mês(es) importados direto do portal Robin Hood.`,
       );
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data: carga, error } = await supabase
-        .from("icms_cargas")
-        .insert({
-          municipio_id: municipioId,
-          tipo: "indice_anual",
-          exercicio: r.exercicio,
-          arquivo_nome: `FJP — ${r.rotuloPeriodo}`,
-          origem: "fjp",
-          linhas: registros.length,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
-      const { error: erroUp } = await supabase.from("icms_indices").upsert(
-        registros.map((x) => ({
-          municipio_id: municipioId,
-          carga_id: carga.id,
-          exercicio: r.exercicio,
-          mes: x.mes,
-          criterio: x.criterio,
-          indice: x.indice,
-          fonte: "fjp",
-        })),
-        { onConflict: "municipio_id,exercicio,mes,criterio" },
-      );
-      if (erroUp) throw erroUp;
-      toast.success(`FJP: ${registros.length} índices de ${r.rotuloPeriodo} importados.`);
       qc.invalidateQueries({ queryKey: ["icms-cargas"] });
       qc.invalidateQueries({ queryKey: ["icms-dados"] });
       qc.invalidateQueries({ queryKey: ["icms-exercicios"] });
     } catch (e) {
       toast.error(
         e instanceof Error
-          ? `Não consegui consultar a FJP: ${e.message}. Use a importação do arquivo.`
-          : "Falha ao consultar a FJP.",
+          ? `Não consegui sincronizar com o portal Robin Hood: ${e.message}. Use a importação do arquivo.`
+          : "Falha ao consultar o portal Robin Hood.",
       );
     } finally {
       setBuscando(false);
@@ -190,12 +165,13 @@ function CargasIcms() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Buscar na FJP</CardTitle>
+            <CardTitle className="text-base">Sincronizar com o portal Robin Hood</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Tenta trazer os índices do mês direto do portal Robin Hood. Quando o portal estiver
-              fora do ar, use a importação manual ao lado.
+              Busca no site oficial da Lei Robin Hood (FJP) todos os critérios do exercício —
+              índices e valores, mês a mês — sem precisar do extrato. Se o portal estiver fora do
+              ar, use a importação manual ao lado.
             </p>
             <div className="flex items-end gap-2">
               <div>
@@ -215,7 +191,7 @@ function CargasIcms() {
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
-                Buscar índices
+                Sincronizar
               </Button>
             </div>
           </CardContent>
