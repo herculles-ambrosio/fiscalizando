@@ -24,6 +24,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip as RTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 import { MapaMunicipios } from "@/components/icms/MapaMunicipios";
 import { useIcmsComparativo, useIcmsExercicios } from "@/hooks/useIcms";
