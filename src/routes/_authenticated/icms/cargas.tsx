@@ -87,7 +87,12 @@ function CargasIcms() {
     try {
       const exercicio = Number(anoFjp);
       const r = await sincronizarRobinHood({
-        data: { municipio: municipio.nome, exercicio },
+        data: {
+          municipio: municipio.nome,
+          codigoSef: municipio.codigo_sef ?? null,
+          exercicio,
+        },
+
       });
       if (!r.registros.length) {
         toast.warning(
