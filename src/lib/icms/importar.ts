@@ -9,6 +9,100 @@ export type ResultadoImportacao = {
 };
 
 /**
+ * Conteúdo guardado junto da carga para que ela possa ser recarregada depois
+ * sem precisar do arquivo original nem de nova consulta ao portal.
+ */
+export type PayloadCarga = {
+  tipo: "indice_anual" | "transferencia_anual" | "comparativo";
+  indices?: { criterio: string; mes: number; indice: number | null; valor: number | null }[];
+  comparativo?: {
+    municipio_nome: string;
+    mes: number;
+    criterio: string;
+    valor: number | null;
+  }[];
+};
+
+async function salvarPayload(cargaId: string, payload: PayloadCarga) {
+  await supabase
+    .from("icms_cargas")
+    .update({ payload: payload as unknown as Record<string, unknown> })
+    .eq("id", cargaId);
+}
+
+/** Apaga cargas anteriores do mesmo tipo/exercício/origem (substituição). */
+async function substituirAnteriores(params: {
+  municipioId: string;
+  exercicio: number;
+  tipo: string;
+  origem: string;
+  manter?: string;
+}) {
+  let q = supabase
+    .from("icms_cargas")
+    .delete()
+    .eq("municipio_id", params.municipioId)
+    .eq("exercicio", params.exercicio)
+    .eq("tipo", params.tipo)
+    .eq("origem", params.origem);
+  if (params.manter) q = q.neq("id", params.manter);
+  await q;
+}
+
+/**
+ * Regrava no banco os valores guardados numa carga já salva ("dar carga" de
+ * novo no arquivo/sincronização que está na lista).
+ */
+export async function reaplicarCarga(cargaId: string): Promise<number> {
+  const { data: carga, error } = await supabase
+    .from("icms_cargas")
+    .select("id, municipio_id, exercicio, tipo, origem, payload")
+    .eq("id", cargaId)
+    .single();
+  if (error) throw error;
+  const payload = carga.payload as PayloadCarga | null;
+  if (!payload) {
+    throw new Error("Esta carga foi feita antes da gravação dos dados e não pode ser recarregada.");
+  }
+
+  if (payload.tipo === "comparativo") {
+    const linhas = (payload.comparativo ?? []).map((l) => ({
+      municipio_id: carga.municipio_id,
+      carga_id: carga.id,
+      exercicio: carga.exercicio,
+      mes: l.mes,
+      criterio: l.criterio,
+      municipio_nome: l.municipio_nome,
+      valor: l.valor,
+    }));
+    if (!linhas.length) return 0;
+    const { error: e } = await supabase
+      .from("icms_comparativo")
+      .upsert(linhas, { onConflict: "municipio_id,exercicio,mes,criterio,municipio_nome" });
+    if (e) throw e;
+    return linhas.length;
+  }
+
+  const linhas = (payload.indices ?? []).map((l) => ({
+    municipio_id: carga.municipio_id,
+    carga_id: carga.id,
+    exercicio: carga.exercicio,
+    mes: l.mes,
+    criterio: l.criterio,
+    indice: l.indice,
+    valor: l.valor,
+    fonte: carga.origem,
+    atualizado_em: new Date().toISOString(),
+  }));
+  if (!linhas.length) return 0;
+  const { error: e } = await supabase
+    .from("icms_indices")
+    .upsert(linhas, { onConflict: "municipio_id,exercicio,mes,criterio" });
+  if (e) throw e;
+  return linhas.length;
+}
+
+/**
  * Grava um extrato lido no banco, substituindo o que já existir para o mesmo
  * exercício/mês/critério (reimportar o mesmo período atualiza os números).
  */
