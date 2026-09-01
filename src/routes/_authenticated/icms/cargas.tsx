@@ -265,6 +265,26 @@ function CargasIcms() {
                     <TableCell className="text-right">{c.linhas}</TableCell>
                     <TableCell>{formatarDataHora(c.criado_em)}</TableCell>
                     <TableCell className="text-right">
+                      {c.temPayload && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={recarregar.isPending}
+                          onClick={() =>
+                            recarregar.mutate(c.id, {
+                              onSuccess: (n) =>
+                                toast.success(`${n} valores recarregados a partir desta carga.`),
+                              onError: (e) =>
+                                toast.error(
+                                  e instanceof Error ? e.message : "Não consegui recarregar.",
+                                ),
+                            })
+                          }
+                          title="Dar carga novamente nestes dados"
+                        >
+                          <RotateCw className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
