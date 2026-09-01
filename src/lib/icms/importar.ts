@@ -9,6 +9,100 @@ export type ResultadoImportacao = {
 };
 
 /**
+ * Conteúdo guardado junto da carga para que ela possa ser recarregada depois
+ * sem precisar do arquivo original nem de nova consulta ao portal.
+ */
+export type PayloadCarga = {
+  tipo: "indice_anual" | "transferencia_anual" | "comparativo";
+  indices?: { criterio: string; mes: number; indice: number | null; valor: number | null }[];
+  comparativo?: {
+    municipio_nome: string;
+    mes: number;
+    criterio: string;
+    valor: number | null;
+  }[];
+};
+
+async function salvarPayload(cargaId: string, payload: PayloadCarga) {
+  await supabase
+    .from("icms_cargas")
+    .update({ payload: JSON.parse(JSON.stringify(payload)) })
+    .eq("id", cargaId);
+}
+
+/** Apaga cargas anteriores do mesmo tipo/exercício/origem (substituição). */
+async function substituirAnteriores(params: {
+  municipioId: string;
+  exercicio: number;
+  tipo: string;
+  origem: string;
+  manter?: string;
+}) {
+  let q = supabase
+    .from("icms_cargas")
+    .delete()
+    .eq("municipio_id", params.municipioId)
+    .eq("exercicio", params.exercicio)
+    .eq("tipo", params.tipo)
+    .eq("origem", params.origem);
+  if (params.manter) q = q.neq("id", params.manter);
+  await q;
+}
+
+/**
+ * Regrava no banco os valores guardados numa carga já salva ("dar carga" de
+ * novo no arquivo/sincronização que está na lista).
+ */
+export async function reaplicarCarga(cargaId: string): Promise<number> {
+  const { data: carga, error } = await supabase
+    .from("icms_cargas")
+    .select("id, municipio_id, exercicio, tipo, origem, payload")
+    .eq("id", cargaId)
+    .single();
+  if (error) throw error;
+  const payload = carga.payload as PayloadCarga | null;
+  if (!payload) {
+    throw new Error("Esta carga foi feita antes da gravação dos dados e não pode ser recarregada.");
+  }
+
+  if (payload.tipo === "comparativo") {
+    const linhas = (payload.comparativo ?? []).map((l) => ({
+      municipio_id: carga.municipio_id,
+      carga_id: carga.id,
+      exercicio: carga.exercicio,
+      mes: l.mes,
+      criterio: l.criterio,
+      municipio_nome: l.municipio_nome,
+      valor: l.valor,
+    }));
+    if (!linhas.length) return 0;
+    const { error: e } = await supabase
+      .from("icms_comparativo")
+      .upsert(linhas, { onConflict: "municipio_id,exercicio,mes,criterio,municipio_nome" });
+    if (e) throw e;
+    return linhas.length;
+  }
+
+  const linhas = (payload.indices ?? []).map((l) => ({
+    municipio_id: carga.municipio_id,
+    carga_id: carga.id,
+    exercicio: carga.exercicio,
+    mes: l.mes,
+    criterio: l.criterio,
+    indice: l.indice,
+    valor: l.valor,
+    fonte: carga.origem,
+    atualizado_em: new Date().toISOString(),
+  }));
+  if (!linhas.length) return 0;
+  const { error: e } = await supabase
+    .from("icms_indices")
+    .upsert(linhas, { onConflict: "municipio_id,exercicio,mes,criterio" });
+  if (e) throw e;
+  return linhas.length;
+}
+
+/**
  * Grava um extrato lido no banco, substituindo o que já existir para o mesmo
  * exercício/mês/critério (reimportar o mesmo período atualiza os números).
  */
@@ -56,6 +150,15 @@ export async function importarExtrato(params: {
         .upsert(linhas, { onConflict: "municipio_id,exercicio,mes,criterio,municipio_nome" });
       if (error) throw error;
     }
+    await salvarPayload(carga.id, {
+      tipo: "comparativo",
+      comparativo: linhas.map((l) => ({
+        municipio_nome: l.municipio_nome,
+        mes: l.mes,
+        criterio: l.criterio,
+        valor: l.valor,
+      })),
+    });
     return { tipo: lido.tipo, exercicio, registros: linhas.length, desconhecidos: [] };
   }
 
@@ -100,6 +203,15 @@ export async function importarExtrato(params: {
   }
 
   await supabase.from("icms_cargas").update({ linhas: registros.length }).eq("id", carga.id);
+  await salvarPayload(carga.id, {
+    tipo: lido.tipo,
+    indices: registros.map((r) => ({
+      criterio: r.criterio,
+      mes: r.mes,
+      indice: r.indice,
+      valor: r.valor,
+    })),
+  });
 
   return {
     tipo: lido.tipo,
@@ -125,6 +237,8 @@ export async function importarColetaRobinHood(params: {
   exercicio: number;
   registros: RegistroRobinHood[];
   rotulo: string;
+  /** apaga as sincronizações anteriores do mesmo exercício (padrão: true) */
+  substituir?: boolean;
 }): Promise<number> {
   const { municipioId, exercicio, registros } = params;
   if (!registros.length) return 0;
@@ -174,6 +288,25 @@ export async function importarColetaRobinHood(params: {
     .from("icms_indices")
     .upsert(linhas, { onConflict: "municipio_id,exercicio,mes,criterio" });
   if (error) throw error;
+
+  await salvarPayload(carga.id, {
+    tipo: "indice_anual",
+    indices: linhas.map((r) => ({
+      criterio: r.criterio,
+      mes: r.mes,
+      indice: r.indice,
+      valor: r.valor,
+    })),
+  });
+  if (params.substituir !== false) {
+    await substituirAnteriores({
+      municipioId,
+      exercicio,
+      tipo: "indice_anual",
+      origem: "fjp",
+      manter: carga.id,
+    });
+  }
 
   return linhas.length;
 }
@@ -225,6 +358,16 @@ export async function importarComparativoFjp(params: {
     .from("icms_comparativo")
     .upsert(comCarga, { onConflict: "municipio_id,exercicio,mes,criterio,municipio_nome" });
   if (error) throw error;
+
+  await salvarPayload(carga.id, {
+    tipo: "comparativo",
+    comparativo: comCarga.map((l) => ({
+      municipio_nome: l.municipio_nome,
+      mes: l.mes,
+      criterio: l.criterio,
+      valor: l.valor,
+    })),
+  });
 
   return comCarga.length;
 }

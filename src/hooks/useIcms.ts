@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMunicipioAtivo } from "./useMunicipio";
 import { CRITERIO_POR_SLUG } from "@/lib/icms/criterios";
+import { reaplicarCarga } from "@/lib/icms/importar";
 
 export type RegistroIndice = {
   criterio: string;
@@ -136,12 +137,122 @@ export function useIcmsCargas() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("icms_cargas")
-        .select("id, tipo, exercicio, arquivo_nome, origem, linhas, criado_em")
+        .select("id, tipo, exercicio, arquivo_nome, origem, linhas, criado_em, payload")
         .eq("municipio_id", municipioId!)
         .order("criado_em", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).map((c) => ({ ...c, temPayload: c.payload != null }));
     },
+  });
+}
+
+/** Regrava os dados de uma carga já salva (recarregar o arquivo/sincronização). */
+export function useRecarregarCarga() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reaplicarCarga(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["icms-dados"] });
+      qc.invalidateQueries({ queryKey: ["icms-comparativo"] });
+      qc.invalidateQueries({ queryKey: ["icms-exercicios"] });
+      qc.invalidateQueries({ queryKey: ["icms-cargas"] });
+    },
+  });
+}
+
+export type ComparativoSalvo = {
+  id: string;
+  nome: string;
+  exercicio: number;
+  criterio: string;
+  municipios: string[];
+  observacao: string | null;
+  criado_em: string;
+};
+
+export function useComparativosSalvos() {
+  const { municipioId } = useMunicipioAtivo();
+  return useQuery({
+    queryKey: ["icms-comparativos-salvos", municipioId],
+    enabled: !!municipioId,
+    queryFn: async (): Promise<ComparativoSalvo[]> => {
+      const { data, error } = await supabase
+        .from("icms_comparativos_salvos")
+        .select("id, nome, exercicio, criterio, municipios, observacao, criado_em")
+        .eq("municipio_id", municipioId!)
+        .order("criado_em", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ComparativoSalvo[];
+    },
+  });
+}
+
+export function useSalvarComparativo() {
+  const qc = useQueryClient();
+  const { municipioId } = useMunicipioAtivo();
+  return useMutation({
+    mutationFn: async (dados: {
+      nome: string;
+      exercicio: number;
+      criterio: string;
+      municipios: string[];
+      observacao?: string | null;
+    }) => {
+      if (!municipioId) throw new Error("Selecione uma prefeitura.");
+      const { error } = await supabase
+        .from("icms_comparativos_salvos")
+        .insert({ ...dados, municipio_id: municipioId });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["icms-comparativos-salvos"] }),
+  });
+}
+
+export function useApagarComparativoSalvo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("icms_comparativos_salvos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["icms-comparativos-salvos"] }),
+  });
+}
+
+/** Remove um município da comparação de um exercício. */
+export function useRemoverMunicipioComparativo() {
+  const qc = useQueryClient();
+  const { municipioId } = useMunicipioAtivo();
+  return useMutation({
+    mutationFn: async ({ exercicio, nome }: { exercicio: number; nome: string }) => {
+      if (!municipioId) throw new Error("Selecione uma prefeitura.");
+      const { error } = await supabase
+        .from("icms_comparativo")
+        .delete()
+        .eq("municipio_id", municipioId)
+        .eq("exercicio", exercicio)
+        .eq("municipio_nome", nome);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["icms-comparativo"] }),
+  });
+}
+
+/** Limpa todo o comparativo gravado de um exercício (novo comparativo). */
+export function useLimparComparativo() {
+  const qc = useQueryClient();
+  const { municipioId } = useMunicipioAtivo();
+  return useMutation({
+    mutationFn: async (exercicio: number) => {
+      if (!municipioId) throw new Error("Selecione uma prefeitura.");
+      const { error } = await supabase
+        .from("icms_comparativo")
+        .delete()
+        .eq("municipio_id", municipioId)
+        .eq("exercicio", exercicio);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["icms-comparativo"] }),
   });
 }
 

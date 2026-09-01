@@ -526,6 +526,7 @@ export type Database = {
           linhas: number
           municipio_id: string
           origem: string
+          payload: Json | null
           tipo: string
         }
         Insert: {
@@ -537,6 +538,7 @@ export type Database = {
           linhas?: number
           municipio_id: string
           origem?: string
+          payload?: Json | null
           tipo: string
         }
         Update: {
@@ -548,6 +550,7 @@ export type Database = {
           linhas?: number
           municipio_id?: string
           origem?: string
+          payload?: Json | null
           tipo?: string
         }
         Relationships: [
@@ -604,6 +607,53 @@ export type Database = {
           },
           {
             foreignKeyName: "icms_comparativo_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      icms_comparativos_salvos: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          criado_por: string | null
+          criterio: string
+          exercicio: number
+          id: string
+          municipio_id: string
+          municipios: string[]
+          nome: string
+          observacao: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          criterio?: string
+          exercicio: number
+          id?: string
+          municipio_id: string
+          municipios?: string[]
+          nome: string
+          observacao?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          criterio?: string
+          exercicio?: number
+          id?: string
+          municipio_id?: string
+          municipios?: string[]
+          nome?: string
+          observacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icms_comparativos_salvos_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
             referencedRelation: "municipios"

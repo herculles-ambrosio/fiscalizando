@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Download, Loader2, Trash2, Upload } from "lucide-react";
+import { Download, Loader2, RotateCw, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
-import { useApagarCarga, useIcmsCargas } from "@/hooks/useIcms";
+import { useApagarCarga, useIcmsCargas, useRecarregarCarga } from "@/hooks/useIcms";
 import { decodificarExtrato, exercicioDoNome, ROTULO_TIPO } from "@/lib/icms/extrato";
 import { importarColetaRobinHood, importarExtrato } from "@/lib/icms/importar";
 import { sincronizarRobinHood } from "@/lib/icms/robinhood.functions";
@@ -45,6 +45,7 @@ function CargasIcms() {
   const { municipioId, municipio } = useMunicipioAtivo();
   const { data: cargas, isLoading } = useIcmsCargas();
   const apagar = useApagarCarga();
+  const recarregar = useRecarregarCarga();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState(false);
@@ -180,6 +181,11 @@ function CargasIcms() {
               índices e valores, mês a mês — sem precisar do extrato. Se o portal estiver fora do
               ar, use a importação manual ao lado.
             </p>
+            <p className="text-xs text-muted-foreground">
+              Os dados sincronizados ficam salvos e substituem a sincronização anterior do mesmo
+              exercício. Depois é só clicar no nome do arquivo salvo na lista abaixo para dar carga
+              nele de novo.
+            </p>
             <div className="flex items-end gap-2">
               <div>
                 <label className="text-xs text-muted-foreground" htmlFor="ano-fjp">
@@ -230,7 +236,30 @@ function CargasIcms() {
               <TableBody>
                 {cargas.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell className="max-w-[260px] truncate">{c.arquivo_nome}</TableCell>
+                    <TableCell className="max-w-[260px] truncate">
+                      {c.temPayload ? (
+                        <button
+                          type="button"
+                          className="text-left font-medium text-primary underline-offset-2 hover:underline disabled:opacity-60"
+                          disabled={recarregar.isPending}
+                          onClick={() =>
+                            recarregar.mutate(c.id, {
+                              onSuccess: (n) =>
+                                toast.success(`${n} valores recarregados a partir desta carga.`),
+                              onError: (e) =>
+                                toast.error(
+                                  e instanceof Error ? e.message : "Não consegui recarregar.",
+                                ),
+                            })
+                          }
+                          title="Clique para dar carga novamente nestes dados"
+                        >
+                          {c.arquivo_nome}
+                        </button>
+                      ) : (
+                        c.arquivo_nome
+                      )}
+                    </TableCell>
                     <TableCell>{ROTULO_TIPO[c.tipo as keyof typeof ROTULO_TIPO]}</TableCell>
                     <TableCell>{c.exercicio}</TableCell>
                     <TableCell>
@@ -241,6 +270,26 @@ function CargasIcms() {
                     <TableCell className="text-right">{c.linhas}</TableCell>
                     <TableCell>{formatarDataHora(c.criado_em)}</TableCell>
                     <TableCell className="text-right">
+                      {c.temPayload && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={recarregar.isPending}
+                          onClick={() =>
+                            recarregar.mutate(c.id, {
+                              onSuccess: (n) =>
+                                toast.success(`${n} valores recarregados a partir desta carga.`),
+                              onError: (e) =>
+                                toast.error(
+                                  e instanceof Error ? e.message : "Não consegui recarregar.",
+                                ),
+                            })
+                          }
+                          title="Dar carga novamente nestes dados"
+                        >
+                          <RotateCw className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"

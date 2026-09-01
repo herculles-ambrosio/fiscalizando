@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
-import { Download, Loader2, RefreshCw, X } from "lucide-react";
+import { Download, FilePlus2, Loader2, RefreshCw, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +36,24 @@ import {
 } from "recharts";
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 import { MapaMunicipios } from "@/components/icms/MapaMunicipios";
-import { useIcmsComparativo, useIcmsExercicios } from "@/hooks/useIcms";
+import {
+  useApagarComparativoSalvo,
+  useComparativosSalvos,
+  useIcmsComparativo,
+  useIcmsExercicios,
+  useLimparComparativo,
+  useRemoverMunicipioComparativo,
+  useSalvarComparativo,
+} from "@/hooks/useIcms";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
 import {
@@ -104,6 +121,18 @@ function ComparativoIcms() {
   const [exercicio, setExercicio] = useState<number | null>(null);
   const [busca, setBusca] = useState("");
   const [criterio, setCriterio] = useState<string>("");
+  /** quando um comparativo salvo está aberto, limita o ranking a esses municípios */
+  const [salvoAberto, setSalvoAberto] = useState<{ id: string; municipios: string[] } | null>(null);
+  const [dialogoSalvar, setDialogoSalvar] = useState(false);
+  const [nomeSalvar, setNomeSalvar] = useState("");
+  const [obsSalvar, setObsSalvar] = useState("");
+  const [aba, setAba] = useState("ranking");
+
+  const { data: salvos } = useComparativosSalvos();
+  const salvar = useSalvarComparativo();
+  const apagarSalvo = useApagarComparativoSalvo();
+  const removerMunicipio = useRemoverMunicipioComparativo();
+  const limparComparativo = useLimparComparativo();
 
   useEffect(() => {
     if (exercicios?.length && (!exercicio || !exercicios.includes(exercicio))) {
@@ -130,9 +159,13 @@ function ComparativoIcms() {
   }, [criteriosDisponiveis, criterio]);
 
   const ranking = useMemo(() => {
+    const permitidos = salvoAberto
+      ? new Set(salvoAberto.municipios.map((n) => normalizarRotulo(n)))
+      : null;
     const mapa = new Map<string, number[]>();
     for (const l of linhas ?? []) {
       if (criterio && l.criterio !== criterio) continue;
+      if (permitidos && !permitidos.has(normalizarRotulo(l.municipio_nome))) continue;
       const arr = mapa.get(l.municipio_nome) ?? Array.from({ length: 12 }, () => 0);
       if (l.mes >= 1 && l.mes <= 12) arr[l.mes - 1] = (arr[l.mes - 1] ?? 0) + (l.valor ?? 0);
       mapa.set(l.municipio_nome, arr);
@@ -143,7 +176,7 @@ function ComparativoIcms() {
       .map((x, i) => ({ ...x, posicao: i + 1 }));
     const termo = normalizarRotulo(busca);
     return termo ? lista.filter((x) => normalizarRotulo(x.nome).includes(termo)) : lista;
-  }, [linhas, busca, criterio]);
+  }, [linhas, busca, criterio, salvoAberto]);
 
   const dadosGrafico = useMemo(
     () =>
@@ -172,6 +205,41 @@ function ComparativoIcms() {
     );
   }
 
+  function confirmarSalvar() {
+    if (!exercicio || !ranking.length) return;
+    salvar.mutate(
+      {
+        nome: nomeSalvar.trim() || `Comparativo ${exercicio}`,
+        exercicio,
+        criterio: criterio || "total",
+        municipios: ranking.map((r) => r.nome),
+        observacao: obsSalvar.trim() || null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Comparativo salvo.");
+          setDialogoSalvar(false);
+          setNomeSalvar("");
+          setObsSalvar("");
+        },
+        onError: (e) =>
+          toast.error(e instanceof Error ? e.message : "Não consegui salvar o comparativo."),
+      },
+    );
+  }
+
+  function novoComparativo() {
+    if (!exercicio) return;
+    limparComparativo.mutate(exercicio, {
+      onSuccess: () => {
+        setSalvoAberto(null);
+        setBusca("");
+        setAba("buscar");
+        toast.success("Comparativo limpo. Escolha os municípios e sincronize novamente.");
+      },
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Não consegui limpar."),
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -186,10 +254,11 @@ function ComparativoIcms() {
         <SeletorExercicio exercicios={exercicios ?? []} valor={exercicio} aoTrocar={setExercicio} />
       </header>
 
-      <Tabs defaultValue={linhas && linhas.length ? "ranking" : "buscar"}>
+      <Tabs value={aba} onValueChange={setAba}>
         <TabsList>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           <TabsTrigger value="buscar">Buscar no portal</TabsTrigger>
+          <TabsTrigger value="salvos">Salvos {salvos?.length ? `(${salvos.length})` : ""}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ranking" className="mt-4">
@@ -220,6 +289,30 @@ function ComparativoIcms() {
                       </SelectContent>
                     </Select>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setNomeSalvar(`Comparativo ${exercicio ?? ""}`.trim());
+                      setDialogoSalvar(true);
+                    }}
+                  >
+                    <Save className="h-4 w-4" />
+                    Salvar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={novoComparativo}
+                    disabled={limparComparativo.isPending}
+                  >
+                    {limparComparativo.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FilePlus2 className="h-4 w-4" />
+                    )}
+                    Novo comparativo
+                  </Button>
                   <Button variant="outline" size="sm" onClick={exportar}>
                     <Download className="h-4 w-4" />
                     CSV
@@ -227,12 +320,28 @@ function ComparativoIcms() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Input
-                  placeholder="Buscar município"
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  className="max-w-xs"
-                />
+                {salvoAberto && (
+                  <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2 text-xs">
+                    <span>
+                      Mostrando um comparativo salvo ({salvoAberto.municipios.length} municípios).
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => setSalvoAberto(null)}>
+                      Ver todos
+                    </Button>
+                  </div>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    placeholder="Buscar município"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    className="max-w-xs"
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setAba("buscar")}>
+                    <RefreshCw className="h-4 w-4" />
+                    Incluir outros municípios
+                  </Button>
+                </div>
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dadosGrafico} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
@@ -274,6 +383,7 @@ function ComparativoIcms() {
                           </TableHead>
                         ))}
                         <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                        <TableHead className="w-10" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -302,6 +412,40 @@ function ComparativoIcms() {
                           <TableCell className="text-right font-semibold tabular-nums">
                             {formatarMoeda(r.total)}
                           </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title={`Remover ${r.nome} da comparação`}
+                              aria-label={`Remover ${r.nome} da comparação`}
+                              disabled={removerMunicipio.isPending || !exercicio}
+                              onClick={() => {
+                                if (!exercicio) return;
+                                removerMunicipio.mutate(
+                                  { exercicio, nome: r.nome },
+                                  {
+                                    onSuccess: () => {
+                                      setSalvoAberto((s) =>
+                                        s
+                                          ? {
+                                              ...s,
+                                              municipios: s.municipios.filter((n) => n !== r.nome),
+                                            }
+                                          : s,
+                                      );
+                                      toast.success(`${r.nome} removido da comparação.`);
+                                    },
+                                    onError: (e) =>
+                                      toast.error(
+                                        e instanceof Error ? e.message : "Não consegui remover.",
+                                      ),
+                                  },
+                                );
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -323,10 +467,114 @@ function ComparativoIcms() {
               qc.invalidateQueries({ queryKey: ["icms-comparativo"] });
               qc.invalidateQueries({ queryKey: ["icms-cargas"] });
               qc.invalidateQueries({ queryKey: ["icms-exercicios"] });
+              setAba("ranking");
             }}
           />
         </TabsContent>
+
+        <TabsContent value="salvos" className="mt-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Comparativos salvos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!salvos?.length ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Nenhum comparativo salvo ainda. Monte a comparação na aba Ranking e clique em
+                  “Salvar”.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead className="w-24">Exercício</TableHead>
+                      <TableHead className="w-28">Municípios</TableHead>
+                      <TableHead className="w-40 text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salvos.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell>
+                          <div className="font-medium">{s.nome}</div>
+                          {s.observacao && (
+                            <div className="text-xs text-muted-foreground">{s.observacao}</div>
+                          )}
+                        </TableCell>
+                        <TableCell>{s.exercicio}</TableCell>
+                        <TableCell>{s.municipios.length}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setExercicio(s.exercicio);
+                              if (s.criterio) setCriterio(s.criterio);
+                              setSalvoAberto({ id: s.id, municipios: s.municipios });
+                              setAba("ranking");
+                            }}
+                          >
+                            Abrir
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Excluir comparativo salvo"
+                            aria-label="Excluir comparativo salvo"
+                            onClick={() =>
+                              apagarSalvo.mutate(s.id, {
+                                onSuccess: () => {
+                                  setSalvoAberto((cur) => (cur?.id === s.id ? null : cur));
+                                  toast.success("Comparativo excluído.");
+                                },
+                              })
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      <Dialog open={dialogoSalvar} onOpenChange={setDialogoSalvar}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Salvar comparativo</DialogTitle>
+            <DialogDescription>
+              Guarda os municípios comparados, o exercício e o critério para você reabrir depois.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Nome do comparativo"
+              value={nomeSalvar}
+              onChange={(e) => setNomeSalvar(e.target.value)}
+            />
+            <Textarea
+              placeholder="Observação (opcional)"
+              value={obsSalvar}
+              onChange={(e) => setObsSalvar(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogoSalvar(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarSalvar} disabled={salvar.isPending}>
+              {salvar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
