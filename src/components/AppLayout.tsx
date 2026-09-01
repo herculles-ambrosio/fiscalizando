@@ -99,17 +99,30 @@ export function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [municipioId, pathname, navigate, queryClient]);
 
-  const grupos = [
-    {
-      rotulo: "Operação",
-      itens: [...(perfil?.ehConsultoria ? NAV_CONSULTORIA : []), ...NAV_OPERACAO],
-    },
-    { rotulo: "Análise", itens: NAV_ANALISE },
-    {
-      rotulo: "Administração",
-      itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
-    },
-  ];
+  // Produto ativo: Apura VAF (padrão) ou ICMS Robin Hood.
+  const produto: "vaf" | "icms" = pathname.startsWith("/icms") ? "icms" : "vaf";
+
+  const grupos =
+    produto === "icms"
+      ? [
+          { rotulo: "Operação", itens: NAV_ICMS_OPERACAO },
+          { rotulo: "Análise", itens: NAV_ICMS_ANALISE },
+          {
+            rotulo: "Administração",
+            itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
+          },
+        ]
+      : [
+          {
+            rotulo: "Operação",
+            itens: [...(perfil?.ehConsultoria ? NAV_CONSULTORIA : []), ...NAV_OPERACAO],
+          },
+          { rotulo: "Análise", itens: NAV_ANALISE },
+          {
+            rotulo: "Administração",
+            itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
+          },
+        ];
   const nav = grupos.flatMap((g) => g.itens);
 
   async function sair() {
