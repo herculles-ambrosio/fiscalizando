@@ -56,6 +56,15 @@ export async function importarExtrato(params: {
         .upsert(linhas, { onConflict: "municipio_id,exercicio,mes,criterio,municipio_nome" });
       if (error) throw error;
     }
+    await salvarPayload(carga.id, {
+      tipo: "comparativo",
+      comparativo: linhas.map((l) => ({
+        municipio_nome: l.municipio_nome,
+        mes: l.mes,
+        criterio: l.criterio,
+        valor: l.valor,
+      })),
+    });
     return { tipo: lido.tipo, exercicio, registros: linhas.length, desconhecidos: [] };
   }
 
