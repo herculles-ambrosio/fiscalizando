@@ -237,6 +237,8 @@ export async function importarColetaRobinHood(params: {
   exercicio: number;
   registros: RegistroRobinHood[];
   rotulo: string;
+  /** apaga as sincronizações anteriores do mesmo exercício (padrão: true) */
+  substituir?: boolean;
 }): Promise<number> {
   const { municipioId, exercicio, registros } = params;
   if (!registros.length) return 0;
