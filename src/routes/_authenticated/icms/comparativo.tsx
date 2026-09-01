@@ -289,6 +289,30 @@ function ComparativoIcms() {
                       </SelectContent>
                     </Select>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setNomeSalvar(`Comparativo ${exercicio ?? ""}`.trim());
+                      setDialogoSalvar(true);
+                    }}
+                  >
+                    <Save className="h-4 w-4" />
+                    Salvar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={novoComparativo}
+                    disabled={limparComparativo.isPending}
+                  >
+                    {limparComparativo.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FilePlus2 className="h-4 w-4" />
+                    )}
+                    Novo comparativo
+                  </Button>
                   <Button variant="outline" size="sm" onClick={exportar}>
                     <Download className="h-4 w-4" />
                     CSV
