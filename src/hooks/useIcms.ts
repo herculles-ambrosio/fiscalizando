@@ -91,8 +91,8 @@ export function useIcmsDados(exercicio: number | null) {
           .map((v, i) => ({ v, i }))
           .filter((x) => x.v != null)
           .map((x) => x.v as number);
-        s.ultimoIndice = comIndice.length ? comIndice[comIndice.length - 1] : null;
-        s.indiceAnterior = comIndice.length > 1 ? comIndice[comIndice.length - 2] : null;
+        s.ultimoIndice = comIndice.at(-1) ?? null;
+        s.indiceAnterior = comIndice.length > 1 ? (comIndice.at(-2) ?? null) : null;
         const cat = CRITERIO_POR_SLUG.get(s.criterio);
         if (!cat?.agregado && !cat?.paiSlug) totalAno += s.totalValor;
       }
