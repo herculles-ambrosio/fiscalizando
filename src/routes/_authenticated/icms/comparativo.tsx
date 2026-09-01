@@ -159,9 +159,13 @@ function ComparativoIcms() {
   }, [criteriosDisponiveis, criterio]);
 
   const ranking = useMemo(() => {
+    const permitidos = salvoAberto
+      ? new Set(salvoAberto.municipios.map((n) => normalizarRotulo(n)))
+      : null;
     const mapa = new Map<string, number[]>();
     for (const l of linhas ?? []) {
       if (criterio && l.criterio !== criterio) continue;
+      if (permitidos && !permitidos.has(normalizarRotulo(l.municipio_nome))) continue;
       const arr = mapa.get(l.municipio_nome) ?? Array.from({ length: 12 }, () => 0);
       if (l.mes >= 1 && l.mes <= 12) arr[l.mes - 1] = (arr[l.mes - 1] ?? 0) + (l.valor ?? 0);
       mapa.set(l.municipio_nome, arr);
