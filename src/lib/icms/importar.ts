@@ -359,5 +359,15 @@ export async function importarComparativoFjp(params: {
     .upsert(comCarga, { onConflict: "municipio_id,exercicio,mes,criterio,municipio_nome" });
   if (error) throw error;
 
+  await salvarPayload(carga.id, {
+    tipo: "comparativo",
+    comparativo: comCarga.map((l) => ({
+      municipio_nome: l.municipio_nome,
+      mes: l.mes,
+      criterio: l.criterio,
+      valor: l.valor,
+    })),
+  });
+
   return comCarga.length;
 }
