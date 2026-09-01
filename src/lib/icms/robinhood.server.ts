@@ -195,3 +195,43 @@ export async function coletarRobinHood(params: {
     mesesComDados: [...new Set(registros.map((r) => r.mes))].sort((a, b) => a - b),
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Comparativo entre municípios (coleta direta do portal)              */
+/* ------------------------------------------------------------------ */
+
+export type MunicipioFjpPublico = {
+  id: number;
+  nome: string;
+  sef: number | null;
+  ibge6: number | null;
+};
+
+/** Lista oficial de municípios do portal Robin Hood. */
+export async function listarMunicipiosFjp(): Promise<MunicipioFjpPublico[]> {
+  const lista = await pegarJson<MunicipioFjp[]>(`${API}/municipios`);
+  return lista
+    .map((m) => ({
+      id: Number(m.id),
+      nome: String(m.municipio ?? "").trim(),
+      sef: m.sef != null ? Number(m.sef) : null,
+      ibge6: m.ibge6 != null ? Number(m.ibge6) : null,
+    }))
+    .filter((m) => Number.isFinite(m.id) && m.nome)
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
+const TODOS_MESES = new Set(Array.from({ length: 12 }, (_, i) => i + 1));
+
+/** Valores em R$ por critério/mês de um município do portal. */
+export async function coletarValoresMunicipio(
+  municipioFjpId: number,
+  exercicio: number,
+): Promise<RegistroColetado[]> {
+  const destino = new Map<string, RegistroColetado>();
+  const relatorio = await pegarJson<Relatorio>(
+    `${API}/valores/relatorio?municipio_id=${municipioFjpId}&ano=${exercicio}&categoria_id=2`,
+  );
+  lerRelatorio(relatorio, "valor", TODOS_MESES, destino);
+  return [...destino.values()].sort((a, b) => a.mes - b.mes || a.criterio.localeCompare(b.criterio));
+}
