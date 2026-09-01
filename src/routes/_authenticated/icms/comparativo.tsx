@@ -320,12 +320,28 @@ function ComparativoIcms() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Input
-                  placeholder="Buscar município"
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  className="max-w-xs"
-                />
+                {salvoAberto && (
+                  <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2 text-xs">
+                    <span>
+                      Mostrando um comparativo salvo ({salvoAberto.municipios.length} municípios).
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => setSalvoAberto(null)}>
+                      Ver todos
+                    </Button>
+                  </div>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    placeholder="Buscar município"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    className="max-w-xs"
+                  />
+                  <Button variant="outline" size="sm" onClick={() => setAba("buscar")}>
+                    <RefreshCw className="h-4 w-4" />
+                    Incluir outros municípios
+                  </Button>
+                </div>
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dadosGrafico} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
