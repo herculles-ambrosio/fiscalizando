@@ -197,29 +197,81 @@ function ComparativoIcms() {
                   onChange={(e) => setBusca(e.target.value)}
                   className="max-w-xs"
                 />
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16">#</TableHead>
-                      <TableHead>Município</TableHead>
-                      <TableHead className="text-right">Repasse no exercício</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {ranking.map((r) => (
-                      <TableRow
-                        key={r.nome}
-                        className={cn(
-                          normalizarRotulo(r.nome) === meu && "bg-primary/5 font-medium",
-                        )}
-                      >
-                        <TableCell>{r.posicao}</TableCell>
-                        <TableCell>{r.nome}</TableCell>
-                        <TableCell className="text-right">{formatarMoeda(r.total)}</TableCell>
+                <div className="h-72 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dadosGrafico} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+                      <YAxis
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v: number) => v.toLocaleString("pt-BR")}
+                        width={72}
+                      />
+                      <RTooltip
+                        formatter={(v: number, n: string) => [formatarMoeda(v), n]}
+                        contentStyle={{ fontSize: 12 }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      {ranking.map((r, i) => (
+                        <Line
+                          key={r.nome}
+                          type="monotone"
+                          dataKey={r.nome}
+                          stroke={CORES[i % CORES.length]}
+                          strokeWidth={normalizarRotulo(r.nome) === meu ? 3 : 2}
+                          dot={{ r: 2 }}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">#</TableHead>
+                        <TableHead className="min-w-40">Município</TableHead>
+                        {MESES.map((m) => (
+                          <TableHead key={m} className="text-right whitespace-nowrap">
+                            {m}
+                          </TableHead>
+                        ))}
+                        <TableHead className="text-right whitespace-nowrap">Total</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {ranking.map((r, i) => (
+                        <TableRow
+                          key={r.nome}
+                          className={cn(
+                            normalizarRotulo(r.nome) === meu && "bg-primary/5 font-medium",
+                          )}
+                        >
+                          <TableCell>{r.posicao}</TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <span className="flex items-center gap-2">
+                              <span
+                                className="inline-block h-2.5 w-2.5 rounded-full"
+                                style={{ backgroundColor: CORES[i % CORES.length] }}
+                              />
+                              {r.nome}
+                            </span>
+                          </TableCell>
+                          {r.meses.map((v, idx) => (
+                            <TableCell key={idx} className="text-right tabular-nums">
+                              {v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </TableCell>
+                          ))}
+                          <TableCell className="text-right font-semibold tabular-nums">
+                            {formatarMoeda(r.total)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
               </CardContent>
             </Card>
           )}
