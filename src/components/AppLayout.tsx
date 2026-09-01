@@ -5,9 +5,11 @@ import {
   FileUp,
   History,
   FileSignature,
+  ListChecks,
   PieChart,
   LogOut,
   MapPin,
+  Scale,
   Settings,
   TrendingUp,
   Users,
@@ -52,6 +54,17 @@ const NAV_SUPERADMIN = [
   { to: "/consultoria/codigos-sef", rotulo: "Códigos SEF", icone: MapPin },
 ];
 
+// Módulo ICMS (Lei Robin Hood) — os 18 critérios de distribuição.
+const NAV_ICMS_OPERACAO = [
+  { to: "/icms", rotulo: "Painel do ICMS", icone: BarChart3 },
+  { to: "/icms/cargas", rotulo: "Cargas", icone: FileUp },
+];
+const NAV_ICMS_ANALISE = [
+  { to: "/icms/criterios", rotulo: "Critérios", icone: Scale },
+  { to: "/icms/comparativo", rotulo: "Comparativo", icone: TrendingUp },
+  { to: "/icms/plano", rotulo: "Plano de melhoria", icone: ListChecks },
+];
+
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: perfil } = usePerfil();
@@ -86,17 +99,30 @@ export function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [municipioId, pathname, navigate, queryClient]);
 
-  const grupos = [
-    {
-      rotulo: "Operação",
-      itens: [...(perfil?.ehConsultoria ? NAV_CONSULTORIA : []), ...NAV_OPERACAO],
-    },
-    { rotulo: "Análise", itens: NAV_ANALISE },
-    {
-      rotulo: "Administração",
-      itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
-    },
-  ];
+  // Produto ativo: Apura VAF (padrão) ou ICMS Robin Hood.
+  const produto: "vaf" | "icms" = pathname.startsWith("/icms") ? "icms" : "vaf";
+
+  const grupos =
+    produto === "icms"
+      ? [
+          { rotulo: "Operação", itens: NAV_ICMS_OPERACAO },
+          { rotulo: "Análise", itens: NAV_ICMS_ANALISE },
+          {
+            rotulo: "Administração",
+            itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
+          },
+        ]
+      : [
+          {
+            rotulo: "Operação",
+            itens: [...(perfil?.ehConsultoria ? NAV_CONSULTORIA : []), ...NAV_OPERACAO],
+          },
+          { rotulo: "Análise", itens: NAV_ANALISE },
+          {
+            rotulo: "Administração",
+            itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
+          },
+        ];
   const nav = grupos.flatMap((g) => g.itens);
 
   async function sair() {
@@ -121,6 +147,34 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 : "—"}
           </p>
         </div>
+
+        <div className="mt-6 flex gap-1 rounded-full bg-white/5 p-1">
+          <Link
+            to="/dashboard"
+            onClick={limparTela}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
+              produto === "vaf"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+            )}
+          >
+            Apura VAF
+          </Link>
+          <Link
+            to="/icms"
+            onClick={limparTela}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
+              produto === "icms"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+            )}
+          >
+            ICMS
+          </Link>
+        </div>
+
 
         {podeTrocar && (
           <div className="mt-6 rounded-xl border border-sidebar-border bg-white/5 p-2.5 shadow-soft">
@@ -154,7 +208,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {grupo.rotulo}
               </p>
               {grupo.itens.map((item) => {
-                const ativo = pathname.startsWith(item.to);
+                const ativo = item.to === "/icms" ? pathname === "/icms" : pathname.startsWith(item.to);
                 return (
                   <Link
                     key={item.to}
