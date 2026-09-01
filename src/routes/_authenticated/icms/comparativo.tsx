@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
-import { Download, Loader2, RefreshCw, X } from "lucide-react";
+import { Download, FilePlus2, Loader2, RefreshCw, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +36,24 @@ import {
 } from "recharts";
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 import { MapaMunicipios } from "@/components/icms/MapaMunicipios";
-import { useIcmsComparativo, useIcmsExercicios } from "@/hooks/useIcms";
+import {
+  useApagarComparativoSalvo,
+  useComparativosSalvos,
+  useIcmsComparativo,
+  useIcmsExercicios,
+  useLimparComparativo,
+  useRemoverMunicipioComparativo,
+  useSalvarComparativo,
+} from "@/hooks/useIcms";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
 import {
