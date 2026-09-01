@@ -37,6 +37,7 @@ import { Route as AuthenticatedIcmsComparativoRouteImport } from './routes/_auth
 import { Route as AuthenticatedIcmsCriteriosRouteImport } from './routes/_authenticated/icms/criterios'
 import { Route as AuthenticatedIcmsPlanoRouteImport } from './routes/_authenticated/icms/plano'
 import { Route as ApiPublicHooksReceitaFilaRouteImport } from './routes/api/public/hooks/receita-fila'
+import { Route as ApiPublicIcmsDiagRouteImport } from './routes/api/public/icms/diag'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -190,6 +191,11 @@ const ApiPublicHooksReceitaFilaRoute =
     path: '/api/public/hooks/receita-fila',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicIcmsDiagRoute = ApiPublicIcmsDiagRouteImport.update({
+  id: '/api/public/icms/diag',
+  path: '/api/public/icms/diag',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
+  '/api/public/icms/diag': typeof ApiPublicIcmsDiagRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
+  '/api/public/icms/diag': typeof ApiPublicIcmsDiagRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -278,6 +286,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
+  '/api/public/icms/diag': typeof ApiPublicIcmsDiagRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -309,6 +318,7 @@ export interface FileRouteTypes {
     | '/icms/plano'
     | '/icms/'
     | '/api/public/hooks/receita-fila'
+    | '/api/public/icms/diag'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/icms/plano'
     | '/icms'
     | '/api/public/hooks/receita-fila'
+    | '/api/public/icms/diag'
   id:
     | '__root__'
     | '/'
@@ -367,12 +378,14 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/plano'
     | '/_authenticated/icms/'
     | '/api/public/hooks/receita-fila'
+    | '/api/public/icms/diag'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ApiPublicHooksReceitaFilaRoute: typeof ApiPublicHooksReceitaFilaRoute
+  ApiPublicIcmsDiagRoute: typeof ApiPublicIcmsDiagRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -573,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksReceitaFilaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/icms/diag': {
+      id: '/api/public/icms/diag'
+      path: '/api/public/icms/diag'
+      fullPath: '/api/public/icms/diag'
+      preLoaderRoute: typeof ApiPublicIcmsDiagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -667,6 +687,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ApiPublicHooksReceitaFilaRoute: ApiPublicHooksReceitaFilaRoute,
+  ApiPublicIcmsDiagRoute: ApiPublicIcmsDiagRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
