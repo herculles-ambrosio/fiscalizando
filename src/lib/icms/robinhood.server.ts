@@ -41,7 +41,7 @@ async function pegarJson<T>(url: string, vezes = 4): Promise<T> {
       const resp = await fetch(url, {
         headers: { "user-agent": UA, accept: "application/json, text/plain, */*" },
         redirect: "follow",
-        signal: AbortSignal.timeout(20_000),
+        signal: AbortSignal.timeout(12_000),
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       return (await resp.json()) as T;
@@ -72,7 +72,7 @@ async function acharMunicipio(
   codigoSef: string | null,
   codigoIbge: string | null,
 ): Promise<MunicipioFjp | null> {
-  const lista = await pegarJson<MunicipioFjp[]>(`${API}/municipios`);
+  const lista = await pegarJson<MunicipioFjp[]>(`${API}/municipios`, 2);
   const sef = codigoSef ? Number(String(codigoSef).replace(/\D/g, "")) : NaN;
   if (Number.isFinite(sef) && sef > 0) {
     const porSef = lista.find((m) => Number(m.sef) === sef);
@@ -209,7 +209,7 @@ export type MunicipioFjpPublico = {
 
 /** Lista oficial de municípios do portal Robin Hood. */
 export async function listarMunicipiosFjp(): Promise<MunicipioFjpPublico[]> {
-  const lista = await pegarJson<MunicipioFjp[]>(`${API}/municipios`);
+  const lista = await pegarJson<MunicipioFjp[]>(`${API}/municipios`, 2);
   return lista
     .map((m) => ({
       id: Number(m.id),

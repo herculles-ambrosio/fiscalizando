@@ -7,9 +7,22 @@ import { z } from "zod";
  */
 
 export const listarMunicipiosFjpFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { listarMunicipiosFjp } = await import("./robinhood.server");
-  return await listarMunicipiosFjp();
+  // Nunca propaga o erro: o portal da FJP cai com frequência e um throw aqui
+  // derruba a tela inteira. A UI mostra o aviso e o extrato continua como plano B.
+  try {
+    const { listarMunicipiosFjp } = await import("./robinhood.server");
+    return { municipios: await listarMunicipiosFjp(), erro: null as string | null };
+  } catch (e) {
+    const erro =
+      e instanceof Error && e.name === "TimeoutError"
+        ? "o portal da FJP não respondeu a tempo"
+        : e instanceof Error
+          ? e.message
+          : "portal indisponível";
+    return { municipios: [], erro };
+  }
 });
+
 
 export const compararMunicipiosFjp = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
