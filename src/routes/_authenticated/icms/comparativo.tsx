@@ -121,6 +121,18 @@ function ComparativoIcms() {
   const [exercicio, setExercicio] = useState<number | null>(null);
   const [busca, setBusca] = useState("");
   const [criterio, setCriterio] = useState<string>("");
+  /** quando um comparativo salvo está aberto, limita o ranking a esses municípios */
+  const [salvoAberto, setSalvoAberto] = useState<{ id: string; municipios: string[] } | null>(null);
+  const [dialogoSalvar, setDialogoSalvar] = useState(false);
+  const [nomeSalvar, setNomeSalvar] = useState("");
+  const [obsSalvar, setObsSalvar] = useState("");
+  const [aba, setAba] = useState("ranking");
+
+  const { data: salvos } = useComparativosSalvos();
+  const salvar = useSalvarComparativo();
+  const apagarSalvo = useApagarComparativoSalvo();
+  const removerMunicipio = useRemoverMunicipioComparativo();
+  const limparComparativo = useLimparComparativo();
 
   useEffect(() => {
     if (exercicios?.length && (!exercicio || !exercicios.includes(exercicio))) {
