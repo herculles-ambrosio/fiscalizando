@@ -12,6 +12,7 @@ export const sincronizarRobinHood = createServerFn({ method: "POST" })
       .object({
         municipio: z.string().trim().min(2).max(120),
         codigoIbge: z.string().trim().max(10).optional().nullable(),
+        codigoSef: z.string().trim().max(10).optional().nullable(),
         exercicio: z.number().int().min(1991).max(2100),
         meses: z.array(z.number().int().min(1).max(12)).max(12).optional(),
       })
@@ -22,9 +23,11 @@ export const sincronizarRobinHood = createServerFn({ method: "POST" })
     const coleta = await coletarRobinHood({
       municipio: data.municipio,
       codigoIbge: data.codigoIbge ?? null,
+      codigoSef: data.codigoSef ?? null,
       exercicio: data.exercicio,
       ...(data.meses ? { meses: data.meses } : {}),
     });
+
     return {
       exercicio: data.exercicio,
       fonte: coleta.fonte,
