@@ -336,7 +336,31 @@ function MetasIcms() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {l.metaValor != null ? formatarMoeda(l.metaValor) : "—"}
+                    {l.metaValor != null ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help">{formatarMoeda(l.metaValor)}</span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm space-y-1">
+                          <p className="text-xs">
+                            {l.indiceCriterio?.toLocaleString("pt-BR", {
+                              maximumFractionDigits: 7,
+                            })}
+                            % (índice do critério) × {l.pesoLegalPct ?? "—"}% (Anexo I) ×{" "}
+                            {painel?.valorPorPontoIndice
+                              ? formatarMoeda(painel.valorPorPontoIndice)
+                              : "—"}{" "}
+                            (1 ponto) = {formatarMoeda(l.metaValor)}
+                          </p>
+                          <p className="text-xs opacity-80">
+                            Recebido {formatarMoeda(l.valorAno)} — falta{" "}
+                            {formatarMoeda(l.faltaValor)}.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
                   <TableCell className="text-right">{formatarMoeda(l.valorAno)}</TableCell>
                   <TableCell className="text-right">
