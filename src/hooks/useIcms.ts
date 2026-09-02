@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMunicipioAtivo } from "./useMunicipio";
 import { CRITERIO_POR_SLUG } from "@/lib/icms/criterios";
 import { reaplicarCarga } from "@/lib/icms/importar";
+import type { SituacaoItem } from "@/lib/icms/pontuacao";
+
 
 export type RegistroIndice = {
   criterio: string;
