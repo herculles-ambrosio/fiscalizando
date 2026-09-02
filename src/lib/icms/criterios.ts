@@ -317,7 +317,8 @@ export const CRITERIOS: Criterio[] = [
     slug: "esportes",
     nome: "Esportes",
     sinonimos: ["esportes", "esporte"],
-    percentual: 0.1,
+    // Cadastro trazia 0,1%; o repasse real da FJP indica 0,50%.
+    percentual: 0.5,
     baseLegal: "Anexo I, item 15 da Lei 18.030/2009",
     orgao: "SEDESE / Secretaria de Esportes de MG",
     periodicidade: "Anual — inscrição em edital, com prazo rígido",
