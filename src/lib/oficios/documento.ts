@@ -196,10 +196,16 @@ export function construirOficio(params: ParametrosOficio): Document {
             children: [new TextRun({ text: "Recebi ____/____/____", size: 22, font: FONTE })],
           }),
 
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: config.endereco_rodape, size: 18, font: FONTE })],
-          }),
+          ...(modelo.rodape?.trim() ? subst(modelo.rodape).split(/\r?\n/) : [config.endereco_rodape])
+            .filter((l) => l.trim())
+            .map(
+              (linha) =>
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [new TextRun({ text: linha.trim(), size: 18, font: FONTE })],
+                }),
+            ),
+
         ],
       },
     ],
