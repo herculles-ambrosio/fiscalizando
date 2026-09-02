@@ -11,21 +11,34 @@ export type LinhaDiagnostico = {
   indiceAnterior: number | null;
   variacaoPct: number | null;
   situacao: SituacaoCriterio;
-  /** Estimativa de receita anual perdida enquanto o critério estiver zerado. */
+  /**
+   * Meta do critério = índice do próprio critério (FJP) x valor de 1 ponto de
+   * índice do exercício. Nunca peso da lei x repasse do município.
+   */
+  metaValor: number | null;
+  /** Quanto falta para a meta do critério (R$/ano). */
   potencialAnual: number | null;
   recomendacoes: string[];
+};
+
+export type OpcoesDiagnostico = {
+  /** Valor de 1 ponto de índice do exercício (constante estadual). */
+  valorPontoIndice?: number | null;
 };
 
 export type Diagnostico = {
   exercicio: number;
   totalAno: number;
   indiceParticipacao: number | null;
-  /** R$ recebidos no ano por cada 1 ponto (1%) de índice de participação. */
+  /** R$ do exercício por cada 1 ponto (1%) de índice de participação. */
   valorPorPontoIndice: number | null;
+  /** "parametro" quando informado manualmente, "derivado" quando calculado. */
+  origemValorPonto: "parametro" | "derivado" | null;
   linhas: LinhaDiagnostico[];
   oportunidades: LinhaDiagnostico[];
   quedas: LinhaDiagnostico[];
 };
+
 
 export const ROTULO_SITUACAO: Record<SituacaoCriterio, string> = {
   zerado_oportunidade: "Zerado — oportunidade",
