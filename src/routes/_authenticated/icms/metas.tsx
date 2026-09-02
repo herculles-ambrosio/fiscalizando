@@ -272,13 +272,33 @@ function MetasIcms() {
             </TableBody>
           </Table>
           <p className="mt-3 text-xs text-muted-foreground">
-            A meta de cada critério é o percentual do Anexo I da Lei 18.030/2009 aplicado ao total
-            que o município recebeu no exercício. Critérios estruturais (cota mínima, área,
-            municípios mineradores) não dependem de ação da prefeitura e ficam fora do potencial a
-            recuperar.
+            A meta de cada critério é o índice de participação do município naquele critério
+            (publicado pela FJP, já ponderado pelo peso legal) multiplicado pelo valor de 1 ponto
+            de índice do exercício. O peso do Anexo I da Lei 18.030/2009 não é reaplicado e a meta
+            não usa o repasse total do próprio município como base. Critérios estruturais (cota
+            mínima, área, municípios mineradores) ficam fora do potencial a recuperar.
           </p>
         </CardContent>
       </Card>
+
+      {depurar && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Depuração do cálculo da meta</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Valor do ponto de índice: {painel.valorPorPontoIndice ?? "—"} (
+              {painel.origemValorPonto ?? "sem origem"}). Peso legal reaplicado: não. Quando
+              meta ÷ recebido ficar perto de 1, o índice da FJP já vem ponderado pelo peso legal.
+            </p>
+            <pre className="max-h-96 overflow-auto rounded bg-muted p-3 text-xs">
+              {JSON.stringify(painel.depuracao, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
+
     </div>
     </TooltipProvider>
   );
