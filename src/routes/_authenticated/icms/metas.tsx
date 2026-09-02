@@ -116,6 +116,7 @@ function MetasIcms() {
           l.faltaValor.toFixed(2),
           l.faltaIndice?.toFixed(6) ?? "",
           l.aderencia?.toFixed(3) ?? "",
+          l.pesoImplicitoPct?.toFixed(3) ?? "",
           ROTULO_STATUS_META[l.status],
           l.criterio.orgao,
         ]),
