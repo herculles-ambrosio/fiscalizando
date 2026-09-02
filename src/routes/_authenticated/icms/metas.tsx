@@ -85,7 +85,8 @@ function MetasIcms() {
       montarCsv(
         [
           "Critério",
-          "% da lei",
+          "Índice do critério (FJP)",
+          "% da lei (informativo)",
           "% realizado",
           "Meta (R$)",
           "Recebido (R$)",
@@ -96,7 +97,8 @@ function MetasIcms() {
         ],
         painel.linhas.map((l) => [
           l.criterio.nome,
-          l.metaPct ?? "",
+          l.indiceCriterio?.toFixed(7) ?? "",
+          l.pesoLegalPct ?? "",
           l.realPct.toFixed(4),
           l.metaValor?.toFixed(2) ?? "",
           l.valorAno.toFixed(2),
@@ -108,6 +110,7 @@ function MetasIcms() {
       ),
     );
   }
+
 
   return (
     <TooltipProvider delayDuration={150}>
