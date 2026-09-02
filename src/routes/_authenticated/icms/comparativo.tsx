@@ -25,7 +25,10 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Line,
   LineChart,
@@ -55,7 +58,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
-import { nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
+import { CRITERIO_POR_SLUG, nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
 import { montarDiagnostico } from "@/lib/icms/diagnostico";
 import {
   compararMunicipiosFjp,
@@ -183,6 +186,18 @@ function ComparativoIcms() {
     return diagnostico.linhas.find((l) => l.criterio.slug === criterio)?.metaValor ?? null;
   }, [diagnostico, criterio]);
 
+  /** peso do Anexo I do critério em tela (fração, ex.: 0,75 para o VAF) */
+  const pesoAnexo = useMemo(() => {
+    if (!criterio || criterio === "total") return null;
+    const pct = CRITERIO_POR_SLUG.get(criterio)?.percentual ?? null;
+    return pct != null ? pct / 100 : null;
+  }, [criterio]);
+
+  const valorPonto = diagnostico?.valorPorPontoIndice ?? null;
+  /** valor de 1 ponto de índice dentro da fatia do critério */
+  const valorPontoCriterio =
+    valorPonto != null && pesoAnexo != null ? valorPonto * pesoAnexo : null;
+
   const ranking = useMemo(() => {
     const permitidos = salvoAberto
       ? new Set(salvoAberto.municipios.map((n) => normalizarRotulo(n)))
@@ -216,6 +231,21 @@ function ComparativoIcms() {
     [ranking],
   );
 
+  /**
+   * Pontuação real de cada município no critério: valor recebido dividido pelo
+   * valor de 1 ponto de índice dentro da fatia do critério
+   * (valor do ponto x peso do Anexo I).
+   */
+  const dadosBarras = useMemo(
+    () =>
+      ranking.map((r) => ({
+        nome: r.nome,
+        total: r.total,
+        pontos: valorPontoCriterio ? r.total / valorPontoCriterio : null,
+      })),
+    [ranking, valorPontoCriterio],
+  );
+
   const meu = normalizarRotulo(municipio?.nome ?? "");
 
   function exportar() {
@@ -227,6 +257,9 @@ function ComparativoIcms() {
           "Município",
           ...MESES,
           `Total (${nomeCriterio(criterio)})`,
+          "Peso Anexo I (%)",
+          "Valor de 1 ponto no critério (R$)",
+          "Pontuação real (índice)",
           "Meta ponderada (R$)",
           "Falta (R$)",
         ],
@@ -237,6 +270,9 @@ function ComparativoIcms() {
             r.nome,
             ...r.meses.map((v) => v.toFixed(2)),
             r.total.toFixed(2),
+            pesoAnexo != null ? (pesoAnexo * 100).toFixed(2) : "",
+            valorPontoCriterio != null ? valorPontoCriterio.toFixed(2) : "",
+            valorPontoCriterio ? (r.total / valorPontoCriterio).toFixed(8) : "",
             proprio && metaPropria != null ? metaPropria.toFixed(2) : "",
             proprio && metaPropria != null ? Math.max(0, metaPropria - r.total).toFixed(2) : "",
           ];
@@ -383,6 +419,101 @@ function ComparativoIcms() {
                       : `Sem índice próprio importado para ${exercicio}: a meta ponderada aparece assim que os índices deste exercício forem carregados.`
                     : "Escolha um critério específico para ver a meta ponderada do seu município."}
                 </p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground">Peso do Anexo I</p>
+                    <p className="font-display text-lg font-semibold">
+                      {pesoAnexo != null
+                        ? `${(pesoAnexo * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`
+                        : "—"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Fatia do critério {nomeCriterio(criterio)} na Lei 18.030/2009.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground">Valor de 1 ponto de índice</p>
+                    <p className="font-display text-lg font-semibold">
+                      {valorPonto != null ? formatarMoeda(valorPonto) : "—"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      No critério:{" "}
+                      {valorPontoCriterio != null ? formatarMoeda(valorPontoCriterio) : "—"} por
+                      ponto ({exercicio}).
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground">
+                      Meta ponderada — {municipio?.nome ?? "seu município"}
+                    </p>
+                    <p className="font-display text-lg font-semibold">
+                      {metaPropria != null ? formatarMoeda(metaPropria) : "—"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Índice do critério × peso do Anexo I × valor de 1 ponto.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-medium">
+                    Pontuação real por município — {nomeCriterio(criterio)}
+                  </p>
+                  <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={dadosBarras}
+                        margin={{ top: 8, right: 16, bottom: 40, left: 8 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis
+                          dataKey="nome"
+                          tick={{ fontSize: 10 }}
+                          interval={0}
+                          angle={-25}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11 }}
+                          width={90}
+                          tickFormatter={(v: number) =>
+                            v.toLocaleString("pt-BR", { maximumFractionDigits: 6 })
+                          }
+                        />
+                        <RTooltip
+                          contentStyle={{ fontSize: 12 }}
+                          formatter={(v: number, _n: string, item: { payload?: { total?: number } }) => [
+                            `${v.toLocaleString("pt-BR", { maximumFractionDigits: 8 })} pontos (${formatarMoeda(
+                              item?.payload?.total ?? 0,
+                            )})`,
+                            "Pontuação real",
+                          ]}
+                        />
+                        <Bar dataKey="pontos" radius={[4, 4, 0, 0]}>
+                          {dadosBarras.map((d, i) => (
+                            <Cell
+                              key={d.nome}
+                              fill={
+                                normalizarRotulo(d.nome) === meu
+                                  ? "hsl(var(--primary))"
+                                  : CORES[i % CORES.length]
+                              }
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {valorPontoCriterio == null && (
+                    <p className="text-[11px] text-muted-foreground">
+                      A pontuação aparece quando houver índice próprio importado do exercício e um
+                      critério específico selecionado (o peso do Anexo I é necessário para converter
+                      reais em pontos).
+                    </p>
+                  )}
+                </div>
+
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dadosGrafico} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
@@ -424,6 +555,10 @@ function ComparativoIcms() {
                           </TableHead>
                         ))}
                         <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Peso Anexo I</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">
+                          Pontuação real
+                        </TableHead>
                         <TableHead className="text-right whitespace-nowrap">
                           Meta ponderada
                         </TableHead>
@@ -456,6 +591,19 @@ function ComparativoIcms() {
                           ))}
                           <TableCell className="text-right font-semibold tabular-nums">
                             {formatarMoeda(r.total)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {pesoAnexo != null
+                              ? `${(pesoAnexo * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {valorPontoCriterio
+                              ? (r.total / valorPontoCriterio).toLocaleString("pt-BR", {
+                                  minimumFractionDigits: 6,
+                                  maximumFractionDigits: 8,
+                                })
+                              : "—"}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {normalizarRotulo(r.nome) === meu && metaPropria != null
