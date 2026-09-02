@@ -330,7 +330,7 @@ export function useIcmsAcoes(exercicio: number | null) {
       const { data, error } = await supabase
         .from("icms_acoes")
         .select(
-          "id, criterio, exercicio, titulo, descricao, orgao, responsavel, prazo, impacto_estimado, status, observacao",
+          "id, criterio, item_codigo, exercicio, titulo, descricao, orgao, responsavel, prazo, impacto_estimado, status, observacao",
         )
         .eq("municipio_id", municipioId!)
         .eq("exercicio", exercicio!)
