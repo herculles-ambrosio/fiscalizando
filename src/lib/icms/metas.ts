@@ -52,6 +52,11 @@ export type LinhaMeta = {
   aderencia: number | null;
   /** true quando a meta fecha com o repasse real (0,9–1,1) */
   aderente: boolean | null;
+  /**
+   * Peso que o repasse real sugere para o critério:
+   * recebido ÷ (índice × valor de 1 ponto) × 100.
+   */
+  pesoImplicitoPct: number | null;
   estrutural: boolean;
   recomendacoes: string[];
 };
