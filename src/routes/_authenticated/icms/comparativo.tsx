@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
@@ -37,6 +37,7 @@ import {
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 import { MapaMunicipios } from "@/components/icms/MapaMunicipios";
 import {
+  useIcmsDados,
   useApagarComparativoSalvo,
   useComparativosSalvos,
   useIcmsComparativo,
@@ -55,6 +56,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
+import { montarDiagnostico } from "@/lib/icms/diagnostico";
 import {
   compararMunicipiosFjp,
   listarMunicipiosFjpFn,
@@ -147,16 +149,39 @@ function ComparativoIcms() {
     return [...set].sort((a, b) => nomeCriterio(a).localeCompare(nomeCriterio(b), "pt-BR"));
   }, [linhas]);
 
+  /** critério escolhido pelo usuário — mantido ao trocar de exercício */
+  const criterioPreferido = useRef<string>("");
+  useEffect(() => {
+    if (criterio) criterioPreferido.current = criterio;
+  }, [criterio]);
+
   useEffect(() => {
     if (!criteriosDisponiveis.length) return;
-    if (!criteriosDisponiveis.includes(criterio)) {
-      setCriterio(
-        criteriosDisponiveis.includes("total")
+    if (criteriosDisponiveis.includes(criterio)) return;
+    const preferido = criterioPreferido.current;
+    setCriterio(
+      preferido && criteriosDisponiveis.includes(preferido)
+        ? preferido
+        : criteriosDisponiveis.includes("total")
           ? "total"
           : (criteriosDisponiveis[0] as string),
-      );
-    }
+    );
   }, [criteriosDisponiveis, criterio]);
+
+  /**
+   * Meta ponderada do próprio município no exercício selecionado:
+   * índice do critério (FJP) x peso do Anexo I x valor de 1 ponto de índice —
+   * sempre do exercício em tela (o de destino), nunca do exercício de origem.
+   */
+  const { data: dadosProprios } = useIcmsDados(exercicio);
+  const diagnostico = useMemo(
+    () => (dadosProprios && exercicio ? montarDiagnostico(dadosProprios, exercicio) : null),
+    [dadosProprios, exercicio],
+  );
+  const metaPropria = useMemo(() => {
+    if (!diagnostico || !criterio || criterio === "total") return null;
+    return diagnostico.linhas.find((l) => l.criterio.slug === criterio)?.metaValor ?? null;
+  }, [diagnostico, criterio]);
 
   const ranking = useMemo(() => {
     const permitidos = salvoAberto
@@ -197,13 +222,25 @@ function ComparativoIcms() {
     baixarCsv(
       `comparativo-icms-${exercicio}.csv`,
       montarCsv(
-        ["Posição", "Município", ...MESES, `Total (${nomeCriterio(criterio)})`],
-        ranking.map((r) => [
-          r.posicao,
-          r.nome,
-          ...r.meses.map((v) => v.toFixed(2)),
-          r.total.toFixed(2),
-        ]),
+        [
+          "Posição",
+          "Município",
+          ...MESES,
+          `Total (${nomeCriterio(criterio)})`,
+          "Meta ponderada (R$)",
+          "Falta (R$)",
+        ],
+        ranking.map((r) => {
+          const proprio = normalizarRotulo(r.nome) === meu;
+          return [
+            r.posicao,
+            r.nome,
+            ...r.meses.map((v) => v.toFixed(2)),
+            r.total.toFixed(2),
+            proprio && metaPropria != null ? metaPropria.toFixed(2) : "",
+            proprio && metaPropria != null ? Math.max(0, metaPropria - r.total).toFixed(2) : "",
+          ];
+        }),
       ),
     );
   }
@@ -335,6 +372,17 @@ function ComparativoIcms() {
                     Incluir outros municípios
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {criterio && criterio !== "total"
+                    ? metaPropria != null
+                      ? `Meta ponderada de ${municipio?.nome ?? "seu município"} em ${nomeCriterio(
+                          criterio,
+                        )}: índice do critério × peso do Anexo I × valor de 1 ponto de índice de ${exercicio} (${formatarMoeda(
+                          diagnostico?.valorPorPontoIndice ?? 0,
+                        )}). Os demais municípios entram como referência de valor recebido.`
+                      : `Sem índice próprio importado para ${exercicio}: a meta ponderada aparece assim que os índices deste exercício forem carregados.`
+                    : "Escolha um critério específico para ver a meta ponderada do seu município."}
+                </p>
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dadosGrafico} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
@@ -376,6 +424,10 @@ function ComparativoIcms() {
                           </TableHead>
                         ))}
                         <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">
+                          Meta ponderada
+                        </TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Falta</TableHead>
                         <TableHead className="w-10" />
                       </TableRow>
                     </TableHeader>
@@ -404,6 +456,18 @@ function ComparativoIcms() {
                           ))}
                           <TableCell className="text-right font-semibold tabular-nums">
                             {formatarMoeda(r.total)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {normalizarRotulo(r.nome) === meu && metaPropria != null
+                              ? formatarMoeda(metaPropria)
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {normalizarRotulo(r.nome) === meu && metaPropria != null
+                              ? metaPropria - r.total > 0
+                                ? formatarMoeda(metaPropria - r.total)
+                                : "meta atingida"
+                              : "—"}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button

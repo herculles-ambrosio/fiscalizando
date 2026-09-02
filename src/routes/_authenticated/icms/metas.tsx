@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, Target } from "lucide-react";
+import { AlertTriangle, Download, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,6 +101,7 @@ function MetasIcms() {
           "Recebido (R$)",
           "Falta (R$)",
           "Falta (pontos de índice)",
+          "Meta ÷ recebido",
           "Status",
           "Órgão",
         ],
@@ -113,6 +114,7 @@ function MetasIcms() {
           l.valorAno.toFixed(2),
           l.faltaValor.toFixed(2),
           l.faltaIndice?.toFixed(6) ?? "",
+          l.aderencia?.toFixed(3) ?? "",
           ROTULO_STATUS_META[l.status],
           l.criterio.orgao,
         ]),
@@ -188,6 +190,31 @@ function MetasIcms() {
         </Card>
       </div>
 
+      {painel.foraDeAderencia.length > 0 && (
+        <Card className="border-amber-300 bg-amber-50/60">
+          <CardContent className="flex gap-3 py-4 text-sm text-amber-900">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-medium">Confira o peso legal destes critérios</p>
+              <p className="text-xs">
+                A meta calculada (índice × peso do Anexo I × valor do ponto) ficou fora da faixa de
+                0,9 a 1,1 do repasse realmente recebido em:{" "}
+                {painel.foraDeAderencia
+                  .map(
+                    (l) =>
+                      `${l.criterio.nome} (${l.aderencia?.toLocaleString("pt-BR", {
+                        maximumFractionDigits: 2,
+                      })}x)`,
+                  )
+                  .join(", ")}
+                . Ou o percentual cadastrado está desatualizado, ou o índice da FJP desse critério
+                vem em escala própria.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -229,6 +256,24 @@ function MetasIcms() {
                     </Tooltip>
                     {l.estrutural && (
                       <span className="ml-2 text-xs text-muted-foreground">(estrutural)</span>
+                    )}
+                    {l.aderente === false && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge
+                            variant="outline"
+                            className="ml-2 cursor-help border-amber-300 bg-amber-100 text-amber-800"
+                          >
+                            conferir
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          Meta ÷ recebido ={" "}
+                          {l.aderencia?.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}. O
+                          peso do Anexo I cadastrado ({l.pesoLegalPct ?? "—"}%) pode estar
+                          desatualizado para este critério.
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
