@@ -352,7 +352,8 @@ export const CRITERIOS: Criterio[] = [
     slug: "icms_solidario",
     nome: "ICMS Solidário",
     sinonimos: ["icms solidario"],
-    percentual: 4.14,
+    // Anexo I traz 4,14%; o repasse real da FJP indica 1,89%.
+    percentual: 1.89,
     baseLegal: "Anexo I, item 17 da Lei 18.030/2009",
     orgao: "FJP",
     periodicidade: "Anual",
