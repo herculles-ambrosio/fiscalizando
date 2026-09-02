@@ -150,25 +150,37 @@ function PlanoIcms() {
 
   const exportarCsv = () => {
     if (!painel) return;
-    baixarCsv(
-      `plano-icms-${painel.exercicio}.csv`,
-      painel.blocos.flatMap((b) =>
-        b.linhas.map((l) => ({
-          Critério: b.criterio.nome,
-          Item: l.item.codigo,
-          Descrição: l.item.titulo,
-          Nota: l.item.nota ?? "",
-          "Parcela (%)": l.item.parcelaPct ?? "",
-          Situação: ROTULO_ITEM[l.situacao],
-          "Onde lançar": l.item.ondeLancar,
-          Prazo: l.item.prazo,
-          Documentos: l.item.documentos.join("; "),
-          "Potencial R$/ano": l.potencial ? l.potencial.toFixed(2) : "",
-          Observação: l.registro?.observacao ?? "",
-        })),
-      ),
+    const cabecalho = [
+      "Critério",
+      "Item",
+      "Descrição",
+      "Nota",
+      "Parcela (%)",
+      "Situação",
+      "Onde lançar",
+      "Prazo",
+      "Documentos",
+      "Potencial R$/ano",
+      "Observação",
+    ];
+    const linhas = painel.blocos.flatMap((b) =>
+      b.linhas.map((l) => [
+        b.criterio.nome,
+        l.item.codigo,
+        l.item.titulo,
+        l.item.nota ?? "",
+        l.item.parcelaPct ?? "",
+        ROTULO_ITEM[l.situacao],
+        l.item.ondeLancar,
+        l.item.prazo,
+        l.item.documentos.join("; "),
+        l.potencial ? l.potencial.toFixed(2) : "",
+        l.registro?.observacao ?? "",
+      ]),
     );
+    baixarCsv(`plano-icms-${painel.exercicio}.csv`, montarCsv(cabecalho, linhas));
   };
+
 
   return (
     <TooltipProvider>
