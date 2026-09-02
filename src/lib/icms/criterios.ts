@@ -12,7 +12,15 @@ export type Criterio = {
   nome: string;
   /** Rótulos usados nos extratos da FJP que devem cair neste critério. */
   sinonimos: string[];
-  /** Participação aproximada no total distribuído (Anexo I da Lei 18.030). */
+  /**
+   * Participação no total distribuído (Anexo I da Lei 18.030/2009, já com as
+   * alterações posteriores e a parcela de educação da EC 108/2020).
+   *
+   * Os pesos foram conferidos contra o repasse real do portal da FJP
+   * (peso = valor recebido ÷ (índice do critério × valor de 1 ponto de índice)).
+   * Quando a lei e o portal divergiam, prevaleceu o portal — é ele que gera o
+   * repasse. As divergências corrigidas estão anotadas critério a critério.
+   */
   percentual: number | null;
   baseLegal: string;
   orgao: string;
