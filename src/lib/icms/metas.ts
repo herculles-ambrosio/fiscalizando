@@ -32,7 +32,7 @@ export const ROTULO_STATUS_META: Record<StatusMeta, string> = {
 
 export type LinhaMeta = {
   criterio: Criterio;
-  /** percentual do Anexo I da lei — informativo, não entra no cálculo */
+  /** percentual do Anexo I da lei, aplicado na meta */
   pesoLegalPct: number | null;
   /** índice de participação do município naquele critério (FJP) */
   indiceCriterio: number | null;
@@ -55,12 +55,12 @@ export type LinhaMeta = {
 export type DepuracaoMeta = {
   criterio: string;
   indiceFjp: number | null;
-  pesoLegalAplicado: false;
+  pesoLegalAplicado: true;
   valorPontoIndice: number | null;
   origemValorPonto: "parametro" | "derivado" | null;
   metaCalculada: number | null;
   recebido: number;
-  /** meta / recebido — perto de 1 confirma que o índice da FJP já vem ponderado */
+  /** meta / recebido — perto de 1 confirma a fórmula */
   razaoMetaRecebido: number | null;
 };
 
@@ -131,7 +131,7 @@ export function montarMetas(
   const depuracao: DepuracaoMeta[] = linhas.map((l) => ({
     criterio: l.criterio.nome,
     indiceFjp: l.indiceCriterio,
-    pesoLegalAplicado: false as const,
+    pesoLegalAplicado: true as const,
     valorPontoIndice: diag.valorPorPontoIndice,
     origemValorPonto: diag.origemValorPonto,
     metaCalculada: l.metaValor,
