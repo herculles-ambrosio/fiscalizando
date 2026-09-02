@@ -66,17 +66,27 @@ export function construirOficio(params: ParametrosOficio): Document {
     );
   }
 
+  const linhasCabecalho = (modelo.cabecalho ?? "")
+    .split(/\r?\n/)
+    .map((l) => subst(l).trim())
+    .filter(Boolean);
+
   cabecalho.push(
-    tituloCabecalho(config.nome_prefeitura, 26),
-    tituloCabecalho(config.estado, 22),
-    tituloCabecalho(config.secretaria, 22),
-    tituloCabecalho(config.setor, 20),
+    ...(linhasCabecalho.length
+      ? linhasCabecalho.map((linha, i) => tituloCabecalho(linha, i === 0 ? 26 : 22))
+      : [
+          tituloCabecalho(config.nome_prefeitura, 26),
+          tituloCabecalho(config.estado, 22),
+          tituloCabecalho(config.secretaria, 22),
+          tituloCabecalho(config.setor, 20),
+        ]),
     new Paragraph({
       spacing: { after: 240 },
       border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 1 } },
       children: [],
     }),
   );
+
 
   const corpo: Paragraph[] = analisarCorpo(modelo.corpo).map((bloco) => {
     switch (bloco.tipo) {
