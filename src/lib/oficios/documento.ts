@@ -10,11 +10,14 @@ import {
 import {
   analisarCorpo,
   aplicarPlaceholders,
+  cmParaTwips,
+  MARGENS_PADRAO,
   MODELOS_PADRAO,
   type ModeloOficio,
 } from "./modelos";
 import { dataPorExtenso } from "./texto";
 import type { BrasaoImagem, ConfiguracaoMunicipio, ContribuinteOficio } from "./zerados";
+
 
 const FONTE = "Arial";
 
