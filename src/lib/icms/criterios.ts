@@ -113,7 +113,9 @@ export const CRITERIOS: Criterio[] = [
     slug: "educacao",
     nome: "Educação",
     sinonimos: ["educacao"],
-    percentual: 2,
+    // Anexo I trazia 2%; com a parcela de indicadores de educação da
+    // EC 108/2020 o repasse real da FJP fecha em 10%. Conferido no portal.
+    percentual: 10,
     baseLegal: "Anexo I, item 6 da Lei 18.030/2009",
     orgao: "Secretaria de Estado de Educação (SEE/MG)",
     periodicidade: "Anual — informação até o prazo fixado em resolução da SEE",
