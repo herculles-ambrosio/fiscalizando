@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
@@ -37,6 +37,7 @@ import {
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 import { MapaMunicipios } from "@/components/icms/MapaMunicipios";
 import {
+  useIcmsDados,
   useApagarComparativoSalvo,
   useComparativosSalvos,
   useIcmsComparativo,
@@ -55,6 +56,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
+import { montarDiagnostico } from "@/lib/icms/diagnostico";
 import {
   compararMunicipiosFjp,
   listarMunicipiosFjpFn,
@@ -147,16 +149,39 @@ function ComparativoIcms() {
     return [...set].sort((a, b) => nomeCriterio(a).localeCompare(nomeCriterio(b), "pt-BR"));
   }, [linhas]);
 
+  /** critério escolhido pelo usuário — mantido ao trocar de exercício */
+  const criterioPreferido = useRef<string>("");
+  useEffect(() => {
+    if (criterio) criterioPreferido.current = criterio;
+  }, [criterio]);
+
   useEffect(() => {
     if (!criteriosDisponiveis.length) return;
-    if (!criteriosDisponiveis.includes(criterio)) {
-      setCriterio(
-        criteriosDisponiveis.includes("total")
+    if (criteriosDisponiveis.includes(criterio)) return;
+    const preferido = criterioPreferido.current;
+    setCriterio(
+      preferido && criteriosDisponiveis.includes(preferido)
+        ? preferido
+        : criteriosDisponiveis.includes("total")
           ? "total"
           : (criteriosDisponiveis[0] as string),
-      );
-    }
+    );
   }, [criteriosDisponiveis, criterio]);
+
+  /**
+   * Meta ponderada do próprio município no exercício selecionado:
+   * índice do critério (FJP) x peso do Anexo I x valor de 1 ponto de índice —
+   * sempre do exercício em tela (o de destino), nunca do exercício de origem.
+   */
+  const { data: dadosProprios } = useIcmsDados(exercicio);
+  const diagnostico = useMemo(
+    () => (dadosProprios && exercicio ? montarDiagnostico(dadosProprios, exercicio) : null),
+    [dadosProprios, exercicio],
+  );
+  const metaPropria = useMemo(() => {
+    if (!diagnostico || !criterio || criterio === "total") return null;
+    return diagnostico.linhas.find((l) => l.criterio.slug === criterio)?.metaValor ?? null;
+  }, [diagnostico, criterio]);
 
   const ranking = useMemo(() => {
     const permitidos = salvoAberto
