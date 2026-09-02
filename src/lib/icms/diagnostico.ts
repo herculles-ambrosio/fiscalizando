@@ -12,10 +12,11 @@ export type LinhaDiagnostico = {
   variacaoPct: number | null;
   situacao: SituacaoCriterio;
   /**
-   * Meta do critério = índice do próprio critério (FJP) x valor de 1 ponto de
-   * índice do exercício. Nunca peso da lei x repasse do município.
+   * Meta do critério = índice do próprio critério (FJP) x peso legal do
+   * Anexo I x valor de 1 ponto de índice do exercício.
    */
   metaValor: number | null;
+
   /** Quanto falta para a meta do critério (R$/ano). */
   potencialAnual: number | null;
   recomendacoes: string[];
