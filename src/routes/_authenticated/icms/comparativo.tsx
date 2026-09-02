@@ -40,11 +40,10 @@ import {
   useApagarComparativoSalvo,
   useComparativosSalvos,
   useIcmsComparativo,
-  useIcmsExercicios,
-  useLimparComparativo,
-  useRemoverMunicipioComparativo,
+  useIcmsExerciciosComparativo,
   useSalvarComparativo,
 } from "@/hooks/useIcms";
+
 import {
   Dialog,
   DialogContent,
