@@ -50,6 +50,42 @@ export function useIcmsExercicios() {
   });
 }
 
+/**
+ * Exercícios que têm dados de comparação gravados. O comparativo pode existir
+ * sem nenhum índice próprio importado, por isso ele não pode depender de
+ * `useIcmsExercicios` (que só olha `icms_indices`).
+ */
+export function useIcmsExerciciosComparativo() {
+  const { municipioId } = useMunicipioAtivo();
+  return useQuery({
+    queryKey: ["icms-exercicios-comparativo", municipioId],
+    enabled: !!municipioId,
+    queryFn: async (): Promise<number[]> => {
+      const [indices, comparativo, salvos] = await Promise.all([
+        supabase.from("icms_indices").select("exercicio").eq("municipio_id", municipioId!),
+        supabase.from("icms_comparativo").select("exercicio").eq("municipio_id", municipioId!),
+        supabase
+          .from("icms_comparativos_salvos")
+          .select("exercicio")
+          .eq("municipio_id", municipioId!),
+      ]);
+      if (indices.error) throw indices.error;
+      if (comparativo.error) throw comparativo.error;
+      if (salvos.error) throw salvos.error;
+      const anos = new Set<number>();
+      for (const r of [
+        ...(indices.data ?? []),
+        ...(comparativo.data ?? []),
+        ...(salvos.data ?? []),
+      ]) {
+        anos.add(r.exercicio as number);
+      }
+      return [...anos].sort((a, b) => b - a);
+    },
+  });
+}
+
+
 export function useIcmsDados(exercicio: number | null) {
   const { municipioId } = useMunicipioAtivo();
   return useQuery({

@@ -40,11 +40,10 @@ import {
   useApagarComparativoSalvo,
   useComparativosSalvos,
   useIcmsComparativo,
-  useIcmsExercicios,
-  useLimparComparativo,
-  useRemoverMunicipioComparativo,
+  useIcmsExerciciosComparativo,
   useSalvarComparativo,
 } from "@/hooks/useIcms";
+
 import {
   Dialog,
   DialogContent,
@@ -116,13 +115,15 @@ const CORES = [
 
 function ComparativoIcms() {
   const { municipio, municipioId } = useMunicipioAtivo();
-  const { data: exercicios } = useIcmsExercicios();
+  const { data: exercicios } = useIcmsExerciciosComparativo();
   const qc = useQueryClient();
   const [exercicio, setExercicio] = useState<number | null>(null);
   const [busca, setBusca] = useState("");
   const [criterio, setCriterio] = useState<string>("");
   /** quando um comparativo salvo está aberto, limita o ranking a esses municípios */
   const [salvoAberto, setSalvoAberto] = useState<{ id: string; municipios: string[] } | null>(null);
+  /** municípios tirados da tela (não apaga nada gravado) */
+  const [ocultos, setOcultos] = useState<string[]>([]);
   const [dialogoSalvar, setDialogoSalvar] = useState(false);
   const [nomeSalvar, setNomeSalvar] = useState("");
   const [obsSalvar, setObsSalvar] = useState("");
@@ -131,8 +132,7 @@ function ComparativoIcms() {
   const { data: salvos } = useComparativosSalvos();
   const salvar = useSalvarComparativo();
   const apagarSalvo = useApagarComparativoSalvo();
-  const removerMunicipio = useRemoverMunicipioComparativo();
-  const limparComparativo = useLimparComparativo();
+
 
   useEffect(() => {
     if (exercicios?.length && (!exercicio || !exercicios.includes(exercicio))) {
@@ -162,10 +162,12 @@ function ComparativoIcms() {
     const permitidos = salvoAberto
       ? new Set(salvoAberto.municipios.map((n) => normalizarRotulo(n)))
       : null;
+    const escondidos = new Set(ocultos.map((n) => normalizarRotulo(n)));
     const mapa = new Map<string, number[]>();
     for (const l of linhas ?? []) {
       if (criterio && l.criterio !== criterio) continue;
       if (permitidos && !permitidos.has(normalizarRotulo(l.municipio_nome))) continue;
+      if (escondidos.has(normalizarRotulo(l.municipio_nome))) continue;
       const arr = mapa.get(l.municipio_nome) ?? Array.from({ length: 12 }, () => 0);
       if (l.mes >= 1 && l.mes <= 12) arr[l.mes - 1] = (arr[l.mes - 1] ?? 0) + (l.valor ?? 0);
       mapa.set(l.municipio_nome, arr);
@@ -176,7 +178,8 @@ function ComparativoIcms() {
       .map((x, i) => ({ ...x, posicao: i + 1 }));
     const termo = normalizarRotulo(busca);
     return termo ? lista.filter((x) => normalizarRotulo(x.nome).includes(termo)) : lista;
-  }, [linhas, busca, criterio, salvoAberto]);
+  }, [linhas, busca, criterio, salvoAberto, ocultos]);
+
 
   const dadosGrafico = useMemo(
     () =>
@@ -229,17 +232,15 @@ function ComparativoIcms() {
   }
 
   function novoComparativo() {
-    if (!exercicio) return;
-    limparComparativo.mutate(exercicio, {
-      onSuccess: () => {
-        setSalvoAberto(null);
-        setBusca("");
-        setAba("buscar");
-        toast.success("Comparativo limpo. Escolha os municípios e sincronize novamente.");
-      },
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Não consegui limpar."),
-    });
+    setSalvoAberto(null);
+    setOcultos([]);
+    setBusca("");
+    setAba("buscar");
+    toast.success(
+      "Tela limpa para um novo comparativo. Os dados já gravados continuam salvos e podem ser reabertos.",
+    );
   }
+
 
   return (
     <div className="space-y-6">
@@ -300,19 +301,11 @@ function ComparativoIcms() {
                     <Save className="h-4 w-4" />
                     Salvar
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={novoComparativo}
-                    disabled={limparComparativo.isPending}
-                  >
-                    {limparComparativo.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <FilePlus2 className="h-4 w-4" />
-                    )}
+                  <Button variant="outline" size="sm" onClick={novoComparativo}>
+                    <FilePlus2 className="h-4 w-4" />
                     Novo comparativo
                   </Button>
+
                   <Button variant="outline" size="sm" onClick={exportar}>
                     <Download className="h-4 w-4" />
                     CSV
@@ -416,36 +409,24 @@ function ComparativoIcms() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              title={`Remover ${r.nome} da comparação`}
-                              aria-label={`Remover ${r.nome} da comparação`}
-                              disabled={removerMunicipio.isPending || !exercicio}
+                              title={`Tirar ${r.nome} da comparação`}
+                              aria-label={`Tirar ${r.nome} da comparação`}
                               onClick={() => {
-                                if (!exercicio) return;
-                                removerMunicipio.mutate(
-                                  { exercicio, nome: r.nome },
-                                  {
-                                    onSuccess: () => {
-                                      setSalvoAberto((s) =>
-                                        s
-                                          ? {
-                                              ...s,
-                                              municipios: s.municipios.filter((n) => n !== r.nome),
-                                            }
-                                          : s,
-                                      );
-                                      toast.success(`${r.nome} removido da comparação.`);
-                                    },
-                                    onError: (e) =>
-                                      toast.error(
-                                        e instanceof Error ? e.message : "Não consegui remover.",
-                                      ),
-                                  },
+                                setOcultos((s) => (s.includes(r.nome) ? s : [...s, r.nome]));
+                                setSalvoAberto((s) =>
+                                  s
+                                    ? { ...s, municipios: s.municipios.filter((n) => n !== r.nome) }
+                                    : s,
+                                );
+                                toast.success(
+                                  `${r.nome} saiu da comparação (os valores continuam gravados).`,
                                 );
                               }}
                             >
                               <X className="h-4 w-4" />
                             </Button>
                           </TableCell>
+
                         </TableRow>
                       ))}
                     </TableBody>
@@ -467,6 +448,9 @@ function ComparativoIcms() {
               qc.invalidateQueries({ queryKey: ["icms-comparativo"] });
               qc.invalidateQueries({ queryKey: ["icms-cargas"] });
               qc.invalidateQueries({ queryKey: ["icms-exercicios"] });
+              qc.invalidateQueries({ queryKey: ["icms-exercicios-comparativo"] });
+              setOcultos([]);
+
               setAba("ranking");
             }}
           />
@@ -511,7 +495,9 @@ function ComparativoIcms() {
                             onClick={() => {
                               setExercicio(s.exercicio);
                               if (s.criterio) setCriterio(s.criterio);
+                              setOcultos([]);
                               setSalvoAberto({ id: s.id, municipios: s.municipios });
+
                               setAba("ranking");
                             }}
                           >
