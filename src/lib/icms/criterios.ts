@@ -59,7 +59,9 @@ export const CRITERIOS: Criterio[] = [
     slug: "cota_minima",
     nome: "Cota Mínima",
     sinonimos: ["cota minima"],
-    percentual: 5.5,
+    // Anexo I traz 5,5%; o repasse real da FJP indica 1,50% após o rateio
+    // vigente (parcela de educação da EC 108/2020). Conferido no portal.
+    percentual: 1.5,
     baseLegal: "Anexo I, item 2 da Lei 18.030/2009",
     orgao: "FJP",
     periodicidade: "Anual",
