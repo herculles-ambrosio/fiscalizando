@@ -310,6 +310,8 @@ export function useApagarCarga() {
 export type AcaoIcms = {
   id: string;
   criterio: string;
+  item_codigo: string | null;
+
   exercicio: number;
   titulo: string;
   descricao: string | null;
