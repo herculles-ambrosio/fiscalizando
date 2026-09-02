@@ -130,9 +130,15 @@ export function construirOficio(params: ParametrosOficio): Document {
         properties: {
           page: {
             size: { width: 12240, height: 15840 },
-            margin: { top: 1080, right: 1080, bottom: 1080, left: 1080 },
+            margin: {
+              top: cmParaTwips(modelo.margem_topo ?? MARGENS_PADRAO.margem_topo),
+              right: cmParaTwips(modelo.margem_direita ?? MARGENS_PADRAO.margem_direita),
+              bottom: cmParaTwips(modelo.margem_inferior ?? MARGENS_PADRAO.margem_inferior),
+              left: cmParaTwips(modelo.margem_esquerda ?? MARGENS_PADRAO.margem_esquerda),
+            },
           },
         },
+
         children: [
           ...cabecalho,
 
