@@ -32,7 +32,27 @@ export type ModeloOficio = {
   titulo: string;
   corpo: string;
   ativo: boolean;
+  /** Margens da página em centímetros. */
+  margem_topo?: number;
+  margem_direita?: number;
+  margem_inferior?: number;
+  margem_esquerda?: number;
+  /** Cabeçalho próprio (uma linha por linha do texto). Vazio = usa os dados da prefeitura. */
+  cabecalho?: string | null;
+  /** Rodapé próprio. Vazio = usa o endereço configurado da prefeitura. */
+  rodape?: string | null;
 };
+
+export const MARGENS_PADRAO = {
+  margem_topo: 1.9,
+  margem_direita: 1.9,
+  margem_inferior: 1.9,
+  margem_esquerda: 1.9,
+} as const;
+
+/** Converte centímetros em twips (unidade usada pelo docx). */
+export const cmParaTwips = (cm: number) => Math.round(cm * 567);
+
 
 export const PLACEHOLDERS: { chave: string; descricao: string }[] = [
   { chave: "{{contribuinte}}", descricao: "Nome do contribuinte" },
