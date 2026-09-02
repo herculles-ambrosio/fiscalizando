@@ -11,12 +11,13 @@ import type { DadosIcms } from "@/hooks/useIcms";
  * redistribuída pelo índice de participação do município NAQUELE critério.
  *
  * Como o sistema analisa um município por vez, bastam dois números:
- *   - o índice do critério para o município (vem pronto da FJP, já ponderado
- *     pelo peso legal — por isso o peso não é reaplicado aqui);
+ *   - o índice do critério para o município (vem da FJP, interno à fatia do
+ *     critério — por isso o peso legal do Anexo I é aplicado aqui);
  *   - o valor de 1 ponto de índice do exercício (constante estadual; quando
  *     não informado, é derivado de repasse total / índice de participação).
  *
- *   Meta_critério = índice_do_critério x valor_de_1_ponto_de_índice
+ *   Meta_critério = índice_do_critério x peso_legal x valor_de_1_ponto_de_índice
+
  */
 
 export type StatusMeta = "atingida" | "proxima" | "abaixo" | "zerada" | "sem_meta";
@@ -31,7 +32,7 @@ export const ROTULO_STATUS_META: Record<StatusMeta, string> = {
 
 export type LinhaMeta = {
   criterio: Criterio;
-  /** percentual do Anexo I da lei — informativo, não entra no cálculo */
+  /** percentual do Anexo I da lei, aplicado na meta */
   pesoLegalPct: number | null;
   /** índice de participação do município naquele critério (FJP) */
   indiceCriterio: number | null;
@@ -54,12 +55,12 @@ export type LinhaMeta = {
 export type DepuracaoMeta = {
   criterio: string;
   indiceFjp: number | null;
-  pesoLegalAplicado: false;
+  pesoLegalAplicado: true;
   valorPontoIndice: number | null;
   origemValorPonto: "parametro" | "derivado" | null;
   metaCalculada: number | null;
   recebido: number;
-  /** meta / recebido — perto de 1 confirma que o índice da FJP já vem ponderado */
+  /** meta / recebido — perto de 1 confirma a fórmula */
   razaoMetaRecebido: number | null;
 };
 
@@ -130,7 +131,7 @@ export function montarMetas(
   const depuracao: DepuracaoMeta[] = linhas.map((l) => ({
     criterio: l.criterio.nome,
     indiceFjp: l.indiceCriterio,
-    pesoLegalAplicado: false as const,
+    pesoLegalAplicado: true as const,
     valorPontoIndice: diag.valorPorPontoIndice,
     origemValorPonto: diag.origemValorPonto,
     metaCalculada: l.metaValor,
