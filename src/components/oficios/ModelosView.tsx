@@ -43,6 +43,14 @@ const CONTRIBUINTE_EXEMPLO = {
   endereco: "RUA EXEMPLO, 100 - CENTRO",
 };
 
+const MARGENS_CAMPOS = [
+  { campo: "margem_topo", rotulo: "Superior" },
+  { campo: "margem_direita", rotulo: "Direita" },
+  { campo: "margem_inferior", rotulo: "Inferior" },
+  { campo: "margem_esquerda", rotulo: "Esquerda" },
+] as const satisfies readonly { campo: keyof typeof MARGENS_PADRAO; rotulo: string }[];
+
+
 export default function Modelos() {
   const { data: perfil } = usePerfil();
   const { data: config } = useConfiguracao();
