@@ -122,6 +122,8 @@ export default function Modelos() {
       titulo: "OFÍCIO VAF {{exercicio}}",
       corpo: "Prezado,\n\n* Contribuinte: {{contribuinte}}\n* CNPJ: {{cnpj}}\n\nTexto do ofício.\n\nAtenciosamente.",
       ativo: true,
+      ...MARGENS_PADRAO,
+
     };
     setChave(modelo.chave);
     setRascunho(modelo);
