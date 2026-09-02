@@ -10,6 +10,7 @@ import {
   useSalvarModelo,
 } from "@/hooks/useModelos";
 import {
+  MARGENS_PADRAO,
   MODELOS_PADRAO,
   PLACEHOLDERS,
   ROTULO_SITUACAO,
@@ -41,6 +42,14 @@ const CONTRIBUINTE_EXEMPLO = {
   inscricao_estadual: "0011234567890",
   endereco: "RUA EXEMPLO, 100 - CENTRO",
 };
+
+const MARGENS_CAMPOS = [
+  { campo: "margem_topo", rotulo: "Superior" },
+  { campo: "margem_direita", rotulo: "Direita" },
+  { campo: "margem_inferior", rotulo: "Inferior" },
+  { campo: "margem_esquerda", rotulo: "Esquerda" },
+] as const satisfies readonly { campo: keyof typeof MARGENS_PADRAO; rotulo: string }[];
+
 
 export default function Modelos() {
   const { data: perfil } = usePerfil();
@@ -113,6 +122,8 @@ export default function Modelos() {
       titulo: "OFÍCIO VAF {{exercicio}}",
       corpo: "Prezado,\n\n* Contribuinte: {{contribuinte}}\n* CNPJ: {{cnpj}}\n\nTexto do ofício.\n\nAtenciosamente.",
       ativo: true,
+      ...MARGENS_PADRAO,
+
     };
     setChave(modelo.chave);
     setRascunho(modelo);
