@@ -372,6 +372,17 @@ function ComparativoIcms() {
                     Incluir outros municípios
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {criterio && criterio !== "total"
+                    ? metaPropria != null
+                      ? `Meta ponderada de ${municipio?.nome ?? "seu município"} em ${nomeCriterio(
+                          criterio,
+                        )}: índice do critério × peso do Anexo I × valor de 1 ponto de índice de ${exercicio} (${formatarMoeda(
+                          diagnostico?.valorPorPontoIndice ?? 0,
+                        )}). Os demais municípios entram como referência de valor recebido.`
+                      : `Sem índice próprio importado para ${exercicio}: a meta ponderada aparece assim que os índices deste exercício forem carregados.`
+                    : "Escolha um critério específico para ver a meta ponderada do seu município."}
+                </p>
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dadosGrafico} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
