@@ -102,6 +102,7 @@ function MetasIcms() {
           "Falta (R$)",
           "Falta (pontos de índice)",
           "Meta ÷ recebido",
+          "Peso implícito (%)",
           "Status",
           "Órgão",
         ],
