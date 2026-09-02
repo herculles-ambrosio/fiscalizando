@@ -54,11 +54,19 @@ function media(valores: (number | null)[]): number | null {
   return v.reduce((a, b) => a + b, 0) / v.length;
 }
 
-export function montarDiagnostico(dados: DadosIcms, exercicio: number): Diagnostico {
+export function montarDiagnostico(
+  dados: DadosIcms,
+  exercicio: number,
+  opcoes: OpcoesDiagnostico = {},
+): Diagnostico {
   const participacao = dados.series.get("indice_participacao");
   const indiceParticipacao = participacao?.ultimoIndice ?? null;
-  const valorPorPontoIndice =
+  const derivado =
     indiceParticipacao && indiceParticipacao > 0 ? dados.totalAno / indiceParticipacao : null;
+  const informado =
+    opcoes.valorPontoIndice && opcoes.valorPontoIndice > 0 ? opcoes.valorPontoIndice : null;
+  const valorPorPontoIndice = informado ?? derivado;
+  const origemValorPonto = valorPorPontoIndice == null ? null : informado ? "parametro" : "derivado";
 
   const linhas: LinhaDiagnostico[] = CRITERIOS_PAINEL.filter((c) => c.slug !== "indice_participacao").map(
     (criterio) => {
@@ -87,12 +95,13 @@ export function montarDiagnostico(dados: DadosIcms, exercicio: number): Diagnost
         situacao = "estavel";
       }
 
-      // Potencial: se o critério é zerado e tem peso conhecido, estimamos o
-      // que ele renderia com uma participação equivalente à média do município.
-      const potencialAnual =
-        situacao === "zerado_oportunidade" && criterio.percentual && valorPorPontoIndice
-          ? (criterio.percentual / 100) * valorPorPontoIndice * (indiceParticipacao ?? 0)
+      // Meta = índice do critério (já ponderado pela FJP) x valor do ponto de
+      // índice do exercício. Não se aplica o peso legal de novo.
+      const metaValor =
+        indiceAtual != null && valorPorPontoIndice != null
+          ? indiceAtual * valorPorPontoIndice
           : null;
+      const potencialAnual = metaValor != null ? Math.max(0, metaValor - valorAno) : null;
 
       return {
         criterio,
@@ -102,6 +111,7 @@ export function montarDiagnostico(dados: DadosIcms, exercicio: number): Diagnost
         indiceAnterior,
         variacaoPct,
         situacao,
+        metaValor,
         potencialAnual,
         recomendacoes: criterio.comoMelhorar,
       };
@@ -115,11 +125,13 @@ export function montarDiagnostico(dados: DadosIcms, exercicio: number): Diagnost
     totalAno: dados.totalAno,
     indiceParticipacao,
     valorPorPontoIndice,
+    origemValorPonto,
     linhas,
     oportunidades: linhas.filter((l) => l.situacao === "zerado_oportunidade"),
     quedas: linhas.filter((l) => l.situacao === "queda"),
   };
 }
+
 
 /** Média mensal do critério, útil em textos do relatório. */
 export function mediaMensal(dados: DadosIcms, slug: string): number | null {
