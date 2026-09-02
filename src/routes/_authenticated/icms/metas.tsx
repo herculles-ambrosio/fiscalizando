@@ -223,8 +223,11 @@ function MetasIcms() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {l.metaPct != null ? `${l.metaPct.toLocaleString("pt-BR")}%` : "—"}
+                    {l.indiceCriterio != null
+                      ? l.indiceCriterio.toLocaleString("pt-BR", { maximumFractionDigits: 7 })
+                      : "—"}
                   </TableCell>
+
                   <TableCell className="text-right">
                     {l.realPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
                   </TableCell>
