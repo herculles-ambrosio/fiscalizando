@@ -448,6 +448,9 @@ function ComparativoIcms() {
               qc.invalidateQueries({ queryKey: ["icms-comparativo"] });
               qc.invalidateQueries({ queryKey: ["icms-cargas"] });
               qc.invalidateQueries({ queryKey: ["icms-exercicios"] });
+              qc.invalidateQueries({ queryKey: ["icms-exercicios-comparativo"] });
+              setOcultos([]);
+
               setAba("ranking");
             }}
           />
