@@ -464,6 +464,7 @@ export type Database = {
           exercicio: number
           id: string
           impacto_estimado: number | null
+          item_codigo: string | null
           municipio_id: string
           observacao: string | null
           orgao: string | null
@@ -481,6 +482,7 @@ export type Database = {
           exercicio: number
           id?: string
           impacto_estimado?: number | null
+          item_codigo?: string | null
           municipio_id: string
           observacao?: string | null
           orgao?: string | null
@@ -498,6 +500,7 @@ export type Database = {
           exercicio?: number
           id?: string
           impacto_estimado?: number | null
+          item_codigo?: string | null
           municipio_id?: string
           observacao?: string | null
           orgao?: string | null
@@ -556,6 +559,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "icms_cargas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      icms_checklist: {
+        Row: {
+          atualizado_em: string
+          atualizado_por: string | null
+          criado_em: string
+          criterio: string
+          evidencia: string | null
+          exercicio: number
+          id: string
+          item_codigo: string
+          municipio_id: string
+          observacao: string | null
+          prazo: string | null
+          responsavel: string | null
+          situacao: string
+        }
+        Insert: {
+          atualizado_em?: string
+          atualizado_por?: string | null
+          criado_em?: string
+          criterio: string
+          evidencia?: string | null
+          exercicio: number
+          id?: string
+          item_codigo: string
+          municipio_id: string
+          observacao?: string | null
+          prazo?: string | null
+          responsavel?: string | null
+          situacao?: string
+        }
+        Update: {
+          atualizado_em?: string
+          atualizado_por?: string | null
+          criado_em?: string
+          criterio?: string
+          evidencia?: string | null
+          exercicio?: number
+          id?: string
+          item_codigo?: string
+          municipio_id?: string
+          observacao?: string | null
+          prazo?: string | null
+          responsavel?: string | null
+          situacao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icms_checklist_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
             referencedRelation: "municipios"
