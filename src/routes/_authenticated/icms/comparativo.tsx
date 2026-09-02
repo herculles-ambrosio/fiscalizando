@@ -495,7 +495,9 @@ function ComparativoIcms() {
                             onClick={() => {
                               setExercicio(s.exercicio);
                               if (s.criterio) setCriterio(s.criterio);
+                              setOcultos([]);
                               setSalvoAberto({ id: s.id, municipios: s.municipios });
+
                               setAba("ranking");
                             }}
                           >
