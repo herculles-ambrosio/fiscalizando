@@ -48,6 +48,10 @@ export type LinhaMeta = {
   /** 0 a 1 — o quanto da meta já foi alcançado */
   cumprimento: number | null;
   status: StatusMeta;
+  /** meta ÷ recebido — fora de 0,9–1,1 indica peso legal ou índice a conferir */
+  aderencia: number | null;
+  /** true quando a meta fecha com o repasse real (0,9–1,1) */
+  aderente: boolean | null;
   estrutural: boolean;
   recomendacoes: string[];
 };
@@ -75,6 +79,8 @@ export type PainelMetas = {
   potencialTotal: number;
   atingidas: number;
   comMeta: number;
+  /** critérios cuja meta não fecha com o repasse real (conferir peso/índice) */
+  foraDeAderencia: LinhaMeta[];
   /** conferência do critério VAF (ver README do módulo) */
   depuracao: DepuracaoMeta[];
 };
@@ -107,6 +113,8 @@ export function montarMetas(
       else if (cumprimento != null && cumprimento >= 0.8) status = "proxima";
       else status = "abaixo";
 
+      const aderencia = metaValor != null && valorAno > 0 ? metaValor / valorAno : null;
+
       return {
         criterio,
         pesoLegalPct: criterio.percentual,
@@ -118,6 +126,8 @@ export function montarMetas(
         faltaIndice,
         cumprimento,
         status,
+        aderencia,
+        aderente: aderencia == null ? null : aderencia >= 0.9 && aderencia <= 1.1,
         estrutural: !!criterio.estrutural,
         recomendacoes: criterio.comoMelhorar,
       };
@@ -151,6 +161,7 @@ export function montarMetas(
       .reduce((soma, l) => soma + l.faltaValor, 0),
     atingidas: linhas.filter((l) => l.status === "atingida").length,
     comMeta,
+    foraDeAderencia: linhas.filter((l) => l.aderente === false),
     depuracao,
   };
 }
