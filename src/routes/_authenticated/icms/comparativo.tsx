@@ -25,7 +25,10 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Line,
   LineChart,
@@ -55,7 +58,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
-import { nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
+import { CRITERIO_POR_SLUG, nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
 import { montarDiagnostico } from "@/lib/icms/diagnostico";
 import {
   compararMunicipiosFjp,
@@ -254,6 +257,9 @@ function ComparativoIcms() {
           "Município",
           ...MESES,
           `Total (${nomeCriterio(criterio)})`,
+          "Peso Anexo I (%)",
+          "Valor de 1 ponto no critério (R$)",
+          "Pontuação real (índice)",
           "Meta ponderada (R$)",
           "Falta (R$)",
         ],
@@ -264,6 +270,9 @@ function ComparativoIcms() {
             r.nome,
             ...r.meses.map((v) => v.toFixed(2)),
             r.total.toFixed(2),
+            pesoAnexo != null ? (pesoAnexo * 100).toFixed(2) : "",
+            valorPontoCriterio != null ? valorPontoCriterio.toFixed(2) : "",
+            valorPontoCriterio ? (r.total / valorPontoCriterio).toFixed(8) : "",
             proprio && metaPropria != null ? metaPropria.toFixed(2) : "",
             proprio && metaPropria != null ? Math.max(0, metaPropria - r.total).toFixed(2) : "",
           ];
@@ -451,6 +460,10 @@ function ComparativoIcms() {
                           </TableHead>
                         ))}
                         <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Peso Anexo I</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">
+                          Pontuação real
+                        </TableHead>
                         <TableHead className="text-right whitespace-nowrap">
                           Meta ponderada
                         </TableHead>
@@ -483,6 +496,19 @@ function ComparativoIcms() {
                           ))}
                           <TableCell className="text-right font-semibold tabular-nums">
                             {formatarMoeda(r.total)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {pesoAnexo != null
+                              ? `${(pesoAnexo * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {valorPontoCriterio
+                              ? (r.total / valorPontoCriterio).toLocaleString("pt-BR", {
+                                  minimumFractionDigits: 6,
+                                  maximumFractionDigits: 8,
+                                })
+                              : "—"}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {normalizarRotulo(r.nome) === meu && metaPropria != null
