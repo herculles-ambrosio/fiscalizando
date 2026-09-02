@@ -417,36 +417,24 @@ function ComparativoIcms() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              title={`Remover ${r.nome} da comparação`}
-                              aria-label={`Remover ${r.nome} da comparação`}
-                              disabled={removerMunicipio.isPending || !exercicio}
+                              title={`Tirar ${r.nome} da comparação`}
+                              aria-label={`Tirar ${r.nome} da comparação`}
                               onClick={() => {
-                                if (!exercicio) return;
-                                removerMunicipio.mutate(
-                                  { exercicio, nome: r.nome },
-                                  {
-                                    onSuccess: () => {
-                                      setSalvoAberto((s) =>
-                                        s
-                                          ? {
-                                              ...s,
-                                              municipios: s.municipios.filter((n) => n !== r.nome),
-                                            }
-                                          : s,
-                                      );
-                                      toast.success(`${r.nome} removido da comparação.`);
-                                    },
-                                    onError: (e) =>
-                                      toast.error(
-                                        e instanceof Error ? e.message : "Não consegui remover.",
-                                      ),
-                                  },
+                                setOcultos((s) => (s.includes(r.nome) ? s : [...s, r.nome]));
+                                setSalvoAberto((s) =>
+                                  s
+                                    ? { ...s, municipios: s.municipios.filter((n) => n !== r.nome) }
+                                    : s,
+                                );
+                                toast.success(
+                                  `${r.nome} saiu da comparação (os valores continuam gravados).`,
                                 );
                               }}
                             >
                               <X className="h-4 w-4" />
                             </Button>
                           </TableCell>
+
                         </TableRow>
                       ))}
                     </TableBody>
