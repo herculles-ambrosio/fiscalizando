@@ -48,6 +48,12 @@ export function useSalvarModelo() {
           titulo: modelo.titulo,
           corpo: modelo.corpo,
           ativo: modelo.ativo,
+          margem_topo: modelo.margem_topo ?? 1.9,
+          margem_direita: modelo.margem_direita ?? 1.9,
+          margem_inferior: modelo.margem_inferior ?? 1.9,
+          margem_esquerda: modelo.margem_esquerda ?? 1.9,
+          cabecalho: modelo.cabecalho?.trim() ? modelo.cabecalho : null,
+          rodape: modelo.rodape?.trim() ? modelo.rodape : null,
         },
         { onConflict: "municipio_id,chave" },
       );
