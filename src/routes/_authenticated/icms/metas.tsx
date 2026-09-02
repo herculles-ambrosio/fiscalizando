@@ -71,6 +71,15 @@ function MetasIcms() {
     [dados, exercicio],
   );
 
+  // Modo de conferência: /icms/metas?debug=1
+  const [depurar, setDepurar] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDepurar(new URLSearchParams(window.location.search).get("debug") === "1");
+    }
+  }, []);
+
+
   if (exercicios && !exercicios.length) {
     return (
       <VazioIcms mensagem="Ainda não há dados do ICMS. Sincronize com o portal Robin Hood ou importe os extratos na tela de Cargas." />
