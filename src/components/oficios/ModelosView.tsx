@@ -289,6 +289,23 @@ export default function Modelos() {
                 </div>
 
                 <div className="space-y-1.5">
+                  <Label htmlFor="cabecalho">Cabeçalho (opcional)</Label>
+                  <Textarea
+                    id="cabecalho"
+                    rows={4}
+                    className="font-mono text-xs"
+                    placeholder={`Vazio = usa os dados da prefeitura das Configurações.\nEx.: {{prefeitura}}\nESTADO DE MINAS GERAIS`}
+                    value={rascunho.cabecalho ?? ""}
+                    disabled={!admin}
+                    onChange={(e) => atualizar({ cabecalho: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Uma linha por linha do cabeçalho. A primeira linha sai em destaque. Campos
+                    automáticos também funcionam aqui.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
                   <Label htmlFor="corpo">Corpo do ofício</Label>
                   <Textarea
                     id="corpo"
@@ -306,6 +323,47 @@ export default function Modelos() {
                     parágrafos.
                   </p>
                 </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="rodape">Rodapé (opcional)</Label>
+                  <Textarea
+                    id="rodape"
+                    rows={3}
+                    className="font-mono text-xs"
+                    placeholder="Vazio = usa o endereço configurado da prefeitura."
+                    value={rascunho.rodape ?? ""}
+                    disabled={!admin}
+                    onChange={(e) => atualizar({ rodape: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Margens da página (cm)</Label>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {MARGENS_CAMPOS.map((m) => (
+                      <div key={m.campo} className="space-y-1.5">
+                        <Label htmlFor={m.campo} className="text-xs text-muted-foreground">
+                          {m.rotulo}
+                        </Label>
+                        <Input
+                          id={m.campo}
+                          type="number"
+                          min={0}
+                          max={10}
+                          step={0.1}
+                          disabled={!admin}
+                          value={rascunho[m.campo] ?? MARGENS_PADRAO[m.campo]}
+                          onChange={(e) =>
+                            atualizar({
+                              [m.campo]: e.target.value === "" ? undefined : Number(e.target.value),
+                            } as Partial<ModeloOficio>)
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
 
                 <div className="space-y-2">
                   <Label>Campos automáticos</Label>
