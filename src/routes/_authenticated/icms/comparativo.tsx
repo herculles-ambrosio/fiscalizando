@@ -419,6 +419,101 @@ function ComparativoIcms() {
                       : `Sem índice próprio importado para ${exercicio}: a meta ponderada aparece assim que os índices deste exercício forem carregados.`
                     : "Escolha um critério específico para ver a meta ponderada do seu município."}
                 </p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground">Peso do Anexo I</p>
+                    <p className="font-display text-lg font-semibold">
+                      {pesoAnexo != null
+                        ? `${(pesoAnexo * 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`
+                        : "—"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Fatia do critério {nomeCriterio(criterio)} na Lei 18.030/2009.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground">Valor de 1 ponto de índice</p>
+                    <p className="font-display text-lg font-semibold">
+                      {valorPonto != null ? formatarMoeda(valorPonto) : "—"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      No critério:{" "}
+                      {valorPontoCriterio != null ? formatarMoeda(valorPontoCriterio) : "—"} por
+                      ponto ({exercicio}).
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-xs text-muted-foreground">
+                      Meta ponderada — {municipio?.nome ?? "seu município"}
+                    </p>
+                    <p className="font-display text-lg font-semibold">
+                      {metaPropria != null ? formatarMoeda(metaPropria) : "—"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Índice do critério × peso do Anexo I × valor de 1 ponto.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-medium">
+                    Pontuação real por município — {nomeCriterio(criterio)}
+                  </p>
+                  <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={dadosBarras}
+                        margin={{ top: 8, right: 16, bottom: 40, left: 8 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis
+                          dataKey="nome"
+                          tick={{ fontSize: 10 }}
+                          interval={0}
+                          angle={-25}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11 }}
+                          width={90}
+                          tickFormatter={(v: number) =>
+                            v.toLocaleString("pt-BR", { maximumFractionDigits: 6 })
+                          }
+                        />
+                        <RTooltip
+                          contentStyle={{ fontSize: 12 }}
+                          formatter={(v: number, _n: string, item: { payload?: { total?: number } }) => [
+                            `${v.toLocaleString("pt-BR", { maximumFractionDigits: 8 })} pontos (${formatarMoeda(
+                              item?.payload?.total ?? 0,
+                            )})`,
+                            "Pontuação real",
+                          ]}
+                        />
+                        <Bar dataKey="pontos" radius={[4, 4, 0, 0]}>
+                          {dadosBarras.map((d, i) => (
+                            <Cell
+                              key={d.nome}
+                              fill={
+                                normalizarRotulo(d.nome) === meu
+                                  ? "hsl(var(--primary))"
+                                  : CORES[i % CORES.length]
+                              }
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {valorPontoCriterio == null && (
+                    <p className="text-[11px] text-muted-foreground">
+                      A pontuação aparece quando houver índice próprio importado do exercício e um
+                      critério específico selecionado (o peso do Anexo I é necessário para converter
+                      reais em pontos).
+                    </p>
+                  )}
+                </div>
+
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dadosGrafico} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
