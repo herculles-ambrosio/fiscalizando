@@ -228,6 +228,21 @@ function ComparativoIcms() {
     [ranking],
   );
 
+  /**
+   * Pontuação real de cada município no critério: valor recebido dividido pelo
+   * valor de 1 ponto de índice dentro da fatia do critério
+   * (valor do ponto x peso do Anexo I).
+   */
+  const dadosBarras = useMemo(
+    () =>
+      ranking.map((r) => ({
+        nome: r.nome,
+        total: r.total,
+        pontos: valorPontoCriterio ? r.total / valorPontoCriterio : null,
+      })),
+    [ranking, valorPontoCriterio],
+  );
+
   const meu = normalizarRotulo(municipio?.nome ?? "");
 
   function exportar() {
