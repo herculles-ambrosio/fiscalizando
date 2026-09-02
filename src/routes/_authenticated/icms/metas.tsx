@@ -190,8 +190,9 @@ function MetasIcms() {
             <TableHeader>
               <TableRow>
                 <TableHead>Critério</TableHead>
-                <TableHead className="text-right">% da lei</TableHead>
+                <TableHead className="text-right">Índice do critério</TableHead>
                 <TableHead className="text-right">% realizado</TableHead>
+
                 <TableHead className="w-40">Cumprimento</TableHead>
                 <TableHead className="text-right">Meta</TableHead>
                 <TableHead className="text-right">Recebido</TableHead>
