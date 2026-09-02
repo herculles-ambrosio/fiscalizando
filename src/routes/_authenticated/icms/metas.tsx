@@ -71,6 +71,15 @@ function MetasIcms() {
     [dados, exercicio],
   );
 
+  // Modo de conferência: /icms/metas?debug=1
+  const [depurar, setDepurar] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDepurar(new URLSearchParams(window.location.search).get("debug") === "1");
+    }
+  }, []);
+
+
   if (exercicios && !exercicios.length) {
     return (
       <VazioIcms mensagem="Ainda não há dados do ICMS. Sincronize com o portal Robin Hood ou importe os extratos na tela de Cargas." />
@@ -85,7 +94,8 @@ function MetasIcms() {
       montarCsv(
         [
           "Critério",
-          "% da lei",
+          "Índice do critério (FJP)",
+          "% da lei (informativo)",
           "% realizado",
           "Meta (R$)",
           "Recebido (R$)",
@@ -96,7 +106,8 @@ function MetasIcms() {
         ],
         painel.linhas.map((l) => [
           l.criterio.nome,
-          l.metaPct ?? "",
+          l.indiceCriterio?.toFixed(7) ?? "",
+          l.pesoLegalPct ?? "",
           l.realPct.toFixed(4),
           l.metaValor?.toFixed(2) ?? "",
           l.valorAno.toFixed(2),
@@ -108,6 +119,7 @@ function MetasIcms() {
       ),
     );
   }
+
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -187,8 +199,9 @@ function MetasIcms() {
             <TableHeader>
               <TableRow>
                 <TableHead>Critério</TableHead>
-                <TableHead className="text-right">% da lei</TableHead>
+                <TableHead className="text-right">Índice do critério</TableHead>
                 <TableHead className="text-right">% realizado</TableHead>
+
                 <TableHead className="w-40">Cumprimento</TableHead>
                 <TableHead className="text-right">Meta</TableHead>
                 <TableHead className="text-right">Recebido</TableHead>
@@ -219,8 +232,11 @@ function MetasIcms() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {l.metaPct != null ? `${l.metaPct.toLocaleString("pt-BR")}%` : "—"}
+                    {l.indiceCriterio != null
+                      ? l.indiceCriterio.toLocaleString("pt-BR", { maximumFractionDigits: 7 })
+                      : "—"}
                   </TableCell>
+
                   <TableCell className="text-right">
                     {l.realPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
                   </TableCell>
@@ -265,13 +281,33 @@ function MetasIcms() {
             </TableBody>
           </Table>
           <p className="mt-3 text-xs text-muted-foreground">
-            A meta de cada critério é o percentual do Anexo I da Lei 18.030/2009 aplicado ao total
-            que o município recebeu no exercício. Critérios estruturais (cota mínima, área,
-            municípios mineradores) não dependem de ação da prefeitura e ficam fora do potencial a
-            recuperar.
+            A meta de cada critério é o índice de participação do município naquele critério
+            (publicado pela FJP, já ponderado pelo peso legal) multiplicado pelo valor de 1 ponto
+            de índice do exercício. O peso do Anexo I da Lei 18.030/2009 não é reaplicado e a meta
+            não usa o repasse total do próprio município como base. Critérios estruturais (cota
+            mínima, área, municípios mineradores) ficam fora do potencial a recuperar.
           </p>
         </CardContent>
       </Card>
+
+      {depurar && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Depuração do cálculo da meta</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Valor do ponto de índice: {painel.valorPorPontoIndice ?? "—"} (
+              {painel.origemValorPonto ?? "sem origem"}). Peso legal reaplicado: não. Quando
+              meta ÷ recebido ficar perto de 1, o índice da FJP já vem ponderado pelo peso legal.
+            </p>
+            <pre className="max-h-96 overflow-auto rounded bg-muted p-3 text-xs">
+              {JSON.stringify(painel.depuracao, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
+
     </div>
     </TooltipProvider>
   );
