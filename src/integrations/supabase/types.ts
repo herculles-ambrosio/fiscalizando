@@ -913,36 +913,54 @@ export type Database = {
         Row: {
           ativo: boolean
           atualizado_em: string
+          cabecalho: string | null
           chave: string
           corpo: string
           criado_em: string
           id: string
+          margem_direita: number
+          margem_esquerda: number
+          margem_inferior: number
+          margem_topo: number
           municipio_id: string
           nome: string
+          rodape: string | null
           situacao: string
           titulo: string
         }
         Insert: {
           ativo?: boolean
           atualizado_em?: string
+          cabecalho?: string | null
           chave: string
           corpo?: string
           criado_em?: string
           id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
           municipio_id: string
           nome: string
+          rodape?: string | null
           situacao: string
           titulo?: string
         }
         Update: {
           ativo?: boolean
           atualizado_em?: string
+          cabecalho?: string | null
           chave?: string
           corpo?: string
           criado_em?: string
           id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
           municipio_id?: string
           nome?: string
+          rodape?: string | null
           situacao?: string
           titulo?: string
         }

@@ -10,11 +10,14 @@ import {
 import {
   analisarCorpo,
   aplicarPlaceholders,
+  cmParaTwips,
+  MARGENS_PADRAO,
   MODELOS_PADRAO,
   type ModeloOficio,
 } from "./modelos";
 import { dataPorExtenso } from "./texto";
 import type { BrasaoImagem, ConfiguracaoMunicipio, ContribuinteOficio } from "./zerados";
+
 
 const FONTE = "Arial";
 
@@ -63,17 +66,27 @@ export function construirOficio(params: ParametrosOficio): Document {
     );
   }
 
+  const linhasCabecalho = (modelo.cabecalho ?? "")
+    .split(/\r?\n/)
+    .map((l) => subst(l).trim())
+    .filter(Boolean);
+
   cabecalho.push(
-    tituloCabecalho(config.nome_prefeitura, 26),
-    tituloCabecalho(config.estado, 22),
-    tituloCabecalho(config.secretaria, 22),
-    tituloCabecalho(config.setor, 20),
+    ...(linhasCabecalho.length
+      ? linhasCabecalho.map((linha, i) => tituloCabecalho(linha, i === 0 ? 26 : 22))
+      : [
+          tituloCabecalho(config.nome_prefeitura, 26),
+          tituloCabecalho(config.estado, 22),
+          tituloCabecalho(config.secretaria, 22),
+          tituloCabecalho(config.setor, 20),
+        ]),
     new Paragraph({
       spacing: { after: 240 },
       border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 1 } },
       children: [],
     }),
   );
+
 
   const corpo: Paragraph[] = analisarCorpo(modelo.corpo).map((bloco) => {
     switch (bloco.tipo) {
@@ -117,9 +130,15 @@ export function construirOficio(params: ParametrosOficio): Document {
         properties: {
           page: {
             size: { width: 12240, height: 15840 },
-            margin: { top: 1080, right: 1080, bottom: 1080, left: 1080 },
+            margin: {
+              top: cmParaTwips(modelo.margem_topo ?? MARGENS_PADRAO.margem_topo),
+              right: cmParaTwips(modelo.margem_direita ?? MARGENS_PADRAO.margem_direita),
+              bottom: cmParaTwips(modelo.margem_inferior ?? MARGENS_PADRAO.margem_inferior),
+              left: cmParaTwips(modelo.margem_esquerda ?? MARGENS_PADRAO.margem_esquerda),
+            },
           },
         },
+
         children: [
           ...cabecalho,
 
@@ -183,10 +202,16 @@ export function construirOficio(params: ParametrosOficio): Document {
             children: [new TextRun({ text: "Recebi ____/____/____", size: 22, font: FONTE })],
           }),
 
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: config.endereco_rodape, size: 18, font: FONTE })],
-          }),
+          ...(modelo.rodape?.trim() ? subst(modelo.rodape).split(/\r?\n/) : [config.endereco_rodape])
+            .filter((l) => l.trim())
+            .map(
+              (linha) =>
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [new TextRun({ text: linha.trim(), size: 18, font: FONTE })],
+                }),
+            ),
+
         ],
       },
     ],
