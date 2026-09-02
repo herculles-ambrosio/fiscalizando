@@ -120,10 +120,21 @@ export function montarMetas(
 
       const aderencia = metaValor != null && valorAno > 0 ? metaValor / valorAno : null;
 
+      // Peso que o repasse real sugere: inverte a fórmula da meta.
+      const indiceCriterio = base?.indiceAtual ?? null;
+      const pesoImplicitoPct =
+        indiceCriterio != null &&
+        indiceCriterio > 0 &&
+        valorAno > 0 &&
+        diag.valorPorPontoIndice != null &&
+        diag.valorPorPontoIndice > 0
+          ? (valorAno / (indiceCriterio * diag.valorPorPontoIndice)) * 100
+          : null;
+
       return {
         criterio,
         pesoLegalPct: criterio.percentual,
-        indiceCriterio: base?.indiceAtual ?? null,
+        indiceCriterio,
         realPct,
         metaValor,
         valorAno,
@@ -133,6 +144,7 @@ export function montarMetas(
         status,
         aderencia,
         aderente: aderencia == null ? null : aderencia >= 0.9 && aderencia <= 1.1,
+        pesoImplicitoPct,
         estrutural: !!criterio.estrutural,
         recomendacoes: criterio.comoMelhorar,
       };
