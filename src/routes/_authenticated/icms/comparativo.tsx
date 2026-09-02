@@ -115,13 +115,15 @@ const CORES = [
 
 function ComparativoIcms() {
   const { municipio, municipioId } = useMunicipioAtivo();
-  const { data: exercicios } = useIcmsExercicios();
+  const { data: exercicios } = useIcmsExerciciosComparativo();
   const qc = useQueryClient();
   const [exercicio, setExercicio] = useState<number | null>(null);
   const [busca, setBusca] = useState("");
   const [criterio, setCriterio] = useState<string>("");
   /** quando um comparativo salvo está aberto, limita o ranking a esses municípios */
   const [salvoAberto, setSalvoAberto] = useState<{ id: string; municipios: string[] } | null>(null);
+  /** municípios tirados da tela (não apaga nada gravado) */
+  const [ocultos, setOcultos] = useState<string[]>([]);
   const [dialogoSalvar, setDialogoSalvar] = useState(false);
   const [nomeSalvar, setNomeSalvar] = useState("");
   const [obsSalvar, setObsSalvar] = useState("");
@@ -130,8 +132,7 @@ function ComparativoIcms() {
   const { data: salvos } = useComparativosSalvos();
   const salvar = useSalvarComparativo();
   const apagarSalvo = useApagarComparativoSalvo();
-  const removerMunicipio = useRemoverMunicipioComparativo();
-  const limparComparativo = useLimparComparativo();
+
 
   useEffect(() => {
     if (exercicios?.length && (!exercicio || !exercicios.includes(exercicio))) {
