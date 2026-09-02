@@ -183,6 +183,18 @@ function ComparativoIcms() {
     return diagnostico.linhas.find((l) => l.criterio.slug === criterio)?.metaValor ?? null;
   }, [diagnostico, criterio]);
 
+  /** peso do Anexo I do critério em tela (fração, ex.: 0,75 para o VAF) */
+  const pesoAnexo = useMemo(() => {
+    if (!criterio || criterio === "total") return null;
+    const pct = CRITERIO_POR_SLUG.get(criterio)?.percentual ?? null;
+    return pct != null ? pct / 100 : null;
+  }, [criterio]);
+
+  const valorPonto = diagnostico?.valorPorPontoIndice ?? null;
+  /** valor de 1 ponto de índice dentro da fatia do critério */
+  const valorPontoCriterio =
+    valorPonto != null && pesoAnexo != null ? valorPonto * pesoAnexo : null;
+
   const ranking = useMemo(() => {
     const permitidos = salvoAberto
       ? new Set(salvoAberto.municipios.map((n) => normalizarRotulo(n)))
