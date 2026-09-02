@@ -294,11 +294,22 @@ function MetasIcms() {
                             conferir
                           </Badge>
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          Meta ÷ recebido ={" "}
-                          {l.aderencia?.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}. O
-                          peso do Anexo I cadastrado ({l.pesoLegalPct ?? "—"}%) pode estar
-                          desatualizado para este critério.
+                        <TooltipContent className="max-w-xs space-y-1">
+                          <p>
+                            Meta ÷ recebido ={" "}
+                            {l.aderencia?.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}. O
+                            peso do Anexo I cadastrado ({l.pesoLegalPct ?? "—"}%) pode estar
+                            desatualizado para este critério.
+                          </p>
+                          {l.pesoImplicitoPct != null && (
+                            <p className="text-xs opacity-80">
+                              O repasse real sugere peso de{" "}
+                              {l.pesoImplicitoPct.toLocaleString("pt-BR", {
+                                maximumFractionDigits: 2,
+                              })}
+                              %.
+                            </p>
+                          )}
                         </TooltipContent>
                       </Tooltip>
                     )}
