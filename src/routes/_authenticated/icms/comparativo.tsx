@@ -232,17 +232,15 @@ function ComparativoIcms() {
   }
 
   function novoComparativo() {
-    if (!exercicio) return;
-    limparComparativo.mutate(exercicio, {
-      onSuccess: () => {
-        setSalvoAberto(null);
-        setBusca("");
-        setAba("buscar");
-        toast.success("Comparativo limpo. Escolha os municípios e sincronize novamente.");
-      },
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Não consegui limpar."),
-    });
+    setSalvoAberto(null);
+    setOcultos([]);
+    setBusca("");
+    setAba("buscar");
+    toast.success(
+      "Tela limpa para um novo comparativo. Os dados já gravados continuam salvos e podem ser reabertos.",
+    );
   }
+
 
   return (
     <div className="space-y-6">
