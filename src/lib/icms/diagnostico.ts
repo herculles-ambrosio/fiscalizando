@@ -95,13 +95,16 @@ export function montarDiagnostico(
         situacao = "estavel";
       }
 
-      // Meta = índice do critério (já ponderado pela FJP) x valor do ponto de
-      // índice do exercício. Não se aplica o peso legal de novo.
+      // Meta = índice do critério (FJP) x peso legal do Anexo I x valor de 1
+      // ponto de índice do exercício. Conferido com dados reais: o índice da
+      // FJP é interno à fatia do critério, por isso o peso legal se aplica.
+      const peso = criterio.percentual != null ? criterio.percentual / 100 : null;
       const metaValor =
-        indiceAtual != null && valorPorPontoIndice != null
-          ? indiceAtual * valorPorPontoIndice
+        indiceAtual != null && valorPorPontoIndice != null && peso != null
+          ? indiceAtual * peso * valorPorPontoIndice
           : null;
       const potencialAnual = metaValor != null ? Math.max(0, metaValor - valorAno) : null;
+
 
       return {
         criterio,
