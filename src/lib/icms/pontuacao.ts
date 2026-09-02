@@ -97,9 +97,10 @@ export function montarPontuacao(
 
     const linhaDiag = porCriterio.get(criterio.slug) ?? null;
     const valorAno = linhaDiag?.valorAno ?? 0;
-    const metaValor =
-      criterio.percentual != null ? (criterio.percentual / 100) * diag.totalAno : null;
-    const potencialCriterio = metaValor != null ? Math.max(0, metaValor - valorAno) : 0;
+    // Meta = índice do critério (FJP) x valor do ponto de índice do exercício.
+    const metaValor = linhaDiag?.metaValor ?? null;
+    const potencialCriterio = linhaDiag?.potencialAnual ?? 0;
+
 
     const pesos = quadro.itens.map((i) => pesoDoItem(i, quadro));
     const notaPossivel = pesos.reduce((a, b) => a + b, 0);
