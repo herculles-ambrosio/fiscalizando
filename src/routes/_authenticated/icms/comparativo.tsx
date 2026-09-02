@@ -222,13 +222,25 @@ function ComparativoIcms() {
     baixarCsv(
       `comparativo-icms-${exercicio}.csv`,
       montarCsv(
-        ["Posição", "Município", ...MESES, `Total (${nomeCriterio(criterio)})`],
-        ranking.map((r) => [
-          r.posicao,
-          r.nome,
-          ...r.meses.map((v) => v.toFixed(2)),
-          r.total.toFixed(2),
-        ]),
+        [
+          "Posição",
+          "Município",
+          ...MESES,
+          `Total (${nomeCriterio(criterio)})`,
+          "Meta ponderada (R$)",
+          "Falta (R$)",
+        ],
+        ranking.map((r) => {
+          const proprio = normalizarRotulo(r.nome) === meu;
+          return [
+            r.posicao,
+            r.nome,
+            ...r.meses.map((v) => v.toFixed(2)),
+            r.total.toFixed(2),
+            proprio && metaPropria != null ? metaPropria.toFixed(2) : "",
+            proprio && metaPropria != null ? Math.max(0, metaPropria - r.total).toFixed(2) : "",
+          ];
+        }),
       ),
     );
   }
@@ -401,6 +413,10 @@ function ComparativoIcms() {
                           </TableHead>
                         ))}
                         <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">
+                          Meta ponderada
+                        </TableHead>
+                        <TableHead className="text-right whitespace-nowrap">Falta</TableHead>
                         <TableHead className="w-10" />
                       </TableRow>
                     </TableHeader>
@@ -429,6 +445,18 @@ function ComparativoIcms() {
                           ))}
                           <TableCell className="text-right font-semibold tabular-nums">
                             {formatarMoeda(r.total)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {normalizarRotulo(r.nome) === meu && metaPropria != null
+                              ? formatarMoeda(metaPropria)
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {normalizarRotulo(r.nome) === meu && metaPropria != null
+                              ? metaPropria - r.total > 0
+                                ? formatarMoeda(metaPropria - r.total)
+                                : "meta atingida"
+                              : "—"}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button
