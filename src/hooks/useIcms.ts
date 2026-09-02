@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMunicipioAtivo } from "./useMunicipio";
 import { CRITERIO_POR_SLUG } from "@/lib/icms/criterios";
 import { reaplicarCarga } from "@/lib/icms/importar";
+import type { SituacaoItem } from "@/lib/icms/pontuacao";
+
 
 export type RegistroIndice = {
   criterio: string;
@@ -310,6 +312,8 @@ export function useApagarCarga() {
 export type AcaoIcms = {
   id: string;
   criterio: string;
+  item_codigo: string | null;
+
   exercicio: number;
   titulo: string;
   descricao: string | null;
@@ -330,7 +334,7 @@ export function useIcmsAcoes(exercicio: number | null) {
       const { data, error } = await supabase
         .from("icms_acoes")
         .select(
-          "id, criterio, exercicio, titulo, descricao, orgao, responsavel, prazo, impacto_estimado, status, observacao",
+          "id, criterio, item_codigo, exercicio, titulo, descricao, orgao, responsavel, prazo, impacto_estimado, status, observacao",
         )
         .eq("municipio_id", municipioId!)
         .eq("exercicio", exercicio!)
@@ -370,5 +374,64 @@ export function useApagarAcao() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["icms-acoes"] }),
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Checklist de pontuação por item da lei                              */
+/* ------------------------------------------------------------------ */
+
+export type RegistroChecklistDb = {
+  id: string;
+  criterio: string;
+  item_codigo: string;
+  situacao: SituacaoItem;
+  observacao: string | null;
+  evidencia: string | null;
+  responsavel: string | null;
+  prazo: string | null;
+};
+
+export function useIcmsChecklist(exercicio: number | null) {
+  const { municipioId } = useMunicipioAtivo();
+  return useQuery({
+    queryKey: ["icms-checklist", municipioId, exercicio],
+    enabled: !!municipioId && !!exercicio,
+    queryFn: async (): Promise<RegistroChecklistDb[]> => {
+      const { data, error } = await supabase
+        .from("icms_checklist")
+        .select("id, criterio, item_codigo, situacao, observacao, evidencia, responsavel, prazo")
+        .eq("municipio_id", municipioId!)
+        .eq("exercicio", exercicio!);
+      if (error) throw error;
+      return (data ?? []) as RegistroChecklistDb[];
+    },
+  });
+}
+
+export function useSalvarChecklist() {
+  const qc = useQueryClient();
+  const { municipioId } = useMunicipioAtivo();
+  return useMutation({
+    mutationFn: async (registro: {
+      exercicio: number;
+      criterio: string;
+      item_codigo: string;
+      situacao?: SituacaoItem;
+      observacao?: string | null;
+      evidencia?: string | null;
+      responsavel?: string | null;
+      prazo?: string | null;
+    }) => {
+      if (!municipioId) throw new Error("Selecione uma prefeitura.");
+      const { error } = await supabase
+        .from("icms_checklist")
+        .upsert(
+          { ...registro, municipio_id: municipioId },
+          { onConflict: "municipio_id,exercicio,criterio,item_codigo" },
+        );
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["icms-checklist"] }),
   });
 }
