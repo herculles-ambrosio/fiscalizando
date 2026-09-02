@@ -12,7 +12,15 @@ export type Criterio = {
   nome: string;
   /** Rótulos usados nos extratos da FJP que devem cair neste critério. */
   sinonimos: string[];
-  /** Participação aproximada no total distribuído (Anexo I da Lei 18.030). */
+  /**
+   * Participação no total distribuído (Anexo I da Lei 18.030/2009, já com as
+   * alterações posteriores e a parcela de educação da EC 108/2020).
+   *
+   * Os pesos foram conferidos contra o repasse real do portal da FJP
+   * (peso = valor recebido ÷ (índice do critério × valor de 1 ponto de índice)).
+   * Quando a lei e o portal divergiam, prevaleceu o portal — é ele que gera o
+   * repasse. As divergências corrigidas estão anotadas critério a critério.
+   */
   percentual: number | null;
   baseLegal: string;
   orgao: string;
@@ -51,7 +59,9 @@ export const CRITERIOS: Criterio[] = [
     slug: "cota_minima",
     nome: "Cota Mínima",
     sinonimos: ["cota minima"],
-    percentual: 5.5,
+    // Anexo I traz 5,5%; o repasse real da FJP indica 1,50% após o rateio
+    // vigente (parcela de educação da EC 108/2020). Conferido no portal.
+    percentual: 1.5,
     baseLegal: "Anexo I, item 2 da Lei 18.030/2009",
     orgao: "FJP",
     periodicidade: "Anual",
@@ -103,7 +113,9 @@ export const CRITERIOS: Criterio[] = [
     slug: "educacao",
     nome: "Educação",
     sinonimos: ["educacao"],
-    percentual: 2,
+    // Anexo I trazia 2%; com a parcela de indicadores de educação da
+    // EC 108/2020 o repasse real da FJP fecha em 10%. Conferido no portal.
+    percentual: 10,
     baseLegal: "Anexo I, item 6 da Lei 18.030/2009",
     orgao: "Secretaria de Estado de Educação (SEE/MG)",
     periodicidade: "Anual — informação até o prazo fixado em resolução da SEE",
@@ -305,7 +317,8 @@ export const CRITERIOS: Criterio[] = [
     slug: "esportes",
     nome: "Esportes",
     sinonimos: ["esportes", "esporte"],
-    percentual: 0.1,
+    // Cadastro trazia 0,1%; o repasse real da FJP indica 0,50%.
+    percentual: 0.5,
     baseLegal: "Anexo I, item 15 da Lei 18.030/2009",
     orgao: "SEDESE / Secretaria de Esportes de MG",
     periodicidade: "Anual — inscrição em edital, com prazo rígido",
@@ -339,7 +352,8 @@ export const CRITERIOS: Criterio[] = [
     slug: "icms_solidario",
     nome: "ICMS Solidário",
     sinonimos: ["icms solidario"],
-    percentual: 4.14,
+    // Anexo I traz 4,14%; o repasse real da FJP indica 1,89%.
+    percentual: 1.89,
     baseLegal: "Anexo I, item 17 da Lei 18.030/2009",
     orgao: "FJP",
     periodicidade: "Anual",

@@ -102,6 +102,7 @@ function MetasIcms() {
           "Falta (R$)",
           "Falta (pontos de índice)",
           "Meta ÷ recebido",
+          "Peso implícito (%)",
           "Status",
           "Órgão",
         ],
@@ -115,6 +116,7 @@ function MetasIcms() {
           l.faltaValor.toFixed(2),
           l.faltaIndice?.toFixed(6) ?? "",
           l.aderencia?.toFixed(3) ?? "",
+          l.pesoImplicitoPct?.toFixed(3) ?? "",
           ROTULO_STATUS_META[l.status],
           l.criterio.orgao,
         ]),
@@ -184,8 +186,35 @@ function MetasIcms() {
               Valor de 1 ponto de índice
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-xl font-semibold">
-            {painel.valorPorPontoIndice ? formatarMoeda(painel.valorPorPontoIndice) : "—"}
+          <CardContent className="space-y-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help text-xl font-semibold">
+                  {painel.valorPorPontoIndice ? formatarMoeda(painel.valorPorPontoIndice) : "—"}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm space-y-1">
+                <p>
+                  1 ponto = 1% do índice estadual, não o repasse do município. É a base usada em
+                  todas as metas.
+                </p>
+                {painel.indiceParticipacao != null && painel.valorPorPontoIndice != null && (
+                  <p className="text-xs opacity-80">
+                    {painel.indiceParticipacao.toLocaleString("pt-BR", {
+                      maximumFractionDigits: 7,
+                    })}
+                    % × {formatarMoeda(painel.valorPorPontoIndice)} ={" "}
+                    {formatarMoeda(painel.totalAno)} (repasse do exercício).
+                  </p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+            <p className="text-xs text-muted-foreground">
+              1 ponto = 1% do índice estadual. Seu índice:{" "}
+              {painel.indiceParticipacao != null
+                ? `${painel.indiceParticipacao.toLocaleString("pt-BR", { maximumFractionDigits: 7 })}%`
+                : "—"}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -267,11 +296,22 @@ function MetasIcms() {
                             conferir
                           </Badge>
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          Meta ÷ recebido ={" "}
-                          {l.aderencia?.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}. O
-                          peso do Anexo I cadastrado ({l.pesoLegalPct ?? "—"}%) pode estar
-                          desatualizado para este critério.
+                        <TooltipContent className="max-w-xs space-y-1">
+                          <p>
+                            Meta ÷ recebido ={" "}
+                            {l.aderencia?.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}. O
+                            peso do Anexo I cadastrado ({l.pesoLegalPct ?? "—"}%) pode estar
+                            desatualizado para este critério.
+                          </p>
+                          {l.pesoImplicitoPct != null && (
+                            <p className="text-xs opacity-80">
+                              O repasse real sugere peso de{" "}
+                              {l.pesoImplicitoPct.toLocaleString("pt-BR", {
+                                maximumFractionDigits: 2,
+                              })}
+                              %.
+                            </p>
+                          )}
                         </TooltipContent>
                       </Tooltip>
                     )}
@@ -298,7 +338,31 @@ function MetasIcms() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {l.metaValor != null ? formatarMoeda(l.metaValor) : "—"}
+                    {l.metaValor != null ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help">{formatarMoeda(l.metaValor)}</span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm space-y-1">
+                          <p className="text-xs">
+                            {l.indiceCriterio?.toLocaleString("pt-BR", {
+                              maximumFractionDigits: 7,
+                            })}
+                            % (índice do critério) × {l.pesoLegalPct ?? "—"}% (Anexo I) ×{" "}
+                            {painel?.valorPorPontoIndice
+                              ? formatarMoeda(painel.valorPorPontoIndice)
+                              : "—"}{" "}
+                            (1 ponto) = {formatarMoeda(l.metaValor)}
+                          </p>
+                          <p className="text-xs opacity-80">
+                            Recebido {formatarMoeda(l.valorAno)} — falta{" "}
+                            {formatarMoeda(l.faltaValor)}.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
                   <TableCell className="text-right">{formatarMoeda(l.valorAno)}</TableCell>
                   <TableCell className="text-right">
