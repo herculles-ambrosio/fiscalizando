@@ -162,10 +162,12 @@ function ComparativoIcms() {
     const permitidos = salvoAberto
       ? new Set(salvoAberto.municipios.map((n) => normalizarRotulo(n)))
       : null;
+    const escondidos = new Set(ocultos.map((n) => normalizarRotulo(n)));
     const mapa = new Map<string, number[]>();
     for (const l of linhas ?? []) {
       if (criterio && l.criterio !== criterio) continue;
       if (permitidos && !permitidos.has(normalizarRotulo(l.municipio_nome))) continue;
+      if (escondidos.has(normalizarRotulo(l.municipio_nome))) continue;
       const arr = mapa.get(l.municipio_nome) ?? Array.from({ length: 12 }, () => 0);
       if (l.mes >= 1 && l.mes <= 12) arr[l.mes - 1] = (arr[l.mes - 1] ?? 0) + (l.valor ?? 0);
       mapa.set(l.municipio_nome, arr);
@@ -176,7 +178,8 @@ function ComparativoIcms() {
       .map((x, i) => ({ ...x, posicao: i + 1 }));
     const termo = normalizarRotulo(busca);
     return termo ? lista.filter((x) => normalizarRotulo(x.nome).includes(termo)) : lista;
-  }, [linhas, busca, criterio, salvoAberto]);
+  }, [linhas, busca, criterio, salvoAberto, ocultos]);
+
 
   const dadosGrafico = useMemo(
     () =>
