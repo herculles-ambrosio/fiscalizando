@@ -184,8 +184,35 @@ function MetasIcms() {
               Valor de 1 ponto de índice
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-xl font-semibold">
-            {painel.valorPorPontoIndice ? formatarMoeda(painel.valorPorPontoIndice) : "—"}
+          <CardContent className="space-y-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help text-xl font-semibold">
+                  {painel.valorPorPontoIndice ? formatarMoeda(painel.valorPorPontoIndice) : "—"}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm space-y-1">
+                <p>
+                  1 ponto = 1% do índice estadual, não o repasse do município. É a base usada em
+                  todas as metas.
+                </p>
+                {painel.indiceParticipacao != null && painel.valorPorPontoIndice != null && (
+                  <p className="text-xs opacity-80">
+                    {painel.indiceParticipacao.toLocaleString("pt-BR", {
+                      maximumFractionDigits: 7,
+                    })}
+                    % × {formatarMoeda(painel.valorPorPontoIndice)} ={" "}
+                    {formatarMoeda(painel.totalAno)} (repasse do exercício).
+                  </p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+            <p className="text-xs text-muted-foreground">
+              1 ponto = 1% do índice estadual. Seu índice:{" "}
+              {painel.indiceParticipacao != null
+                ? `${painel.indiceParticipacao.toLocaleString("pt-BR", { maximumFractionDigits: 7 })}%`
+                : "—"}
+            </p>
           </CardContent>
         </Card>
       </div>
