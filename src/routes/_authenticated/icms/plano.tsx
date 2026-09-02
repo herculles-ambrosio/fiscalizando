@@ -48,7 +48,7 @@ import {
   type LinhaItemPontuacao,
   type SituacaoItem,
 } from "@/lib/icms/pontuacao";
-import { baixarCsv } from "@/lib/csv";
+import { baixarCsv, montarCsv } from "@/lib/csv";
 import { formatarMoeda } from "@/lib/format";
 
 const STATUS: { valor: AcaoIcms["status"]; rotulo: string }[] = [
