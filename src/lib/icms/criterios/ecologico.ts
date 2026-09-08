@@ -29,7 +29,7 @@ const RE_UC = new RegExp(
 );
 
 /** Mata seca: código IBGE, código SEF, município e o percentual. */
-const RE_MATA = new RegExp(`(\\d{3,6})\\s+(\\d{1,4})\\s+(${NOME})\\s+(-|0,\\d{3,10})(?=\\s|$)`, "g");
+const RE_MATA = new RegExp(`(\\d{3,6})\\s+(\\d{1,4})\\s+(${NOME})\\s+(-|0,\\d{6,10})(?=\\s|$)`, "g");
 
 function num(valor: string): number | null {
   const bruto = valor.trim();
