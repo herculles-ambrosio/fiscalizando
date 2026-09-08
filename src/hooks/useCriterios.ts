@@ -191,3 +191,40 @@ export function useImportacoes(criterio?: string | null) {
     },
   });
 }
+
+/**
+ * Índice de cada município em todos os critérios que já têm relatório
+ * importado. Para cada critério usa o ano-base mais recente e, dentro dele,
+ * prefere o relatório definitivo ao preliminar.
+ */
+export function useRankingTodosCriterios(municipios: string[]) {
+  const chaves = [...new Set(municipios)].sort();
+  return useQuery({
+    queryKey: ["criterio-ranking-todos", chaves],
+    enabled: chaves.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<RankingCriterioRow[]> => {
+      const { data, error } = await supabase
+        .from("criterio_ranking_municipio")
+        .select("criterio, ano_base, fonte_relatorio, municipio, municipio_nome, posicao, nota_final, indice_percentual")
+        .in("municipio", chaves)
+        .order("ano_base", { ascending: false })
+        .limit(5000);
+      if (error) throw error;
+      const linhas = (data ?? []) as unknown as RankingCriterioRow[];
+      const melhor = new Map<string, { ano: number; fonte: string }>();
+      for (const l of linhas) {
+        const atual = melhor.get(l.criterio);
+        const ganha =
+          !atual ||
+          l.ano_base > atual.ano ||
+          (l.ano_base === atual.ano && l.fonte_relatorio === "definitivo");
+        if (ganha) melhor.set(l.criterio, { ano: l.ano_base, fonte: l.fonte_relatorio });
+      }
+      return linhas.filter((l) => {
+        const m = melhor.get(l.criterio);
+        return m && l.ano_base === m.ano && l.fonte_relatorio === m.fonte;
+      });
+    },
+  });
+}
