@@ -202,6 +202,15 @@ function DetalheGenerico({ slug }: { slug: string }) {
             </CardContent>
           </Card>
 
+          <ConferenciaFjp
+            slug={criterio.slug}
+            nomeCriterio={criterio.nome}
+            pesoLegalPct={criterio.percentual}
+            indiceRelatorio={linhaMunicipio?.indice_percentual ?? null}
+          />
+
+
+
 
           {!referencia?.length && (
             <Card>
