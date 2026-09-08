@@ -88,7 +88,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     paginas: import("@/lib/icms/esportes/parser").PaginaTexto[],
     origem: "site" | "url" | "arquivo" | "colado",
     identificacao: string | null,
+    anoForcado?: number,
   ) {
+    const ano = anoForcado ?? anoBase;
     setEtapa("Casando as colunas com os itens do critério");
     // Cada órgão publica em um formato: o ICMS Turismo traz um quadro único com
     // circuito, nota, RLPC, IRC, IIT e índice; o ICMS Ecológico traz vários
@@ -116,17 +118,17 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     setEtapa("Gravando");
     // No Meio Ambiente as publicações se complementam, então uma não apaga a
     // outra; nos demais critérios o relatório novo substitui o anterior.
-    if (!ecologico) await limpar({ data: { criterio: pipeline.slug, anoBase, fonte } });
+    if (!ecologico) await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte } });
 
     for (let i = 0; i < r.ranking.length; i += 300) {
       await gravarRanking({
-        data: { criterio: pipeline.slug, anoBase, fonte, linhas: r.ranking.slice(i, i + 300) },
+        data: { criterio: pipeline.slug, anoBase: ano, fonte, linhas: r.ranking.slice(i, i + 300) },
       });
       setProgresso(70 + Math.round(((i + 300) / Math.max(r.ranking.length, 1)) * 10));
     }
     for (let i = 0; i < r.itens.length; i += 150) {
       await gravarItens({
-        data: { criterio: pipeline.slug, anoBase, fonte, itens: r.itens.slice(i, i + 150) },
+        data: { criterio: pipeline.slug, anoBase: ano, fonte, itens: r.itens.slice(i, i + 150) },
       });
       setProgresso(80 + Math.round(((i + 150) / Math.max(r.itens.length, 1)) * 20));
     }
@@ -135,7 +137,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     await registrar({
       data: {
         criterio: pipeline.slug,
-        anoBase,
+        anoBase: ano,
         fonte,
         origem,
         url: origem === "url" || origem === "site" ? identificacao : null,
@@ -168,6 +170,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     dados: Uint8Array,
     origem: "site" | "url" | "arquivo",
     identificacao: string | null,
+    anoForcado?: number,
   ) {
     setRodando(true);
     setResumo(null);
@@ -177,7 +180,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const paginas = await extrairPaginas(dados, (p, total) =>
         setProgresso(Math.round((p / total) * 70)),
       );
-      await gravarResultado(paginas, origem, identificacao);
+      await gravarResultado(paginas, origem, identificacao, anoForcado);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o relatório.");
     } finally {
@@ -209,7 +212,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   }
 
 
-  async function importarUrl(endereco: string, origem: "site" | "url") {
+  async function importarUrl(endereco: string, origem: "site" | "url", anoForcado?: number) {
     if (!endereco.trim()) {
       toast.error("Informe o endereço do PDF.");
       return;
@@ -221,7 +224,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const bin = atob(r.base64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      await processar(bytes, origem, endereco.trim());
+      await processar(bytes, origem, endereco.trim(), anoForcado);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao baixar o relatório.");
       setRodando(false);
