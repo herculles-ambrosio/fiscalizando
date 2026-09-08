@@ -84,8 +84,14 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
       let m: RegExpExecArray | null;
       while ((m = re.exec(html))) {
         const href = m[1] ?? "";
-        // PDFs diretos ou documentos publicados no gerenciador do site (sem extensão no link)
-        if (!/\.pdf(\?|$)/i.test(href) && !/\/documents\/d\//i.test(href)) continue;
+        // PDFs diretos, documentos publicados no gerenciador do site (sem
+        // extensão no link) ou downloads da biblioteca da Secult.
+        if (
+          !/\.pdf(\?|$)/i.test(href) &&
+          !/\/documents\/d\//i.test(href) &&
+          !/\/download\/(category|file)\//i.test(href)
+        )
+          continue;
         const texto = (m[2] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
         let url: string;
         try {
@@ -96,6 +102,9 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
         }
         const alvo = `${url} ${texto}`.toLowerCase();
         if (!p.palavrasChave.some((k) => alvo.includes(k))) continue;
+        // Na página do ICMS Turismo só interessam as listas de habilitados —
+        // resoluções, leis e cartilhas ficam de fora.
+        if (data.criterio === "turismo" && !/habilitad|indice|índice/.test(alvo)) continue;
         // As publicações trimestrais da SEMAD têm o mesmo título; o número no
         // fim do endereço identifica o trimestre (…-2 = 1º, …-3 = 2º, e assim
         // por diante), então usamos isso para dar nome próprio a cada uma.
@@ -109,19 +118,23 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
             ? trimestre && trimestre >= 1 && trimestre <= 4
               ? `tabelas do ${trimestre}º trimestre`
               : "tabelas trimestrais"
-            : /definitiv/.test(alvo)
+            : /habilitad|definitiv/.test(alvo)
               ? "definitivo"
               : /preliminar|parcial|provisori/.test(alvo)
                 ? "preliminar"
                 : "outro";
 
-        const anoMatch = alvo.match(/(?:ano[-_ ]?base[-_ ]?)?(20\d{2})/);
+        // "Habilitados 2024 - ano referência 2023 (com repasse em 2025)":
+        // o ano-base é o de referência, não o da publicação.
+        const referencia = alvo.match(/refer[eê]ncia\D{0,6}(20\d{2})/);
+        const anoMatch = referencia ?? alvo.match(/(?:ano[-_ ]?base[-_ ]?)?(20\d{2})/);
         achados.set(url, {
           url,
           texto: texto || url.split("/").pop() || url,
           tipo,
           ano: anoMatch ? Number(anoMatch[1]) : null,
         });
+
       }
       diagnostico.push({ pagina, situacao: "lida", encontrados: achados.size - antes });
       if (achados.size) break;
