@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, Loader2, Search, Upload } from "lucide-react";
+import { ClipboardPaste, Download, Loader2, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -270,6 +272,32 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
               Importar
             </Button>
           </div>
+
+          <div className="space-y-2 rounded-md border p-3">
+            <Label>Colar o quadro de pontuação</Label>
+            <p className="text-xs text-muted-foreground">
+              Se o relatório não abrir ou vier só em papel/Diário Oficial, copie o quadro (do PDF, do
+              Excel ou de uma tabela do site) e cole aqui. A primeira linha deve ser o cabeçalho com
+              os nomes das colunas e as demais uma linha por município.
+            </p>
+            <Textarea
+              rows={8}
+              className="font-mono text-xs"
+              placeholder={"Município\tÓrgão municipal\tConselho\tFundo\tPontuação\nABRE CAMPO\tSim\tSim\tNão\t12,50"}
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={processarColado} disabled={rodando}>
+                <ClipboardPaste className="mr-2 size-4" />
+                Importar o que foi colado
+              </Button>
+              <Button variant="ghost" onClick={() => setTexto("")} disabled={rodando || !texto}>
+                Limpar
+              </Button>
+            </div>
+          </div>
+
 
           {links.length > 0 && (
             <div className="space-y-2 rounded-md border p-3">
