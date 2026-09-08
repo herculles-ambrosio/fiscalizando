@@ -54,17 +54,33 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
 
     const ano = data.anoBase ?? new Date().getFullYear();
     const paginas = [...(p.paginasPorAno?.(ano) ?? []), ...p.paginasBusca];
+    const diagnostico: { pagina: string; situacao: string; encontrados: number }[] = [];
 
     for (const pagina of paginas) {
       let html = "";
       try {
-        const resp = await fetch(pagina, { headers: { "user-agent": "Mozilla/5.0 ApuraVAF" } });
-        if (!resp.ok) continue;
+        const resp = await fetch(pagina, {
+          headers: {
+            "user-agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36",
+            accept: "text/html,application/xhtml+xml",
+          },
+        });
+        if (!resp.ok) {
+          diagnostico.push({ pagina, situacao: `página respondeu ${resp.status}`, encontrados: 0 });
+          continue;
+        }
         html = await resp.text();
-      } catch {
+      } catch (e) {
+        diagnostico.push({
+          pagina,
+          situacao: e instanceof Error ? `falha de acesso: ${e.message}` : "falha de acesso",
+          encontrados: 0,
+        });
         continue;
       }
-      const re = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+      const antes = achados.size;
+      const re = /<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
       let m: RegExpExecArray | null;
       while ((m = re.exec(html))) {
         const href = m[1] ?? "";
@@ -86,7 +102,7 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
             : "fator de qualidade (preliminar)"
           : /definitiv/.test(alvo)
             ? "definitivo"
-            : /preliminar|provisori/.test(alvo)
+            : /preliminar|parcial|provisori/.test(alvo)
               ? "preliminar"
               : /trimestre|resolucoes|resoluções/.test(alvo)
                 ? "tabelas trimestrais"
@@ -99,11 +115,16 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
           ano: anoMatch ? Number(anoMatch[1]) : null,
         });
       }
+      diagnostico.push({ pagina, situacao: "lida", encontrados: achados.size - antes });
       if (achados.size) break;
     }
 
-    return { relatorios: [...achados.values()].sort((a, b) => (b.ano ?? 0) - (a.ano ?? 0)) };
+    return {
+      relatorios: [...achados.values()].sort((a, b) => (b.ano ?? 0) - (a.ano ?? 0)),
+      diagnostico,
+    };
   });
+
 
 
 /** Baixa o PDF e devolve em base64 para o navegador processar. */
