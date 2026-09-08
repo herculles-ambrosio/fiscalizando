@@ -38,6 +38,7 @@ import { Route as AuthenticatedIcmsCriteriosRouteImport } from './routes/_authen
 import { Route as AuthenticatedIcmsEsportesRouteImport } from './routes/_authenticated/icms/esportes'
 import { Route as AuthenticatedIcmsImportacoesRouteImport } from './routes/_authenticated/icms/importacoes'
 import { Route as AuthenticatedIcmsPlanoRouteImport } from './routes/_authenticated/icms/plano'
+import { Route as AuthenticatedIcmsCriterioSlugRouteImport } from './routes/_authenticated/icms/criterio.$slug'
 import { Route as ApiPublicHooksReceitaFilaRouteImport } from './routes/api/public/hooks/receita-fila'
 
 const IndexRoute = IndexRouteImport.update({
@@ -198,6 +199,12 @@ const AuthenticatedIcmsPlanoRoute = AuthenticatedIcmsPlanoRouteImport.update({
   path: '/plano',
   getParentRoute: () => AuthenticatedIcmsRouteRoute,
 } as any)
+const AuthenticatedIcmsCriterioSlugRoute =
+  AuthenticatedIcmsCriterioSlugRouteImport.update({
+    id: '/criterio/$slug',
+    path: '/criterio/$slug',
+    getParentRoute: () => AuthenticatedIcmsRouteRoute,
+  } as any)
 const ApiPublicHooksReceitaFilaRoute =
   ApiPublicHooksReceitaFilaRouteImport.update({
     id: '/api/public/hooks/receita-fila',
@@ -234,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
+  '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRoutesByTo {
@@ -264,6 +272,7 @@ export interface FileRoutesByTo {
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
+  '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRoutesById {
@@ -297,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/_authenticated/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
+  '/_authenticated/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRouteTypes {
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms/'
+    | '/icms/criterio/$slug'
     | '/api/public/hooks/receita-fila'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -360,6 +371,7 @@ export interface FileRouteTypes {
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms'
+    | '/icms/criterio/$slug'
     | '/api/public/hooks/receita-fila'
   id:
     | '__root__'
@@ -392,6 +404,7 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/importacoes'
     | '/_authenticated/icms/plano'
     | '/_authenticated/icms/'
+    | '/_authenticated/icms/criterio/$slug'
     | '/api/public/hooks/receita-fila'
   fileRoutesById: FileRoutesById
 }
@@ -606,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIcmsPlanoRouteImport
       parentRoute: typeof AuthenticatedIcmsRouteRoute
     }
+    '/_authenticated/icms/criterio/$slug': {
+      id: '/_authenticated/icms/criterio/$slug'
+      path: '/criterio/$slug'
+      fullPath: '/icms/criterio/$slug'
+      preLoaderRoute: typeof AuthenticatedIcmsCriterioSlugRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
     '/api/public/hooks/receita-fila': {
       id: '/api/public/hooks/receita-fila'
       path: '/api/public/hooks/receita-fila'
@@ -645,6 +665,7 @@ interface AuthenticatedIcmsRouteRouteChildren {
   AuthenticatedIcmsImportacoesRoute: typeof AuthenticatedIcmsImportacoesRoute
   AuthenticatedIcmsPlanoRoute: typeof AuthenticatedIcmsPlanoRoute
   AuthenticatedIcmsIndexRoute: typeof AuthenticatedIcmsIndexRoute
+  AuthenticatedIcmsCriterioSlugRoute: typeof AuthenticatedIcmsCriterioSlugRoute
 }
 
 const AuthenticatedIcmsRouteRouteChildren: AuthenticatedIcmsRouteRouteChildren =
@@ -656,6 +677,7 @@ const AuthenticatedIcmsRouteRouteChildren: AuthenticatedIcmsRouteRouteChildren =
     AuthenticatedIcmsImportacoesRoute: AuthenticatedIcmsImportacoesRoute,
     AuthenticatedIcmsPlanoRoute: AuthenticatedIcmsPlanoRoute,
     AuthenticatedIcmsIndexRoute: AuthenticatedIcmsIndexRoute,
+    AuthenticatedIcmsCriterioSlugRoute: AuthenticatedIcmsCriterioSlugRoute,
   }
 
 const AuthenticatedIcmsRouteRouteWithChildren =
