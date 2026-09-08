@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, Loader2, Search, Upload } from "lucide-react";
+import { ClipboardPaste, Download, Loader2, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -49,6 +51,8 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   const [anoBase, setAnoBase] = useState<number>(new Date().getFullYear() - 2);
   const [fonte, setFonte] = useState<FonteRelatorio>("definitivo");
   const [url, setUrl] = useState("");
+  const [texto, setTexto] = useState("");
+
   const [links, setLinks] = useState<{ url: string; texto: string; tipo: string }[]>([]);
   const [buscando, setBuscando] = useState(false);
   const [etapa, setEtapa] = useState("");
@@ -69,6 +73,67 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     }
   }
 
+  async function gravarResultado(
+    paginas: import("@/lib/icms/esportes/parser").PaginaTexto[],
+    origem: "site" | "url" | "arquivo" | "colado",
+    identificacao: string | null,
+  ) {
+    setEtapa("Casando as colunas com os itens do critério");
+    const r = extrairTabelaCriterio(paginas, referencia ?? [], pipeline.colunasTotal);
+    if (!r.itens.length && !r.ranking.length) {
+      throw new Error(
+        "Não foi possível reconhecer a tabela deste relatório. Confira se o conteúdo é o quadro de pontuação por município.",
+      );
+    }
+
+    setEtapa("Gravando");
+    await limpar({ data: { criterio: pipeline.slug, anoBase, fonte } });
+    for (let i = 0; i < r.ranking.length; i += 300) {
+      await gravarRanking({
+        data: { criterio: pipeline.slug, anoBase, fonte, linhas: r.ranking.slice(i, i + 300) },
+      });
+      setProgresso(70 + Math.round(((i + 300) / Math.max(r.ranking.length, 1)) * 10));
+    }
+    for (let i = 0; i < r.itens.length; i += 150) {
+      await gravarItens({
+        data: { criterio: pipeline.slug, anoBase, fonte, itens: r.itens.slice(i, i + 150) },
+      });
+      setProgresso(80 + Math.round(((i + 150) / Math.max(r.itens.length, 1)) * 20));
+    }
+
+    const municipios = new Set(r.itens.map((i) => i.municipio)).size;
+    await registrar({
+      data: {
+        criterio: pipeline.slug,
+        anoBase,
+        fonte,
+        origem,
+        url: origem === "url" || origem === "site" ? identificacao : null,
+        arquivoNome: origem === "url" || origem === "site" ? null : identificacao,
+        paginas: paginas.length,
+        registrosRanking: r.ranking.length,
+        registrosItens: r.itens.length,
+        municipios,
+        naoMapeados: r.naoMapeados,
+        divergencias: [],
+      },
+    });
+
+    setResumo({
+      municipios,
+      ranking: r.ranking.length,
+      itens: r.itens.length,
+      naoMapeados: r.naoMapeados,
+      cabecalho: r.cabecalho,
+    });
+    setProgresso(100);
+    await cliente.invalidateQueries({ queryKey: ["criterio-anos"] });
+    await cliente.invalidateQueries({ queryKey: ["criterio-ranking"] });
+    await cliente.invalidateQueries({ queryKey: ["criterio-itens"] });
+    await cliente.invalidateQueries({ queryKey: ["criterio-importacoes"] });
+    toast.success("Relatório importado.");
+  }
+
   async function processar(
     dados: Uint8Array,
     origem: "site" | "url" | "arquivo",
@@ -82,61 +147,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const paginas = await extrairPaginas(dados, (p, total) =>
         setProgresso(Math.round((p / total) * 70)),
       );
-
-      setEtapa("Casando as colunas com os itens do critério");
-      const r = extrairTabelaCriterio(paginas, referencia ?? [], pipeline.colunasTotal);
-      if (!r.itens.length && !r.ranking.length) {
-        throw new Error(
-          "Não foi possível reconhecer a tabela deste relatório. Confira se o PDF é o quadro de pontuação por município.",
-        );
-      }
-
-      setEtapa("Gravando");
-      await limpar({ data: { criterio: pipeline.slug, anoBase, fonte } });
-      for (let i = 0; i < r.ranking.length; i += 300) {
-        await gravarRanking({
-          data: { criterio: pipeline.slug, anoBase, fonte, linhas: r.ranking.slice(i, i + 300) },
-        });
-        setProgresso(70 + Math.round(((i + 300) / Math.max(r.ranking.length, 1)) * 10));
-      }
-      for (let i = 0; i < r.itens.length; i += 150) {
-        await gravarItens({
-          data: { criterio: pipeline.slug, anoBase, fonte, itens: r.itens.slice(i, i + 150) },
-        });
-        setProgresso(80 + Math.round(((i + 150) / Math.max(r.itens.length, 1)) * 20));
-      }
-
-      const municipios = new Set(r.itens.map((i) => i.municipio)).size;
-      await registrar({
-        data: {
-          criterio: pipeline.slug,
-          anoBase,
-          fonte,
-          origem,
-          url: origem === "arquivo" ? null : identificacao,
-          arquivoNome: origem === "arquivo" ? identificacao : null,
-          paginas: paginas.length,
-          registrosRanking: r.ranking.length,
-          registrosItens: r.itens.length,
-          municipios,
-          naoMapeados: r.naoMapeados,
-          divergencias: [],
-        },
-      });
-
-      setResumo({
-        municipios,
-        ranking: r.ranking.length,
-        itens: r.itens.length,
-        naoMapeados: r.naoMapeados,
-        cabecalho: r.cabecalho,
-      });
-      setProgresso(100);
-      await cliente.invalidateQueries({ queryKey: ["criterio-anos"] });
-      await cliente.invalidateQueries({ queryKey: ["criterio-ranking"] });
-      await cliente.invalidateQueries({ queryKey: ["criterio-itens"] });
-      await cliente.invalidateQueries({ queryKey: ["criterio-importacoes"] });
-      toast.success("Relatório importado.");
+      await gravarResultado(paginas, origem, identificacao);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o relatório.");
     } finally {
@@ -144,6 +155,29 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       setEtapa("");
     }
   }
+
+  async function processarColado() {
+    if (texto.trim().length < 40) {
+      toast.error("Cole o conteúdo do quadro de pontuação (cabeçalho e linhas dos municípios).");
+      return;
+    }
+    setRodando(true);
+    setResumo(null);
+    setProgresso(20);
+    try {
+      setEtapa("Lendo o conteúdo colado");
+      const { paginasDoTextoColado } = await import("@/lib/icms/criterios/colado");
+      const { paginas, linhas } = paginasDoTextoColado(texto);
+      setProgresso(60);
+      await gravarResultado(paginas, "colado", `texto colado (${linhas} linhas)`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao processar o conteúdo colado.");
+    } finally {
+      setRodando(false);
+      setEtapa("");
+    }
+  }
+
 
   async function importarUrl(endereco: string, origem: "site" | "url") {
     if (!endereco.trim()) {
@@ -238,6 +272,32 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
               Importar
             </Button>
           </div>
+
+          <div className="space-y-2 rounded-md border p-3">
+            <Label>Colar o quadro de pontuação</Label>
+            <p className="text-xs text-muted-foreground">
+              Se o relatório não abrir ou vier só em papel/Diário Oficial, copie o quadro (do PDF, do
+              Excel ou de uma tabela do site) e cole aqui. A primeira linha deve ser o cabeçalho com
+              os nomes das colunas e as demais uma linha por município.
+            </p>
+            <Textarea
+              rows={8}
+              className="font-mono text-xs"
+              placeholder={"Município\tÓrgão municipal\tConselho\tFundo\tPontuação\nABRE CAMPO\tSim\tSim\tNão\t12,50"}
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={processarColado} disabled={rodando}>
+                <ClipboardPaste className="mr-2 size-4" />
+                Importar o que foi colado
+              </Button>
+              <Button variant="ghost" onClick={() => setTexto("")} disabled={rodando || !texto}>
+                Limpar
+              </Button>
+            </div>
+          </div>
+
 
           {links.length > 0 && (
             <div className="space-y-2 rounded-md border p-3">

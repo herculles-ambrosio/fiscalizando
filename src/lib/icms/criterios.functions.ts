@@ -228,7 +228,7 @@ export const registrarImportacao = createServerFn({ method: "POST" })
       .extend({
         anoBase: z.number().int().min(2000).max(2100),
         fonte: fonteSchema,
-        origem: z.enum(["site", "url", "arquivo"]),
+        origem: z.enum(["site", "url", "arquivo", "colado"]),
         url: z.string().nullable(),
         arquivoNome: z.string().nullable(),
         paginas: z.number().int().min(0),
