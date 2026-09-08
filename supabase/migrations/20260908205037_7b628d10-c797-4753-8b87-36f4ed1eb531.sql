@@ -1,0 +1,1 @@
+ALTER TABLE public.esportes_atividade_municipio ADD COLUMN peso_atividade numeric;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   CartesianGrid,
   Line,
@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 import { VazioIcms } from "@/components/icms/VazioIcms";
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
@@ -87,6 +88,23 @@ function CriteriosIcms() {
         </div>
         <SeletorExercicio exercicios={exercicios ?? []} valor={exercicio} aoTrocar={setExercicio} />
       </header>
+
+      <Card className="border-emerald-500/40 bg-emerald-500/5">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+          <div>
+            <p className="font-medium">Critério Esportes — detalhamento por atividade</p>
+            <p className="text-sm text-muted-foreground">
+              Veja o que a prefeitura já pontua no ICMS Esportivo e o que ainda falta explorar, a
+              partir dos relatórios oficiais da SEDESE.
+            </p>
+          </div>
+          <Button asChild size="sm">
+            <Link to="/icms/esportes">Abrir Esportes</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
         <Card className="h-fit">
