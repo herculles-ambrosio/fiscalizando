@@ -104,27 +104,45 @@ function CriteriosIcms() {
         </CardContent>
       </Card>
 
+      {semDados && (
+        <Card className="border-gold/40 bg-gold/5">
+          <CardContent className="py-4 text-sm text-muted-foreground">
+            Ainda não há extrato do Robin Hood importado para esta prefeitura, então os valores
+            recebidos aparecem vazios. Você já pode abrir cada critério abaixo para ver o que ele
+            mede e como pontuar.
+            <div className="pt-3">
+              <Button asChild size="sm" variant="outline">
+                <Link to="/icms/cargas">Importar extratos</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <section className="space-y-2">
         <h2 className="text-sm font-medium text-muted-foreground">
           Todos os critérios — abra o detalhamento de cada um
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {diag?.linhas.map((l) => (
-            <Card key={`card-${l.criterio.slug}`} className="flex flex-col justify-between">
+          {(diag
+            ? diag.linhas.map((l) => ({ criterio: l.criterio, valorAno: l.valorAno as number | null }))
+            : CRITERIOS.map((criterio) => ({ criterio, valorAno: null }))
+          ).map(({ criterio, valorAno }) => (
+            <Card key={`card-${criterio.slug}`} className="flex flex-col justify-between">
               <CardContent className="space-y-1 pt-4">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium leading-tight">{l.criterio.nome}</p>
-                  {l.criterio.percentual != null && (
-                    <Badge variant="secondary">{l.criterio.percentual}%</Badge>
+                  <p className="font-medium leading-tight">{criterio.nome}</p>
+                  {criterio.percentual != null && (
+                    <Badge variant="secondary">{criterio.percentual}%</Badge>
                   )}
                 </div>
-                <p className="line-clamp-2 text-xs text-muted-foreground">{l.criterio.oQueMede}</p>
+                <p className="line-clamp-2 text-xs text-muted-foreground">{criterio.oQueMede}</p>
                 <p className="text-xs text-muted-foreground">
-                  Recebido no exercício: {formatarMoeda(l.valorAno)}
+                  Recebido no exercício: {valorAno != null ? formatarMoeda(valorAno) : "—"}
                 </p>
                 <div className="pt-2">
                   <Button asChild size="sm" variant="outline">
-                    <Link to="/icms/criterio/$slug" params={{ slug: l.criterio.slug }}>
+                    <Link to="/icms/criterio/$slug" params={{ slug: criterio.slug }}>
                       Abrir detalhamento
                     </Link>
                   </Button>
@@ -134,6 +152,7 @@ function CriteriosIcms() {
           ))}
         </div>
       </section>
+
 
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
