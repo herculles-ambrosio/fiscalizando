@@ -66,19 +66,33 @@ export const PIPELINES: Pipeline[] = [
   {
     slug: "meio_ambiente",
     nome: "Meio Ambiente",
-    orgao: "FEAM / SEMAD",
-    hosts: ["www.feam.br", "feam.br", "www.meioambiente.mg.gov.br", "meioambiente.mg.gov.br"],
+    orgao: "SEMAD / FEAM / IEF",
+    hosts: [
+      "semad.mg.gov.br",
+      "www.semad.mg.gov.br",
+      "www.feam.br",
+      "feam.br",
+      "www.ief.mg.gov.br",
+      "ief.mg.gov.br",
+      "www.meioambiente.mg.gov.br",
+      "meioambiente.mg.gov.br",
+    ],
+    paginasPorAno: (ano) => [
+      `https://semad.mg.gov.br/w/icms-ecologico-publicacoes-${ano}`,
+      `https://semad.mg.gov.br/w/icms-ecologico-publicacoes-${ano - 1}`,
+    ],
     paginasBusca: [
-      "http://www.feam.br/icms-ecologico",
+      "https://semad.mg.gov.br/w/icms-ecologico-publicacoes-2025",
       "https://www.meioambiente.mg.gov.br/",
     ],
-    palavrasChave: ["icms", "ecologic", "saneamento", "conservacao"],
+    palavrasChave: ["icms", "ecologic", "pontuacao", "fq", "fator de qualidade", "saneamento", "conservacao"],
     formato: "tabela_itens",
     colunasTotal: ["pontuacao", "indice", "total", "iqr"],
     comoFunciona:
-      "Lê os quadros do ICMS Ecológico (saneamento ambiental, unidades de conservação e mata seca) e casa cada coluna com os itens exigidos da estrutura ambiental do município.",
+      "Varre a página oficial de publicações do ICMS Ecológico do ano (SEMAD) e traz as tabelas trimestrais das resoluções (saneamento, unidades de conservação e mata seca) e as tabelas de Fator de Qualidade (preliminar e final).",
   },
 ];
+
 
 export const PIPELINE_POR_SLUG = new Map(PIPELINES.map((p) => [p.slug, p]));
 
