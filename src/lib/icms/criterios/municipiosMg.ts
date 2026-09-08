@@ -28,6 +28,17 @@ for (const nome of Object.values(MUNICIPIOS_SEF)) {
 export type MunicipioOficial = { chave: string; nome: string };
 
 /**
+ * Correspondência exata (sem tentar cortar sobras): usada quando o texto lido
+ * pode conter, na mesma linha, o município e outra informação — caso do
+ * relatório de Turismo, em que o circuito turístico vem logo depois do nome.
+ */
+export function municipioExato(nomeLido: string): MunicipioOficial | null {
+  const oficial = INDICE.get(apenasLetras(nomeLido));
+  return oficial ? { chave: normalizarMunicipio(oficial), nome: oficial } : null;
+}
+
+
+/**
  * Devolve o município oficial correspondente ao nome lido, ou `null` quando o
  * texto não é um município (cabeçalho, sigla, sobra de tabela).
  */
