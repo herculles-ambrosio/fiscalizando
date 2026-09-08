@@ -44,7 +44,8 @@ export function paginasDoTextoColado(bruto: string): ConteudoColado {
     );
 
   return {
-    paginas: [{ numero: 1, linhas: linhas.map((texto) => ({ texto })) } as unknown as PaginaTexto],
+    paginas: [{ pagina: 1, linhas: linhas.map((texto, i) => ({ texto, y: linhas.length - i })) }],
     linhas: linhas.length,
   };
+
 }
