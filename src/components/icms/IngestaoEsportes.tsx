@@ -65,9 +65,10 @@ export function IngestaoEsportes() {
     }
   }
 
-  async function processar(dados: Uint8Array) {
+  async function processar(dados: Uint8Array, origem?: { url?: string; arquivoNome?: string }) {
     setRodando(true);
     setResumo(null);
+
     try {
       const { extrairPaginas } = await import("@/lib/icms/esportes/pdf");
       setEtapa("Lendo o PDF");
