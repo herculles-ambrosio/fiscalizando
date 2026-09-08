@@ -11,7 +11,8 @@
  * linha.
  */
 
-import { normalizarMunicipio, type PaginaTexto } from "@/lib/icms/esportes/parser";
+import type { PaginaTexto } from "@/lib/icms/esportes/parser";
+import { canonicalizarMunicipio } from "./municipiosMg";
 import type { ItemMunicipio, ResultadoTabela } from "./tabela";
 
 const NOME = "[A-ZÁÀÂÃÉÊÍÓÔÕÚÜÇ][A-Za-zÁÀÂÃÉÊÍÓÔÕÚÜÇáàâãéêíóôõúüç'’.\\- ]{2,60}?";

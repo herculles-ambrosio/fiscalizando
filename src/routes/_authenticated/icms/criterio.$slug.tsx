@@ -314,12 +314,12 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {ranking.map((l) => (
+                      {ranking.map((l, i) => (
                         <tr
                           key={l.municipio}
                           className={l.municipio === chaveMunicipio ? "bg-emerald-50 dark:bg-emerald-950/20" : ""}
                         >
-                          <td className="p-2">{l.posicao ?? "—"}</td>
+                          <td className="p-2">{i + 1}</td>
                           <td className="p-2">{l.municipio_nome}</td>
                           <td className="p-2 text-right">{l.nota_final.toLocaleString("pt-BR")}</td>
                           <td className="p-2 text-right">
