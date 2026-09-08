@@ -55,10 +55,29 @@ function CriteriosIcms() {
   }, [exercicios, exercicio]);
 
   const { data: dados, isLoading } = useIcmsDados(exercicio);
+  const { data: comDados } = useCriteriosComDados();
   const diag = useMemo(
     () => (dados && exercicio ? montarDiagnostico(dados, exercicio) : null),
     [dados, exercicio],
   );
+
+  // Esportes já vem dos relatórios da SEDESE; os demais aparecem em verde
+  // assim que o primeiro relatório oficial é importado.
+  const criteriosProntos = useMemo(() => {
+    const slugs = new Set<string>(["esportes", ...Object.keys(comDados ?? {})]);
+    return CRITERIOS.filter((c) => slugs.has(c.slug)).map((c) => {
+      const info = comDados?.[c.slug];
+      const anos = info?.anos.slice(0, 3).join(", ");
+      return {
+        slug: c.slug,
+        nome: c.nome,
+        detalhe: anos
+          ? `Relatórios importados (ano-base ${anos}) — veja o que a prefeitura já pontua e o que falta.`
+          : "Veja o que a prefeitura já pontua e o que ainda falta explorar, a partir dos relatórios oficiais.",
+      };
+    });
+  }, [comDados]);
+
 
   const linha = useMemo(() => {
     if (!diag) return null;
