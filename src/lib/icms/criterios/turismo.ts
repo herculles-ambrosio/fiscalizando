@@ -48,8 +48,12 @@ export function lerLinhaTurismo(texto: string): LinhaTurismo | null {
   const tokens = texto.replace(/\s+/g, " ").trim().split(" ");
   if (tokens.length < 8) return null;
 
+  // O relatório usa "S.I." (sem informação) em algumas colunas, então a célula
+  // pode não ser numérica — o que importa é o bloco final de seis valores.
   const valores = tokens.slice(-6);
-  if (!valores.every((v) => RE_NUM.test(v))) return null;
+  const numericos = valores.filter((v) => RE_NUM.test(v)).length;
+  if (numericos < 5 || !RE_NUM.test(valores[5] ?? "")) return null;
+
 
   const cabeca = tokens.slice(0, -6);
   const primeiro = cabeca[0] ?? "";
