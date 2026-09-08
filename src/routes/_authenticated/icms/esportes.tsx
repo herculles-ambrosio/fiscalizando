@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { IngestaoEsportes } from "@/components/icms/IngestaoEsportes";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { usePerfil } from "@/hooks/usePerfil";
@@ -238,6 +238,7 @@ function CriterioEsportes() {
                               <Badge className="bg-emerald-600 hover:bg-emerald-600">pontuando</Badge>
                               <span>{a.atividade_nome}</span>
                               {a.modalidades_texto && (
+                                <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Info className="h-3.5 w-3.5 text-muted-foreground" />
@@ -246,6 +247,7 @@ function CriterioEsportes() {
                                     <p className="text-xs">{a.modalidades_texto}</p>
                                   </TooltipContent>
                                 </Tooltip>
+                                </TooltipProvider>
                               )}
                             </div>
                           </TableCell>
