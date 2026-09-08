@@ -72,13 +72,20 @@ export function normalizarMunicipio(valor: string): string {
 }
 
 function numeroBr(valor: string): number {
-  const limpo = valor.trim().replace(/\./g, "").replace(",", ".");
+  const bruto = valor.trim();
+  // O ranking usa vírgula decimal ("9481,5"); os quadros de pontuação usam
+  // ponto decimal ("0.5"). Trata os dois formatos.
+  const limpo = bruto.includes(",")
+    ? bruto.replace(/\./g, "").replace(",", ".")
+    : /^\d+\.\d+$/.test(bruto)
+      ? bruto
+      : bruto.replace(/\./g, "");
   const n = Number(limpo);
   return Number.isFinite(n) ? n : 0;
 }
 
 const RE_RANKING =
-  /^(\d{1,4})\s+(.*?)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s*%$/;
+  /^(\d{1,4})\s+([^\d]*?)\s*([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s*%$/;
 
 const RE_SO_NUMERO = /^[\d.,%\s]+$/;
 
