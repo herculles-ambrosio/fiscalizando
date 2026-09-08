@@ -16,7 +16,7 @@ import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
 import { montarDiagnostico, ROTULO_SITUACAO } from "@/lib/icms/diagnostico";
-import { MESES } from "@/lib/icms/criterios";
+import { CRITERIOS, MESES } from "@/lib/icms/criterios";
 import { formatarCompacto, formatarMoeda } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
