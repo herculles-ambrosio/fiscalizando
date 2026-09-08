@@ -361,6 +361,11 @@ function DetalheGenerico({ slug }: { slug: string }) {
             </CardContent>
           </Card>
         </TabsContent>
+        {ehMeioAmbiente && (
+          <TabsContent value="ief" className="pt-4">
+            <AreasSemCadastroIef ano={ano} fonte={fonte} />
+          </TabsContent>
+        )}
         {pipeline && consultoria && (
           <TabsContent value="importar" className="pt-4">
             <IngestaoCriterio pipeline={pipeline} />
