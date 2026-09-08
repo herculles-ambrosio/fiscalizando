@@ -42,13 +42,20 @@ const fonteSchema = z.enum(["preliminar", "definitivo"]);
 /** Procura no site do órgão os PDFs do critério. */
 export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => criterioSchema.parse(data))
+  .inputValidator((data: unknown) =>
+    criterioSchema
+      .extend({ anoBase: z.number().int().min(2000).max(2100).optional() })
+      .parse(data),
+  )
   .handler(async ({ data, context }) => {
     await exigirConsultoria(context as never);
     const p = pipeline(data.criterio);
     const achados = new Map<string, { url: string; texto: string; tipo: string; ano: number | null }>();
 
-    for (const pagina of p.paginasBusca) {
+    const ano = data.anoBase ?? new Date().getFullYear();
+    const paginas = [...(p.paginasPorAno?.(ano) ?? []), ...p.paginasBusca];
+
+    for (const pagina of paginas) {
       let html = "";
       try {
         const resp = await fetch(pagina, { headers: { "user-agent": "Mozilla/5.0 ApuraVAF" } });
@@ -57,10 +64,12 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
       } catch {
         continue;
       }
-      const re = /<a[^>]+href="([^"]+\.pdf)"[^>]*>([\s\S]*?)<\/a>/gi;
+      const re = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
       let m: RegExpExecArray | null;
       while ((m = re.exec(html))) {
         const href = m[1] ?? "";
+        // PDFs diretos ou documentos publicados no gerenciador do site (sem extensão no link)
+        if (!/\.pdf(\?|$)/i.test(href) && !/\/documents\/d\//i.test(href)) continue;
         const texto = (m[2] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
         let url: string;
         try {
@@ -71,11 +80,17 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
         }
         const alvo = `${url} ${texto}`.toLowerCase();
         if (!p.palavrasChave.some((k) => alvo.includes(k))) continue;
-        const tipo = /definitiv/.test(alvo)
-          ? "definitivo"
-          : /preliminar|provisori/.test(alvo)
-            ? "preliminar"
-            : "outro";
+        const tipo = /(fq|fator de qualidade)/.test(alvo)
+          ? /final|definitiv/.test(alvo)
+            ? "fator de qualidade (final)"
+            : "fator de qualidade (preliminar)"
+          : /definitiv/.test(alvo)
+            ? "definitivo"
+            : /preliminar|provisori/.test(alvo)
+              ? "preliminar"
+              : /trimestre|resolucoes|resoluções/.test(alvo)
+                ? "tabelas trimestrais"
+                : "outro";
         const anoMatch = alvo.match(/(?:ano[-_ ]?base[-_ ]?)?(20\d{2})/);
         achados.set(url, {
           url,
@@ -89,6 +104,7 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
 
     return { relatorios: [...achados.values()].sort((a, b) => (b.ano ?? 0) - (a.ano ?? 0)) };
   });
+
 
 /** Baixa o PDF e devolve em base64 para o navegador processar. */
 export const baixarRelatorioCriterio = createServerFn({ method: "POST" })
