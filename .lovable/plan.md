@@ -1,14 +1,15 @@
-# Critério Esportes no módulo ICMS (substituindo "Metas")
+# Critérios do ICMS (substituindo "Metas"), começando por Esportes
 
 ## Objetivo
-Trocar o menu "Metas" por um menu "Esportes", que mostra, para cada município e ano-base, o que já pontua no Critério Esportes (ICMS Solidário, Lei 18.030/2009) e o que ainda falta pontuar, a partir dos relatórios em PDF da SEDESE/Observatório do Esporte.
+Trocar o menu "Metas" por um menu "Critérios", que reunirá os 18 critérios da Lei 18.030/2009 e mostra, para cada município e ano-base, o que já pontua no Critério Esportes (ICMS Solidário) e o que ainda falta pontuar, a partir dos relatórios em PDF da SEDESE/Observatório do Esporte.
 
 ## O que muda na navegação
 - O item "Metas" sai do menu do ICMS e a tela é removida.
-- Entra "Esportes", com três abas: **Detalhamento do município**, **Ranking** e **Ingestão de dados** (esta última só para a consultoria/administração).
-- Nada mais do módulo ICMS é alterado (Painel, Comparativo, Critérios, Plano de melhoria, Cargas seguem como estão).
+- A tela "Critérios" vira a porta de entrada dos 18 critérios: uma lista em que cada critério abre sua própria página. Por enquanto só Esportes tem conteúdo próprio; os demais mantêm a visão atual de peso/índice com o rótulo "em desenvolvimento".
+- A página do critério Esportes tem três abas: **Detalhamento do município**, **Ranking** e **Ingestão de dados** (esta última só para a consultoria/administração).
+- Nada mais do módulo ICMS é alterado (Painel, Comparativo, Plano de melhoria, Cargas seguem como estão).
 
-## Tela "Esportes"
+## Tela do critério Esportes
 
 **Detalhamento do município** (município e ano-base selecionáveis)
 - Cartões de resumo: nota das demais atividades, nota JIMI, nota final, índice percentual e posição no ranking daquele ano.
