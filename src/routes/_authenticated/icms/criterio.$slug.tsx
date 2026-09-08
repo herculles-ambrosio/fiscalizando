@@ -13,6 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CRITERIOS } from "@/lib/icms/criterios";
+import { CriterioEsportesDetalhe } from "@/components/icms/CriterioEsportesDetalhe";
+import { IngestaoCriterio } from "@/components/icms/IngestaoCriterio";
+import { usePerfil } from "@/hooks/usePerfil";
 import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
 import {
   useCriterioAnos,
@@ -48,9 +51,16 @@ export const Route = createFileRoute("/_authenticated/icms/criterio/$slug")({
 
 function DetalheCriterio() {
   const { slug } = Route.useParams();
+  if (slug === "esportes") return <CriterioEsportesDetalhe />;
+  return <DetalheGenerico slug={slug} />;
+}
+
+function DetalheGenerico({ slug }: { slug: string }) {
   const criterio = CRITERIOS.find((c) => c.slug === slug) ?? null;
   const pipeline = PIPELINE_POR_SLUG.get(slug) ?? null;
   const { municipio } = useMunicipioAtivo();
+  const { data: perfil } = usePerfil();
+  const consultoria = perfil?.papel === "superadmin" || perfil?.papel === "consultor";
   const chaveMunicipio = municipio ? normalizarMunicipio(municipio.nome) : null;
 
   const { data: referencia } = useItensReferenciaCompleta(slug);
@@ -115,6 +125,14 @@ function DetalheCriterio() {
             {criterio.orgao} · {criterio.periodicidade}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          {criterio.percentual != null && (
+            <Badge variant="secondary">Peso legal {criterio.percentual}%</Badge>
+          )}
+          <Button asChild size="sm" variant="outline">
+            <Link to="/icms/comparativo">Comparar municípios</Link>
+          </Button>
+        </div>
         {anos && anos.length > 0 && (
           <Select value={combo} onValueChange={setCombo}>
             <SelectTrigger className="w-56">
@@ -146,6 +164,7 @@ function DetalheCriterio() {
           <TabsTrigger value="pontuacao">O que pontua hoje</TabsTrigger>
           <TabsTrigger value="melhorar">Como melhorar</TabsTrigger>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
+          {pipeline && consultoria && <TabsTrigger value="importar">Importar relatório</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="pontuacao" className="space-y-4 pt-4">
@@ -317,6 +336,11 @@ function DetalheCriterio() {
             </CardContent>
           </Card>
         </TabsContent>
+        {pipeline && consultoria && (
+          <TabsContent value="importar" className="pt-4">
+            <IngestaoCriterio pipeline={pipeline} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

@@ -14,7 +14,6 @@ import {
 
   TrendingUp,
   Users,
-  Trophy,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type ReactNode } from "react";
