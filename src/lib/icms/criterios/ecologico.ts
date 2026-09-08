@@ -172,9 +172,16 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
         indicePercentual: 0,
       })),
     naoMapeados: [],
-    cabecalho: ["Saneamento ambiental", "Unidades de conservação", "Mata seca"],
+    cabecalho: [
+      "Saneamento ambiental",
+      "Unidades de conservação",
+      "Índice de conservação",
+      "Índice do critério publicado",
+    ],
     saneamento,
     uc,
-    mata,
+    conservacao,
+    indice,
   };
 }
+
