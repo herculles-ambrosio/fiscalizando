@@ -75,7 +75,7 @@ function CriteriosIcms() {
     }));
   }, [dados, linha]);
 
-  if (!isLoading && (!dados || !dados.series.size)) return <VazioIcms />;
+  const semDados = !isLoading && (!dados || !dados.series.size);
 
   return (
     <div className="space-y-6">
