@@ -41,6 +41,9 @@ type Resumo = {
 export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   const cliente = useQueryClient();
   const { data: referencia } = useItensReferencia(pipeline.slug);
+  const { data: importacoes } = useImportacoes(pipeline.slug);
+  const jaImportados = new Set((importacoes ?? []).map((i) => i.url).filter(Boolean) as string[]);
+
   const descobrir = useServerFn(descobrirRelatoriosCriterio);
   const baixar = useServerFn(baixarRelatorioCriterio);
   const limpar = useServerFn(limparCriterio);
