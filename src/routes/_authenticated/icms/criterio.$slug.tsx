@@ -69,6 +69,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
   const { data: referencia } = useItensReferenciaCompleta(slug);
   const { data: anos } = useCriterioAnos(slug);
   const [combo, setCombo] = useState<string>("");
+  const [filtroPontuacao, setFiltroPontuacao] = useState<"todos" | "pontuados" | "nao_pontuados">("todos");
+
 
   useEffect(() => {
     if (anos?.length && !combo) setCombo(`${anos[0]!.ano}|${anos[0]!.fonte}`);
@@ -103,6 +105,16 @@ function DetalheGenerico({ slug }: { slug: string }) {
     () => (referencia ?? []).filter((r) => !(pontuados.get(r.codigo)?.pontuacao ?? 0)),
     [referencia, pontuados],
   );
+
+  const referenciaFiltrada = useMemo(() => {
+    const lista = referencia ?? [];
+    if (filtroPontuacao === "todos") return lista;
+    return lista.filter((r) => {
+      const pontua = !!(pontuados.get(r.codigo)?.pontuacao ?? 0);
+      return filtroPontuacao === "pontuados" ? pontua : !pontua;
+    });
+  }, [referencia, pontuados, filtroPontuacao]);
+
 
   if (!criterio) {
     return (
@@ -279,10 +291,22 @@ function DetalheGenerico({ slug }: { slug: string }) {
 
           {!!referencia?.length && (
             <Card>
-              <CardHeader className="flex-row items-center justify-between">
-                <CardTitle className="text-base">
-                  Itens do critério em {municipio?.nome ?? "—"}
-                </CardTitle>
+              <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-base">
+                    Itens do critério em {municipio?.nome ?? "—"}
+                  </CardTitle>
+                  <Select value={filtroPontuacao} onValueChange={(v) => setFiltroPontuacao(v as typeof filtroPontuacao)}>
+                    <SelectTrigger className="h-8 w-44 text-xs">
+                      <SelectValue placeholder="Mostrar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      <SelectItem value="pontuados">O que pontuou</SelectItem>
+                      <SelectItem value="nao_pontuados">Sem pontuação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button
                   size="sm"
                   variant="outline"
@@ -291,7 +315,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       `${slug}-${municipio?.nome ?? "municipio"}.csv`,
                       montarCsv(
                         ["Item", "Situação", "Pontuação", "Requisito"],
-                        (referencia ?? []).map((r) => {
+                        referenciaFiltrada.map((r) => {
                           const p = pontuados.get(r.codigo);
                           return [
                             r.nome_oficial,
@@ -309,7 +333,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-2">
-                {(referencia ?? []).map((r) => {
+                {referenciaFiltrada.map((r) => {
                   const p = pontuados.get(r.codigo);
                   const pontua = !!p?.pontuacao;
                   return (
@@ -335,6 +359,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
               </CardContent>
             </Card>
           )}
+
         </TabsContent>
 
         <TabsContent value="melhorar" className="space-y-4 pt-4">
