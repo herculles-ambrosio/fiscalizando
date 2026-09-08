@@ -173,7 +173,9 @@ function DetalheGenerico({ slug }: { slug: string }) {
               <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Posição</p>
-                  <p className="text-xl font-semibold">{linhaMunicipio.posicao ?? "—"}</p>
+                  <p className="text-xl font-semibold">
+                    {(ranking ?? []).findIndex((l) => l.municipio === chaveMunicipio) + 1 || "—"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Pontuação</p>
