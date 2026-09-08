@@ -99,7 +99,7 @@ function CriteriosIcms() {
             </p>
           </div>
           <Button asChild size="sm">
-            <Link to="/icms/esportes">Abrir Esportes</Link>
+            <Link to="/icms/criterio/$slug" params={{ slug: "esportes" }}>Abrir Esportes</Link>
           </Button>
         </CardContent>
       </Card>
@@ -124,13 +124,9 @@ function CriteriosIcms() {
                 </p>
                 <div className="pt-2">
                   <Button asChild size="sm" variant="outline">
-                    {l.criterio.slug === "esportes" ? (
-                      <Link to="/icms/esportes">Abrir detalhamento</Link>
-                    ) : (
-                      <Link to="/icms/criterio/$slug" params={{ slug: l.criterio.slug }}>
-                        Abrir detalhamento
-                      </Link>
-                    )}
+                    <Link to="/icms/criterio/$slug" params={{ slug: l.criterio.slug }}>
+                      Abrir detalhamento
+                    </Link>
                   </Button>
                 </div>
               </CardContent>
