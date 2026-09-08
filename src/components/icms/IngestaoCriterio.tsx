@@ -49,6 +49,8 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   const [anoBase, setAnoBase] = useState<number>(new Date().getFullYear() - 2);
   const [fonte, setFonte] = useState<FonteRelatorio>("definitivo");
   const [url, setUrl] = useState("");
+  const [texto, setTexto] = useState("");
+
   const [links, setLinks] = useState<{ url: string; texto: string; tipo: string }[]>([]);
   const [buscando, setBuscando] = useState(false);
   const [etapa, setEtapa] = useState("");
