@@ -168,32 +168,40 @@ function DetalheGenerico({ slug }: { slug: string }) {
         </TabsList>
 
         <TabsContent value="pontuacao" className="space-y-4 pt-4">
-          {linhaMunicipio && (
-            <Card>
-              <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">Posição</p>
-                  <p className="text-xl font-semibold">
-                    {(ranking ?? []).findIndex((l) => l.municipio === chaveMunicipio) + 1 || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Pontuação</p>
-                  <p className="text-xl font-semibold">
-                    {linhaMunicipio.nota_final.toLocaleString("pt-BR")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Índice</p>
-                  <p className="text-xl font-semibold">
-                    {linhaMunicipio.indice_percentual
-                      ? `${linhaMunicipio.indice_percentual.toLocaleString("pt-BR", { maximumFractionDigits: 5 })}%`
-                      : "—"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Posição</p>
+                <p className="text-xl font-semibold">
+                  {linhaMunicipio
+                    ? (ranking ?? []).findIndex((l) => l.municipio === chaveMunicipio) + 1 || "—"
+                    : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Pontuação</p>
+                <p className="text-xl font-semibold">
+                  {linhaMunicipio ? linhaMunicipio.nota_final.toLocaleString("pt-BR") : "0"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Índice</p>
+                <p className="text-xl font-semibold">
+                  {linhaMunicipio?.indice_percentual
+                    ? `${linhaMunicipio.indice_percentual.toLocaleString("pt-BR", { maximumFractionDigits: 5 })}%`
+                    : "—"}
+                </p>
+              </div>
+              {!linhaMunicipio && (
+                <p className="text-xs text-muted-foreground sm:col-span-3">
+                  {municipio?.nome ?? "Este município"} não aparece no relatório importado deste
+                  ano-base, ou seja, hoje não pontua neste critério. Veja em “Como melhorar” o que
+                  precisa ser feito para entrar na lista.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
 
           {!referencia?.length && (
             <Card>
