@@ -51,18 +51,23 @@ export const PIPELINES: Pipeline[] = [
   {
     slug: "turismo",
     nome: "Turismo",
-    orgao: "SETUR/MG",
-    hosts: ["www.turismo.mg.gov.br", "turismo.mg.gov.br", "www.mg.gov.br"],
-    paginasBusca: [
-      "https://www.turismo.mg.gov.br/icms-turistico/",
-      "https://www.turismo.mg.gov.br/",
+    orgao: "Secult-MG (ICMS Turismo)",
+    hosts: [
+      "www.secult.mg.gov.br",
+      "secult.mg.gov.br",
+      "www.icmsturismo.mg.gov.br",
+      "icmsturismo.mg.gov.br",
+      "www.turismo.mg.gov.br",
+      "turismo.mg.gov.br",
     ],
-    palavrasChave: ["turis"],
+    paginasBusca: ["https://www.secult.mg.gov.br/turismo/icms-turismo"],
+    palavrasChave: ["habilitados", "icms-turismo", "indice", "índice", "turis"],
     formato: "tabela_itens",
-    colunasTotal: ["pontuacao", "pontuacao final", "total", "indice"],
+    colunasTotal: ["indice", "indice de participacao", "iit", "pontuacao", "total"],
     comoFunciona:
-      "Lê a planilha de pontuação por município publicada pela SETUR e casa cada coluna com os itens da política municipal de turismo (órgão, conselho, fundo, plano, circuito, inventário).",
+      "Lê a publicação oficial dos índices do ICMS Turismo (Secult-MG): uma linha por município habilitado com circuito turístico, nota da habilitação, RLPC, IRC, IIT e o índice de participação no critério.",
   },
+
   {
     slug: "meio_ambiente",
     nome: "Meio Ambiente",
