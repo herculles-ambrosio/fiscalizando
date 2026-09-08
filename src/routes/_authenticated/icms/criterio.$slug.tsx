@@ -16,6 +16,7 @@ import { CRITERIOS } from "@/lib/icms/criterios";
 import { CriterioEsportesDetalhe } from "@/components/icms/CriterioEsportesDetalhe";
 import { IngestaoCriterio } from "@/components/icms/IngestaoCriterio";
 import { ConferenciaFjp } from "@/components/icms/ConferenciaFjp";
+import { AreasSemCadastroIef } from "@/components/icms/AreasSemCadastroIef";
 
 import { usePerfil } from "@/hooks/usePerfil";
 import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
@@ -79,6 +80,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
 
   const { data: ranking } = useCriterioRanking(slug, ano, fonte);
   const { data: itens } = useCriterioItens(slug, ano, fonte, chaveMunicipio);
+
+  const ehMeioAmbiente = slug === "meio_ambiente" || slug === "meio-ambiente";
 
   const linhaMunicipio = useMemo(
     () => (ranking ?? []).find((l) => l.municipio === chaveMunicipio) ?? null,
@@ -166,6 +169,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
           <TabsTrigger value="pontuacao">O que pontua hoje</TabsTrigger>
           <TabsTrigger value="melhorar">Como melhorar</TabsTrigger>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
+          {ehMeioAmbiente && <TabsTrigger value="ief">Cadastro no IEF</TabsTrigger>}
           {pipeline && consultoria && <TabsTrigger value="importar">Importar relatório</TabsTrigger>}
         </TabsList>
 
@@ -357,6 +361,11 @@ function DetalheGenerico({ slug }: { slug: string }) {
             </CardContent>
           </Card>
         </TabsContent>
+        {ehMeioAmbiente && (
+          <TabsContent value="ief" className="pt-4">
+            <AreasSemCadastroIef ano={ano} fonte={fonte} />
+          </TabsContent>
+        )}
         {pipeline && consultoria && (
           <TabsContent value="importar" className="pt-4">
             <IngestaoCriterio pipeline={pipeline} />
