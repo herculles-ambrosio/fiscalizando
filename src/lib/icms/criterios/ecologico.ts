@@ -75,10 +75,25 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
   };
 
   for (const pagina of paginas) {
-    for (const linha of pagina.linhas) {
-      const texto = linha.texto.replace(/\s+/g, " ").trim();
-      if (texto.length < 12) continue;
+    const textos = pagina.linhas
+      .map((l) => l.texto.replace(/\s+/g, " ").trim())
+      .filter((t) => t.length >= 12);
 
+    // A tabela de mata seca é a única com linhas "código código município
+    // percentual". Como esse formato é curto e apareceria por engano nas
+    // outras tabelas, ela só é lida em páginas que não têm saneamento nem
+    // unidades de conservação e onde esse padrão domina a página.
+    const contar = (re: RegExp) =>
+      textos.reduce((soma, t) => {
+        re.lastIndex = 0;
+        return soma + [...t.matchAll(re)].length;
+      }, 0);
+    const qtdSaneamento = contar(RE_SANEAMENTO);
+    const qtdUc = contar(RE_UC);
+    const qtdMata = contar(RE_MATA);
+    const paginaMata = qtdSaneamento === 0 && qtdUc === 0 && qtdMata >= textos.length * 0.5;
+
+    for (const texto of textos) {
       let achou = false;
       RE_SANEAMENTO.lastIndex = 0;
       for (const m of texto.matchAll(RE_SANEAMENTO)) {
@@ -106,7 +121,7 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
         achou = achou || ok;
         if (ok) uc++;
       }
-      if (achou) continue;
+      if (achou || !paginaMata) continue;
 
       RE_MATA.lastIndex = 0;
       for (const m of texto.matchAll(RE_MATA)) {
@@ -115,6 +130,7 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
       }
     }
   }
+
 
   const ranking = new Map<string, { municipio: string; municipioNome: string; nota: number }>();
   for (const item of itens) {
