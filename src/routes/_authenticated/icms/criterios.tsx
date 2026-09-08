@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
+import { useCriteriosComDados } from "@/hooks/useCriterios";
 import { montarDiagnostico, ROTULO_SITUACAO } from "@/lib/icms/diagnostico";
 import { CRITERIOS, MESES } from "@/lib/icms/criterios";
 import { formatarCompacto, formatarMoeda } from "@/lib/format";
@@ -55,10 +56,29 @@ function CriteriosIcms() {
   }, [exercicios, exercicio]);
 
   const { data: dados, isLoading } = useIcmsDados(exercicio);
+  const { data: comDados } = useCriteriosComDados();
   const diag = useMemo(
     () => (dados && exercicio ? montarDiagnostico(dados, exercicio) : null),
     [dados, exercicio],
   );
+
+  // Esportes já vem dos relatórios da SEDESE; os demais aparecem em verde
+  // assim que o primeiro relatório oficial é importado.
+  const criteriosProntos = useMemo(() => {
+    const slugs = new Set<string>(["esportes", ...Object.keys(comDados ?? {})]);
+    return CRITERIOS.filter((c) => slugs.has(c.slug)).map((c) => {
+      const info = comDados?.[c.slug];
+      const anos = info?.anos.slice(0, 3).join(", ");
+      return {
+        slug: c.slug,
+        nome: c.nome,
+        detalhe: anos
+          ? `Relatórios importados (ano-base ${anos}) — veja o que a prefeitura já pontua e o que falta.`
+          : "Veja o que a prefeitura já pontua e o que ainda falta explorar, a partir dos relatórios oficiais.",
+      };
+    });
+  }, [comDados]);
+
 
   const linha = useMemo(() => {
     if (!diag) return null;
@@ -89,20 +109,31 @@ function CriteriosIcms() {
         <SeletorExercicio exercicios={exercicios ?? []} valor={exercicio} aoTrocar={setExercicio} />
       </header>
 
-      <Card className="border-emerald-500/40 bg-emerald-500/5">
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-          <div>
-            <p className="font-medium">Critério Esportes — detalhamento por atividade</p>
-            <p className="text-sm text-muted-foreground">
-              Veja o que a prefeitura já pontua no ICMS Esportivo e o que ainda falta explorar, a
-              partir dos relatórios oficiais da SEDESE.
-            </p>
-          </div>
-          <Button asChild size="sm">
-            <Link to="/icms/criterio/$slug" params={{ slug: "esportes" }}>Abrir Esportes</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      {criteriosProntos.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-medium text-muted-foreground">
+            Critérios com relatórios já importados — abra para analisar
+          </h2>
+          {criteriosProntos.map((c) => (
+            <Card key={`pronto-${c.slug}`} className="border-emerald-500/40 bg-emerald-500/5">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <div>
+                  <p className="font-medium">Critério {c.nome} — detalhamento por item</p>
+                  <p className="text-sm text-muted-foreground">
+                    {c.detalhe}
+                  </p>
+                </div>
+                <Button asChild size="sm">
+                  <Link to="/icms/criterio/$slug" params={{ slug: c.slug }}>
+                    Abrir {c.nome}
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+      )}
+
 
       {semDados && (
         <Card className="border-gold/40 bg-gold/5">

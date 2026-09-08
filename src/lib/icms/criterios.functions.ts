@@ -96,17 +96,25 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
         }
         const alvo = `${url} ${texto}`.toLowerCase();
         if (!p.palavrasChave.some((k) => alvo.includes(k))) continue;
+        // As publicações trimestrais da SEMAD têm o mesmo título; o número no
+        // fim do endereço identifica o trimestre (…-2 = 1º, …-3 = 2º, e assim
+        // por diante), então usamos isso para dar nome próprio a cada uma.
+        const seq = alvo.match(/icms-ecologic[oa][-_](\d{1,2})(?!\d)/);
+        const trimestre = seq ? Number(seq[1]) - 1 : null;
         const tipo = /(fq|fator de qualidade)/.test(alvo)
           ? /final|definitiv/.test(alvo)
             ? "fator de qualidade (final)"
             : "fator de qualidade (preliminar)"
-          : /definitiv/.test(alvo)
-            ? "definitivo"
-            : /preliminar|parcial|provisori/.test(alvo)
-              ? "preliminar"
-              : /trimestre|resolucoes|resoluções/.test(alvo)
-                ? "tabelas trimestrais"
+          : /trimestre|resolucoes|resoluções/.test(alvo)
+            ? trimestre && trimestre >= 1 && trimestre <= 4
+              ? `tabelas do ${trimestre}º trimestre`
+              : "tabelas trimestrais"
+            : /definitiv/.test(alvo)
+              ? "definitivo"
+              : /preliminar|parcial|provisori/.test(alvo)
+                ? "preliminar"
                 : "outro";
+
         const anoMatch = alvo.match(/(?:ano[-_ ]?base[-_ ]?)?(20\d{2})/);
         achados.set(url, {
           url,

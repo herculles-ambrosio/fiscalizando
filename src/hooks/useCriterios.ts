@@ -48,7 +48,32 @@ export type ImportacaoRow = {
   criado_em: string;
 };
 
+/** Critérios que já têm relatório importado (usado para destacar no catálogo). */
+export function useCriteriosComDados() {
+  return useQuery({
+    queryKey: ["criterios-com-dados"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<Record<string, { anos: number[]; importacoes: number }>> => {
+      const { data, error } = await supabase
+        .from("criterio_importacoes")
+        .select("criterio, ano_base")
+        .order("ano_base", { ascending: false })
+        .limit(1000);
+      if (error) throw error;
+      const mapa: Record<string, { anos: number[]; importacoes: number }> = {};
+      for (const l of data ?? []) {
+        const slug = l.criterio as string;
+        const atual = (mapa[slug] ??= { anos: [], importacoes: 0 });
+        atual.importacoes += 1;
+        if (!atual.anos.includes(l.ano_base as number)) atual.anos.push(l.ano_base as number);
+      }
+      return mapa;
+    },
+  });
+}
+
 export function useItensReferencia(criterio: string | null) {
+
   return useQuery({
     queryKey: ["criterio-referencia", criterio],
     enabled: !!criterio,
