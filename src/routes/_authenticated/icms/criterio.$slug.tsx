@@ -81,6 +81,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
   const { data: ranking } = useCriterioRanking(slug, ano, fonte);
   const { data: itens } = useCriterioItens(slug, ano, fonte, chaveMunicipio);
 
+  const ehMeioAmbiente = slug === "meio_ambiente" || slug === "meio-ambiente";
+
   const linhaMunicipio = useMemo(
     () => (ranking ?? []).find((l) => l.municipio === chaveMunicipio) ?? null,
     [ranking, chaveMunicipio],
