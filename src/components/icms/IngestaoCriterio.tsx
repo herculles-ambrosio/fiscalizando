@@ -84,7 +84,16 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     identificacao: string | null,
   ) {
     setEtapa("Casando as colunas com os itens do critério");
-    const r = extrairTabelaCriterio(paginas, referencia ?? [], pipeline.colunasTotal);
+    // O ICMS Ecológico não tem um quadro único por município: cada publicação
+    // da SEMAD traz saneamento, unidades de conservação, fator de qualidade e
+    // o índice do critério em tabelas de formatos diferentes.
+    let r = extrairTabelaCriterio(paginas, referencia ?? [], pipeline.colunasTotal);
+    const ecologico = pipeline.slug === "meio-ambiente";
+    if (ecologico && !r.itens.length) {
+      const { extrairIcmsEcologico } = await import("@/lib/icms/criterios/ecologico");
+      const e = extrairIcmsEcologico(paginas);
+      if (e.itens.length) r = e;
+    }
     if (!r.itens.length && !r.ranking.length) {
       throw new Error(
         "Não foi possível reconhecer a tabela deste relatório. Confira se o conteúdo é o quadro de pontuação por município.",
@@ -92,7 +101,10 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     }
 
     setEtapa("Gravando");
-    await limpar({ data: { criterio: pipeline.slug, anoBase, fonte } });
+    // No Meio Ambiente as publicações se complementam, então uma não apaga a
+    // outra; nos demais critérios o relatório novo substitui o anterior.
+    if (!ecologico) await limpar({ data: { criterio: pipeline.slug, anoBase, fonte } });
+
     for (let i = 0; i < r.ranking.length; i += 300) {
       await gravarRanking({
         data: { criterio: pipeline.slug, anoBase, fonte, linhas: r.ranking.slice(i, i + 300) },
