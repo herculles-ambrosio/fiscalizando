@@ -74,13 +74,14 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
     pontuacao: number | null,
     observacao: string | null,
   ) => {
-    const municipioNome = limparNome(nome);
-    const municipio = normalizarMunicipio(municipioNome);
-    if (!municipio || municipio.length < 3) return false;
-    // Nos quadros de índice o município vem em caixa alta e baixa ("Abre
-    // Campo"); siglas soltas de unidade de conservação ("APA", "RPPN") não.
-    if (itemCodigo.startsWith("indice_") && (municipioNome.length < 5 || !/[a-záàâãéêíóôõúüç]/.test(municipioNome)))
-      return false;
+    const lido = limparNome(nome);
+    if (!lido || lido.length < 3) return false;
+    // Confere contra a relação oficial dos 853 municípios: corrige quebras de
+    // texto do PDF ("Mar liéria") e descarta sobras que não são município.
+    const oficial = canonicalizarMunicipio(lido);
+    if (!oficial) return false;
+    const municipio = oficial.chave;
+    const municipioNome = oficial.nome;
     itens.push({
       municipio,
       municipioNome,
