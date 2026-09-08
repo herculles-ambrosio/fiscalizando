@@ -37,12 +37,33 @@ function NotFoundComponent() {
   );
 }
 
+// Após um novo deploy, a aba antiga aponta para arquivos que não existem mais.
+// Nesse caso recarregamos uma única vez em vez de mostrar tela de erro.
+const CHAVE_RECARGA = "recarga-versao-nova";
+
+function ehModuloDesatualizado(error: unknown) {
+  const msg = error instanceof Error ? error.message : String(error);
+  return (
+    /dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(
+      msg,
+    ) || /ChunkLoadError/i.test(msg)
+  );
+}
+
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
+    if (ehModuloDesatualizado(error) && typeof window !== "undefined") {
+      if (!sessionStorage.getItem(CHAVE_RECARGA)) {
+        sessionStorage.setItem(CHAVE_RECARGA, "1");
+        window.location.reload();
+        return;
+      }
+    }
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
