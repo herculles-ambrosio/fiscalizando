@@ -9,46 +9,63 @@ Trocar o menu "Metas" por um menu "Critérios", que reunirá os 18 critérios da
 - A página do critério Esportes tem três abas: **Detalhamento do município**, **Ranking** e **Ingestão de dados** (esta última só para a consultoria/administração).
 - Nada mais do módulo ICMS é alterado (Painel, Comparativo, Plano de melhoria, Cargas seguem como estão).
 
+## O que o relatório traz (confirmado no PDF definitivo ano-base 2024, 717 páginas)
+
+Ranking (uma linha por município habilitado), com as colunas reais:
+`RANKING | MUNICÍPIO | ATIVIDADES | JIMI | JEMG | B.A E B.T ESTADUAL | FINAL | PERCENTUAL`.
+Exemplo: `24 | RAUL SOARES | 5120 | 0 | 96 | 0 | 5216 | 0,67620%`. O nome do município pode vir quebrado em duas ou três linhas.
+
+Memória de cálculo: um bloco por município e atividade, com um quadro de pontuação que o enunciado original não previa:
+```text
+Município: ABAETÉ
+Atividade Esportiva: Outros Programas e Projetos
+Eventos Realizados (Número de Participantes):
+2ª Copa Open Karatê de Abaeté (46), Trilhão da ACA (160), ...
+Modalidades Oferecidas:
+KARATÊ, CICLISMO, ...
+Peso Atividade Esportiva | Peso Receita Líquida per Capita | Pontuação Atletas | Pontuação Modalidades | Pontuação
+1.5                      | 8                               | 15                | 10                    | 1800
+```
+A fórmula confere: peso da atividade × peso da RCL per capita × pontuação de atletas × pontuação de modalidades = pontuação do bloco (1,5 × 8 × 15 × 10 = 1800). Isso permite mostrar não só "falta a atividade X", mas também "nesta atividade você pontua 20 de um máximo possível", já que o peso da RCL é o mesmo para todas as atividades do município.
+
 ## Tela do critério Esportes
 
 **Detalhamento do município** (município e ano-base selecionáveis)
-- Cartões de resumo: nota das demais atividades, nota JIMI, nota final, índice percentual e posição no ranking daquele ano.
-- Lista "Já pontuando": cada atividade com nome, peso do Anexo V, número de eventos, participantes somados, modalidades oferecidas e selo verde.
-- Lista "Ainda não explorado": as atividades do Anexo V que não apareceram, com o peso como ganho potencial, selo cinza e uma explicação curta do requisito de cada uma.
-- Se o município não aparecer no relatório do ano escolhido: aviso destacado de que só participam do critério os municípios com Conselho Municipal de Esportes em pleno funcionamento (art. 8º, §1º da Lei 18.030/2009).
-- Conferência visível: soma das notas das atividades × peso comparada com a "nota demais atividades" do ranking, sinalizando divergência quando houver.
+- Cartões: pontuação de atividades, JIMI, JEMG, Bolsa Atleta/Técnico Estadual, nota final, índice percentual e posição no ranking.
+- Lista "Já pontuando": atividade, peso do Anexo V, pontuação obtida, pontuação de atletas e de modalidades, número de eventos, participantes somados e modalidades.
+- Lista "Ainda não explorado": atividades do Anexo V ausentes, com o ganho potencial estimado (peso da atividade × peso da RCL do município × faixas de atletas e modalidades) e uma explicação curta do requisito.
+- Aviso destacado quando o município não aparece no relatório do ano: só participam do critério os municípios com Conselho Municipal de Esportes em pleno funcionamento (art. 8º, §1º da Lei 18.030/2009).
+- Conferência visível: soma das pontuações das atividades comparada com a coluna ATIVIDADES do ranking, sinalizando divergência.
 
 **Ranking**
-- Tabela do ano-base com busca por município, ordenação e exportação CSV.
+- Tabela do ano-base com busca, ordenação e exportação CSV.
 
-**Ingestão de dados**
-- Botão "Atualizar dados de Esportes": o sistema procura no site do Observatório do Esporte os links do relatório preliminar e do definitivo mais recentes e mostra o que encontrou antes de importar.
-- Campo alternativo para colar a URL do PDF manualmente, caso a busca automática não encontre (site mudou de layout).
-- Escolha do tipo (preliminar/definitivo) e do ano-base; a reimportação substitui os dados daquele ano e tipo.
-- Ao final: resumo com quantos municípios e atividades foram lidos e uma lista das atividades cujo nome não bateu com o Anexo V, para revisão manual.
+**Ingestão de dados** (superadmin/consultor)
+- Busca automática dos links dos relatórios preliminar e definitivo mais recentes no observatoriodoesporte.mg.gov.br; os candidatos são exibidos para confirmação.
+- Alternativas: colar a URL do PDF ou enviar o arquivo direto do computador.
+- Escolha de tipo (preliminar/definitivo) e ano-base; reimportar substitui os dados daquele ano e tipo.
+- Barra de progresso por página (o relatório tem centenas de páginas) e, ao final, resumo com municípios, atividades e a lista de nomes de atividade que não bateram com o Anexo V.
 
 ## Dados guardados
-Três tabelas novas no banco:
-- `esportes_atividades_referencia` — as 14 atividades do Anexo V (código, nome oficial, peso, texto do requisito), carregadas junto com a criação da tabela.
-- `esportes_ranking_municipio` — ano-base, município normalizado, nome original, notas, índice percentual, posição, tipo do relatório e data da ingestão.
-- `esportes_atividade_municipio` — ano-base, município normalizado, nome da atividade como veio do PDF, código e peso mapeados (podem ficar vazios para revisão), texto dos eventos, quantidade de eventos, total de participantes, texto das modalidades, tipo do relatório e data da ingestão.
+- `esportes_atividades_referencia` — as 14 atividades do Anexo V (código, nome oficial, sinônimos, peso, texto do requisito), criadas junto com a tabela.
+- `esportes_ranking_municipio` — ano-base, município normalizado, nome original, posição, pontuação de atividades, JIMI, JEMG, BA/BT estadual, nota final, índice percentual, tipo do relatório, data da ingestão.
+- `esportes_atividade_municipio` — ano-base, município normalizado, nome da atividade como veio do PDF, código e peso mapeados (podem ficar vazios para revisão), peso da RCL, pontuação de atletas, de modalidades e total, texto dos eventos, quantidade de eventos, total de participantes, texto das modalidades, tipo do relatório, data da ingestão.
 
-Acesso: leitura liberada para qualquer usuário autenticado (são dados públicos estaduais e o comparativo entre municípios depende disso); gravação apenas pelo processo de ingestão executado por superadmin/consultor.
+Acesso: leitura para qualquer usuário autenticado (dados públicos estaduais, e o comparativo entre municípios depende disso); gravação apenas por superadmin/consultor.
 
 ## Detalhes técnicos
 
-**Ingestão** — função de servidor `src/lib/icms/esportes.functions.ts` + `esportes.server.ts`:
-1. Descoberta: baixa a página de publicações do observatoriodoesporte.mg.gov.br, extrai os `href` de `.pdf` cujo texto/nome do arquivo contenha "preliminar"/"definitivo" e o ano-base; devolve os candidatos ao usuário em vez de escolher sozinho. Fallback: URL colada manualmente.
-2. Extração de texto: `unpdf` (JS puro, compatível com o runtime de borda; `pdf-parse`/`pdfjs-dist` de Node não servem aqui).
-3. Parser da Seção 1: linhas `^\s*(\d+)\s+([A-ZÀ-Ú' ./-]+?)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s*%`, com números em formato brasileiro.
-4. Parser da Seção 2: divide o texto **apenas** pelo marcador em início de linha `^Município:\s*(.+)$`; dentro de cada bloco lê `Atividade Esportiva:`, `Eventos Realizados (Número de Participantes):` e `Modalidades Oferecidas:` até o próximo marcador. Nomes de município citados dentro de textos de eventos nunca abrem bloco (âncora de início de linha + marcador literal), atendendo ao caso "Festival ... Escola Municipal Raul Soares" em Aimorés.
-5. Eventos: `qtd_eventos` = ocorrências de `nome (número)`; participantes = soma dos números entre parênteses.
-6. Mapeamento: normaliza (sem acento, maiúsculo, espaços colapsados) e compara com `nome_oficial`; sem correspondência exata, tenta sinônimos cadastrados e, falhando, grava código/peso nulos e reporta na lista de revisão.
-7. Gravação em lotes, com remoção prévia das linhas do mesmo (ano_base, fonte_relatorio).
+**Onde o PDF é lido.** O relatório tem 717 páginas e ~2 MB; extrair isso dentro de uma função de servidor estoura o tempo/CPU do runtime de borda. A leitura acontece no navegador do admin, com `pdfjs-dist` página a página (barra de progresso), e só as linhas já estruturadas são enviadas ao servidor para gravação em lotes. A descoberta do link e o download do PDF passam por uma função de servidor (`src/lib/icms/esportes.functions.ts`), que devolve o arquivo ao navegador evitando bloqueio de origem cruzada.
 
-**Validação** — teste com Vitest sobre o relatório definitivo ano-base 2024: Raul Soares no ranking com nota final 5216 e índice 0,67620%; nenhuma atividade de Raul Soares vinda de bloco de outro município; soma das notas das atividades conferida contra 5120 (divergência apenas reportada, não bloqueia).
+**Parser da Seção 1.** Percorre as linhas acumulando fragmentos de nome; ao encontrar `^\s*(\d+)\s+(.*?)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)%$`, junta o nome da própria linha com os fragmentos pendentes das linhas anteriores. Números em formato brasileiro. Cabeçalhos e rodapés de página (`n / 717`) são descartados.
 
-**Remoções** — `src/routes/_authenticated/icms/metas.tsx`, o item do menu em `src/components/AppLayout.tsx` e `src/lib/icms/metas.ts` caso nenhum outro módulo o use (verificar Comparativo e Plano antes de apagar; se usarem, o arquivo fica e só a tela sai).
+**Parser da Seção 2.** Divide **apenas** por `^Município:\s*(.+)$` no início da linha; dentro do bloco lê `Atividade Esportiva:`, `Eventos Realizados (Número de Participantes):`, `Modalidades Oferecidas:` e a linha numérica após o cabeçalho `Peso Atividade Esportiva ...`. Menções ao nome de um município dentro de textos de evento (ex.: "1º Festival Esportivo da Escola Municipal Raul Soares", que aparece em Aimorés, e "44ª Olimpíadas de Raul Soares", em Caratinga) nunca abrem bloco.
+
+**Mapeamento das atividades.** Normaliza sem acento/maiúsculas e compara com `nome_oficial` e sinônimos. Os nomes que o PDF usa já foram levantados: Projetos Sócio Educacionais, Esporte para Pessoas com deficiência, Jogos Escolares Municipais, Atividades Futebol Amador, Esporte Terceira Idade, Atividades de Lazer, Qualificação de Agente Esportivo, Xadrez na Escola, Academia na Escola, Outros Programas e Projetos, Instalação/Reforma/Equipamento Esportivo, Bolsa Atleta e Bolsa Técnico - Estadual e Municipal –BABTE. Sem correspondência, o código e o peso ficam vazios e o nome entra na lista de revisão.
+
+**Validação (Vitest, com o PDF definitivo 2024 já disponível).** Raul Soares no ranking com 5120 / 0 / 96 / 0 / 5216 / 0,67620%; nenhum bloco de atividade atribuído a Raul Soares vindo de texto de outro município; soma das pontuações das atividades conferida contra 5120 (divergência é reportada, não bloqueia); nomes de município quebrados em várias linhas (Lagoa da Prata, São João del Rei, Entre Rios de Minas) lidos corretamente.
+
+**Remoções.** `src/routes/_authenticated/icms/metas.tsx` e o item do menu em `src/components/AppLayout.tsx`; `src/lib/icms/metas.ts` só sai se nenhum outro módulo o usar (verificar Comparativo e Plano antes).
 
 ## Fora de escopo
 Critérios Turismo e Meio Ambiente; agendamento automático da ingestão.
