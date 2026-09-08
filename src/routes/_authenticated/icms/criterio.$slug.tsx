@@ -216,6 +216,56 @@ function DetalheGenerico({ slug }: { slug: string }) {
           />
 
 
+          {!!itens?.length && (
+            <Card>
+              <CardHeader className="flex-row items-center justify-between">
+                <CardTitle className="text-base">
+                  O que {municipio?.nome ?? "o município"} já pontua no relatório
+                </CardTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    baixarCsv(
+                      `${slug}-pontuado-${municipio?.nome ?? "municipio"}.csv`,
+                      montarCsv(
+                        ["Registro", "Pontuação", "Quantidade", "Detalhe"],
+                        (itens ?? []).map((i) => [
+                          i.item_nome,
+                          String(i.pontuacao ?? 0),
+                          String(i.quantidade ?? ""),
+                          i.observacao ?? "",
+                        ]),
+                      ),
+                    )
+                  }
+                >
+                  <Download className="mr-2 size-4" />
+                  CSV
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {[...(itens ?? [])]
+                  .sort((a, b) => (b.pontuacao ?? 0) - (a.pontuacao ?? 0))
+                  .map((i) => (
+                    <div key={i.id} className="flex items-start gap-3 rounded-md border p-3 text-sm">
+                      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">{i.item_nome}</p>
+                        {i.observacao && (
+                          <p className="text-xs text-muted-foreground">{i.observacao}</p>
+                        )}
+                      </div>
+                      <Badge variant="secondary">
+                        {i.pontuacao != null
+                          ? i.pontuacao.toLocaleString("pt-BR", { maximumFractionDigits: 6 })
+                          : "—"}
+                      </Badge>
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
+          )}
 
 
           {!referencia?.length && (
