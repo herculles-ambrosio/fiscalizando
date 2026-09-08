@@ -28,8 +28,17 @@ const RE_UC = new RegExp(
   "g",
 );
 
-/** Mata seca: código IBGE, código SEF, município e o percentual. */
-const RE_MATA = new RegExp(`(\\d{3,6})\\s+(\\d{1,4})\\s+(${NOME})\\s+(-|0,\\d{6,10})(?=\\s|$)`, "g");
+/** Índice de conservação: código IBGE, código SEF, município e três valores. */
+const RE_CONSERVACAO = new RegExp(
+  `(\\d{3,6})\\s+(\\d{1,4})\\s+(${NOME})\\s+(-|[\\d.]*[\\d],\\d{6,12})\\s+(-|[\\d.]*[\\d],\\d{6,12})\\s+(-|[\\d.]*[\\d],\\d{6,12})(?=\\s|$)`,
+  "g",
+);
+
+/** Quadro dos municípios habilitados: código IBGE, código SEF, município e o índice. */
+const RE_INDICE = new RegExp(
+  `(\\d{3,6})\\s+(\\d{1,4})\\s+(${NOME})\\s+(-|[\\d.]*[\\d],\\d{6,12})(?=\\s|$)`,
+  "g",
+);
 
 function num(valor: string): number | null {
   const bruto = valor.trim();
@@ -43,7 +52,13 @@ function limparNome(nome: string): string {
   return nome.replace(/\s+/g, " ").trim();
 }
 
-export type ResultadoEcologico = ResultadoTabela & { saneamento: number; uc: number; mata: number };
+export type ResultadoEcologico = ResultadoTabela & {
+  saneamento: number;
+  uc: number;
+  conservacao: number;
+  indice: number;
+};
+
 
 export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico {
   const itens: ItemMunicipio[] = [];
