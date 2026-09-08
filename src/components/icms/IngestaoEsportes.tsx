@@ -43,6 +43,7 @@ export function IngestaoEsportes() {
   const limpar = useServerFn(limparEsportes);
   const gravarRanking = useServerFn(gravarRankingEsportes);
   const gravarAtividades = useServerFn(gravarAtividadesEsportes);
+  const registrar = useServerFn(registrarImportacao);
 
   const [anoBase, setAnoBase] = useState<number>(new Date().getFullYear() - 2);
   const [fonte, setFonte] = useState<FonteRelatorio>("definitivo");
@@ -132,7 +133,7 @@ export function IngestaoEsportes() {
             criterio: "esportes",
             anoBase,
             fonte,
-            origem: origem?.url ? "url" : "upload",
+            origem: origem?.url ? "url" : "arquivo",
             url: origem?.url ?? null,
             arquivoNome: origem?.arquivoNome ?? null,
             paginas: paginas.length,
@@ -173,7 +174,7 @@ export function IngestaoEsportes() {
       const binario = atob(r.base64);
       const bytes = new Uint8Array(binario.length);
       for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
-      await processar(bytes);
+      await processar(bytes, { url: alvo });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao baixar o relatório.");
       setRodando(false);
@@ -239,7 +240,10 @@ export function IngestaoEsportes() {
                 disabled={rodando}
                 onChange={async (e) => {
                   const arquivo = e.target.files?.[0];
-                  if (arquivo) await processar(new Uint8Array(await arquivo.arrayBuffer()));
+                  if (arquivo)
+                    await processar(new Uint8Array(await arquivo.arrayBuffer()), {
+                      arquivoNome: arquivo.name,
+                    });
                   e.target.value = "";
                 }}
               />
