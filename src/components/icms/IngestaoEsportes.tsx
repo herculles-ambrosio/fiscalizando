@@ -124,10 +124,32 @@ export function IngestaoEsportes() {
         atividades: itens.length,
         naoMapeadas: [...naoMapeadas],
       });
+      try {
+        await registrar({
+          data: {
+            criterio: "esportes",
+            anoBase,
+            fonte,
+            origem: origem?.url ? "url" : "upload",
+            url: origem?.url ?? null,
+            arquivoNome: origem?.arquivoNome ?? null,
+            paginas: paginas.length,
+            registrosRanking: ranking.length,
+            registrosItens: itens.length,
+            municipios: new Set(itens.map((i) => i.municipio)).size,
+            naoMapeados: [...naoMapeadas],
+            divergencias: [],
+          },
+        });
+      } catch {
+        // o histórico é apenas informativo; não interrompe a carga
+      }
       await cliente.invalidateQueries({ queryKey: ["esportes-anos"] });
       await cliente.invalidateQueries({ queryKey: ["esportes-ranking"] });
       await cliente.invalidateQueries({ queryKey: ["esportes-atividades"] });
+      await cliente.invalidateQueries({ queryKey: ["criterio-importacoes"] });
       toast.success("Dados do critério Esportes atualizados.");
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o relatório.");
     } finally {
