@@ -36,6 +36,7 @@ import { Route as AuthenticatedIcmsCargasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedIcmsComparativoRouteImport } from './routes/_authenticated/icms/comparativo'
 import { Route as AuthenticatedIcmsCriteriosRouteImport } from './routes/_authenticated/icms/criterios'
 import { Route as AuthenticatedIcmsEsportesRouteImport } from './routes/_authenticated/icms/esportes'
+import { Route as AuthenticatedIcmsFjpRouteImport } from './routes/_authenticated/icms/fjp'
 import { Route as AuthenticatedIcmsImportacoesRouteImport } from './routes/_authenticated/icms/importacoes'
 import { Route as AuthenticatedIcmsPlanoRouteImport } from './routes/_authenticated/icms/plano'
 import { Route as AuthenticatedIcmsCriterioSlugRouteImport } from './routes/_authenticated/icms/criterio.$slug'
@@ -188,6 +189,11 @@ const AuthenticatedIcmsEsportesRoute =
     path: '/esportes',
     getParentRoute: () => AuthenticatedIcmsRouteRoute,
   } as any)
+const AuthenticatedIcmsFjpRoute = AuthenticatedIcmsFjpRouteImport.update({
+  id: '/fjp',
+  path: '/fjp',
+  getParentRoute: () => AuthenticatedIcmsRouteRoute,
+} as any)
 const AuthenticatedIcmsImportacoesRoute =
   AuthenticatedIcmsImportacoesRouteImport.update({
     id: '/importacoes',
@@ -238,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
   '/icms/esportes': typeof AuthenticatedIcmsEsportesRoute
+  '/icms/fjp': typeof AuthenticatedIcmsFjpRoute
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
@@ -269,6 +276,7 @@ export interface FileRoutesByTo {
   '/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
   '/icms/esportes': typeof AuthenticatedIcmsEsportesRoute
+  '/icms/fjp': typeof AuthenticatedIcmsFjpRoute
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
@@ -303,6 +311,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/_authenticated/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
   '/_authenticated/icms/esportes': typeof AuthenticatedIcmsEsportesRoute
+  '/_authenticated/icms/fjp': typeof AuthenticatedIcmsFjpRoute
   '/_authenticated/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/_authenticated/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/icms/comparativo'
     | '/icms/criterios'
     | '/icms/esportes'
+    | '/icms/fjp'
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms/'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/icms/comparativo'
     | '/icms/criterios'
     | '/icms/esportes'
+    | '/icms/fjp'
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/comparativo'
     | '/_authenticated/icms/criterios'
     | '/_authenticated/icms/esportes'
+    | '/_authenticated/icms/fjp'
     | '/_authenticated/icms/importacoes'
     | '/_authenticated/icms/plano'
     | '/_authenticated/icms/'
@@ -605,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIcmsEsportesRouteImport
       parentRoute: typeof AuthenticatedIcmsRouteRoute
     }
+    '/_authenticated/icms/fjp': {
+      id: '/_authenticated/icms/fjp'
+      path: '/fjp'
+      fullPath: '/icms/fjp'
+      preLoaderRoute: typeof AuthenticatedIcmsFjpRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
     '/_authenticated/icms/importacoes': {
       id: '/_authenticated/icms/importacoes'
       path: '/importacoes'
@@ -662,6 +681,7 @@ interface AuthenticatedIcmsRouteRouteChildren {
   AuthenticatedIcmsComparativoRoute: typeof AuthenticatedIcmsComparativoRoute
   AuthenticatedIcmsCriteriosRoute: typeof AuthenticatedIcmsCriteriosRoute
   AuthenticatedIcmsEsportesRoute: typeof AuthenticatedIcmsEsportesRoute
+  AuthenticatedIcmsFjpRoute: typeof AuthenticatedIcmsFjpRoute
   AuthenticatedIcmsImportacoesRoute: typeof AuthenticatedIcmsImportacoesRoute
   AuthenticatedIcmsPlanoRoute: typeof AuthenticatedIcmsPlanoRoute
   AuthenticatedIcmsIndexRoute: typeof AuthenticatedIcmsIndexRoute
@@ -674,6 +694,7 @@ const AuthenticatedIcmsRouteRouteChildren: AuthenticatedIcmsRouteRouteChildren =
     AuthenticatedIcmsComparativoRoute: AuthenticatedIcmsComparativoRoute,
     AuthenticatedIcmsCriteriosRoute: AuthenticatedIcmsCriteriosRoute,
     AuthenticatedIcmsEsportesRoute: AuthenticatedIcmsEsportesRoute,
+    AuthenticatedIcmsFjpRoute: AuthenticatedIcmsFjpRoute,
     AuthenticatedIcmsImportacoesRoute: AuthenticatedIcmsImportacoesRoute,
     AuthenticatedIcmsPlanoRoute: AuthenticatedIcmsPlanoRoute,
     AuthenticatedIcmsIndexRoute: AuthenticatedIcmsIndexRoute,
