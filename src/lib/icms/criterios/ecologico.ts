@@ -64,7 +64,8 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
   const itens: ItemMunicipio[] = [];
   let saneamento = 0;
   let uc = 0;
-  let mata = 0;
+  let conservacao = 0;
+  let indice = 0;
 
   const push = (
     nome: string,
@@ -94,20 +95,6 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
       .map((l) => l.texto.replace(/\s+/g, " ").trim())
       .filter((t) => t.length >= 12);
 
-    // A tabela de mata seca é a única com linhas "código código município
-    // percentual". Como esse formato é curto e apareceria por engano nas
-    // outras tabelas, ela só é lida em páginas que não têm saneamento nem
-    // unidades de conservação e onde esse padrão domina a página.
-    const contar = (re: RegExp) =>
-      textos.reduce((soma, t) => {
-        re.lastIndex = 0;
-        return soma + [...t.matchAll(re)].length;
-      }, 0);
-    const qtdSaneamento = contar(RE_SANEAMENTO);
-    const qtdUc = contar(RE_UC);
-    const qtdMata = contar(RE_MATA);
-    const paginaMata = qtdSaneamento === 0 && qtdUc === 0 && qtdMata >= textos.length * 0.5;
-
     for (const texto of textos) {
       let achou = false;
       RE_SANEAMENTO.lastIndex = 0;
@@ -136,28 +123,42 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
         achou = achou || ok;
         if (ok) uc++;
       }
-      if (achou || !paginaMata) continue;
+      if (achou) continue;
 
-      RE_MATA.lastIndex = 0;
-      for (const m of texto.matchAll(RE_MATA)) {
-        const ok = push(m[3] ?? "", "Mata seca", "mata_seca", num(m[4] ?? ""), null);
-        if (ok) mata++;
+      RE_CONSERVACAO.lastIndex = 0;
+      for (const m of texto.matchAll(RE_CONSERVACAO)) {
+        const ok = push(
+          m[3] ?? "",
+          "Índice de conservação",
+          "indice_conservacao",
+          num(m[4] ?? ""),
+          `apurado ${m[5]} · final ${m[6]}`,
+        );
+        achou = achou || ok;
+        if (ok) conservacao++;
+      }
+      if (achou) continue;
+
+      RE_INDICE.lastIndex = 0;
+      for (const m of texto.matchAll(RE_INDICE)) {
+        const ok = push(m[3] ?? "", "Índice do critério publicado", "indice_criterio", num(m[4] ?? ""), null);
+        if (ok) indice++;
       }
     }
   }
 
-
   const ranking = new Map<string, { municipio: string; municipioNome: string; nota: number }>();
   for (const item of itens) {
-    if (item.itemCodigo !== "unidades_conservacao") continue;
+    if (item.itemCodigo !== "indice_criterio" && item.itemCodigo !== "indice_conservacao") continue;
     const atual = ranking.get(item.municipio) ?? {
       municipio: item.municipio,
       municipioNome: item.municipioNome,
       nota: 0,
     };
-    atual.nota += item.pontuacao ?? 0;
+    atual.nota = Math.max(atual.nota, item.pontuacao ?? 0);
     ranking.set(item.municipio, atual);
   }
+
 
   return {
     itens,
