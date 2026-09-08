@@ -401,6 +401,198 @@ export type Database = {
           },
         ]
       }
+      criterio_importacoes: {
+        Row: {
+          ano_base: number
+          arquivo_nome: string | null
+          criado_em: string
+          criterio: string
+          divergencias: Json
+          fonte_relatorio: string
+          id: string
+          importado_por: string | null
+          importado_por_nome: string | null
+          municipios: number
+          nao_mapeados: Json
+          origem: string
+          paginas: number
+          registros_itens: number
+          registros_ranking: number
+          url: string | null
+        }
+        Insert: {
+          ano_base: number
+          arquivo_nome?: string | null
+          criado_em?: string
+          criterio: string
+          divergencias?: Json
+          fonte_relatorio: string
+          id?: string
+          importado_por?: string | null
+          importado_por_nome?: string | null
+          municipios?: number
+          nao_mapeados?: Json
+          origem: string
+          paginas?: number
+          registros_itens?: number
+          registros_ranking?: number
+          url?: string | null
+        }
+        Update: {
+          ano_base?: number
+          arquivo_nome?: string | null
+          criado_em?: string
+          criterio?: string
+          divergencias?: Json
+          fonte_relatorio?: string
+          id?: string
+          importado_por?: string | null
+          importado_por_nome?: string | null
+          municipios?: number
+          nao_mapeados?: Json
+          origem?: string
+          paginas?: number
+          registros_itens?: number
+          registros_ranking?: number
+          url?: string | null
+        }
+        Relationships: []
+      }
+      criterio_item_municipio: {
+        Row: {
+          ano_base: number
+          criado_em: string
+          criterio: string
+          detalhes: Json
+          fonte_relatorio: string
+          id: string
+          item_codigo: string | null
+          item_nome: string
+          municipio: string
+          municipio_nome: string
+          observacao: string | null
+          peso: number | null
+          pontuacao: number | null
+          quantidade: number | null
+        }
+        Insert: {
+          ano_base: number
+          criado_em?: string
+          criterio: string
+          detalhes?: Json
+          fonte_relatorio: string
+          id?: string
+          item_codigo?: string | null
+          item_nome: string
+          municipio: string
+          municipio_nome: string
+          observacao?: string | null
+          peso?: number | null
+          pontuacao?: number | null
+          quantidade?: number | null
+        }
+        Update: {
+          ano_base?: number
+          criado_em?: string
+          criterio?: string
+          detalhes?: Json
+          fonte_relatorio?: string
+          id?: string
+          item_codigo?: string | null
+          item_nome?: string
+          municipio?: string
+          municipio_nome?: string
+          observacao?: string | null
+          peso?: number | null
+          pontuacao?: number | null
+          quantidade?: number | null
+        }
+        Relationships: []
+      }
+      criterio_itens_referencia: {
+        Row: {
+          atualizado_em: string
+          codigo: string
+          criado_em: string
+          criterio: string
+          id: string
+          nome_oficial: string
+          ordem: number
+          peso: number | null
+          requisito: string | null
+          sinonimos: string[]
+        }
+        Insert: {
+          atualizado_em?: string
+          codigo: string
+          criado_em?: string
+          criterio: string
+          id?: string
+          nome_oficial: string
+          ordem?: number
+          peso?: number | null
+          requisito?: string | null
+          sinonimos?: string[]
+        }
+        Update: {
+          atualizado_em?: string
+          codigo?: string
+          criado_em?: string
+          criterio?: string
+          id?: string
+          nome_oficial?: string
+          ordem?: number
+          peso?: number | null
+          requisito?: string | null
+          sinonimos?: string[]
+        }
+        Relationships: []
+      }
+      criterio_ranking_municipio: {
+        Row: {
+          ano_base: number
+          atualizado_em: string
+          criado_em: string
+          criterio: string
+          detalhes: Json
+          fonte_relatorio: string
+          id: string
+          indice_percentual: number
+          municipio: string
+          municipio_nome: string
+          nota_final: number
+          posicao: number | null
+        }
+        Insert: {
+          ano_base: number
+          atualizado_em?: string
+          criado_em?: string
+          criterio: string
+          detalhes?: Json
+          fonte_relatorio: string
+          id?: string
+          indice_percentual?: number
+          municipio: string
+          municipio_nome: string
+          nota_final?: number
+          posicao?: number | null
+        }
+        Update: {
+          ano_base?: number
+          atualizado_em?: string
+          criado_em?: string
+          criterio?: string
+          detalhes?: Json
+          fonte_relatorio?: string
+          id?: string
+          indice_percentual?: number
+          municipio?: string
+          municipio_nome?: string
+          nota_final?: number
+          posicao?: number | null
+        }
+        Relationships: []
+      }
       esportes_atividade_municipio: {
         Row: {
           ano_base: number
