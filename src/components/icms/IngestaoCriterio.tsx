@@ -88,7 +88,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     // da SEMAD traz saneamento, unidades de conservação, fator de qualidade e
     // o índice do critério em tabelas de formatos diferentes.
     let r = extrairTabelaCriterio(paginas, referencia ?? [], pipeline.colunasTotal);
-    const ecologico = pipeline.slug === "meio-ambiente";
+    const ecologico = pipeline.slug === "meio_ambiente" || pipeline.slug === "meio-ambiente";
     if (ecologico && !r.itens.length) {
       const { extrairIcmsEcologico } = await import("@/lib/icms/criterios/ecologico");
       const e = extrairIcmsEcologico(paginas);
