@@ -63,7 +63,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   async function buscarLinks() {
     setBuscando(true);
     try {
-      const r = await descobrir({ data: { criterio: pipeline.slug } });
+      const r = await descobrir({ data: { criterio: pipeline.slug, anoBase } });
       setLinks(r.relatorios);
       if (!r.relatorios.length) toast.info("Nenhum relatório localizado. Cole o endereço do PDF.");
     } catch (e) {
