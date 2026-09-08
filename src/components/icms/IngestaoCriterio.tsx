@@ -69,6 +69,67 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     }
   }
 
+  async function gravarResultado(
+    paginas: import("@/lib/icms/esportes/parser").PaginaTexto[],
+    origem: "site" | "url" | "arquivo" | "colado",
+    identificacao: string | null,
+  ) {
+    setEtapa("Casando as colunas com os itens do critério");
+    const r = extrairTabelaCriterio(paginas, referencia ?? [], pipeline.colunasTotal);
+    if (!r.itens.length && !r.ranking.length) {
+      throw new Error(
+        "Não foi possível reconhecer a tabela deste relatório. Confira se o conteúdo é o quadro de pontuação por município.",
+      );
+    }
+
+    setEtapa("Gravando");
+    await limpar({ data: { criterio: pipeline.slug, anoBase, fonte } });
+    for (let i = 0; i < r.ranking.length; i += 300) {
+      await gravarRanking({
+        data: { criterio: pipeline.slug, anoBase, fonte, linhas: r.ranking.slice(i, i + 300) },
+      });
+      setProgresso(70 + Math.round(((i + 300) / Math.max(r.ranking.length, 1)) * 10));
+    }
+    for (let i = 0; i < r.itens.length; i += 150) {
+      await gravarItens({
+        data: { criterio: pipeline.slug, anoBase, fonte, itens: r.itens.slice(i, i + 150) },
+      });
+      setProgresso(80 + Math.round(((i + 150) / Math.max(r.itens.length, 1)) * 20));
+    }
+
+    const municipios = new Set(r.itens.map((i) => i.municipio)).size;
+    await registrar({
+      data: {
+        criterio: pipeline.slug,
+        anoBase,
+        fonte,
+        origem,
+        url: origem === "url" || origem === "site" ? identificacao : null,
+        arquivoNome: origem === "url" || origem === "site" ? null : identificacao,
+        paginas: paginas.length,
+        registrosRanking: r.ranking.length,
+        registrosItens: r.itens.length,
+        municipios,
+        naoMapeados: r.naoMapeados,
+        divergencias: [],
+      },
+    });
+
+    setResumo({
+      municipios,
+      ranking: r.ranking.length,
+      itens: r.itens.length,
+      naoMapeados: r.naoMapeados,
+      cabecalho: r.cabecalho,
+    });
+    setProgresso(100);
+    await cliente.invalidateQueries({ queryKey: ["criterio-anos"] });
+    await cliente.invalidateQueries({ queryKey: ["criterio-ranking"] });
+    await cliente.invalidateQueries({ queryKey: ["criterio-itens"] });
+    await cliente.invalidateQueries({ queryKey: ["criterio-importacoes"] });
+    toast.success("Relatório importado.");
+  }
+
   async function processar(
     dados: Uint8Array,
     origem: "site" | "url" | "arquivo",
@@ -82,61 +143,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const paginas = await extrairPaginas(dados, (p, total) =>
         setProgresso(Math.round((p / total) * 70)),
       );
-
-      setEtapa("Casando as colunas com os itens do critério");
-      const r = extrairTabelaCriterio(paginas, referencia ?? [], pipeline.colunasTotal);
-      if (!r.itens.length && !r.ranking.length) {
-        throw new Error(
-          "Não foi possível reconhecer a tabela deste relatório. Confira se o PDF é o quadro de pontuação por município.",
-        );
-      }
-
-      setEtapa("Gravando");
-      await limpar({ data: { criterio: pipeline.slug, anoBase, fonte } });
-      for (let i = 0; i < r.ranking.length; i += 300) {
-        await gravarRanking({
-          data: { criterio: pipeline.slug, anoBase, fonte, linhas: r.ranking.slice(i, i + 300) },
-        });
-        setProgresso(70 + Math.round(((i + 300) / Math.max(r.ranking.length, 1)) * 10));
-      }
-      for (let i = 0; i < r.itens.length; i += 150) {
-        await gravarItens({
-          data: { criterio: pipeline.slug, anoBase, fonte, itens: r.itens.slice(i, i + 150) },
-        });
-        setProgresso(80 + Math.round(((i + 150) / Math.max(r.itens.length, 1)) * 20));
-      }
-
-      const municipios = new Set(r.itens.map((i) => i.municipio)).size;
-      await registrar({
-        data: {
-          criterio: pipeline.slug,
-          anoBase,
-          fonte,
-          origem,
-          url: origem === "arquivo" ? null : identificacao,
-          arquivoNome: origem === "arquivo" ? identificacao : null,
-          paginas: paginas.length,
-          registrosRanking: r.ranking.length,
-          registrosItens: r.itens.length,
-          municipios,
-          naoMapeados: r.naoMapeados,
-          divergencias: [],
-        },
-      });
-
-      setResumo({
-        municipios,
-        ranking: r.ranking.length,
-        itens: r.itens.length,
-        naoMapeados: r.naoMapeados,
-        cabecalho: r.cabecalho,
-      });
-      setProgresso(100);
-      await cliente.invalidateQueries({ queryKey: ["criterio-anos"] });
-      await cliente.invalidateQueries({ queryKey: ["criterio-ranking"] });
-      await cliente.invalidateQueries({ queryKey: ["criterio-itens"] });
-      await cliente.invalidateQueries({ queryKey: ["criterio-importacoes"] });
-      toast.success("Relatório importado.");
+      await gravarResultado(paginas, origem, identificacao);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o relatório.");
     } finally {
@@ -144,6 +151,29 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       setEtapa("");
     }
   }
+
+  async function processarColado() {
+    if (texto.trim().length < 40) {
+      toast.error("Cole o conteúdo do quadro de pontuação (cabeçalho e linhas dos municípios).");
+      return;
+    }
+    setRodando(true);
+    setResumo(null);
+    setProgresso(20);
+    try {
+      setEtapa("Lendo o conteúdo colado");
+      const { paginasDoTextoColado } = await import("@/lib/icms/criterios/colado");
+      const { paginas, linhas } = paginasDoTextoColado(texto);
+      setProgresso(60);
+      await gravarResultado(paginas, "colado", `texto colado (${linhas} linhas)`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao processar o conteúdo colado.");
+    } finally {
+      setRodando(false);
+      setEtapa("");
+    }
+  }
+
 
   async function importarUrl(endereco: string, origem: "site" | "url") {
     if (!endereco.trim()) {
