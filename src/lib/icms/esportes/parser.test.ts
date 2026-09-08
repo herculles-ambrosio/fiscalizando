@@ -110,15 +110,17 @@ describe.skipIf(!existsSync(PDF))("relatório definitivo ano-base 2024", () => {
     const blocos = extrairBlocos(paginas.flatMap((p) => p.linhas.map((l) => l.texto)));
     expect(blocos.length).toBeGreaterThan(1000);
     const deRaul = blocos.filter((b) => b.municipio === "RAUL SOARES");
-    // O relatório não traz memória de cálculo para Raul Soares; as menções ao
-    // nome estão dentro de eventos de outros municípios.
-    expect(deRaul.length).toBe(0);
+    expect(deRaul.length).toBe(11);
+    // A soma das atividades bate exatamente com a coluna ATIVIDADES do ranking.
+    expect(deRaul.reduce((s, b) => s + (b.pontuacao ?? 0), 0)).toBe(5120);
+    // Eventos de outros municípios que citam "Raul Soares" não entram aqui.
+    expect(
+      deRaul.some((b) => /Escola Municipal Raul Soares/i.test(b.eventosTexto)),
+    ).toBe(false);
 
-    // Conferência da soma por município: Abaeté aparece com vários blocos.
-    const somaAbaete = blocos
-      .filter((b) => b.municipio === "ABAETE")
-      .reduce((s, b) => s + (b.pontuacao ?? 0), 0);
-    const rankAbaete = ranking.find((l) => l.municipio === "ABAETE");
-    if (rankAbaete) expect(Math.abs(somaAbaete - rankAbaete.notaAtividades)).toBeLessThan(1);
+    // Nomes de município quebrados em várias linhas no ranking.
+    for (const nome of ["LAGOA DA PRATA", "SAO JOAO DEL REI", "ENTRE RIOS DE MINAS"]) {
+      expect(ranking.some((l) => l.municipio === nome)).toBe(true);
+    }
   }, 300000);
 });
