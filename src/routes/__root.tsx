@@ -152,6 +152,20 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    // Carregou bem: libera nova tentativa de recarga em deploys futuros.
+    sessionStorage.removeItem(CHAVE_RECARGA);
+    const aoFalharPrecarga = (evento: Event) => {
+      evento.preventDefault();
+      if (!sessionStorage.getItem(CHAVE_RECARGA)) {
+        sessionStorage.setItem(CHAVE_RECARGA, "1");
+        window.location.reload();
+      }
+    };
+    window.addEventListener("vite:preloadError", aoFalharPrecarga);
+    return () => window.removeEventListener("vite:preloadError", aoFalharPrecarga);
+  }, []);
+
+  useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((evento) => {
       if (evento !== "SIGNED_IN" && evento !== "SIGNED_OUT" && evento !== "USER_UPDATED") return;
       // Não invalide o roteador enquanto a rota autenticada ainda executa o
