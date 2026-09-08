@@ -15,7 +15,8 @@
  * alguns relatórios ambientais.
  */
 
-import { normalizarMunicipio, normalizarTexto, type PaginaTexto } from "@/lib/icms/esportes/parser";
+import { normalizarTexto, type PaginaTexto } from "@/lib/icms/esportes/parser";
+import { canonicalizarMunicipio } from "./municipiosMg";
 
 export type ItemReferencia = {
   codigo: string;
@@ -143,8 +144,10 @@ export function extrairTabelaCriterio(
 
     const partido = partirLinha(texto);
     if (!partido) continue;
-    const municipio = normalizarMunicipio(partido.nome);
-    if (!municipio) continue;
+    const oficial = canonicalizarMunicipio(partido.nome);
+    if (!oficial) continue;
+    const municipio = oficial.chave;
+    const nomeMunicipio = oficial.nome;
 
     // A primeira coluna do cabeçalho costuma ser "Município"; as células
     // começam na segunda coluna.
@@ -156,7 +159,7 @@ export function extrairTabelaCriterio(
       if (i === posTotal) {
         ranking.set(municipio, {
           municipio,
-          municipioNome: partido.nome.trim(),
+          municipioNome: nomeMunicipio,
           posicao: null,
           notaFinal: pontuacao ?? 0,
           indicePercentual: /%/.test(celula) ? (pontuacao ?? 0) : 0,
@@ -170,7 +173,7 @@ export function extrairTabelaCriterio(
       }
       itens.push({
         municipio,
-        municipioNome: partido.nome.trim(),
+        municipioNome: nomeMunicipio,
         itemNome: item.nome_oficial,
         itemCodigo: item.codigo,
         peso: item.peso,
@@ -186,8 +189,8 @@ export function extrairTabelaCriterio(
   for (const texto of linhas) {
     const mMun = texto.match(/^\s*Munic[ií]pio:\s*(.+)$/);
     if (mMun) {
-      const nome = (mMun[1] ?? "").trim();
-      municipioAtual = { nome, chave: normalizarMunicipio(nome) };
+      const oficial = canonicalizarMunicipio((mMun[1] ?? "").trim());
+      municipioAtual = oficial ? { nome: oficial.nome, chave: oficial.chave } : null;
       continue;
     }
     if (!municipioAtual) continue;

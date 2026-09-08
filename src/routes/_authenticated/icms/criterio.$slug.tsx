@@ -173,7 +173,9 @@ function DetalheGenerico({ slug }: { slug: string }) {
               <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Posição</p>
-                  <p className="text-xl font-semibold">{linhaMunicipio.posicao ?? "—"}</p>
+                  <p className="text-xl font-semibold">
+                    {(ranking ?? []).findIndex((l) => l.municipio === chaveMunicipio) + 1 || "—"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Pontuação</p>
@@ -314,12 +316,12 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {ranking.map((l) => (
+                      {ranking.map((l, i) => (
                         <tr
                           key={l.municipio}
                           className={l.municipio === chaveMunicipio ? "bg-emerald-50 dark:bg-emerald-950/20" : ""}
                         >
-                          <td className="p-2">{l.posicao ?? "—"}</td>
+                          <td className="p-2">{i + 1}</td>
                           <td className="p-2">{l.municipio_nome}</td>
                           <td className="p-2 text-right">{l.nota_final.toLocaleString("pt-BR")}</td>
                           <td className="p-2 text-right">
