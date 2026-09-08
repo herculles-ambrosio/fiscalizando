@@ -322,6 +322,18 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             </div>
           )}
 
+          {links.length === 0 && diagnostico.length > 0 && (
+            <div className="space-y-1 rounded-md border p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">Páginas consultadas</p>
+              {diagnostico.map((d) => (
+                <p key={d.pagina} className="truncate">
+                  {d.pagina} — {d.situacao} ({d.encontrados} relatórios)
+                </p>
+              ))}
+            </div>
+          )}
+
+
           {rodando && (
             <div className="space-y-2">
               <Progress value={progresso} />
