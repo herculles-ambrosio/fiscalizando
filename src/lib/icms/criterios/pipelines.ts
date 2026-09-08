@@ -19,6 +19,8 @@ export type Pipeline = {
   hosts: string[];
   /** páginas varridas na descoberta automática de PDFs */
   paginasBusca: string[];
+  /** páginas oficiais que mudam só o ano na URL (varridas antes das demais) */
+  paginasPorAno?: (ano: number) => string[];
   /** palavras que precisam aparecer no link/nome do PDF */
   palavrasChave: string[];
   /** parser usado na leitura */
@@ -27,6 +29,7 @@ export type Pipeline = {
   colunasTotal: string[];
   /** explicação exibida na tela de ingestão */
   comoFunciona: string;
+
 };
 
 export const PIPELINES: Pipeline[] = [
