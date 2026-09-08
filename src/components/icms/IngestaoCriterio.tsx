@@ -56,7 +56,10 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   const [url, setUrl] = useState("");
   const [texto, setTexto] = useState("");
 
-  const [links, setLinks] = useState<{ url: string; texto: string; tipo: string }[]>([]);
+  const [links, setLinks] = useState<
+    { url: string; texto: string; tipo: string; ano: number | null }[]
+  >([]);
+
   const [diagnostico, setDiagnostico] = useState<
     { pagina: string; situacao: string; encontrados: number }[]
   >([]);
@@ -337,6 +340,11 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                         {l.tipo}
                       </Badge>
                       {l.texto}
+                      {l.ano ? (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          ano-base {l.ano}
+                        </span>
+                      ) : null}
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
                       {importado && (
@@ -348,7 +356,10 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                         size="sm"
                         variant="ghost"
                         disabled={rodando}
-                        onClick={() => importarUrl(l.url, "site")}
+                        onClick={() => {
+                          if (l.ano) setAnoBase(l.ano);
+                          void importarUrl(l.url, "site", l.ano ?? undefined);
+                        }}
                       >
                         {importado ? "Importar de novo" : "Importar"}
                       </Button>
@@ -356,6 +367,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                   </div>
                 );
               })}
+
             </div>
           )}
 
