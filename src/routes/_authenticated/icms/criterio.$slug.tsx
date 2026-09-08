@@ -106,6 +106,16 @@ function DetalheGenerico({ slug }: { slug: string }) {
     [referencia, pontuados],
   );
 
+  const referenciaFiltrada = useMemo(() => {
+    const lista = referencia ?? [];
+    if (filtroPontuacao === "todos") return lista;
+    return lista.filter((r) => {
+      const pontua = !!(pontuados.get(r.codigo)?.pontuacao ?? 0);
+      return filtroPontuacao === "pontuados" ? pontua : !pontua;
+    });
+  }, [referencia, pontuados, filtroPontuacao]);
+
+
   if (!criterio) {
     return (
       <div className="p-6">
