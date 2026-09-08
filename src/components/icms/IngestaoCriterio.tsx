@@ -27,7 +27,7 @@ import {
   registrarImportacao,
 } from "@/lib/icms/criterios.functions";
 import { extrairTabelaCriterio } from "@/lib/icms/criterios/tabela";
-import { useItensReferencia, type FonteRelatorio } from "@/hooks/useCriterios";
+import { useImportacoes, useItensReferencia, type FonteRelatorio } from "@/hooks/useCriterios";
 import type { Pipeline } from "@/lib/icms/criterios/pipelines";
 
 type Resumo = {
