@@ -59,6 +59,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { CRITERIO_POR_SLUG, nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
+import { PontuacaoCriterios } from "@/components/icms/PontuacaoCriterios";
 import { montarDiagnostico } from "@/lib/icms/diagnostico";
 import {
   compararMunicipiosFjp,
@@ -648,7 +649,14 @@ function ComparativoIcms() {
               </CardContent>
             </Card>
           )}
+
+          {ranking.length > 0 && (
+            <div className="mt-4">
+              <PontuacaoCriterios municipios={ranking.map((r) => r.nome)} />
+            </div>
+          )}
         </TabsContent>
+
 
         <TabsContent value="buscar" className="mt-4">
           <BuscarNoPortal

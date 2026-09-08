@@ -15,6 +15,8 @@ import {
 import { CRITERIOS } from "@/lib/icms/criterios";
 import { CriterioEsportesDetalhe } from "@/components/icms/CriterioEsportesDetalhe";
 import { IngestaoCriterio } from "@/components/icms/IngestaoCriterio";
+import { ConferenciaFjp } from "@/components/icms/ConferenciaFjp";
+
 import { usePerfil } from "@/hooks/usePerfil";
 import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
 import {
@@ -201,6 +203,15 @@ function DetalheGenerico({ slug }: { slug: string }) {
               )}
             </CardContent>
           </Card>
+
+          <ConferenciaFjp
+            slug={criterio.slug}
+            nomeCriterio={criterio.nome}
+            pesoLegalPct={criterio.percentual}
+            indiceRelatorio={linhaMunicipio?.indice_percentual ?? null}
+          />
+
+
 
 
           {!referencia?.length && (

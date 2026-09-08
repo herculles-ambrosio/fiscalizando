@@ -21,11 +21,31 @@ function apenasLetras(valor: string): string {
 }
 
 const INDICE = new Map<string, string>();
+/**
+ * Índice tolerante à grafia antiga com "h" ("São Thomé das Letras" no relatório
+ * de Turismo x "São Tomé das Letras" na relação oficial). Conferido: nenhuma
+ * colisão entre os 853 municípios.
+ */
+const INDICE_SEM_H = new Map<string, string>();
 for (const nome of Object.values(MUNICIPIOS_SEF)) {
   INDICE.set(apenasLetras(nome), nome);
+  INDICE_SEM_H.set(apenasLetras(nome).replace(/H/g, ""), nome);
 }
 
 export type MunicipioOficial = { chave: string; nome: string };
+
+/**
+ * Correspondência exata (sem tentar cortar sobras): usada quando o texto lido
+ * pode conter, na mesma linha, o município e outra informação — caso do
+ * relatório de Turismo, em que o circuito turístico vem logo depois do nome.
+ */
+export function municipioExato(nomeLido: string): MunicipioOficial | null {
+  const chave = apenasLetras(nomeLido);
+  const oficial = INDICE.get(chave) ?? INDICE_SEM_H.get(chave.replace(/H/g, ""));
+  return oficial ? { chave: normalizarMunicipio(oficial), nome: oficial } : null;
+}
+
+
 
 /**
  * Devolve o município oficial correspondente ao nome lido, ou `null` quando o
