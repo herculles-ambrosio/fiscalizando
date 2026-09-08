@@ -23,6 +23,8 @@ import {
   gravarRankingEsportes,
   limparEsportes,
 } from "@/lib/icms/esportes.functions";
+import { registrarImportacao } from "@/lib/icms/criterios.functions";
+
 import { extrairBlocos, extrairRanking, mapearAtividade } from "@/lib/icms/esportes/parser";
 import { useAtividadesReferencia, type FonteRelatorio } from "@/hooks/useEsportes";
 
