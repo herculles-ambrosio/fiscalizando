@@ -87,16 +87,23 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     identificacao: string | null,
   ) {
     setEtapa("Casando as colunas com os itens do critério");
-    // O ICMS Ecológico não tem um quadro único por município: cada publicação
-    // da SEMAD traz saneamento, unidades de conservação, fator de qualidade e
-    // o índice do critério em tabelas de formatos diferentes.
+    // Cada órgão publica em um formato: o ICMS Turismo traz um quadro único com
+    // circuito, nota, RLPC, IRC, IIT e índice; o ICMS Ecológico traz vários
+    // quadros (saneamento, unidades de conservação, fator de qualidade e
+    // índice) em uma mesma publicação.
     let r = extrairTabelaCriterio(paginas, referencia ?? [], pipeline.colunasTotal);
     const ecologico = pipeline.slug === "meio_ambiente" || pipeline.slug === "meio-ambiente";
+    if (pipeline.slug === "turismo") {
+      const { extrairTurismo } = await import("@/lib/icms/criterios/turismo");
+      const t = extrairTurismo(paginas);
+      if (t.ranking.length) r = t;
+    }
     if (ecologico && !r.itens.length) {
       const { extrairIcmsEcologico } = await import("@/lib/icms/criterios/ecologico");
       const e = extrairIcmsEcologico(paginas);
       if (e.itens.length) r = e;
     }
+
     if (!r.itens.length && !r.ranking.length) {
       throw new Error(
         "Não foi possível reconhecer a tabela deste relatório. Confira se o conteúdo é o quadro de pontuação por município.",
