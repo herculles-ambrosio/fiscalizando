@@ -401,6 +401,155 @@ export type Database = {
           },
         ]
       }
+      esportes_atividade_municipio: {
+        Row: {
+          ano_base: number
+          atividade_codigo: string | null
+          atividade_nome: string
+          data_ingestao: string
+          eventos_texto: string
+          fonte_relatorio: string
+          id: string
+          modalidades_texto: string
+          municipio: string
+          municipio_nome: string
+          peso_anexo_v: number | null
+          peso_atividade: number | null
+          peso_rcl: number | null
+          pontuacao: number | null
+          pontuacao_atletas: number | null
+          pontuacao_modalidades: number | null
+          qtd_eventos: number
+          total_participantes: number
+        }
+        Insert: {
+          ano_base: number
+          atividade_codigo?: string | null
+          atividade_nome: string
+          data_ingestao?: string
+          eventos_texto?: string
+          fonte_relatorio: string
+          id?: string
+          modalidades_texto?: string
+          municipio: string
+          municipio_nome: string
+          peso_anexo_v?: number | null
+          peso_atividade?: number | null
+          peso_rcl?: number | null
+          pontuacao?: number | null
+          pontuacao_atletas?: number | null
+          pontuacao_modalidades?: number | null
+          qtd_eventos?: number
+          total_participantes?: number
+        }
+        Update: {
+          ano_base?: number
+          atividade_codigo?: string | null
+          atividade_nome?: string
+          data_ingestao?: string
+          eventos_texto?: string
+          fonte_relatorio?: string
+          id?: string
+          modalidades_texto?: string
+          municipio?: string
+          municipio_nome?: string
+          peso_anexo_v?: number | null
+          peso_atividade?: number | null
+          peso_rcl?: number | null
+          pontuacao?: number | null
+          pontuacao_atletas?: number | null
+          pontuacao_modalidades?: number | null
+          qtd_eventos?: number
+          total_participantes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esportes_atividade_municipio_atividade_codigo_fkey"
+            columns: ["atividade_codigo"]
+            isOneToOne: false
+            referencedRelation: "esportes_atividades_referencia"
+            referencedColumns: ["codigo"]
+          },
+        ]
+      }
+      esportes_atividades_referencia: {
+        Row: {
+          codigo: string
+          criado_em: string
+          nome_oficial: string
+          ordem: number
+          peso: number
+          requisito: string
+          sinonimos: string[]
+        }
+        Insert: {
+          codigo: string
+          criado_em?: string
+          nome_oficial: string
+          ordem?: number
+          peso: number
+          requisito?: string
+          sinonimos?: string[]
+        }
+        Update: {
+          codigo?: string
+          criado_em?: string
+          nome_oficial?: string
+          ordem?: number
+          peso?: number
+          requisito?: string
+          sinonimos?: string[]
+        }
+        Relationships: []
+      }
+      esportes_ranking_municipio: {
+        Row: {
+          ano_base: number
+          data_ingestao: string
+          fonte_relatorio: string
+          id: string
+          indice_percentual: number
+          municipio: string
+          municipio_nome: string
+          nota_atividades: number
+          nota_babt: number
+          nota_final: number
+          nota_jemg: number
+          nota_jimi: number
+          posicao: number | null
+        }
+        Insert: {
+          ano_base: number
+          data_ingestao?: string
+          fonte_relatorio: string
+          id?: string
+          indice_percentual?: number
+          municipio: string
+          municipio_nome: string
+          nota_atividades?: number
+          nota_babt?: number
+          nota_final?: number
+          nota_jemg?: number
+          nota_jimi?: number
+          posicao?: number | null
+        }
+        Update: {
+          ano_base?: number
+          data_ingestao?: string
+          fonte_relatorio?: string
+          id?: string
+          indice_percentual?: number
+          municipio?: string
+          municipio_nome?: string
+          nota_atividades?: number
+          nota_babt?: number
+          nota_final?: number
+          nota_jemg?: number
+          nota_jimi?: number
+          posicao?: number | null
+        }
+        Relationships: []
+      }
       evolucoes_salvas: {
         Row: {
           arquivo_atual_nome: string

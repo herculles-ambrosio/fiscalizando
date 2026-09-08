@@ -11,10 +11,10 @@ import {
   MapPin,
   Scale,
   Settings,
-  Target,
 
   TrendingUp,
   Users,
+  Trophy,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -63,7 +63,7 @@ const NAV_ICMS_OPERACAO = [
 ];
 const NAV_ICMS_ANALISE = [
   { to: "/icms/criterios", rotulo: "Critérios", icone: Scale },
-  { to: "/icms/metas", rotulo: "Metas", icone: Target },
+  { to: "/icms/esportes", rotulo: "Esportes", icone: Trophy },
   { to: "/icms/comparativo", rotulo: "Comparativo", icone: TrendingUp },
   { to: "/icms/plano", rotulo: "Plano de melhoria", icone: ListChecks },
 ];
