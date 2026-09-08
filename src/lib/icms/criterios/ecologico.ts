@@ -77,6 +77,10 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
     const municipioNome = limparNome(nome);
     const municipio = normalizarMunicipio(municipioNome);
     if (!municipio || municipio.length < 3) return false;
+    // Nos quadros de índice o município vem em caixa alta e baixa ("Abre
+    // Campo"); siglas soltas de unidade de conservação ("APA", "RPPN") não.
+    if (itemCodigo.startsWith("indice_") && (municipioNome.length < 5 || !/[a-záàâãéêíóôõúüç]/.test(municipioNome)))
+      return false;
     itens.push({
       municipio,
       municipioNome,
