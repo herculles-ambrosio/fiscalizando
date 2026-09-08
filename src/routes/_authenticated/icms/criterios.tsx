@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
-import { VazioIcms } from "@/components/icms/VazioIcms";
+
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
 import { montarDiagnostico, ROTULO_SITUACAO } from "@/lib/icms/diagnostico";
 import { MESES } from "@/lib/icms/criterios";
