@@ -54,6 +54,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   const [texto, setTexto] = useState("");
 
   const [links, setLinks] = useState<{ url: string; texto: string; tipo: string }[]>([]);
+  const [diagnostico, setDiagnostico] = useState<
+    { pagina: string; situacao: string; encontrados: number }[]
+  >([]);
   const [buscando, setBuscando] = useState(false);
   const [etapa, setEtapa] = useState("");
   const [progresso, setProgresso] = useState(0);
@@ -65,6 +68,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     try {
       const r = await descobrir({ data: { criterio: pipeline.slug, anoBase } });
       setLinks(r.relatorios);
+      setDiagnostico(r.diagnostico ?? []);
       if (!r.relatorios.length) toast.info("Nenhum relatório localizado. Cole o endereço do PDF.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao consultar o site.");
@@ -72,6 +76,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       setBuscando(false);
     }
   }
+
 
   async function gravarResultado(
     paginas: import("@/lib/icms/esportes/parser").PaginaTexto[],
