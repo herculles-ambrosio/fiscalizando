@@ -321,21 +321,37 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
 
           {links.length > 0 && (
             <div className="space-y-2 rounded-md border p-3">
-              {links.map((l) => (
-                <div key={l.url} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate">
-                    <Badge variant="outline" className="mr-2">
-                      {l.tipo}
-                    </Badge>
-                    {l.texto}
-                  </span>
-                  <Button size="sm" variant="ghost" disabled={rodando} onClick={() => importarUrl(l.url, "site")}>
-                    Importar
-                  </Button>
-                </div>
-              ))}
+              {links.map((l) => {
+                const importado = jaImportados.has(l.url);
+                return (
+                  <div key={l.url} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="truncate">
+                      <Badge variant="outline" className="mr-2">
+                        {l.tipo}
+                      </Badge>
+                      {l.texto}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2">
+                      {importado && (
+                        <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600">
+                          Importado
+                        </Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={rodando}
+                        onClick={() => importarUrl(l.url, "site")}
+                      >
+                        {importado ? "Importar de novo" : "Importar"}
+                      </Button>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
+
 
           {links.length === 0 && diagnostico.length > 0 && (
             <div className="space-y-1 rounded-md border p-3 text-xs text-muted-foreground">
