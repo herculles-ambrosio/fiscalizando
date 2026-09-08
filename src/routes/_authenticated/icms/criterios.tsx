@@ -104,6 +104,40 @@ function CriteriosIcms() {
         </CardContent>
       </Card>
 
+      <section className="space-y-2">
+        <h2 className="text-sm font-medium text-muted-foreground">
+          Todos os critérios — abra o detalhamento de cada um
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {diag?.linhas.map((l) => (
+            <Card key={`card-${l.criterio.slug}`} className="flex flex-col justify-between">
+              <CardContent className="space-y-1 pt-4">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium leading-tight">{l.criterio.nome}</p>
+                  {l.criterio.percentual != null && (
+                    <Badge variant="secondary">{l.criterio.percentual}%</Badge>
+                  )}
+                </div>
+                <p className="line-clamp-2 text-xs text-muted-foreground">{l.criterio.oQueMede}</p>
+                <p className="text-xs text-muted-foreground">
+                  Recebido no exercício: {formatarMoeda(l.valorAno)}
+                </p>
+                <div className="pt-2">
+                  <Button asChild size="sm" variant="outline">
+                    {l.criterio.slug === "esportes" ? (
+                      <Link to="/icms/esportes">Abrir detalhamento</Link>
+                    ) : (
+                      <Link to="/icms/criterio/$slug" params={{ slug: l.criterio.slug }}>
+                        Abrir detalhamento
+                      </Link>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
 
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
