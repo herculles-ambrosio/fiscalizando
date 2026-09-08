@@ -69,6 +69,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
   const { data: referencia } = useItensReferenciaCompleta(slug);
   const { data: anos } = useCriterioAnos(slug);
   const [combo, setCombo] = useState<string>("");
+  const [filtroPontuacao, setFiltroPontuacao] = useState<"todos" | "pontuados" | "nao_pontuados">("todos");
+
 
   useEffect(() => {
     if (anos?.length && !combo) setCombo(`${anos[0]!.ano}|${anos[0]!.fonte}`);
