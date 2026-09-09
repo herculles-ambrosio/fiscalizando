@@ -305,6 +305,44 @@ export function RepasseEducacaoFjp({
               {buscando ? "Consultando o portal…" : "Baixar e comparar"}
             </Button>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={arquivoRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void lerPlanilha(f);
+                e.target.value = "";
+              }}
+            />
+            <Button variant="outline" onClick={() => arquivoRef.current?.click()}>
+              <FileSpreadsheet className="mr-2 size-4" />
+              Enviar planilha de repasse
+            </Button>
+            <Button variant="outline" onClick={adicionarDaPlanilha} disabled={!planilha.size}>
+              Adicionar municípios da planilha
+            </Button>
+            {nomeArquivo && (
+              <Badge variant="secondary" className="gap-1">
+                {nomeArquivo} — {planilha.size} município(s)
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlanilha(new Map());
+                    setNomeArquivo(null);
+                  }}
+                  aria-label="Remover planilha"
+                >
+                  <X className="size-3" />
+                </button>
+              </Badge>
+            )}
+            <span className="text-xs text-muted-foreground">
+              Quando o município está na planilha, o valor pago vem dela; nos demais, do portal.
+            </span>
+          </div>
           {!!escolhidos.length && (
             <div className="flex flex-wrap gap-1">
               {escolhidos.map((m) => (
