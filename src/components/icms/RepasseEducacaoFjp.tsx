@@ -158,20 +158,46 @@ export function RepasseEducacaoFjp({
     return mapa;
   }, [ranking]);
 
-  const resultado = useMemo(
-    () =>
-      linhas.map((l) => {
-        const calc = indicePorMunicipio.get(normalizarMunicipio(l.nome)) ?? null;
-        const ieCalculado = calc?.indice ?? null;
-        const fator = l.valor != null && l.indice ? l.valor / l.indice : null;
-        const esperado = fator != null && ieCalculado != null ? ieCalculado * fator : null;
-        const difValor = esperado != null && l.valor != null ? esperado - l.valor : null;
-        const difIndice =
-          ieCalculado != null && l.indice != null ? ieCalculado - l.indice : null;
-        return { ...l, ieCalculado, esperado, difValor, difIndice };
-      }),
-    [linhas, indicePorMunicipio],
-  );
+  const resultado = useMemo(() => {
+    const porId = new Map(linhas.map((l) => [l.id, l]));
+    const base = escolhidos.length
+      ? escolhidos.map(
+          (m) =>
+            porId.get(m.id) ?? {
+              id: m.id,
+              nome: m.nome,
+              valor: null,
+              indice: null,
+              meses: 0,
+              erro: null,
+            },
+        )
+      : linhas;
+    return base.map((l) => {
+      const chave = normalizarMunicipio(l.nome);
+      const calc = indicePorMunicipio.get(chave) ?? null;
+      const ieCalculado = calc?.indice ?? null;
+      const daPlanilha = planilha.get(chave) ?? null;
+      const valor = daPlanilha ?? l.valor;
+      const origem: "planilha" | "portal" | null =
+        daPlanilha != null ? "planilha" : l.valor != null ? "portal" : null;
+      const fator = valor != null && l.indice ? valor / l.indice : null;
+      const esperado = fator != null && ieCalculado != null ? ieCalculado * fator : null;
+      const difValor = esperado != null && valor != null ? esperado - valor : null;
+      const difIndice = ieCalculado != null && l.indice != null ? ieCalculado - l.indice : null;
+      return { ...l, valor, origem, ieCalculado, esperado, difValor, difIndice };
+    });
+  }, [linhas, escolhidos, indicePorMunicipio, planilha]);
+
+  const totais = useMemo(() => {
+    let pago = 0;
+    let esperado = 0;
+    for (const l of resultado) {
+      if (l.valor != null) pago += l.valor;
+      if (l.esperado != null) esperado += l.esperado;
+    }
+    return { pago, esperado, dif: esperado - pago };
+  }, [resultado]);
 
   const sugestoes = useMemo(() => {
     const termo = filtro.trim().toLowerCase();
