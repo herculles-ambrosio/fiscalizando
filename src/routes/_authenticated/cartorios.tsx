@@ -284,7 +284,9 @@ function FiscalizaCartorio() {
                     <Download className="mr-2 size-4" />
                     CSV
                   </Button>
+                  </div>
                 </CardHeader>
+
                 <CardContent className="overflow-x-auto p-0">
                   <Table>
                     <TableHeader>
