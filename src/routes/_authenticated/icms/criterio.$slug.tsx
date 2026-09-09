@@ -24,6 +24,7 @@ import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
 import {
   useCriterioAnos,
   useCriterioItens,
+  usePotencialItens,
   useCriterioRanking,
   useItensReferenciaCompleta,
   type FonteRelatorio,
@@ -83,6 +84,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
 
   const { data: ranking } = useCriterioRanking(slug, ano, fonte);
   const { data: itens } = useCriterioItens(slug, ano, fonte, chaveMunicipio);
+  const { data: potencial } = usePotencialItens(slug, ano, fonte);
 
   const ehMeioAmbiente = slug === "meio_ambiente" || slug === "meio-ambiente";
   const ehTurismo = slug === "turismo";
@@ -116,6 +118,23 @@ function DetalheGenerico({ slug }: { slug: string }) {
       return filtroPontuacao === "pontuados" ? pontua : !pontua;
     });
   }, [referencia, pontuados, filtroPontuacao]);
+
+  /**
+   * Quanto o município pode somar nos itens hoje zerados: usa a pontuação
+   * típica (mediana) de quem já cumpre o item no mesmo relatório, com o teto
+   * observado como referência máxima.
+   */
+  const potencialFaltante = useMemo(() => {
+    let tipico = 0;
+    let maximo = 0;
+    for (const f of faltantes) {
+      const p = potencial?.get(f.codigo);
+      if (!p) continue;
+      tipico += p.tipico;
+      maximo += p.maximo;
+    }
+    return { tipico, maximo };
+  }, [faltantes, potencial]);
 
 
   if (!criterio) {
