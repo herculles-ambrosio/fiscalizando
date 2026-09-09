@@ -267,6 +267,35 @@ function DetalheGenerico({ slug }: { slug: string }) {
             anoBase={ano}
           />
 
+          {potencialFaltante.tipico > 0 && (
+            <Card className="border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/20">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Projeção de pontuação</p>
+                  <p className="text-xl font-semibold text-emerald-700 dark:text-emerald-400">
+                    +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    É o que {municipio?.nome ?? "o município"} pode somar cumprindo os{" "}
+                    {faltantes.length} itens hoje zerados
+                    {potencialFaltante.maximo > potencialFaltante.tipico && (
+                      <>
+                        {" "}(teto observado no relatório:{" "}
+                        {potencialFaltante.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })})
+                      </>
+                    )}
+                    .
+                  </p>
+                </div>
+                <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
+                  Meta de melhoria
+                </Badge>
+              </CardContent>
+            </Card>
+          )}
+
+
+
 
 
           {!!itens?.length && (
