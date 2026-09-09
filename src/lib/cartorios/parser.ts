@@ -197,6 +197,9 @@ export async function lerEmolumentos(arquivo: File): Promise<ResultadoLeitura<Li
       cns,
       nome,
       comarca: idx.comarca >= 0 ? String(linha[idx.comarca] ?? "").trim() || null : null,
+      municipio:
+        idx.municipio >= 0 ? String(linha[idx.municipio] ?? "").trim() || null : municipioTopo,
+
       tipoServico: idx.tipo >= 0 ? String(linha[idx.tipo] ?? "").trim() : "",
       status: idx.status >= 0 ? String(linha[idx.status] ?? "").trim() || null : null,
       emolumentos: numeroBr(linha[idx.emolumentos]),
