@@ -261,13 +261,27 @@ export function useImportarEmolumentos() {
           .upsert(cadastro.slice(i, i + 500), { onConflict: "municipio_id,cns,tipo_servico" });
         if (error) throw error;
       }
+      await registrarCarga({
+        municipioId: municipioId!,
+        tipo: "emolumentos",
+        competencia: {
+          ano: registros[0]?.competencia_ano ?? dados.competencia.ano,
+          mes: registros[0]?.competencia_mes ?? dados.competencia.mes,
+        },
+        arquivoNome: dados.arquivoNome,
+        origem: dados.fonte ?? "arquivo",
+        linhas: registros.length,
+        criadoPor: sessao.user?.id ?? null,
+      });
       return registros.length;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cartorio-competencias", municipioId] });
       qc.invalidateQueries({ queryKey: ["cartorio-fiscalizacao", municipioId] });
       qc.invalidateQueries({ queryKey: ["cartorio-serventias", municipioId] });
+      qc.invalidateQueries({ queryKey: ["cartorio-cargas", municipioId] });
     },
+
   });
 }
 
