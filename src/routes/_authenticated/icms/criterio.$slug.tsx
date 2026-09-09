@@ -490,12 +490,11 @@ function DetalheGenerico({ slug }: { slug: string }) {
                     {faltantes.map((f) => (
                       <li key={f.codigo}>
                         {f.nome_oficial} — {f.requisito}
-                        {potencial?.get(f.codigo) && (
+                        {projecaoDe(f) && (
                           <span className="font-medium text-emerald-700 dark:text-emerald-400">
                             {" "}
-                            (pode somar +
-                            {potencial
-                              .get(f.codigo)!
+                            (projeção +
+                            {projecaoDe(f)!
                               .tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}{" "}
                             pontos)
                           </span>
