@@ -153,6 +153,15 @@ function DetalheGenerico({ slug }: { slug: string }) {
     return { tipico, maximo };
   }, [faltantes, projecaoDe]);
 
+  /**
+   * No Meio Ambiente o relatório não trabalha com pontos: cada exigência vale
+   * uma fatia do índice do critério (saneamento, unidades de conservação e
+   * mata seca). Por isso a projeção é apresentada em % do critério.
+   */
+  const unidade = ehMeioAmbiente ? "% do critério" : "pontos";
+
+
+
 
   if (!criterio) {
     return (
