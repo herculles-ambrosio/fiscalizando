@@ -29,7 +29,7 @@ export const buscarServentiasPortal = createServerFn({ method: "POST" })
     z
       .object({
         mesAno: z.string().regex(/^\d{1,2}\/\d{4}$/, "Informe a competência no formato mês/ano."),
-        comarca: z.string().trim().min(1).nullable().optional(),
+        municipio: z.string().trim().min(1).nullable().optional(),
       })
       .parse(data),
   )
@@ -38,7 +38,7 @@ export const buscarServentiasPortal = createServerFn({ method: "POST" })
       const { baixarServentiasTjmg } = await import("./tjmg.server");
       const r = await baixarServentiasTjmg({
         mesAno: data.mesAno,
-        comarca: data.comarca ?? null,
+        municipio: data.municipio ?? null,
       });
       return { ok: true as const, ...r, mensagem: "" };
     } catch (e) {
@@ -46,6 +46,7 @@ export const buscarServentiasPortal = createServerFn({ method: "POST" })
         ok: false as const,
         competencia: data.mesAno,
         comarca: null,
+        filtro: "estado" as const,
         linhas: [],
         mensagem:
           e instanceof Error
@@ -54,3 +55,4 @@ export const buscarServentiasPortal = createServerFn({ method: "POST" })
       };
     }
   });
+

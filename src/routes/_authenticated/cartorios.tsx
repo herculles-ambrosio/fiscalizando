@@ -588,7 +588,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
       const r = await buscarServentias({
         data: {
           mesAno: alvo,
-          comarca: somenteComarca ? (municipio?.nome ?? null) : null,
+          municipio: somenteComarca ? (municipio?.nome ?? null) : null,
         },
       });
       if (!r.ok || !r.linhas.length) {
@@ -596,11 +596,13 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
         return;
       }
       const [mesPortal, anoPortal] = alvo.split("/").map(Number) as [number, number];
+      const porNome = r.filtro === "nome";
       const linhas: LinhaEmolumento[] = r.linhas.map((s) => ({
         cns: s.cns,
         nome: s.nome,
         comarca: s.comarca || null,
-        municipio: null,
+        // município não é sede de comarca: as serventias foram achadas pelo nome
+        municipio: porNome ? (municipio?.nome ?? null) : null,
         tipoServico: "",
         status: s.status || null,
         emolumentos: s.emolumentos,
@@ -612,10 +614,20 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
         ano: anoPortal,
       }));
       setIgnoradas([]);
+      if (porNome)
+        toast.info(
+          `${municipio?.nome} não é sede de comarca (comarca de ${r.comarca ?? "—"}): busquei ${r.linhas.length} cartório(s) pelo nome da serventia.`,
+        );
       await gravarEmolumentos(
         linhas,
         { mes: mesPortal, ano: anoPortal },
-        `Portal TJMG ${alvo}${r.comarca ? ` — comarca ${r.comarca}` : ""}`,
+        `Portal TJMG ${alvo}${
+          porNome
+            ? ` — serventias de ${municipio?.nome}`
+            : r.comarca
+              ? ` — comarca ${r.comarca}`
+              : ""
+        }`,
       );
     } catch {
       toast.error("Não foi possível falar com o portal do TJMG.");
@@ -623,6 +635,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
       setBuscando(false);
     }
   }
+
 
   return (
     <div className="space-y-4">
@@ -737,8 +750,10 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
                 checked={somenteComarca}
                 onChange={(e) => setSomenteComarca(e.target.checked)}
               />
-              Trazer apenas a comarca de {municipio?.nome ?? "prefeitura ativa"} (desmarque para
-              trazer o estado inteiro)
+              Trazer apenas os cartórios de {municipio?.nome ?? "prefeitura ativa"} — quando o
+              município não é sede de comarca, o sistema procura pelo nome da serventia (desmarque
+              para trazer o estado inteiro)
+
             </label>
           </div>
 

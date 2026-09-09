@@ -201,11 +201,35 @@ export type ServentiaTjmg = {
   despesa: number;
 };
 
-/** Baixa a lista de serventias já filtrada por mês/ano (e comarca, se informada). */
+/** "Registro de Imóveis de Dom Silvério" contém "Dom Silvério"? (sem acento/caixa) */
+function nomeCitaMunicipio(nome: string, municipio: string): boolean {
+  const limpar = (t: string) =>
+    ` ${t
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()} `;
+  return limpar(nome).includes(limpar(municipio));
+}
+
+/**
+ * Baixa a lista de serventias já filtrada por mês/ano.
+ *
+ * Quando o município é sede de comarca, filtra pela comarca no próprio painel.
+ * Quando não é (ex.: Dom Silvério pertence à comarca de Alvinópolis), traz a
+ * lista do estado e seleciona as serventias cujo nome cita o município.
+ */
 export async function baixarServentiasTjmg(opcoes: {
   mesAno: string;
-  comarca?: string | null;
-}): Promise<{ competencia: string; comarca: string | null; linhas: ServentiaTjmg[] }> {
+  /** município da prefeitura ativa; nulo traz o estado inteiro */
+  municipio?: string | null;
+}): Promise<{
+  competencia: string;
+  comarca: string | null;
+  filtro: "comarca" | "nome" | "estado";
+  linhas: ServentiaTjmg[];
+}> {
   const { engine, doc } = await conectar();
   try {
     const meses = await valoresDoCampo(engine, doc, CAMPO_MES);
@@ -223,9 +247,10 @@ export async function baixarServentiasTjmg(opcoes: {
     ]);
 
     let comarcaEscolhida: string | null = null;
-    if (opcoes.comarca) {
+    let filtro: "comarca" | "nome" | "estado" = "estado";
+    if (opcoes.municipio) {
       const comarcas = await valoresDoCampo(engine, doc, CAMPO_COMARCA);
-      const alvo = normalizar(opcoes.comarca);
+      const alvo = normalizar(opcoes.municipio);
       const achada = comarcas.valores.find((v) => normalizar(v.texto) === alvo);
       if (achada) {
         await engine.chamar("SelectListObjectValues", comarcas.handle, [
@@ -234,8 +259,13 @@ export async function baixarServentiasTjmg(opcoes: {
           false,
         ]);
         comarcaEscolhida = achada.texto;
+        filtro = "comarca";
+      } else {
+        // município não é sede de comarca: filtramos pelo nome da serventia
+        filtro = "nome";
       }
     }
+
 
     const objeto = (await engine.chamar("GetObject", doc, [OBJETO_TABELA])).qReturn
       .qHandle as number;
@@ -268,6 +298,7 @@ export async function baixarServentiasTjmg(opcoes: {
         const nome = (linha[0]?.qText ?? "").trim();
         const cns = (linha[1]?.qText ?? "").trim();
         if (!nome || !cns) continue;
+        if (filtro === "nome" && !nomeCitaMunicipio(nome, opcoes.municipio!)) continue;
         linhas.push({
           nome,
           cns,
@@ -281,7 +312,16 @@ export async function baixarServentiasTjmg(opcoes: {
       }
     }
 
-    return { competencia: opcoes.mesAno, comarca: comarcaEscolhida, linhas };
+    if (filtro === "nome") {
+      if (!linhas.length)
+        throw new Error(
+          `Não encontrei nenhuma serventia com o nome de ${opcoes.municipio} em ${opcoes.mesAno}. Confira o mês ou envie a planilha do portal.`,
+        );
+      comarcaEscolhida = linhas[0]!.comarca || null;
+    }
+
+    return { competencia: opcoes.mesAno, comarca: comarcaEscolhida, filtro, linhas };
+
   } finally {
     engine.fechar();
   }
