@@ -1019,6 +1019,33 @@ export type Database = {
         }
         Relationships: []
       }
+      educacao_metadados_indicador: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          descricao: string | null
+          direcao_desejada: string
+          etapa: string | null
+          indicador: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          descricao?: string | null
+          direcao_desejada?: string
+          etapa?: string | null
+          indicador: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          descricao?: string | null
+          direcao_desejada?: string
+          etapa?: string | null
+          indicador?: string
+        }
+        Relationships: []
+      }
       educacao_recursos: {
         Row: {
           criado_em: string
