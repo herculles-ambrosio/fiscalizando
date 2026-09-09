@@ -5,9 +5,9 @@
  * trocado ou parcela ainda não repassada.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, Plus, RefreshCw, Search, X } from "lucide-react";
+import { Download, FileSpreadsheet, Plus, RefreshCw, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
