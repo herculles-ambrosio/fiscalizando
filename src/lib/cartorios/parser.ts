@@ -144,6 +144,68 @@ function indicePor(cabecalho: string[], termos: string[]): number {
   return cabecalho.findIndex((c) => termos.some((t) => c.includes(t)));
 }
 
+/** Procura "Município: Abre Campo" nas linhas impressas acima da tabela. */
+function municipioNoTopo(matriz: unknown[][], ateLinha: number): string | null {
+  for (let i = 0; i < ateLinha; i++) {
+    for (const celula of matriz[i] ?? []) {
+      const texto = String(celula ?? "").trim();
+      const m = /(?:munic[ií]pio|cidade|comarca)\s*[:\-]\s*(.+)$/i.exec(texto);
+      const achado = m?.[1]?.trim();
+      if (achado && achado.length > 2) return achado;
+    }
+  }
+  return null;
+}
+
+export type ConferenciaMunicipio = {
+  /** true quando o arquivo bate com a prefeitura ativa ou não traz essa informação. */
+  ok: boolean;
+  /** de onde veio a informação usada na conferência */
+  base: "municipio" | "comarca" | "indefinido";
+  /** nomes de município/comarca encontrados no arquivo */
+  encontrados: string[];
+};
+
+/**
+ * Confere se a planilha enviada é da prefeitura selecionada.
+ * Usa a coluna de município quando existe; senão, a comarca (que pode abranger
+ * cidades vizinhas, por isso a tela permite confirmar manualmente nesse caso).
+ */
+export function conferirMunicipio(
+  linhas: { municipio?: string | null; comarca?: string | null }[],
+  nomeAtivo: string | null | undefined,
+): ConferenciaMunicipio {
+  if (!nomeAtivo) return { ok: true, base: "indefinido", encontrados: [] };
+  const alvo = chave(nomeAtivo);
+
+  const juntar = (campo: "municipio" | "comarca") => {
+    const nomes = new Set<string>();
+    for (const l of linhas) {
+      const v = (l[campo] ?? "").toString().trim();
+      if (v) nomes.add(v);
+    }
+    return [...nomes];
+  };
+
+  const municipios = juntar("municipio");
+  if (municipios.length) {
+    return {
+      ok: municipios.some((n) => chave(n) === alvo),
+      base: "municipio",
+      encontrados: municipios,
+    };
+  }
+
+  const comarcas = juntar("comarca");
+  if (comarcas.length) {
+    return { ok: comarcas.some((n) => chave(n) === alvo), base: "comarca", encontrados: comarcas };
+  }
+
+  return { ok: true, base: "indefinido", encontrados: [] };
+}
+
+
+
 /** Lista de serventias do portal do TJMG. */
 export async function lerEmolumentos(arquivo: File): Promise<ResultadoLeitura<LinhaEmolumento>> {
   const matriz = await lerMatriz(arquivo);
