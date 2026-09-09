@@ -228,3 +228,61 @@ export function useRankingTodosCriterios(municipios: string[]) {
     },
   });
 }
+
+export type PotencialItem = {
+  /** Maior pontuação registrada neste item entre todos os municípios do relatório. */
+  maximo: number;
+  /** Pontuação típica (mediana) entre os municípios que já pontuam o item. */
+  tipico: number;
+  /** Quantos municípios já pontuam o item. */
+  municipios: number;
+};
+
+/**
+ * Quanto cada item pode render, medido no próprio relatório oficial: o teto é a
+ * maior pontuação alcançada por um município mineiro e a expectativa realista é
+ * a mediana entre quem já pontua. Serve para mostrar, num item que hoje está
+ * zerado, o que o município passaria a somar se cumprisse a exigência.
+ */
+export function usePotencialItens(
+  criterio: string | null,
+  ano: number | null,
+  fonte: FonteRelatorio | null,
+) {
+  return useQuery({
+    queryKey: ["criterio-potencial", criterio, ano, fonte],
+    enabled: !!criterio && !!ano && !!fonte,
+    staleTime: 10 * 60 * 1000,
+    queryFn: async (): Promise<Map<string, PotencialItem>> => {
+      const passo = 1000;
+      const valores = new Map<string, number[]>();
+      for (let inicio = 0; inicio < 60000; inicio += passo) {
+        const { data, error } = await supabase
+          .from("criterio_item_municipio")
+          .select("item_codigo, pontuacao")
+          .eq("criterio", criterio!)
+          .eq("ano_base", ano!)
+          .eq("fonte_relatorio", fonte!)
+          .range(inicio, inicio + passo - 1);
+        if (error) throw error;
+        const lote = data ?? [];
+        for (const l of lote as { item_codigo: string | null; pontuacao: number | null }[]) {
+          if (!l.item_codigo || !l.pontuacao || l.pontuacao <= 0) continue;
+          const lista = valores.get(l.item_codigo) ?? [];
+          lista.push(Number(l.pontuacao));
+          valores.set(l.item_codigo, lista);
+        }
+        if (lote.length < passo) break;
+      }
+      const mapa = new Map<string, PotencialItem>();
+      for (const [codigo, lista] of valores) {
+        lista.sort((a, b) => a - b);
+        const meio = Math.floor(lista.length / 2);
+        const tipico =
+          lista.length % 2 ? lista[meio]! : ((lista[meio - 1] ?? 0) + (lista[meio] ?? 0)) / 2;
+        mapa.set(codigo, { maximo: lista[lista.length - 1]!, tipico, municipios: lista.length });
+      }
+      return mapa;
+    },
+  });
+}

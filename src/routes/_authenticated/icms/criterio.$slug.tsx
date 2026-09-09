@@ -24,6 +24,7 @@ import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
 import {
   useCriterioAnos,
   useCriterioItens,
+  usePotencialItens,
   useCriterioRanking,
   useItensReferenciaCompleta,
   type FonteRelatorio,
@@ -83,6 +84,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
 
   const { data: ranking } = useCriterioRanking(slug, ano, fonte);
   const { data: itens } = useCriterioItens(slug, ano, fonte, chaveMunicipio);
+  const { data: potencial } = usePotencialItens(slug, ano, fonte);
 
   const ehMeioAmbiente = slug === "meio_ambiente" || slug === "meio-ambiente";
   const ehTurismo = slug === "turismo";
@@ -116,6 +118,23 @@ function DetalheGenerico({ slug }: { slug: string }) {
       return filtroPontuacao === "pontuados" ? pontua : !pontua;
     });
   }, [referencia, pontuados, filtroPontuacao]);
+
+  /**
+   * Quanto o município pode somar nos itens hoje zerados: usa a pontuação
+   * típica (mediana) de quem já cumpre o item no mesmo relatório, com o teto
+   * observado como referência máxima.
+   */
+  const potencialFaltante = useMemo(() => {
+    let tipico = 0;
+    let maximo = 0;
+    for (const f of faltantes) {
+      const p = potencial?.get(f.codigo);
+      if (!p) continue;
+      tipico += p.tipico;
+      maximo += p.maximo;
+    }
+    return { tipico, maximo };
+  }, [faltantes, potencial]);
 
 
   if (!criterio) {
@@ -319,13 +338,16 @@ function DetalheGenerico({ slug }: { slug: string }) {
                     baixarCsv(
                       `${slug}-${municipio?.nome ?? "municipio"}.csv`,
                       montarCsv(
-                        ["Item", "Situação", "Pontuação", "Requisito"],
+                        ["Item", "Situação", "Pontuação", "Pode alcançar", "Teto no relatório", "Requisito"],
                         referenciaFiltrada.map((r) => {
                           const p = pontuados.get(r.codigo);
+                          const pot = potencial?.get(r.codigo);
                           return [
                             r.nome_oficial,
                             p?.pontuacao ? "Pontua" : "Não pontua",
                             String(p?.pontuacao ?? 0),
+                            p?.pontuacao ? "" : String(pot?.tipico ?? ""),
+                            String(pot?.maximo ?? ""),
                             r.requisito ?? "",
                           ];
                         }),
@@ -338,9 +360,28 @@ function DetalheGenerico({ slug }: { slug: string }) {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-2">
+                {potencialFaltante.tipico > 0 && (
+                  <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/20">
+                    <p className="text-sm font-medium">
+                      Cumprindo os {faltantes.length} itens que hoje estão zerados,{" "}
+                      {municipio?.nome ?? "o município"} passaria a somar cerca de{" "}
+                      <span className="text-emerald-700 dark:text-emerald-400">
+                        +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos
+                      </span>{" "}
+                      neste critério.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Expectativa calculada pela pontuação típica de quem já cumpre cada item no
+                      mesmo relatório oficial. No melhor cenário, o teto alcançado por outros
+                      municípios chega a{" "}
+                      {potencialFaltante.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos.
+                    </p>
+                  </div>
+                )}
                 {referenciaFiltrada.map((r) => {
                   const p = pontuados.get(r.codigo);
                   const pontua = !!p?.pontuacao;
+                  const pot = potencial?.get(r.codigo);
                   return (
                     <div key={r.codigo} className="flex items-start gap-3 rounded-md border p-3 text-sm">
                       {pontua ? (
@@ -354,16 +395,31 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         {p?.observacao && (
                           <p className="text-xs text-muted-foreground">Registro: {p.observacao}</p>
                         )}
+                        {!pontua && pot && (
+                          <p className="text-xs text-muted-foreground">
+                            {pot.municipios} municípios já pontuam este item; o maior alcançou{" "}
+                            {pot.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos.
+                          </p>
+                        )}
                       </div>
-                      <Badge variant={pontua ? "secondary" : "outline"}>
-                        {pontua ? p?.pontuacao?.toLocaleString("pt-BR") : "sem pontuação"}
-                      </Badge>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <Badge variant={pontua ? "secondary" : "outline"}>
+                          {pontua ? p?.pontuacao?.toLocaleString("pt-BR") : "sem pontuação"}
+                        </Badge>
+                        {!pontua && pot && (
+                          <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
+                            pode somar +
+                            {pot.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </CardContent>
             </Card>
           )}
+
 
         </TabsContent>
 
