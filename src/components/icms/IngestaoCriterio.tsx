@@ -185,6 +185,10 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     identificacao: string | null,
     anoForcado?: number,
   ) {
+    if (planilha) {
+      await processarPlanilha(dados, origem, identificacao, anoForcado);
+      return;
+    }
     setRodando(true);
     setResumo(null);
     try {
