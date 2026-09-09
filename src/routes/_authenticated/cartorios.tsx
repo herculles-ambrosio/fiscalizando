@@ -49,6 +49,7 @@ import {
   lerDeclaracoes,
   lerEmolumentos,
   MESES_NOME,
+  type LinhaEmolumento,
 } from "@/lib/cartorios/parser";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import {
@@ -61,7 +62,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { buscarPortalCartorios } from "@/lib/cartorios/portal.functions";
+import {
+  buscarServentiasPortal,
+  listarCompetenciasPortal,
+} from "@/lib/cartorios/portal.functions";
 import { formatarMoeda } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import CargasView from "@/components/cartorios/CargasView";
@@ -409,13 +413,17 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   const excluir = useExcluirCompetenciaCartorio();
   const { data: competencias } = useCompetenciasCartorio();
   const { municipio, municipios, podeTrocar, trocar } = useMunicipioAtivo();
-  const buscar = useServerFn(buscarPortalCartorios);
+  const listarCompetencias = useServerFn(listarCompetenciasPortal);
+  const buscarServentias = useServerFn(buscarServentiasPortal);
 
   const [mes, setMes] = useState(String(new Date().getMonth() + 1));
   const [ano, setAno] = useState(String(anoAtual));
   const [ignoradas, setIgnoradas] = useState<string[]>([]);
-  const [urlPortal, setUrlPortal] = useState("");
+  const [competenciasPortal, setCompetenciasPortal] = useState<string[]>([]);
+  const [competenciaPortal, setCompetenciaPortal] = useState("");
+  const [somenteComarca, setSomenteComarca] = useState(true);
   const [buscando, setBuscando] = useState(false);
+  const [listando, setListando] = useState(false);
   const [confirmacao, setConfirmacao] = useState<{
     encontrados: string[];
   } | null>(null);
@@ -444,27 +452,32 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
     return false;
   }
 
+  async function gravarEmolumentos(
+    linhas: LinhaEmolumento[],
+    comp: { mes: number; ano: number },
+    origem: string,
+  ) {
+    if (!municipioConfere(linhas)) return;
+    const total = await importarEmol.mutateAsync({
+      linhas,
+      competencia: comp,
+      arquivoNome: origem,
+    });
+    setMes(String(comp.mes));
+    setAno(String(comp.ano));
+    toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
+  }
+
   async function enviarEmolumentos(arquivo: File) {
     try {
       const r = await lerEmolumentos(arquivo);
-      const comp = r.competencia ?? competencia;
-      const gravar = async () => {
-        const total = await importarEmol.mutateAsync({
-          linhas: r.linhas,
-          competencia: comp,
-          arquivoNome: arquivo.name,
-        });
-        setIgnoradas(r.colunasIgnoradas);
-        setMes(String(comp.mes));
-        setAno(String(comp.ano));
-        toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
-      };
-      if (!municipioConfere(r.linhas)) return;
-      await gravar();
+      setIgnoradas(r.colunasIgnoradas);
+      await gravarEmolumentos(r.linhas, r.competencia ?? competencia, arquivo.name);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     }
   }
+
 
   async function enviarDeclaracoes(arquivo: File) {
     try {
@@ -485,16 +498,62 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   }
 
 
-  async function tentarPortal() {
+  /** Lê no portal do TJMG quais meses já estão publicados. */
+  async function carregarCompetenciasPortal() {
+    setListando(true);
+    try {
+      const r = await listarCompetencias();
+      if (!r.ok || !r.competencias.length) {
+        toast.warning(r.mensagem || "O portal do TJMG não devolveu as competências.");
+        return;
+      }
+      setCompetenciasPortal(r.competencias);
+      setCompetenciaPortal((atual) => atual || r.competencias[0]!);
+      toast.success(`${r.competencias.length} competência(s) disponíveis no portal.`);
+    } catch {
+      toast.error("Não foi possível falar com o portal do TJMG.");
+    } finally {
+      setListando(false);
+    }
+  }
+
+  /** Baixa a lista de serventias do painel do TJMG e grava a carga. */
+  async function buscarNoPortal() {
+    const alvo = competenciaPortal || `${Number(mes)}/${ano}`;
     setBuscando(true);
     try {
-      const r = await buscar({ data: urlPortal.trim() ? { url: urlPortal.trim() } : {} });
-      if (r.ok && r.conteudo) {
-        const arquivo = new File([r.conteudo], "portal-tjmg.csv", { type: "text/csv" });
-        await enviarEmolumentos(arquivo);
-      } else {
-        toast.warning(r.mensagem);
+      const r = await buscarServentias({
+        data: {
+          mesAno: alvo,
+          comarca: somenteComarca ? (municipio?.nome ?? null) : null,
+        },
+      });
+      if (!r.ok || !r.linhas.length) {
+        toast.warning(r.mensagem || "O portal do TJMG não devolveu serventias.");
+        return;
       }
+      const [mesPortal, anoPortal] = alvo.split("/").map(Number) as [number, number];
+      const linhas: LinhaEmolumento[] = r.linhas.map((s) => ({
+        cns: s.cns,
+        nome: s.nome,
+        comarca: s.comarca || null,
+        municipio: null,
+        tipoServico: "",
+        status: s.status || null,
+        emolumentos: s.emolumentos,
+        recompe: s.recompe,
+        tfj: s.tfj,
+        despesa: s.despesa,
+        outrasReceitas: 0,
+        mes: mesPortal,
+        ano: anoPortal,
+      }));
+      setIgnoradas([]);
+      await gravarEmolumentos(
+        linhas,
+        { mes: mesPortal, ano: anoPortal },
+        `Portal TJMG ${alvo}${r.comarca ? ` — comarca ${r.comarca}` : ""}`,
+      );
     } catch {
       toast.error("Não foi possível falar com o portal do TJMG.");
     } finally {
@@ -558,27 +617,66 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
           </div>
 
           <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Tentar buscar direto no portal</p>
+            <p className="text-sm font-medium">Buscar no portal do TJMG</p>
             <p className="text-xs text-muted-foreground">
-              O painel do TJMG é protegido e costuma recusar a consulta automática. Se você tiver o
-              endereço direto de um arquivo de exportação, cole abaixo.
+              Sem exportar nada: o sistema consulta o painel público do TJMG, escolhe o mês e a
+              comarca e traz a lista de serventias pronta.
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Input
-                className="min-w-64 flex-1"
-                placeholder="Endereço do arquivo (opcional)"
-                value={urlPortal}
-                onChange={(e) => setUrlPortal(e.target.value)}
-              />
-              <Button variant="outline" onClick={tentarPortal} disabled={buscando}>
+            <div className="mt-2 flex flex-wrap items-end gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Competência no portal</Label>
+                <Select
+                  value={competenciaPortal}
+                  onValueChange={setCompetenciaPortal}
+                  disabled={!competenciasPortal.length}
+                >
+                  <SelectTrigger className="h-9 w-44">
+                    <SelectValue
+                      placeholder={listando ? "Carregando…" : "Buscar competências"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {competenciasPortal.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => void carregarCompetenciasPortal()}
+                disabled={listando}
+              >
+                {listando ? (
+                  <RefreshCw className="mr-2 size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 size-4" />
+                )}
+                Ver meses disponíveis
+              </Button>
+              <Button
+                onClick={() => void buscarNoPortal()}
+                disabled={buscando || (!competenciaPortal && !mes)}
+              >
                 {buscando ? (
                   <RefreshCw className="mr-2 size-4 animate-spin" />
                 ) : (
                   <Globe className="mr-2 size-4" />
                 )}
-                Buscar automaticamente
+                {buscando ? "Baixando…" : "Buscar no portal do TJMG"}
               </Button>
             </div>
+            <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={somenteComarca}
+                onChange={(e) => setSomenteComarca(e.target.checked)}
+              />
+              Trazer apenas a comarca de {municipio?.nome ?? "prefeitura ativa"} (desmarque para
+              trazer o estado inteiro)
+            </label>
           </div>
 
           {!!ignoradas.length && (
