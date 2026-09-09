@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   Building2,
+  CalendarClock,
   FileUp,
   History,
   FileSignature,

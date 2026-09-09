@@ -20,6 +20,7 @@ import { AreasSemCadastroIef } from "@/components/icms/AreasSemCadastroIef";
 import { HabilitacaoTurismo } from "@/components/icms/HabilitacaoTurismo";
 import { PrazoRecursoEducacao } from "@/components/icms/PrazoRecursoEducacao";
 import { DadosConstitutivosEducacao } from "@/components/icms/DadosConstitutivosEducacao";
+import { RepasseEducacaoFjp } from "@/components/icms/RepasseEducacaoFjp";
 
 import { usePerfil } from "@/hooks/usePerfil";
 import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
