@@ -55,6 +55,30 @@ export function useExcluirCargaCartorio() {
   });
 }
 
+/** Grava no histórico cada envio de planilha, para consulta na aba Cargas. */
+async function registrarCarga(dados: {
+  municipioId: string;
+  tipo: "emolumentos" | "declaracoes";
+  competencia: Competencia;
+  arquivoNome: string;
+  origem: string;
+  linhas: number;
+  criadoPor: string | null;
+}) {
+  const { error } = await supabase.from("cartorio_cargas").insert({
+    municipio_id: dados.municipioId,
+    tipo: dados.tipo,
+    competencia_ano: dados.competencia.ano,
+    competencia_mes: dados.competencia.mes,
+    arquivo_nome: dados.arquivoNome,
+    origem: dados.origem,
+    linhas: dados.linhas,
+    criado_por: dados.criadoPor,
+  });
+  if (error) throw error;
+}
+
+
 
 export type LinhaFiscalizacao = {
   cns: string;
