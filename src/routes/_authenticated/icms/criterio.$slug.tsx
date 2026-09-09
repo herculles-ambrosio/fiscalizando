@@ -608,6 +608,11 @@ function DetalheGenerico({ slug }: { slug: string }) {
             />
           </TabsContent>
         )}
+        {ehEducacao && (
+          <TabsContent value="repasse" className="pt-4">
+            <RepasseEducacaoFjp anoBase={ano} fonte={fonte} />
+          </TabsContent>
+        )}
         {pipeline && consultoria && (
           <TabsContent value="importar" className="pt-4">
             <IngestaoCriterio pipeline={pipeline} />
