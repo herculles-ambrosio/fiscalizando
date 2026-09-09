@@ -109,6 +109,7 @@ export function CriterioEsportesDetalhe() {
       <Tabs defaultValue="municipio">
         <TabsList>
           <TabsTrigger value="municipio">Detalhamento do município</TabsTrigger>
+          <TabsTrigger value="melhorar">Como melhorar</TabsTrigger>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           {perfil?.ehConsultoria && <TabsTrigger value="ingestao">Ingestão de dados</TabsTrigger>}
         </TabsList>
