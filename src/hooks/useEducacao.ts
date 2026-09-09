@@ -177,3 +177,26 @@ export function useOutliersEducacao(
     },
   });
 }
+
+/** Versões (provisório/definitivo) que já têm dados importados no exercício. */
+export function useVersoesEducacao(exercicio: number | null) {
+  return useQuery({
+    queryKey: ["educacao-versoes", exercicio],
+    enabled: !!exercicio,
+    staleTime: 10 * 60 * 1000,
+    queryFn: async (): Promise<VersaoEducacao[]> => {
+      const achadas: VersaoEducacao[] = [];
+      for (const v of ["provisorio", "definitivo"] as VersaoEducacao[]) {
+        const { data, error } = await supabase
+          .from("educacao_dados_constitutivos")
+          .select("id")
+          .eq("exercicio", exercicio!)
+          .eq("fonte_versao", v)
+          .limit(1);
+        if (error) throw error;
+        if (data?.length) achadas.push(v);
+      }
+      return achadas;
+    },
+  });
+}
