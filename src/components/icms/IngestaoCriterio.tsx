@@ -449,7 +449,11 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
 
           <div className="flex gap-2">
             <Input
-              placeholder="Cole aqui o endereço do PDF publicado pelo órgão"
+              placeholder={
+                planilha
+                  ? "Cole aqui o endereço da planilha publicada pela FJP"
+                  : "Cole aqui o endereço do PDF publicado pelo órgão"
+              }
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
