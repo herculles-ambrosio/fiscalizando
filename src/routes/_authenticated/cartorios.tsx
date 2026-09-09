@@ -68,7 +68,7 @@ import {
   buscarServentiasPortal,
   listarCompetenciasPortal,
 } from "@/lib/cartorios/portal.functions";
-import { formatarMoeda } from "@/lib/format";
+import { formatarMoeda, formatarValorGrid } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import CargasView from "@/components/cartorios/CargasView";
 import DocumentosView from "@/components/cartorios/DocumentosView";
