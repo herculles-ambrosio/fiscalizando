@@ -1689,6 +1689,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      educacao_outliers: {
+        Args: { p_exercicio: number; p_limite?: number; p_versao: string }
+        Returns: {
+          fora: number
+          mun: string
+          mun_nome: string
+          piores: Json
+          total: number
+        }[]
+      }
       norm_mun_tmp: { Args: { t: string }; Returns: string }
     }
     Enums: {
