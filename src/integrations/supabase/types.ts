@@ -593,6 +593,123 @@ export type Database = {
         }
         Relationships: []
       }
+      educacao_calendario: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          data_limite_recurso: string | null
+          data_publicacao_definitivo: string | null
+          data_publicacao_provisorio: string | null
+          email_recurso: string
+          exercicio: number
+          nota_tecnica: string | null
+          peso_iae: number
+          peso_ige: number
+          peso_irap: number
+          peso_ire: number
+          resolucao_referencia: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          data_limite_recurso?: string | null
+          data_publicacao_definitivo?: string | null
+          data_publicacao_provisorio?: string | null
+          email_recurso?: string
+          exercicio: number
+          nota_tecnica?: string | null
+          peso_iae?: number
+          peso_ige?: number
+          peso_irap?: number
+          peso_ire?: number
+          resolucao_referencia?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          data_limite_recurso?: string | null
+          data_publicacao_definitivo?: string | null
+          data_publicacao_provisorio?: string | null
+          email_recurso?: string
+          exercicio?: number
+          nota_tecnica?: string | null
+          peso_iae?: number
+          peso_ige?: number
+          peso_irap?: number
+          peso_ire?: number
+          resolucao_referencia?: string | null
+        }
+        Relationships: []
+      }
+      educacao_dados_constitutivos: {
+        Row: {
+          coluna_origem: string
+          criado_em: string
+          exercicio: number
+          fonte_versao: string
+          id: string
+          municipio: string
+          municipio_nome: string
+          valor_num: number | null
+          valor_texto: string | null
+        }
+        Insert: {
+          coluna_origem: string
+          criado_em?: string
+          exercicio: number
+          fonte_versao: string
+          id?: string
+          municipio: string
+          municipio_nome: string
+          valor_num?: number | null
+          valor_texto?: string | null
+        }
+        Update: {
+          coluna_origem?: string
+          criado_em?: string
+          exercicio?: number
+          fonte_versao?: string
+          id?: string
+          municipio?: string
+          municipio_nome?: string
+          valor_num?: number | null
+          valor_texto?: string | null
+        }
+        Relationships: []
+      }
+      educacao_recursos: {
+        Row: {
+          criado_em: string
+          exercicio: number
+          fonte_versao: string
+          id: string
+          item_contestado: string
+          municipio: string
+          municipio_nome: string
+          resultado: string | null
+        }
+        Insert: {
+          criado_em?: string
+          exercicio: number
+          fonte_versao?: string
+          id?: string
+          item_contestado: string
+          municipio: string
+          municipio_nome: string
+          resultado?: string | null
+        }
+        Update: {
+          criado_em?: string
+          exercicio?: number
+          fonte_versao?: string
+          id?: string
+          item_contestado?: string
+          municipio?: string
+          municipio_nome?: string
+          resultado?: string | null
+        }
+        Relationships: []
+      }
       esportes_atividade_municipio: {
         Row: {
           ano_base: number
