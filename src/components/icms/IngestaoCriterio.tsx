@@ -398,7 +398,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label>Ano-base</Label>
+              <Label>{planilha ? "Exercício do repasse" : "Ano-base"}</Label>
               <Input
                 type="number"
                 value={anoBase}
@@ -412,7 +412,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="preliminar">Preliminar</SelectItem>
+                  <SelectItem value="preliminar">{planilha ? "Provisório" : "Preliminar"}</SelectItem>
                   <SelectItem value="definitivo">Definitivo</SelectItem>
                 </SelectContent>
               </Select>
@@ -427,7 +427,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             <label className="inline-flex">
               <input
                 type="file"
-                accept="application/pdf"
+                accept={planilha ? ".xlsx,.xls" : "application/pdf"}
                 className="hidden"
                 disabled={rodando}
                 onChange={async (e) => {
@@ -441,7 +441,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
               <Button asChild variant="outline" disabled={rodando}>
                 <span>
                   <Upload className="mr-2 size-4" />
-                  Enviar PDF do computador
+                  {planilha ? "Enviar planilha do computador" : "Enviar PDF do computador"}
                 </span>
               </Button>
             </label>
