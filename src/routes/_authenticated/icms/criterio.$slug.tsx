@@ -431,11 +431,29 @@ function DetalheGenerico({ slug }: { slug: string }) {
             <CardContent className="space-y-2 text-sm">
               {faltantes.length > 0 && (
                 <div className="rounded-md border border-amber-300 bg-amber-50 p-3 dark:bg-amber-950/20">
-                  <p className="font-medium">Itens sem pontuação no último relatório:</p>
+                  <p className="font-medium">
+                    Itens sem pontuação no último relatório
+                    {potencialFaltante.tipico > 0 && (
+                      <> — expectativa de +
+                        {potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos
+                      </>
+                    )}
+                    :
+                  </p>
                   <ul className="list-disc pl-5">
                     {faltantes.map((f) => (
                       <li key={f.codigo}>
                         {f.nome_oficial} — {f.requisito}
+                        {potencial?.get(f.codigo) && (
+                          <span className="font-medium text-emerald-700 dark:text-emerald-400">
+                            {" "}
+                            (pode somar +
+                            {potencial
+                              .get(f.codigo)!
+                              .tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}{" "}
+                            pontos)
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ul>
