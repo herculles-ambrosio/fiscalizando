@@ -52,6 +52,8 @@ import {
   type LinhaEmolumento,
 } from "@/lib/cartorios/parser";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { usePreferencia } from "@/hooks/usePreferencia";
+
 import {
   AlertDialog,
   AlertDialogCancel,
