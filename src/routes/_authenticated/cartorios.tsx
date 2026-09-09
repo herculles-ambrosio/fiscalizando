@@ -112,8 +112,27 @@ function FiscalizaCartorio() {
   }, [chaveComp]);
 
   const { data: config } = useCartorioConfig();
-  const { data: linhas, isFetching } = useFiscalizacaoCartorio(competencia);
+  const { data: todasLinhas, isFetching } = useFiscalizacaoCartorio(competencia);
   const aliquota = config?.aliquota_iss ?? 5;
+
+  /** Alguns municípios não cobram ISS de serventias vagas — a escolha fica gravada no perfil. */
+  const { valor: incluirVagos, definir: definirIncluirVagos } = usePreferencia(
+    "cartorio-incluir-vagos",
+    true,
+  );
+
+  const vagos = useMemo(
+    () => (todasLinhas ?? []).filter((l) => (l.status ?? "").toLowerCase().includes("vag")).length,
+    [todasLinhas],
+  );
+
+  const linhas = useMemo(
+    () =>
+      incluirVagos
+        ? todasLinhas
+        : (todasLinhas ?? []).filter((l) => !(l.status ?? "").toLowerCase().includes("vag")),
+    [todasLinhas, incluirVagos],
+  );
 
   const totais = useMemo(() => {
     const l = linhas ?? [];
@@ -127,6 +146,7 @@ function FiscalizaCartorio() {
   }, [linhas]);
 
   const diferenca = totais.devido - totais.declarado;
+
 
   return (
     <div className="space-y-5">
