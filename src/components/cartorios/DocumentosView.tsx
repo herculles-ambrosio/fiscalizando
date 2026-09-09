@@ -25,6 +25,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+
 import { useCartorioConfig, useFiscalizacaoCartorio, type Competencia } from "@/hooks/useCartorios";
 import { useModelosCartorio } from "@/hooks/useCartorioModelos";
 import {
