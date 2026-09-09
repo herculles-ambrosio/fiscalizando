@@ -441,6 +441,26 @@ export function RepasseEducacaoFjp({
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot>
+                    <tr className="border-t font-medium">
+                      <td className="py-2">Total</td>
+                      <td colSpan={3} />
+                      <td className="py-2 text-right">{formatarMoeda(totais.pago)}</td>
+                      <td />
+                      <td className="py-2 text-right">{formatarMoeda(totais.esperado)}</td>
+                      <td
+                        className={`py-2 text-right ${
+                          totais.dif > 0
+                            ? "text-emerald-600"
+                            : totais.dif < 0
+                              ? "text-destructive"
+                              : ""
+                        }`}
+                      >
+                        {formatarMoeda(totais.dif)}
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
               <div className="flex justify-between gap-2">
