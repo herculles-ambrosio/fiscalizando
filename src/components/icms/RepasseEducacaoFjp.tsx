@@ -59,9 +59,75 @@ export function RepasseEducacaoFjp({
   const [erroLista, setErroLista] = useState<string | null>(null);
   const [filtro, setFiltro] = useState("");
   const [escolhidos, setEscolhidos] = useState<MunicipioFjp[]>([]);
-  const [exercicio, setExercicio] = useState<number>(new Date().getFullYear());
+  const [exercicio, setExercicio] = useState<number>(
+    anoBase ? anoBase + 2 : new Date().getFullYear(),
+  );
   const [linhas, setLinhas] = useState<LinhaPortal[]>([]);
   const [buscando, setBuscando] = useState(false);
+  // Valores lidos da planilha real de repasses (tem prioridade sobre o portal).
+  const [planilha, setPlanilha] = useState<Map<string, number>>(new Map());
+  const [nomeArquivo, setNomeArquivo] = useState<string | null>(null);
+  const arquivoRef = useRef<HTMLInputElement>(null);
+
+  // Ao trocar o ano-base do relatório, o repasse acontece dois anos depois.
+  useEffect(() => {
+    if (anoBase) setExercicio(anoBase + 2);
+  }, [anoBase]);
+
+  async function lerPlanilha(arquivo: File) {
+    try {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.read(await arquivo.arrayBuffer(), { type: "array" });
+      const mapa = new Map<string, number>();
+      for (const aba of wb.SheetNames) {
+        const linhasAba = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[aba]!, {
+          header: 1,
+          raw: true,
+        });
+        for (const linha of linhasAba) {
+          if (!Array.isArray(linha)) continue;
+          const nome = linha.find((c) => typeof c === "string" && c.trim().length > 2) as
+            | string
+            | undefined;
+          if (!nome) continue;
+          const chave = normalizarMunicipio(nome);
+          const numeros = linha
+            .map((c) =>
+              typeof c === "number"
+                ? c
+                : typeof c === "string" &&
+                    /^[\d.,\s]+$/.test(c.trim()) &&
+                    c.trim().length > 0
+                  ? Number(c.replace(/\./g, "").replace(",", ".").trim())
+                  : null,
+            )
+            .filter((n): n is number => n != null && Number.isFinite(n) && n > 0);
+          // O repasse é o maior número da linha (índices e quantidades são menores).
+          const valor = numeros.length ? Math.max(...numeros) : null;
+          if (valor != null && valor >= 100 && !mapa.has(chave)) mapa.set(chave, valor);
+        }
+      }
+      if (!mapa.size) {
+        toast.error("Não encontrei valores de repasse por município nessa planilha.");
+        return;
+      }
+      setPlanilha(mapa);
+      setNomeArquivo(arquivo.name);
+      toast.success(`${mapa.size} município(s) lidos da planilha.`);
+    } catch {
+      toast.error("Não foi possível ler a planilha. Envie o arquivo .xlsx original.");
+    }
+  }
+
+  function adicionarDaPlanilha() {
+    const novos: MunicipioFjp[] = [];
+    for (const m of lista) {
+      if (!planilha.has(normalizarMunicipio(m.nome))) continue;
+      if (escolhidos.some((e) => e.id === m.id)) continue;
+      novos.push(m);
+    }
+    setEscolhidos((a) => [...a, ...novos].slice(0, 40));
+  }
 
   useEffect(() => {
     let vivo = true;
