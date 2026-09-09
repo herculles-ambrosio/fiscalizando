@@ -30,6 +30,7 @@ export type LinhaEmolumento = {
 export type LinhaDeclaracao = {
   cns: string;
   nome: string | null;
+  municipio: string | null;
   tipoServico: string;
   baseDeclarada: number;
   issDeclarado: number;
@@ -37,6 +38,7 @@ export type LinhaDeclaracao = {
   mes: number | null;
   ano: number | null;
 };
+
 
 export type ResultadoLeitura<T> = {
   linhas: T[];
