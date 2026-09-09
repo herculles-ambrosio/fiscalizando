@@ -43,19 +43,46 @@ export type LinhaTurismo = {
   indice: number;
 };
 
+const CELULA = /^-?\d{1,3}(?:\.\d{3})*(?:,\d+)?$|^-?\d+(?:\.\d+)?$|^S\.?\s?I\.?$/i;
+
+/**
+ * Em algumas publicações o extrator do PDF perde a vírgula/ponto decimal e a
+ * linha chega como "9 25 4888 50 7 64 75 0 010830 0 196900". Nesse caso a
+ * cauda tem onze números em vez de seis, e cada valor decimal vem quebrado em
+ * duas partes (inteiro e casas decimais).
+ */
+function remontarSemDecimal(cauda: string[]): string[] | null {
+  if (cauda.length !== 11) return null;
+  const j = (a: string, b: string) => `${a}.${b}`;
+  return [
+    j(cauda[0]!, cauda[1]!),
+    j(cauda[2]!, cauda[3]!),
+    cauda[4]!,
+    j(cauda[5]!, cauda[6]!),
+    j(cauda[7]!, cauda[8]!),
+    j(cauda[9]!, cauda[10]!),
+  ];
+}
+
 /** Lê uma linha do quadro; devolve `null` quando a linha não é de município. */
 export function lerLinhaTurismo(texto: string): LinhaTurismo | null {
   const tokens = texto.replace(/\s+/g, " ").trim().split(" ");
   if (tokens.length < 8) return null;
 
-  // O relatório usa "S.I." (sem informação) em algumas colunas, então a célula
-  // pode não ser numérica — o que importa é o bloco final de seis valores.
-  const valores = tokens.slice(-6);
+  // Conta quantas células numéricas encerram a linha para saber se o PDF veio
+  // com os decimais preservados (6 células) ou quebrados (11 células).
+  let inicio = tokens.length;
+  while (inicio > 0 && CELULA.test(tokens[inicio - 1] ?? "")) inicio--;
+  const cauda = tokens.slice(inicio);
+
+  const quebrado = remontarSemDecimal(cauda.slice(-11));
+  const usados = quebrado ? 11 : 6;
+  const valores = quebrado ?? tokens.slice(-6);
   const numericos = valores.filter((v) => RE_NUM.test(v)).length;
   if (numericos < 5 || !RE_NUM.test(valores[5] ?? "")) return null;
 
+  const cabeca = tokens.slice(0, tokens.length - usados);
 
-  const cabeca = tokens.slice(0, -6);
   const primeiro = cabeca[0] ?? "";
   if (!/^\d{1,3}[.ºo)]?$/.test(primeiro)) return null;
 
