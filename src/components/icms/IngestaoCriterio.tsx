@@ -463,30 +463,33 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             </Button>
           </div>
 
-          <div className="space-y-2 rounded-md border p-3">
-            <Label>Colar o quadro de pontuação</Label>
-            <p className="text-xs text-muted-foreground">
-              Se o relatório não abrir ou vier só em papel/Diário Oficial, copie o quadro (do PDF, do
-              Excel ou de uma tabela do site) e cole aqui. A primeira linha deve ser o cabeçalho com
-              os nomes das colunas e as demais uma linha por município.
-            </p>
-            <Textarea
-              rows={8}
-              className="font-mono text-xs"
-              placeholder={"Município\tÓrgão municipal\tConselho\tFundo\tPontuação\nABRE CAMPO\tSim\tSim\tNão\t12,50"}
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={processarColado} disabled={rodando}>
-                <ClipboardPaste className="mr-2 size-4" />
-                Importar o que foi colado
-              </Button>
-              <Button variant="ghost" onClick={() => setTexto("")} disabled={rodando || !texto}>
-                Limpar
-              </Button>
+          {!planilha && (
+            <div className="space-y-2 rounded-md border p-3">
+              <Label>Colar o quadro de pontuação</Label>
+              <p className="text-xs text-muted-foreground">
+                Se o relatório não abrir ou vier só em papel/Diário Oficial, copie o quadro (do PDF,
+                do Excel ou de uma tabela do site) e cole aqui. A primeira linha deve ser o cabeçalho
+                com os nomes das colunas e as demais uma linha por município.
+              </p>
+              <Textarea
+                rows={8}
+                className="font-mono text-xs"
+                placeholder={"Município\tÓrgão municipal\tConselho\tFundo\tPontuação\nABRE CAMPO\tSim\tSim\tNão\t12,50"}
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={processarColado} disabled={rodando}>
+                  <ClipboardPaste className="mr-2 size-4" />
+                  Importar o que foi colado
+                </Button>
+                <Button variant="ghost" onClick={() => setTexto("")} disabled={rodando || !texto}>
+                  Limpar
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
+
 
 
           {links.length > 0 && (
