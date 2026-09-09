@@ -221,13 +221,29 @@ function FiscalizaCartorio() {
               )}
 
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-base">
                     {MESES_NOME[competencia.mes - 1]} de {competencia.ano}
                     {isFetching && <span className="ml-2 text-xs text-muted-foreground">…</span>}
                   </CardTitle>
+                  <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={incluirVagos ? "com" : "sem"}
+                    onValueChange={(v) => definirIncluirVagos(v === "com")}
+                  >
+                    <SelectTrigger className="h-9 w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="com">
+                        Incluir cartórios vagos{vagos ? ` (${vagos})` : ""}
+                      </SelectItem>
+                      <SelectItem value="sem">Somente cartórios providos</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button
                     variant="outline"
+
                     size="sm"
                     onClick={() =>
                       baixarCsv(
