@@ -32,6 +32,8 @@ export type DadoConstitutivo = {
 
 export type ResultadoEducacao = {
   ranking: RankingCriterio[];
+  /** Resolução conjunta SEE/FJP citada na aba de embasamento legal. */
+  resolucao: string | null;
   itens: ItemMunicipio[];
   dadosConstitutivos: DadoConstitutivo[];
   recursos: RecursoEducacao[];
@@ -46,22 +48,47 @@ export type ResultadoEducacao = {
 type Linha = (string | number | null)[];
 
 const COMPONENTES = [
-  { codigo: "edu_irap", nome: "Índice de Desempenho Escolar (IRAP)", peso: 50, chaves: ["irap", "desempenho escolar"] },
-  { codigo: "edu_ire", nome: "Índice de Rendimento Escolar (IRE)", peso: 20, chaves: ["ire", "rendimento escolar"] },
-  { codigo: "edu_iae", nome: "Índice de Atendimento Educacional (IAE)", peso: 15, chaves: ["iae", "atendimento educacional"] },
-  { codigo: "edu_ige", nome: "Índice de Gestão Escolar (IGE)", peso: 15, chaves: ["ige", "gestao escolar"] },
+  {
+    codigo: "edu_irap",
+    nome: "Índice de Desempenho Escolar (IRAP)",
+    peso: 50,
+    chaves: ["indice de desempenho", "irap", "desempenho escolar"],
+  },
+  {
+    codigo: "edu_ire",
+    nome: "Índice de Rendimento Escolar (IRE)",
+    peso: 20,
+    chaves: ["indice de rendimento", "ire", "rendimento escolar"],
+  },
+  {
+    codigo: "edu_iae",
+    nome: "Índice de Atendimento Educacional (IAE)",
+    peso: 15,
+    chaves: ["indice de atendimento", "iae", "atendimento educacional"],
+  },
+  {
+    codigo: "edu_ige",
+    nome: "Índice de Gestão Escolar (IGE)",
+    peso: 15,
+    chaves: ["indice de gestao", "ige", "gestao escolar"],
+  },
 ];
 
 const CHAVES_IQE = ["iqe", "indice de qualidade", "qualidade da educacao"];
+/** Coluna do índice final publicado ("Índice de Educação Consolidado"). */
 const CHAVES_INDICE = [
+  "indice de educacao consolidado",
+  "indice de educacao",
   "indice de participacao",
   "indice educacao",
   "ie municipio",
-  "participacao",
   "indice final",
-  "ie",
 ];
 const CHAVES_MUNICIPIO = ["municipio", "nome do municipio", "municipios"];
+/** Abas com os números brutos de cada subcritério (dados constitutivos). */
+const ABAS_CONSTITUTIVAS = ["desempenho", "rendimento", "atendimento", "gestao"];
+/** Colunas de identificação que não são dado constitutivo. */
+const COLUNAS_IDENTIFICACAO = ["ibge 6", "ibge 4", "ibge", "codigo ibge", "municipio"];
 
 function texto(v: unknown): string {
   return v == null ? "" : String(v).replace(/\s+/g, " ").trim();
@@ -108,7 +135,13 @@ function escolherAba(wb: XLSX.WorkBook, chaves: string[]): string | null {
 }
 
 function abaDeIndices(wb: XLSX.WorkBook): string | null {
-  const direta = escolherAba(wb, ["indices calculados", "indice calculado", "indices", "resultado"]);
+  const direta = escolherAba(wb, [
+    "consolidado",
+    "indices calculados",
+    "indice calculado",
+    "indices",
+    "resultado",
+  ]);
   if (direta) return direta;
   // Sem nome reconhecível: procura a aba que traga pelo menos dois componentes.
   for (const nome of wb.SheetNames) {
@@ -132,14 +165,17 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
 
   // 1) Dicionário de dados (usado para descrever as colunas constitutivas).
   const dicionario: { coluna: string; descricao: string }[] = [];
-  const abaDic = escolherAba(wb, ["dicionario", "dicionário"]);
+  const abaDic = escolherAba(wb, ["metadados", "dicionario", "dicionário"]);
   if (abaDic) {
     for (const l of linhasDaAba(wb, abaDic)) {
-      const coluna = texto(l?.[0]);
-      const descricao = texto(l?.[1]);
-      if (coluna && descricao && normalizarTexto(coluna) !== "variavel") {
-        dicionario.push({ coluna, descricao });
-      }
+      const celulas = (l ?? []).map(texto).filter(Boolean);
+      // "Dimensão | Nome abreviado do indicador | Descrição" ou "coluna | descrição".
+      const coluna = celulas.length >= 3 ? celulas[1]! : (celulas[0] ?? "");
+      const descricao = celulas.length >= 3 ? celulas[2]! : (celulas[1] ?? "");
+      if (!coluna || !descricao) continue;
+      const c = normalizarTexto(coluna);
+      if (c === "variavel" || c.startsWith("nome abreviado")) continue;
+      dicionario.push({ coluna, descricao });
     }
   }
 
@@ -175,16 +211,20 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
         const indice = colIndice >= 0 ? numero(l[colIndice]) : null;
         if (iqe == null && indice == null) continue;
         municipiosComIndice.add(oficial.chave);
+        // A FJP publica os índices como fração da soma estadual (todos somam
+        // 1). O sistema trabalha em percentual, como nos demais critérios.
+        const indicePct = indice == null ? 0 : indice * 100;
         ranking.push({
           municipio: oficial.chave,
           municipioNome: oficial.nome,
           posicao: null,
-          notaFinal: iqe ?? indice ?? 0,
-          indicePercentual: indice ?? 0,
+          notaFinal: iqe != null ? iqe * 100 : indicePct,
+          indicePercentual: indicePct,
         });
         for (const c of colComponentes) {
           if (c.coluna < 0) continue;
-          const valor = numero(l[c.coluna]);
+          const bruto = numero(l[c.coluna]);
+          const valor = bruto == null ? null : bruto * 100;
           itens.push({
             municipio: oficial.chave,
             municipioNome: oficial.nome,
@@ -203,33 +243,39 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
   ranking.sort((a, b) => b.notaFinal - a.notaFinal);
   ranking.forEach((l, i) => (l.posicao = i + 1));
 
-  // 3) Dados constitutivos (números brutos por município).
-  const abaDados = escolherAba(wb, ["constitutiv", "dados brutos", "dados"]);
+  // 3) Dados constitutivos: uma aba por subcritério (Desempenho, Rendimento,
+  // Atendimento e Gestão), com os números brutos que geraram cada índice.
   const municipiosComDados = new Set<string>();
-  if (abaDados && abaDados !== abaIndices) {
-    const linhas = linhasDaAba(wb, abaDados);
+  const abasDados = wb.SheetNames.filter((nome) => {
+    if (nome === abaIndices) return false;
+    const n = normalizarTexto(nome);
+    return ABAS_CONSTITUTIVAS.some((k) => n.includes(k)) || n.includes("constitutiv");
+  });
+  for (const nomeAba of abasDados) {
+    const linhas = linhasDaAba(wb, nomeAba);
     const cab = acharCabecalho(linhas);
-    if (cab) {
-      const colMunicipio = cab.colunas.findIndex((c) => c && casa(c, CHAVES_MUNICIPIO));
-      for (let i = cab.indice + 1; i < linhas.length; i++) {
-        const l = linhas[i] ?? [];
-        const oficial = canonicalizarMunicipio(texto(l[colMunicipio]));
-        if (!oficial) continue;
-        municipiosComDados.add(oficial.chave);
-        cab.colunas.forEach((coluna, idx) => {
-          if (!coluna || idx === colMunicipio) return;
-          const bruto = l[idx];
-          if (bruto == null || texto(bruto) === "") return;
-          const n = numero(bruto);
-          dadosConstitutivos.push({
-            municipio: oficial.chave,
-            municipioNome: oficial.nome,
-            colunaOrigem: coluna,
-            valorNum: n,
-            valorTexto: n == null ? texto(bruto) : null,
-          });
+    if (!cab) continue;
+    const colMunicipio = cab.colunas.findIndex((c) => c && casa(c, CHAVES_MUNICIPIO));
+    if (colMunicipio < 0) continue;
+    for (let i = cab.indice + 1; i < linhas.length; i++) {
+      const l = linhas[i] ?? [];
+      const oficial = canonicalizarMunicipio(texto(l[colMunicipio]));
+      if (!oficial) continue;
+      municipiosComDados.add(oficial.chave);
+      cab.colunas.forEach((coluna, idx) => {
+        if (!coluna || idx === colMunicipio) return;
+        if (casa(coluna, COLUNAS_IDENTIFICACAO)) return;
+        const bruto = l[idx];
+        if (bruto == null || texto(bruto) === "") return;
+        const n = numero(bruto);
+        dadosConstitutivos.push({
+          municipio: oficial.chave,
+          municipioNome: oficial.nome,
+          colunaOrigem: `${nomeAba} — ${coluna}`,
+          valorNum: n,
+          valorTexto: n == null ? texto(bruto) : null,
         });
-      }
+      });
     }
   }
 
@@ -264,13 +310,16 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
   }
 
   // 5) Nota técnica: texto corrido, guardado apenas para consulta.
-  const abaNota = escolherAba(wb, ["nota tecnica", "nota técnica", "nota"]);
+  const abaNota = escolherAba(wb, ["embasamento", "nota tecnica", "nota técnica", "nota"]);
   let notaTecnica: string | null = null;
+  let resolucao: string | null = null;
   if (abaNota) {
     const linhas = linhasDaAba(wb, abaNota)
-      .map((l) => (l ?? []).map(texto).filter(Boolean).join(" "))
+      .map((l) => (l ?? []).map(texto).filter(Boolean).join(" — "))
       .filter(Boolean);
     notaTecnica = linhas.join("\n").slice(0, 20000) || null;
+    const achou = linhas.find((l) => /resolu/i.test(l));
+    if (achou) resolucao = achou.slice(0, 300);
   }
 
   // 6) Municípios presentes em uma aba e ausentes na outra — pode indicar
@@ -287,6 +336,7 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
 
   return {
     ranking,
+    resolucao,
     itens,
     dadosConstitutivos,
     recursos,
