@@ -49,6 +49,7 @@ import {
   lerDeclaracoes,
   lerEmolumentos,
   MESES_NOME,
+  type LinhaEmolumento,
 } from "@/lib/cartorios/parser";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import {
@@ -61,7 +62,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { buscarPortalCartorios } from "@/lib/cartorios/portal.functions";
+import {
+  buscarServentiasPortal,
+  listarCompetenciasPortal,
+} from "@/lib/cartorios/portal.functions";
 import { formatarMoeda } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import CargasView from "@/components/cartorios/CargasView";
