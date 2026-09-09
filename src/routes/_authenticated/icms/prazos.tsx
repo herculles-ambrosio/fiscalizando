@@ -90,6 +90,13 @@ function PainelPrazos() {
     }
   }, [janelas, abertas, exercicio]);
 
+  // Mostra a versão que realmente tem planilha importada no exercício.
+  const { data: versoes } = useVersoesEducacao(exercicio);
+  useEffect(() => {
+    if (versoes?.length && !versoes.includes(versao)) setVersao(versoes[0]!);
+  }, [versoes, versao]);
+
+
   const { data: outliers, isLoading: carregandoOut } = useOutliersEducacao(
     exercicio,
     versao,
