@@ -158,6 +158,8 @@ export async function lerEmolumentos(arquivo: File): Promise<ResultadoLeitura<Li
     nome: indicePor(cabecalho, ["nomedaserventia", "serventia", "cartorio"]),
     cns: indicePor(cabecalho, ["codigocns", "cns"]),
     comarca: indicePor(cabecalho, ["comarca"]),
+    municipio: indicePor(cabecalho, ["municipio", "cidade"]),
+
     tipo: indicePor(cabecalho, ["tipodeservico", "tiposervico"]),
     status: indicePor(cabecalho, ["status", "situacao"]),
     emolumentos: indicePor(cabecalho, ["emolumento"]),
