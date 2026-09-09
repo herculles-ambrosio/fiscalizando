@@ -120,6 +120,23 @@ function DetalheGenerico({ slug }: { slug: string }) {
   }, [referencia, pontuados, filtroPontuacao]);
 
   /**
+   * Projeção de pontos de um item: primeiro tenta o que o próprio relatório
+   * mostra (mediana/teto entre quem já pontua o item); quando o item não tem
+   * linha própria no relatório (ex.: subitens da habilitação de Turismo), cai
+   * no peso de referência do item.
+   */
+  const projecaoDe = useMemo(
+    () => (r: { codigo: string; peso: number | null }) => {
+      const observado = potencial?.get(r.codigo);
+      if (observado) return { tipico: observado.tipico, maximo: observado.maximo, observado: true, municipios: observado.municipios };
+      const peso = r.peso ?? 0;
+      if (peso > 0) return { tipico: peso, maximo: peso, observado: false, municipios: 0 };
+      return null;
+    },
+    [potencial],
+  );
+
+  /**
    * Quanto o município pode somar nos itens hoje zerados: usa a pontuação
    * típica (mediana) de quem já cumpre o item no mesmo relatório, com o teto
    * observado como referência máxima.
@@ -128,13 +145,13 @@ function DetalheGenerico({ slug }: { slug: string }) {
     let tipico = 0;
     let maximo = 0;
     for (const f of faltantes) {
-      const p = potencial?.get(f.codigo);
+      const p = projecaoDe(f);
       if (!p) continue;
       tipico += p.tipico;
       maximo += p.maximo;
     }
     return { tipico, maximo };
-  }, [faltantes, potencial]);
+  }, [faltantes, projecaoDe]);
 
 
   if (!criterio) {
@@ -250,6 +267,35 @@ function DetalheGenerico({ slug }: { slug: string }) {
             anoBase={ano}
           />
 
+          {potencialFaltante.tipico > 0 && (
+            <Card className="border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/20">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Projeção de pontuação</p>
+                  <p className="text-xl font-semibold text-emerald-700 dark:text-emerald-400">
+                    +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    É o que {municipio?.nome ?? "o município"} pode somar cumprindo os{" "}
+                    {faltantes.length} itens hoje zerados
+                    {potencialFaltante.maximo > potencialFaltante.tipico && (
+                      <>
+                        {" "}(teto observado no relatório:{" "}
+                        {potencialFaltante.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })})
+                      </>
+                    )}
+                    .
+                  </p>
+                </div>
+                <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
+                  Meta de melhoria
+                </Badge>
+              </CardContent>
+            </Card>
+          )}
+
+
+
 
 
           {!!itens?.length && (
@@ -341,13 +387,13 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         ["Item", "Situação", "Pontuação", "Pode alcançar", "Teto no relatório", "Requisito"],
                         referenciaFiltrada.map((r) => {
                           const p = pontuados.get(r.codigo);
-                          const pot = potencial?.get(r.codigo);
+                          const proj = projecaoDe(r);
                           return [
                             r.nome_oficial,
                             p?.pontuacao ? "Pontua" : "Não pontua",
                             String(p?.pontuacao ?? 0),
-                            p?.pontuacao ? "" : String(pot?.tipico ?? ""),
-                            String(pot?.maximo ?? ""),
+                            p?.pontuacao ? "" : String(proj?.tipico ?? ""),
+                            String(proj?.maximo ?? ""),
                             r.requisito ?? "",
                           ];
                         }),
@@ -381,7 +427,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                 {referenciaFiltrada.map((r) => {
                   const p = pontuados.get(r.codigo);
                   const pontua = !!p?.pontuacao;
-                  const pot = potencial?.get(r.codigo);
+                  const proj = projecaoDe(r);
                   return (
                     <div key={r.codigo} className="flex items-start gap-3 rounded-md border p-3 text-sm">
                       {pontua ? (
@@ -395,10 +441,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         {p?.observacao && (
                           <p className="text-xs text-muted-foreground">Registro: {p.observacao}</p>
                         )}
-                        {!pontua && pot && (
+                        {!pontua && proj?.observado && (
                           <p className="text-xs text-muted-foreground">
-                            {pot.municipios} municípios já pontuam este item; o maior alcançou{" "}
-                            {pot.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos.
+                            {proj.municipios} municípios já pontuam este item; o maior alcançou{" "}
+                            {proj.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos.
                           </p>
                         )}
                       </div>
@@ -406,10 +452,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         <Badge variant={pontua ? "secondary" : "outline"}>
                           {pontua ? p?.pontuacao?.toLocaleString("pt-BR") : "sem pontuação"}
                         </Badge>
-                        {!pontua && pot && (
+                        {!pontua && proj && (
                           <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
-                            pode somar +
-                            {pot.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}
+                            projeção +
+                            {proj.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}
                           </Badge>
                         )}
                       </div>
@@ -444,12 +490,11 @@ function DetalheGenerico({ slug }: { slug: string }) {
                     {faltantes.map((f) => (
                       <li key={f.codigo}>
                         {f.nome_oficial} — {f.requisito}
-                        {potencial?.get(f.codigo) && (
+                        {projecaoDe(f) && (
                           <span className="font-medium text-emerald-700 dark:text-emerald-400">
                             {" "}
-                            (pode somar +
-                            {potencial
-                              .get(f.codigo)!
+                            (projeção +
+                            {projecaoDe(f)!
                               .tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}{" "}
                             pontos)
                           </span>
