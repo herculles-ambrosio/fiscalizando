@@ -256,16 +256,16 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       }
 
       setEtapa("Gravando os dados constitutivos");
-      for (let i = 0; i < r.dadosConstitutivos.length; i += 800) {
+      for (let i = 0; i < r.dadosConstitutivos.length; i += 2000) {
         await gravarDados({
           data: {
             exercicio: ano,
             fonteVersao: versao,
-            linhas: r.dadosConstitutivos.slice(i, i + 800),
+            linhas: r.dadosConstitutivos.slice(i, i + 2000),
           },
         });
         setProgresso(
-          50 + Math.round(((i + 800) / Math.max(r.dadosConstitutivos.length, 1)) * 35),
+          50 + Math.round(((i + 2000) / Math.max(r.dadosConstitutivos.length, 1)) * 35),
         );
       }
 
@@ -282,8 +282,16 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
         data: {
           exercicio: ano,
           notaTecnica: r.notaTecnica,
+          resolucaoReferencia: r.resolucao,
           ...(versao === "provisorio"
-            ? { dataPublicacaoProvisorio: new Date().toISOString().slice(0, 10) }
+            ? {
+                dataPublicacaoProvisorio: new Date().toISOString().slice(0, 10),
+                // A FJP dá cerca de 15 dias para recurso; a data pode ser
+                // corrigida na aba "Prazo de recurso".
+                dataLimiteRecurso: new Date(Date.now() + 15 * 86400000)
+                  .toISOString()
+                  .slice(0, 10),
+              }
             : { dataPublicacaoDefinitivo: new Date().toISOString().slice(0, 10) }),
         },
       });

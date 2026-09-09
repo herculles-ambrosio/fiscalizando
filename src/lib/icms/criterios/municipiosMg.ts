@@ -27,9 +27,20 @@ const INDICE = new Map<string, string>();
  * colisão entre os 853 municípios.
  */
 const INDICE_SEM_H = new Map<string, string>();
+/**
+ * Índice que ignora as preposições ("Barão de Monte Alto" na planilha da FJP x
+ * "Barão do Monte Alto" na relação da SEF). Nomes que ficariam ambíguos sem a
+ * preposição são retirados deste índice.
+ */
+const INDICE_SEM_CONECTIVOS = new Map<string, string>();
+const semConectivos = (nome: string) =>
+  apenasLetras(nome.replace(/\b(de|do|da|dos|das|d)\b/gi, " "));
 for (const nome of Object.values(MUNICIPIOS_SEF)) {
   INDICE.set(apenasLetras(nome), nome);
   INDICE_SEM_H.set(apenasLetras(nome).replace(/H/g, ""), nome);
+  const chave = semConectivos(nome);
+  if (INDICE_SEM_CONECTIVOS.has(chave)) INDICE_SEM_CONECTIVOS.set(chave, "");
+  else INDICE_SEM_CONECTIVOS.set(chave, nome);
 }
 
 export type MunicipioOficial = { chave: string; nome: string };
@@ -52,7 +63,11 @@ export const MUNICIPIOS_MG: MunicipioOficial[] = [
  */
 export function municipioExato(nomeLido: string): MunicipioOficial | null {
   const chave = apenasLetras(nomeLido);
-  const oficial = INDICE.get(chave) ?? INDICE_SEM_H.get(chave.replace(/H/g, ""));
+  const oficial =
+    INDICE.get(chave) ??
+    INDICE_SEM_H.get(chave.replace(/H/g, "")) ??
+    INDICE_SEM_CONECTIVOS.get(semConectivos(nomeLido)) ??
+    null;
   return oficial ? { chave: normalizarMunicipio(oficial), nome: oficial } : null;
 }
 
@@ -67,7 +82,8 @@ export function canonicalizarMunicipio(nomeLido: string): MunicipioOficial | nul
   if (!bruto) return null;
 
   const tentar = (texto: string): MunicipioOficial | null => {
-    const oficial = INDICE.get(apenasLetras(texto));
+    const oficial =
+      INDICE.get(apenasLetras(texto)) || INDICE_SEM_CONECTIVOS.get(semConectivos(texto)) || null;
     return oficial ? { chave: normalizarMunicipio(oficial), nome: oficial } : null;
   };
 

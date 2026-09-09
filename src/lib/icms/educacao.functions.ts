@@ -61,7 +61,7 @@ export const gravarDadosConstitutivos = createServerFn({ method: "POST" })
               valorTexto: z.string().nullable(),
             }),
           )
-          .max(1000),
+          .max(2000),
       })
       .parse(d),
   )
