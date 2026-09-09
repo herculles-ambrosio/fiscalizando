@@ -53,7 +53,6 @@ import {
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -409,7 +408,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   const importarDecl = useImportarDeclaracoes();
   const excluir = useExcluirCompetenciaCartorio();
   const { data: competencias } = useCompetenciasCartorio();
-  const { municipio } = useMunicipioAtivo();
+  const { municipio, municipios, podeTrocar, trocar } = useMunicipioAtivo();
   const buscar = useServerFn(buscarPortalCartorios);
 
   const [mes, setMes] = useState(String(new Date().getMonth() + 1));
@@ -419,7 +418,6 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   const [buscando, setBuscando] = useState(false);
   const [confirmacao, setConfirmacao] = useState<{
     encontrados: string[];
-    seguir: () => void;
   } | null>(null);
   const refEmol = useRef<HTMLInputElement>(null);
   const refDecl = useRef<HTMLInputElement>(null);
@@ -428,11 +426,10 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
 
   /**
    * Só aceita planilha da prefeitura ativa. Quando a única referência é a
-   * comarca (que abrange cidades vizinhas), pede confirmação em vez de barrar.
+   * comarca (que abrange cidades vizinhas), bloqueia e oferece trocar de prefeitura.
    */
   function municipioConfere(
     linhas: { municipio?: string | null; comarca?: string | null }[],
-    seguir: () => void,
   ): boolean {
     const conf = conferirMunicipio(linhas, municipio?.nome);
     if (conf.ok) return true;
@@ -443,7 +440,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
       );
       return false;
     }
-    setConfirmacao({ encontrados: conf.encontrados, seguir });
+    setConfirmacao({ encontrados: conf.encontrados });
     return false;
   }
 
@@ -462,7 +459,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
         setAno(String(comp.ano));
         toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
       };
-      if (!municipioConfere(r.linhas, () => void gravar())) return;
+      if (!municipioConfere(r.linhas)) return;
       await gravar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
@@ -480,7 +477,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
         });
         toast.success(`${total} declaração(ões) carregadas.`);
       };
-      if (!municipioConfere(r.linhas, () => void gravar())) return;
+      if (!municipioConfere(r.linhas)) return;
       await gravar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
@@ -668,21 +665,34 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
             <AlertDialogTitle>Conferir a prefeitura do arquivo</AlertDialogTitle>
             <AlertDialogDescription>
               A prefeitura ativa é <strong>{municipio?.nome}</strong>, mas o arquivo traz apenas a
-              comarca {confirmacao?.encontrados.slice(0, 3).join(", ")}. Se estes cartórios
-              realmente atendem {municipio?.nome}, pode continuar; caso contrário, cancele e troque
-              a prefeitura.
+              comarca {confirmacao?.encontrados.slice(0, 3).join(", ")}. A carga foi bloqueada:
+              troque para a prefeitura correta e envie o arquivo de novo.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {podeTrocar && (
+            <div className="px-1">
+              <Select
+                onValueChange={(id) => {
+                  trocar(id);
+                  setConfirmacao(null);
+                  toast.success("Prefeitura trocada. Envie o arquivo novamente.");
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Escolher outra prefeitura…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {municipios.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.nome}/{m.uf}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                confirmacao?.seguir();
-                setConfirmacao(null);
-              }}
-            >
-              Carregar assim mesmo
-            </AlertDialogAction>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
