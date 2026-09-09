@@ -409,13 +409,17 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   const excluir = useExcluirCompetenciaCartorio();
   const { data: competencias } = useCompetenciasCartorio();
   const { municipio, municipios, podeTrocar, trocar } = useMunicipioAtivo();
-  const buscar = useServerFn(buscarPortalCartorios);
+  const listarCompetencias = useServerFn(listarCompetenciasPortal);
+  const buscarServentias = useServerFn(buscarServentiasPortal);
 
   const [mes, setMes] = useState(String(new Date().getMonth() + 1));
   const [ano, setAno] = useState(String(anoAtual));
   const [ignoradas, setIgnoradas] = useState<string[]>([]);
-  const [urlPortal, setUrlPortal] = useState("");
+  const [competenciasPortal, setCompetenciasPortal] = useState<string[]>([]);
+  const [competenciaPortal, setCompetenciaPortal] = useState("");
+  const [somenteComarca, setSomenteComarca] = useState(true);
   const [buscando, setBuscando] = useState(false);
+  const [listando, setListando] = useState(false);
   const [confirmacao, setConfirmacao] = useState<{
     encontrados: string[];
   } | null>(null);
