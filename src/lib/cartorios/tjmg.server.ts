@@ -298,6 +298,7 @@ export async function baixarServentiasTjmg(opcoes: {
         const nome = (linha[0]?.qText ?? "").trim();
         const cns = (linha[1]?.qText ?? "").trim();
         if (!nome || !cns) continue;
+        if (filtro === "nome" && !nomeCitaMunicipio(nome, opcoes.municipio!)) continue;
         linhas.push({
           nome,
           cns,
@@ -311,7 +312,16 @@ export async function baixarServentiasTjmg(opcoes: {
       }
     }
 
-    return { competencia: opcoes.mesAno, comarca: comarcaEscolhida, linhas };
+    if (filtro === "nome") {
+      if (!linhas.length)
+        throw new Error(
+          `Não encontrei nenhuma serventia com o nome de ${opcoes.municipio} em ${opcoes.mesAno}. Confira o mês ou envie a planilha do portal.`,
+        );
+      comarcaEscolhida = linhas[0]!.comarca || null;
+    }
+
+    return { competencia: opcoes.mesAno, comarca: comarcaEscolhida, filtro, linhas };
+
   } finally {
     engine.fechar();
   }
