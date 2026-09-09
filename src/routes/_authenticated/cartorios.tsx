@@ -494,16 +494,62 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   }
 
 
-  async function tentarPortal() {
+  /** Lê no portal do TJMG quais meses já estão publicados. */
+  async function carregarCompetenciasPortal() {
+    setListando(true);
+    try {
+      const r = await listarCompetencias();
+      if (!r.ok || !r.competencias.length) {
+        toast.warning(r.mensagem || "O portal do TJMG não devolveu as competências.");
+        return;
+      }
+      setCompetenciasPortal(r.competencias);
+      setCompetenciaPortal((atual) => atual || r.competencias[0]!);
+      toast.success(`${r.competencias.length} competência(s) disponíveis no portal.`);
+    } catch {
+      toast.error("Não foi possível falar com o portal do TJMG.");
+    } finally {
+      setListando(false);
+    }
+  }
+
+  /** Baixa a lista de serventias do painel do TJMG e grava a carga. */
+  async function buscarNoPortal() {
+    const alvo = competenciaPortal || `${Number(mes)}/${ano}`;
     setBuscando(true);
     try {
-      const r = await buscar({ data: urlPortal.trim() ? { url: urlPortal.trim() } : {} });
-      if (r.ok && r.conteudo) {
-        const arquivo = new File([r.conteudo], "portal-tjmg.csv", { type: "text/csv" });
-        await enviarEmolumentos(arquivo);
-      } else {
-        toast.warning(r.mensagem);
+      const r = await buscarServentias({
+        data: {
+          mesAno: alvo,
+          comarca: somenteComarca ? (municipio?.nome ?? null) : null,
+        },
+      });
+      if (!r.ok || !r.linhas.length) {
+        toast.warning(r.mensagem || "O portal do TJMG não devolveu serventias.");
+        return;
       }
+      const [mesPortal, anoPortal] = alvo.split("/").map(Number) as [number, number];
+      const linhas: LinhaEmolumento[] = r.linhas.map((s) => ({
+        cns: s.cns,
+        nome: s.nome,
+        comarca: s.comarca || null,
+        municipio: null,
+        tipoServico: "",
+        status: s.status || null,
+        emolumentos: s.emolumentos,
+        recompe: s.recompe,
+        tfj: s.tfj,
+        despesa: s.despesa,
+        outrasReceitas: 0,
+        mes: mesPortal,
+        ano: anoPortal,
+      }));
+      setIgnoradas([]);
+      await gravarEmolumentos(
+        linhas,
+        { mes: mesPortal, ano: anoPortal },
+        `Portal TJMG ${alvo}${r.comarca ? ` — comarca ${r.comarca}` : ""}`,
+      );
     } catch {
       toast.error("Não foi possível falar com o portal do TJMG.");
     } finally {
