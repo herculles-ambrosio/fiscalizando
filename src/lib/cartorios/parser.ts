@@ -298,7 +298,9 @@ export async function lerDeclaracoes(arquivo: File): Promise<ResultadoLeitura<Li
     base: indicePor(cabecalho, ["basedecalculo", "basedeclarada", "base", "receita", "faturamento"]),
     issDeclarado: indicePor(cabecalho, ["issdeclarado", "issdevido", "valoriss", "iss"]),
     issPago: indicePor(cabecalho, ["isspago", "recolhido", "pago"]),
+    municipio: indicePor(cabecalho, ["municipio", "cidade"]),
     competencia: indicePor(cabecalho, ["mesano", "competencia", "periodo"]),
+
   };
   if (idx.cns < 0 && idx.nome < 0)
     throw new Error("A planilha precisa ter a coluna do CNS ou do nome do cartório.");
