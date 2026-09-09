@@ -392,6 +392,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   const importarDecl = useImportarDeclaracoes();
   const excluir = useExcluirCompetenciaCartorio();
   const { data: competencias } = useCompetenciasCartorio();
+  const { municipio } = useMunicipioAtivo();
   const buscar = useServerFn(buscarPortalCartorios);
 
   const [mes, setMes] = useState(String(new Date().getMonth() + 1));
@@ -399,24 +400,53 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   const [ignoradas, setIgnoradas] = useState<string[]>([]);
   const [urlPortal, setUrlPortal] = useState("");
   const [buscando, setBuscando] = useState(false);
+  const [confirmacao, setConfirmacao] = useState<{
+    encontrados: string[];
+    seguir: () => void;
+  } | null>(null);
   const refEmol = useRef<HTMLInputElement>(null);
   const refDecl = useRef<HTMLInputElement>(null);
 
   const competencia = { ano: Number(ano), mes: Number(mes) };
 
+  /**
+   * Só aceita planilha da prefeitura ativa. Quando a única referência é a
+   * comarca (que abrange cidades vizinhas), pede confirmação em vez de barrar.
+   */
+  function municipioConfere(
+    linhas: { municipio?: string | null; comarca?: string | null }[],
+    seguir: () => void,
+  ): boolean {
+    const conf = conferirMunicipio(linhas, municipio?.nome);
+    if (conf.ok) return true;
+    const lista = conf.encontrados.slice(0, 3).join(", ");
+    if (conf.base === "municipio") {
+      toast.error(
+        `Este arquivo é de ${lista}, e a prefeitura ativa é ${municipio?.nome}. Troque a prefeitura ou envie o arquivo correto.`,
+      );
+      return false;
+    }
+    setConfirmacao({ encontrados: conf.encontrados, seguir });
+    return false;
+  }
+
   async function enviarEmolumentos(arquivo: File) {
     try {
       const r = await lerEmolumentos(arquivo);
       const comp = r.competencia ?? competencia;
-      const total = await importarEmol.mutateAsync({
-        linhas: r.linhas,
-        competencia: comp,
-        arquivoNome: arquivo.name,
-      });
-      setIgnoradas(r.colunasIgnoradas);
-      setMes(String(comp.mes));
-      setAno(String(comp.ano));
-      toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
+      const gravar = async () => {
+        const total = await importarEmol.mutateAsync({
+          linhas: r.linhas,
+          competencia: comp,
+          arquivoNome: arquivo.name,
+        });
+        setIgnoradas(r.colunasIgnoradas);
+        setMes(String(comp.mes));
+        setAno(String(comp.ano));
+        toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
+      };
+      if (!municipioConfere(r.linhas, () => void gravar())) return;
+      await gravar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     }
@@ -425,16 +455,21 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   async function enviarDeclaracoes(arquivo: File) {
     try {
       const r = await lerDeclaracoes(arquivo);
-      const total = await importarDecl.mutateAsync({
-        linhas: r.linhas,
-        competencia,
-        arquivoNome: arquivo.name,
-      });
-      toast.success(`${total} declaração(ões) carregadas.`);
+      const gravar = async () => {
+        const total = await importarDecl.mutateAsync({
+          linhas: r.linhas,
+          competencia,
+          arquivoNome: arquivo.name,
+        });
+        toast.success(`${total} declaração(ões) carregadas.`);
+      };
+      if (!municipioConfere(r.linhas, () => void gravar())) return;
+      await gravar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     }
   }
+
 
   async function tentarPortal() {
     setBuscando(true);
