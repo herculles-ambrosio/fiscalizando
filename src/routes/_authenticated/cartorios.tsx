@@ -380,10 +380,12 @@ function LinhaCartorio({
       normalizado = limpo.replace(/\./g, "").replace(",", ".");
     } else {
       const partes = limpo.split(".");
+      const ultima = partes[partes.length - 1] ?? "";
       normalizado =
-        partes.length > 1 && partes[partes.length - 1].length !== 3
-          ? `${partes.slice(0, -1).join("")}.${partes[partes.length - 1]}`
+        partes.length > 1 && ultima.length !== 3
+          ? `${partes.slice(0, -1).join("")}.${ultima}`
           : partes.join("");
+
     }
     const n = Number(normalizado);
     return Number.isFinite(n) ? n : 0;
