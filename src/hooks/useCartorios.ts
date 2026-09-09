@@ -10,6 +10,52 @@ import { chave, type LinhaDeclaracao, type LinhaEmolumento } from "@/lib/cartori
 
 export type Competencia = { ano: number; mes: number };
 
+export type CargaCartorio = {
+  id: string;
+  tipo: "emolumentos" | "declaracoes";
+  competencia_ano: number;
+  competencia_mes: number;
+  arquivo_nome: string;
+  origem: string;
+  linhas: number;
+  observacao: string | null;
+  criado_em: string;
+};
+
+/** Histórico de todas as cargas mensais enviadas pelo município. */
+export function useCargasCartorio() {
+  const { municipioId } = useMunicipioAtivo();
+  return useQuery({
+    queryKey: ["cartorio-cargas", municipioId],
+    enabled: !!municipioId,
+    queryFn: async (): Promise<CargaCartorio[]> => {
+      const { data, error } = await supabase
+        .from("cartorio_cargas")
+        .select("*")
+        .eq("municipio_id", municipioId!)
+        .order("competencia_ano", { ascending: false })
+        .order("competencia_mes", { ascending: false })
+        .order("criado_em", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as unknown as CargaCartorio[];
+    },
+  });
+}
+
+export function useExcluirCargaCartorio() {
+  const { municipioId } = useMunicipioAtivo();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("cartorio_cargas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cartorio-cargas", municipioId] }),
+  });
+}
+
+
 export type LinhaFiscalizacao = {
   cns: string;
   nome: string;
