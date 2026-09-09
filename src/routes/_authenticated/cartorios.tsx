@@ -53,7 +53,6 @@ import {
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -460,7 +459,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
         setAno(String(comp.ano));
         toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
       };
-      if (!municipioConfere(r.linhas, () => void gravar())) return;
+      if (!municipioConfere(r.linhas)) return;
       await gravar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
@@ -478,7 +477,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
         });
         toast.success(`${total} declaração(ões) carregadas.`);
       };
-      if (!municipioConfere(r.linhas, () => void gravar())) return;
+      if (!municipioConfere(r.linhas)) return;
       await gravar();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
