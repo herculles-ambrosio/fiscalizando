@@ -644,8 +644,34 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={!!confirmacao} onOpenChange={(a) => !a && setConfirmacao(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Conferir a prefeitura do arquivo</AlertDialogTitle>
+            <AlertDialogDescription>
+              A prefeitura ativa é <strong>{municipio?.nome}</strong>, mas o arquivo traz apenas a
+              comarca {confirmacao?.encontrados.slice(0, 3).join(", ")}. Se estes cartórios
+              realmente atendem {municipio?.nome}, pode continuar; caso contrário, cancele e troque
+              a prefeitura.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                confirmacao?.seguir();
+                setConfirmacao(null);
+              }}
+            >
+              Carregar assim mesmo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
+
 }
 
 function ConfiguracaoAliquota() {
