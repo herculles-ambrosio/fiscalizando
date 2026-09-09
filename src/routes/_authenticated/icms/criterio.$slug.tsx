@@ -387,13 +387,13 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         ["Item", "Situação", "Pontuação", "Pode alcançar", "Teto no relatório", "Requisito"],
                         referenciaFiltrada.map((r) => {
                           const p = pontuados.get(r.codigo);
-                          const pot = potencial?.get(r.codigo);
+                          const proj = projecaoDe(r);
                           return [
                             r.nome_oficial,
                             p?.pontuacao ? "Pontua" : "Não pontua",
                             String(p?.pontuacao ?? 0),
-                            p?.pontuacao ? "" : String(pot?.tipico ?? ""),
-                            String(pot?.maximo ?? ""),
+                            p?.pontuacao ? "" : String(proj?.tipico ?? ""),
+                            String(proj?.maximo ?? ""),
                             r.requisito ?? "",
                           ];
                         }),
@@ -427,7 +427,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                 {referenciaFiltrada.map((r) => {
                   const p = pontuados.get(r.codigo);
                   const pontua = !!p?.pontuacao;
-                  const pot = potencial?.get(r.codigo);
+                  const proj = projecaoDe(r);
                   return (
                     <div key={r.codigo} className="flex items-start gap-3 rounded-md border p-3 text-sm">
                       {pontua ? (
@@ -441,10 +441,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         {p?.observacao && (
                           <p className="text-xs text-muted-foreground">Registro: {p.observacao}</p>
                         )}
-                        {!pontua && pot && (
+                        {!pontua && proj?.observado && (
                           <p className="text-xs text-muted-foreground">
-                            {pot.municipios} municípios já pontuam este item; o maior alcançou{" "}
-                            {pot.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos.
+                            {proj.municipios} municípios já pontuam este item; o maior alcançou{" "}
+                            {proj.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos.
                           </p>
                         )}
                       </div>
@@ -452,10 +452,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         <Badge variant={pontua ? "secondary" : "outline"}>
                           {pontua ? p?.pontuacao?.toLocaleString("pt-BR") : "sem pontuação"}
                         </Badge>
-                        {!pontua && pot && (
+                        {!pontua && proj && (
                           <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
-                            pode somar +
-                            {pot.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}
+                            projeção +
+                            {proj.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}
                           </Badge>
                         )}
                       </div>
