@@ -282,7 +282,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                 <div>
                   <p className="text-xs text-muted-foreground">Projeção de pontuação</p>
                   <p className="text-xl font-semibold text-emerald-700 dark:text-emerald-400">
-                    +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos
+                    +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     É o que {municipio?.nome ?? "o município"} pode somar cumprindo os{" "}
@@ -421,7 +421,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       Cumprindo os {faltantes.length} itens que hoje estão zerados,{" "}
                       {municipio?.nome ?? "o município"} passaria a somar cerca de{" "}
                       <span className="text-emerald-700 dark:text-emerald-400">
-                        +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos
+                        +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}
                       </span>{" "}
                       neste critério.
                     </p>
@@ -429,7 +429,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       Expectativa calculada pela pontuação típica de quem já cumpre cada item no
                       mesmo relatório oficial. No melhor cenário, o teto alcançado por outros
                       municípios chega a{" "}
-                      {potencialFaltante.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos.
+                      {potencialFaltante.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}.
                     </p>
                   </div>
                 )}
@@ -453,7 +453,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         {!pontua && proj?.observado && (
                           <p className="text-xs text-muted-foreground">
                             {proj.municipios} municípios já pontuam este item; o maior alcançou{" "}
-                            {proj.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos.
+                            {proj.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}.
                           </p>
                         )}
                       </div>
@@ -490,7 +490,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                     Itens sem pontuação no último relatório
                     {potencialFaltante.tipico > 0 && (
                       <> — expectativa de +
-                        {potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} pontos
+                        {potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}
                       </>
                     )}
                     :
@@ -505,7 +505,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
                             (projeção +
                             {projecaoDe(f)!
                               .tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}{" "}
-                            pontos)
+)
                           </span>
                         )}
                       </li>
