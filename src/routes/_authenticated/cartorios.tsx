@@ -48,6 +48,10 @@ import { lerDeclaracoes, lerEmolumentos, MESES_NOME } from "@/lib/cartorios/pars
 import { buscarPortalCartorios } from "@/lib/cartorios/portal.functions";
 import { formatarMoeda } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
+import CargasView from "@/components/cartorios/CargasView";
+import DocumentosView from "@/components/cartorios/DocumentosView";
+import ModelosCartorioView from "@/components/cartorios/ModelosCartorioView";
+
 
 export const Route = createFileRoute("/_authenticated/cartorios")({
   head: () => ({
@@ -131,11 +135,15 @@ function FiscalizaCartorio() {
       </div>
 
       <Tabs defaultValue={competencias?.length ? "fiscalizacao" : "importar"}>
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="fiscalizacao">Fiscalização</TabsTrigger>
           <TabsTrigger value="importar">Carga de dados</TabsTrigger>
+          <TabsTrigger value="cargas">Meses carregados</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos</TabsTrigger>
+          <TabsTrigger value="modelos">Modelos</TabsTrigger>
           <TabsTrigger value="config">Alíquota do município</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="fiscalizacao" className="space-y-4 pt-4">
           {!competencia ? (
@@ -260,6 +268,18 @@ function FiscalizaCartorio() {
 
         <TabsContent value="importar" className="pt-4">
           <CargaDados competenciaAtual={competencia} />
+        </TabsContent>
+
+        <TabsContent value="cargas" className="pt-4">
+          <CargasView />
+        </TabsContent>
+
+        <TabsContent value="documentos" className="pt-4">
+          <DocumentosView competencia={competencia} />
+        </TabsContent>
+
+        <TabsContent value="modelos" className="pt-4">
+          <ModelosCartorioView competencia={competencia} />
         </TabsContent>
 
         <TabsContent value="config" className="pt-4">

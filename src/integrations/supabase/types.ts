@@ -255,6 +255,59 @@ export type Database = {
           },
         ]
       }
+      cartorio_cargas: {
+        Row: {
+          arquivo_nome: string
+          atualizado_em: string
+          competencia_ano: number
+          competencia_mes: number
+          criado_em: string
+          criado_por: string | null
+          id: string
+          linhas: number
+          municipio_id: string
+          observacao: string | null
+          origem: string
+          tipo: string
+        }
+        Insert: {
+          arquivo_nome: string
+          atualizado_em?: string
+          competencia_ano: number
+          competencia_mes: number
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          linhas?: number
+          municipio_id: string
+          observacao?: string | null
+          origem?: string
+          tipo: string
+        }
+        Update: {
+          arquivo_nome?: string
+          atualizado_em?: string
+          competencia_ano?: number
+          competencia_mes?: number
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          linhas?: number
+          municipio_id?: string
+          observacao?: string | null
+          origem?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartorio_cargas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cartorio_config: {
         Row: {
           aliquota_iss: number
@@ -419,6 +472,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "cartorio_emolumentos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cartorio_modelos: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          cabecalho: string | null
+          chave: string
+          corpo: string
+          criado_em: string
+          id: string
+          margem_direita: number
+          margem_esquerda: number
+          margem_inferior: number
+          margem_topo: number
+          municipio_id: string
+          nome: string
+          rodape: string | null
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          cabecalho?: string | null
+          chave: string
+          corpo: string
+          criado_em?: string
+          id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
+          municipio_id: string
+          nome: string
+          rodape?: string | null
+          tipo?: string
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          cabecalho?: string | null
+          chave?: string
+          corpo?: string
+          criado_em?: string
+          id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
+          municipio_id?: string
+          nome?: string
+          rodape?: string | null
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartorio_modelos_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
             referencedRelation: "municipios"

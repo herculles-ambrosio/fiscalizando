@@ -10,6 +10,76 @@ import { chave, type LinhaDeclaracao, type LinhaEmolumento } from "@/lib/cartori
 
 export type Competencia = { ano: number; mes: number };
 
+export type CargaCartorio = {
+  id: string;
+  tipo: "emolumentos" | "declaracoes";
+  competencia_ano: number;
+  competencia_mes: number;
+  arquivo_nome: string;
+  origem: string;
+  linhas: number;
+  observacao: string | null;
+  criado_em: string;
+};
+
+/** Histórico de todas as cargas mensais enviadas pelo município. */
+export function useCargasCartorio() {
+  const { municipioId } = useMunicipioAtivo();
+  return useQuery({
+    queryKey: ["cartorio-cargas", municipioId],
+    enabled: !!municipioId,
+    queryFn: async (): Promise<CargaCartorio[]> => {
+      const { data, error } = await supabase
+        .from("cartorio_cargas")
+        .select("*")
+        .eq("municipio_id", municipioId!)
+        .order("competencia_ano", { ascending: false })
+        .order("competencia_mes", { ascending: false })
+        .order("criado_em", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as unknown as CargaCartorio[];
+    },
+  });
+}
+
+export function useExcluirCargaCartorio() {
+  const { municipioId } = useMunicipioAtivo();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("cartorio_cargas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cartorio-cargas", municipioId] }),
+  });
+}
+
+/** Grava no histórico cada envio de planilha, para consulta na aba Cargas. */
+async function registrarCarga(dados: {
+  municipioId: string;
+  tipo: "emolumentos" | "declaracoes";
+  competencia: Competencia;
+  arquivoNome: string;
+  origem: string;
+  linhas: number;
+  criadoPor: string | null;
+}) {
+  const { error } = await supabase.from("cartorio_cargas").insert({
+    municipio_id: dados.municipioId,
+    tipo: dados.tipo,
+    competencia_ano: dados.competencia.ano,
+    competencia_mes: dados.competencia.mes,
+    arquivo_nome: dados.arquivoNome,
+    origem: dados.origem,
+    linhas: dados.linhas,
+    criado_por: dados.criadoPor,
+  });
+  if (error) throw error;
+}
+
+
+
 export type LinhaFiscalizacao = {
   cns: string;
   nome: string;
@@ -215,13 +285,27 @@ export function useImportarEmolumentos() {
           .upsert(cadastro.slice(i, i + 500), { onConflict: "municipio_id,cns,tipo_servico" });
         if (error) throw error;
       }
+      await registrarCarga({
+        municipioId: municipioId!,
+        tipo: "emolumentos",
+        competencia: {
+          ano: registros[0]?.competencia_ano ?? dados.competencia.ano,
+          mes: registros[0]?.competencia_mes ?? dados.competencia.mes,
+        },
+        arquivoNome: dados.arquivoNome,
+        origem: dados.fonte ?? "arquivo",
+        linhas: registros.length,
+        criadoPor: sessao.user?.id ?? null,
+      });
       return registros.length;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cartorio-competencias", municipioId] });
       qc.invalidateQueries({ queryKey: ["cartorio-fiscalizacao", municipioId] });
       qc.invalidateQueries({ queryKey: ["cartorio-serventias", municipioId] });
+      qc.invalidateQueries({ queryKey: ["cartorio-cargas", municipioId] });
     },
+
   });
 }
 
@@ -257,9 +341,25 @@ export function useImportarDeclaracoes() {
           });
         if (error) throw error;
       }
+      await registrarCarga({
+        municipioId: municipioId!,
+        tipo: "declaracoes",
+        competencia: {
+          ano: registros[0]?.competencia_ano ?? dados.competencia.ano,
+          mes: registros[0]?.competencia_mes ?? dados.competencia.mes,
+        },
+        arquivoNome: dados.arquivoNome,
+        origem: "planilha",
+        linhas: registros.length,
+        criadoPor: sessao.user?.id ?? null,
+      });
       return registros.length;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cartorio-fiscalizacao", municipioId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cartorio-fiscalizacao", municipioId] });
+      qc.invalidateQueries({ queryKey: ["cartorio-cargas", municipioId] });
+    },
+
   });
 }
 
