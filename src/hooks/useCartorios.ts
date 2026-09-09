@@ -317,9 +317,25 @@ export function useImportarDeclaracoes() {
           });
         if (error) throw error;
       }
+      await registrarCarga({
+        municipioId: municipioId!,
+        tipo: "declaracoes",
+        competencia: {
+          ano: registros[0]?.competencia_ano ?? dados.competencia.ano,
+          mes: registros[0]?.competencia_mes ?? dados.competencia.mes,
+        },
+        arquivoNome: dados.arquivoNome,
+        origem: "planilha",
+        linhas: registros.length,
+        criadoPor: sessao.user?.id ?? null,
+      });
       return registros.length;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cartorio-fiscalizacao", municipioId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cartorio-fiscalizacao", municipioId] });
+      qc.invalidateQueries({ queryKey: ["cartorio-cargas", municipioId] });
+    },
+
   });
 }
 
