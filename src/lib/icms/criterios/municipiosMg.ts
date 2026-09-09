@@ -34,6 +34,17 @@ for (const nome of Object.values(MUNICIPIOS_SEF)) {
 
 export type MunicipioOficial = { chave: string; nome: string };
 
+/** Relação oficial dos municípios mineiros, em ordem alfabética. */
+export const MUNICIPIOS_MG: MunicipioOficial[] = [
+  ...new Map(
+    Object.values(MUNICIPIOS_SEF).map((nome) => [
+      normalizarMunicipio(nome),
+      { chave: normalizarMunicipio(nome), nome },
+    ]),
+  ).values(),
+].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+
 /**
  * Correspondência exata (sem tentar cortar sobras): usada quando o texto lido
  * pode conter, na mesma linha, o município e outra informação — caso do
