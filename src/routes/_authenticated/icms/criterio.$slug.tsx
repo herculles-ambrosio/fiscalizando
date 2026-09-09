@@ -18,6 +18,8 @@ import { IngestaoCriterio } from "@/components/icms/IngestaoCriterio";
 import { ConferenciaFjp } from "@/components/icms/ConferenciaFjp";
 import { AreasSemCadastroIef } from "@/components/icms/AreasSemCadastroIef";
 import { HabilitacaoTurismo } from "@/components/icms/HabilitacaoTurismo";
+import { PrazoRecursoEducacao } from "@/components/icms/PrazoRecursoEducacao";
+import { DadosConstitutivosEducacao } from "@/components/icms/DadosConstitutivosEducacao";
 
 import { usePerfil } from "@/hooks/usePerfil";
 import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
@@ -88,6 +90,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
 
   const ehMeioAmbiente = slug === "meio_ambiente" || slug === "meio-ambiente";
   const ehTurismo = slug === "turismo";
+  const ehEducacao = slug === "educacao";
+  const versaoEducacao = fonte === "definitivo" ? "definitivo" : "provisorio";
 
   const linhaMunicipio = useMemo(
     () => (ranking ?? []).find((l) => l.municipio === chaveMunicipio) ?? null,
