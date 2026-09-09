@@ -448,27 +448,32 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
     return false;
   }
 
+  async function gravarEmolumentos(
+    linhas: LinhaEmolumento[],
+    comp: { mes: number; ano: number },
+    origem: string,
+  ) {
+    if (!municipioConfere(linhas)) return;
+    const total = await importarEmol.mutateAsync({
+      linhas,
+      competencia: comp,
+      arquivoNome: origem,
+    });
+    setMes(String(comp.mes));
+    setAno(String(comp.ano));
+    toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
+  }
+
   async function enviarEmolumentos(arquivo: File) {
     try {
       const r = await lerEmolumentos(arquivo);
-      const comp = r.competencia ?? competencia;
-      const gravar = async () => {
-        const total = await importarEmol.mutateAsync({
-          linhas: r.linhas,
-          competencia: comp,
-          arquivoNome: arquivo.name,
-        });
-        setIgnoradas(r.colunasIgnoradas);
-        setMes(String(comp.mes));
-        setAno(String(comp.ano));
-        toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
-      };
-      if (!municipioConfere(r.linhas)) return;
-      await gravar();
+      setIgnoradas(r.colunasIgnoradas);
+      await gravarEmolumentos(r.linhas, r.competencia ?? competencia, arquivo.name);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível ler o arquivo.");
     }
   }
+
 
   async function enviarDeclaracoes(arquivo: File) {
     try {
