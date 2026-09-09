@@ -613,27 +613,66 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
           </div>
 
           <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Tentar buscar direto no portal</p>
+            <p className="text-sm font-medium">Buscar no portal do TJMG</p>
             <p className="text-xs text-muted-foreground">
-              O painel do TJMG é protegido e costuma recusar a consulta automática. Se você tiver o
-              endereço direto de um arquivo de exportação, cole abaixo.
+              Sem exportar nada: o sistema consulta o painel público do TJMG, escolhe o mês e a
+              comarca e traz a lista de serventias pronta.
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Input
-                className="min-w-64 flex-1"
-                placeholder="Endereço do arquivo (opcional)"
-                value={urlPortal}
-                onChange={(e) => setUrlPortal(e.target.value)}
-              />
-              <Button variant="outline" onClick={tentarPortal} disabled={buscando}>
+            <div className="mt-2 flex flex-wrap items-end gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Competência no portal</Label>
+                <Select
+                  value={competenciaPortal}
+                  onValueChange={setCompetenciaPortal}
+                  disabled={!competenciasPortal.length}
+                >
+                  <SelectTrigger className="h-9 w-44">
+                    <SelectValue
+                      placeholder={listando ? "Carregando…" : "Buscar competências"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {competenciasPortal.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => void carregarCompetenciasPortal()}
+                disabled={listando}
+              >
+                {listando ? (
+                  <RefreshCw className="mr-2 size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 size-4" />
+                )}
+                Ver meses disponíveis
+              </Button>
+              <Button
+                onClick={() => void buscarNoPortal()}
+                disabled={buscando || (!competenciaPortal && !mes)}
+              >
                 {buscando ? (
                   <RefreshCw className="mr-2 size-4 animate-spin" />
                 ) : (
                   <Globe className="mr-2 size-4" />
                 )}
-                Buscar automaticamente
+                {buscando ? "Baixando…" : "Buscar no portal do TJMG"}
               </Button>
             </div>
+            <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={somenteComarca}
+                onChange={(e) => setSomenteComarca(e.target.checked)}
+              />
+              Trazer apenas a comarca de {municipio?.nome ?? "prefeitura ativa"} (desmarque para
+              trazer o estado inteiro)
+            </label>
           </div>
 
           {!!ignoradas.length && (
