@@ -236,6 +236,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
           {ehTurismo && <TabsTrigger value="habilitacao">Habilitação na Secult</TabsTrigger>}
           {ehEducacao && <TabsTrigger value="prazo">Prazo de recurso</TabsTrigger>}
           {ehEducacao && <TabsTrigger value="constitutivos">Dados constitutivos</TabsTrigger>}
+          {ehEducacao && <TabsTrigger value="repasse">Repasse × índice</TabsTrigger>}
           {pipeline && consultoria && <TabsTrigger value="importar">Importar relatório</TabsTrigger>}
         </TabsList>
 

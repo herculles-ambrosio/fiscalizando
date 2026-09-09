@@ -64,6 +64,7 @@ const NAV_ICMS_ANALISE = [
   { to: "/icms/criterios", rotulo: "Critérios", icone: Scale },
   { to: "/icms/comparativo", rotulo: "Comparativo", icone: TrendingUp },
   { to: "/icms/fjp", rotulo: "Portal da FJP", icone: Scale },
+  { to: "/icms/prazos", rotulo: "Prazos de recurso", icone: CalendarClock },
   { to: "/icms/plano", rotulo: "Plano de melhoria", icone: ListChecks },
   { to: "/icms/importacoes", rotulo: "Relatórios importados", icone: FileUp },
 ];
