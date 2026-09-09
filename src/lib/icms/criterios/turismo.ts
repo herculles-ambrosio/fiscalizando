@@ -149,8 +149,9 @@ export function extrairTurismo(paginas: PaginaTexto[]): ResultadoTabela {
       for (const l of lerLinhasTurismo(linha.texto)) {
         if (!lidas.has(l.municipio)) lidas.set(l.municipio, l);
       }
-
+    }
   }
+
 
   const itens: ItemMunicipio[] = [];
   const registrar = (
