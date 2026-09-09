@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { etapasAtendidas, type Direcao } from "@/lib/icms/educacao/indicadores";
 
 export type VersaoEducacao = "provisorio" | "definitivo";
 
