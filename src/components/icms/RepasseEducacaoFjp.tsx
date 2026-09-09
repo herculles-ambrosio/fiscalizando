@@ -417,6 +417,13 @@ export function RepasseEducacaoFjp({
                         <td className="py-2 text-right">
                           {l.valor == null ? "—" : formatarMoeda(l.valor)}
                         </td>
+                        <td className="py-2 text-center text-xs text-muted-foreground">
+                          {l.origem === "planilha"
+                            ? "Planilha"
+                            : l.origem === "portal"
+                              ? "Portal FJP"
+                              : "—"}
+                        </td>
                         <td className="py-2 text-right">
                           {l.esperado == null ? "—" : formatarMoeda(l.esperado)}
                         </td>
