@@ -27,6 +27,7 @@ import { normalizarMunicipio } from "@/lib/icms/esportes/parser";
 import {
   useCalendariosEducacao,
   useOutliersEducacao,
+  useVersoesEducacao,
   type VersaoEducacao,
 } from "@/hooks/useEducacao";
 
