@@ -161,7 +161,7 @@ export const salvarCalendarioEducacao = createServerFn({ method: "POST" })
     }
     const { error } = await supabaseAdmin
       .from("educacao_calendario")
-      .upsert(registro, { onConflict: "exercicio" });
+      .upsert(registro as never, { onConflict: "exercicio" });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
