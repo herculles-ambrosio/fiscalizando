@@ -88,6 +88,7 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
         // extensão no link) ou downloads da biblioteca da Secult.
         if (
           !/\.pdf(\?|$)/i.test(href) &&
+          !/\.xlsx?(\?|$)/i.test(href) &&
           !/\/documents\/d\//i.test(href) &&
           !/\/download\/(category|file)\//i.test(href)
         )
@@ -105,6 +106,9 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
         // Na página do ICMS Turismo só interessam as listas de habilitados —
         // resoluções, leis e cartilhas ficam de fora.
         if (data.criterio === "turismo" && !/habilitad|indice|índice/.test(alvo)) continue;
+        // Educação: só as planilhas do índice publicadas pela FJP.
+        if (data.criterio === "educacao" && !(/educa/.test(alvo) && /\.xlsx?(\?|$)/i.test(url)))
+          continue;
         // As publicações trimestrais da SEMAD têm o mesmo título; o número no
         // fim do endereço identifica o trimestre (…-2 = 1º, …-3 = 2º, e assim
         // por diante), então usamos isso para dar nome próprio a cada uma.

@@ -18,6 +18,8 @@ import { IngestaoCriterio } from "@/components/icms/IngestaoCriterio";
 import { ConferenciaFjp } from "@/components/icms/ConferenciaFjp";
 import { AreasSemCadastroIef } from "@/components/icms/AreasSemCadastroIef";
 import { HabilitacaoTurismo } from "@/components/icms/HabilitacaoTurismo";
+import { PrazoRecursoEducacao } from "@/components/icms/PrazoRecursoEducacao";
+import { DadosConstitutivosEducacao } from "@/components/icms/DadosConstitutivosEducacao";
 
 import { usePerfil } from "@/hooks/usePerfil";
 import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
@@ -88,6 +90,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
 
   const ehMeioAmbiente = slug === "meio_ambiente" || slug === "meio-ambiente";
   const ehTurismo = slug === "turismo";
+  const ehEducacao = slug === "educacao";
+  const versaoEducacao = fonte === "definitivo" ? "definitivo" : "provisorio";
 
   const linhaMunicipio = useMemo(
     () => (ranking ?? []).find((l) => l.municipio === chaveMunicipio) ?? null,
@@ -230,6 +234,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           {ehMeioAmbiente && <TabsTrigger value="ief">Cadastro no IEF</TabsTrigger>}
           {ehTurismo && <TabsTrigger value="habilitacao">Habilitação na Secult</TabsTrigger>}
+          {ehEducacao && <TabsTrigger value="prazo">Prazo de recurso</TabsTrigger>}
+          {ehEducacao && <TabsTrigger value="constitutivos">Dados constitutivos</TabsTrigger>}
           {pipeline && consultoria && <TabsTrigger value="importar">Importar relatório</TabsTrigger>}
         </TabsList>
 
@@ -578,6 +584,26 @@ function DetalheGenerico({ slug }: { slug: string }) {
         {ehTurismo && (
           <TabsContent value="habilitacao" className="pt-4">
             <HabilitacaoTurismo ano={ano} fonte={fonte} />
+          </TabsContent>
+        )}
+        {ehEducacao && (
+          <TabsContent value="prazo" className="pt-4">
+            <PrazoRecursoEducacao
+              exercicio={ano}
+              versao={versaoEducacao}
+              municipio={chaveMunicipio}
+              consultoria={consultoria}
+            />
+          </TabsContent>
+        )}
+        {ehEducacao && (
+          <TabsContent value="constitutivos" className="pt-4">
+            <DadosConstitutivosEducacao
+              exercicio={ano}
+              versao={versaoEducacao}
+              municipio={chaveMunicipio}
+              municipioNome={municipio?.nome ?? "—"}
+            />
           </TabsContent>
         )}
         {pipeline && consultoria && (

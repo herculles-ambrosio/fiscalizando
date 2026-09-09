@@ -26,6 +26,12 @@ import {
   limparCriterio,
   registrarImportacao,
 } from "@/lib/icms/criterios.functions";
+import {
+  gravarDadosConstitutivos,
+  gravarRecursosEducacao,
+  limparEducacao,
+  salvarCalendarioEducacao,
+} from "@/lib/icms/educacao.functions";
 import { extrairTabelaCriterio } from "@/lib/icms/criterios/tabela";
 import { useImportacoes, useItensReferencia, type FonteRelatorio } from "@/hooks/useCriterios";
 import type { Pipeline } from "@/lib/icms/criterios/pipelines";
@@ -50,8 +56,15 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   const gravarRanking = useServerFn(gravarRankingCriterio);
   const gravarItens = useServerFn(gravarItensCriterio);
   const registrar = useServerFn(registrarImportacao);
+  const limparEdu = useServerFn(limparEducacao);
+  const gravarDados = useServerFn(gravarDadosConstitutivos);
+  const gravarRecursos = useServerFn(gravarRecursosEducacao);
+  const salvarCalendario = useServerFn(salvarCalendarioEducacao);
+  const planilha = pipeline.formato === "planilha";
 
-  const [anoBase, setAnoBase] = useState<number>(new Date().getFullYear() - 2);
+  const [anoBase, setAnoBase] = useState<number>(
+    planilha ? new Date().getFullYear() + 1 : new Date().getFullYear() - 2,
+  );
   const [fonte, setFonte] = useState<FonteRelatorio>("definitivo");
   const [url, setUrl] = useState("");
   const [texto, setTexto] = useState("");
@@ -172,6 +185,10 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     identificacao: string | null,
     anoForcado?: number,
   ) {
+    if (planilha) {
+      await processarPlanilha(dados, origem, identificacao, anoForcado);
+      return;
+    }
     setRodando(true);
     setResumo(null);
     try {
@@ -183,6 +200,142 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       await gravarResultado(paginas, origem, identificacao, anoForcado);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o relatório.");
+    } finally {
+      setRodando(false);
+      setEtapa("");
+    }
+  }
+
+  /**
+   * Educação: a FJP publica uma planilha com várias abas (índices calculados,
+   * dados constitutivos, dicionário, recursos e nota técnica). O ranking e os
+   * quatro componentes vão para as tabelas comuns dos critérios; os números
+   * brutos, os recursos e a nota técnica têm tabelas próprias.
+   */
+  async function processarPlanilha(
+    dados: Uint8Array,
+    origem: "site" | "url" | "arquivo",
+    identificacao: string | null,
+    anoForcado?: number,
+  ) {
+    const ano = anoForcado ?? anoBase;
+    const versao = fonte === "definitivo" ? "definitivo" : "provisorio";
+    setRodando(true);
+    setResumo(null);
+    try {
+      setEtapa("Lendo a planilha");
+      setProgresso(15);
+      const { extrairEducacao, somaIndices } = await import("@/lib/icms/criterios/educacao");
+      const r = extrairEducacao(dados);
+      if (!r.ranking.length) {
+        throw new Error(
+          "Não foi possível reconhecer a planilha. Confira se é o arquivo dos índices de Educação publicado pela FJP.",
+        );
+      }
+
+      setEtapa("Gravando os índices");
+      setProgresso(35);
+      await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte } });
+      await limparEdu({ data: { exercicio: ano, fonteVersao: versao } });
+
+      for (let i = 0; i < r.ranking.length; i += 300) {
+        await gravarRanking({
+          data: {
+            criterio: pipeline.slug,
+            anoBase: ano,
+            fonte,
+            linhas: r.ranking.slice(i, i + 300),
+          },
+        });
+      }
+      setProgresso(50);
+      for (let i = 0; i < r.itens.length; i += 150) {
+        await gravarItens({
+          data: { criterio: pipeline.slug, anoBase: ano, fonte, itens: r.itens.slice(i, i + 150) },
+        });
+      }
+
+      setEtapa("Gravando os dados constitutivos");
+      for (let i = 0; i < r.dadosConstitutivos.length; i += 800) {
+        await gravarDados({
+          data: {
+            exercicio: ano,
+            fonteVersao: versao,
+            linhas: r.dadosConstitutivos.slice(i, i + 800),
+          },
+        });
+        setProgresso(
+          50 + Math.round(((i + 800) / Math.max(r.dadosConstitutivos.length, 1)) * 35),
+        );
+      }
+
+      if (r.recursos.length) {
+        setEtapa("Gravando os recursos administrativos");
+        for (let i = 0; i < r.recursos.length; i += 500) {
+          await gravarRecursos({
+            data: { exercicio: ano, fonteVersao: versao, linhas: r.recursos.slice(i, i + 500) },
+          });
+        }
+      }
+
+      await salvarCalendario({
+        data: {
+          exercicio: ano,
+          notaTecnica: r.notaTecnica,
+          ...(versao === "provisorio"
+            ? { dataPublicacaoProvisorio: new Date().toISOString().slice(0, 10) }
+            : { dataPublicacaoDefinitivo: new Date().toISOString().slice(0, 10) }),
+        },
+      });
+
+      const soma = somaIndices(r.ranking);
+      const municipios = new Set(r.ranking.map((l) => l.municipio)).size;
+      await registrar({
+        data: {
+          criterio: pipeline.slug,
+          anoBase: ano,
+          fonte,
+          origem,
+          url: origem === "url" || origem === "site" ? identificacao : null,
+          arquivoNome: origem === "arquivo" ? identificacao : null,
+          paginas: 0,
+          registrosRanking: r.ranking.length,
+          registrosItens: r.itens.length + r.dadosConstitutivos.length,
+          municipios,
+          naoMapeados: r.naoMapeados.slice(0, 500),
+          divergencias: r.divergencias.slice(0, 500),
+        },
+      });
+
+      setResumo({
+        municipios,
+        ranking: r.ranking.length,
+        itens: r.itens.length + r.dadosConstitutivos.length,
+        naoMapeados: r.naoMapeados,
+        cabecalho: r.cabecalho,
+      });
+      setProgresso(100);
+      for (const chave of [
+        "criterio-anos",
+        "criterio-ranking",
+        "criterio-itens",
+        "criterio-importacoes",
+        "criterios-com-dados",
+        "educacao-dados",
+        "educacao-recursos",
+        "educacao-calendario",
+      ]) {
+        await cliente.invalidateQueries({ queryKey: [chave] });
+      }
+      if (Math.abs(soma - 100) > 1) {
+        toast.warning(
+          `Planilha importada, mas a soma dos índices deu ${soma.toFixed(4)} — o esperado é 100. Confira se faltou alguma linha.`,
+        );
+      } else {
+        toast.success("Planilha da Educação importada.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao processar a planilha.");
     } finally {
       setRodando(false);
       setEtapa("");
@@ -245,7 +398,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label>Ano-base</Label>
+              <Label>{planilha ? "Exercício do repasse" : "Ano-base"}</Label>
               <Input
                 type="number"
                 value={anoBase}
@@ -259,7 +412,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="preliminar">Preliminar</SelectItem>
+                  <SelectItem value="preliminar">{planilha ? "Provisório" : "Preliminar"}</SelectItem>
                   <SelectItem value="definitivo">Definitivo</SelectItem>
                 </SelectContent>
               </Select>
@@ -274,7 +427,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             <label className="inline-flex">
               <input
                 type="file"
-                accept="application/pdf"
+                accept={planilha ? ".xlsx,.xls" : "application/pdf"}
                 className="hidden"
                 disabled={rodando}
                 onChange={async (e) => {
@@ -288,7 +441,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
               <Button asChild variant="outline" disabled={rodando}>
                 <span>
                   <Upload className="mr-2 size-4" />
-                  Enviar PDF do computador
+                  {planilha ? "Enviar planilha do computador" : "Enviar PDF do computador"}
                 </span>
               </Button>
             </label>
@@ -296,7 +449,11 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
 
           <div className="flex gap-2">
             <Input
-              placeholder="Cole aqui o endereço do PDF publicado pelo órgão"
+              placeholder={
+                planilha
+                  ? "Cole aqui o endereço da planilha publicada pela FJP"
+                  : "Cole aqui o endereço do PDF publicado pelo órgão"
+              }
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
@@ -306,30 +463,33 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             </Button>
           </div>
 
-          <div className="space-y-2 rounded-md border p-3">
-            <Label>Colar o quadro de pontuação</Label>
-            <p className="text-xs text-muted-foreground">
-              Se o relatório não abrir ou vier só em papel/Diário Oficial, copie o quadro (do PDF, do
-              Excel ou de uma tabela do site) e cole aqui. A primeira linha deve ser o cabeçalho com
-              os nomes das colunas e as demais uma linha por município.
-            </p>
-            <Textarea
-              rows={8}
-              className="font-mono text-xs"
-              placeholder={"Município\tÓrgão municipal\tConselho\tFundo\tPontuação\nABRE CAMPO\tSim\tSim\tNão\t12,50"}
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={processarColado} disabled={rodando}>
-                <ClipboardPaste className="mr-2 size-4" />
-                Importar o que foi colado
-              </Button>
-              <Button variant="ghost" onClick={() => setTexto("")} disabled={rodando || !texto}>
-                Limpar
-              </Button>
+          {!planilha && (
+            <div className="space-y-2 rounded-md border p-3">
+              <Label>Colar o quadro de pontuação</Label>
+              <p className="text-xs text-muted-foreground">
+                Se o relatório não abrir ou vier só em papel/Diário Oficial, copie o quadro (do PDF,
+                do Excel ou de uma tabela do site) e cole aqui. A primeira linha deve ser o cabeçalho
+                com os nomes das colunas e as demais uma linha por município.
+              </p>
+              <Textarea
+                rows={8}
+                className="font-mono text-xs"
+                placeholder={"Município\tÓrgão municipal\tConselho\tFundo\tPontuação\nABRE CAMPO\tSim\tSim\tNão\t12,50"}
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={processarColado} disabled={rodando}>
+                  <ClipboardPaste className="mr-2 size-4" />
+                  Importar o que foi colado
+                </Button>
+                <Button variant="ghost" onClick={() => setTexto("")} disabled={rodando || !texto}>
+                  Limpar
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
+
 
 
           {links.length > 0 && (
