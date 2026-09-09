@@ -284,7 +284,14 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
           notaTecnica: r.notaTecnica,
           resolucaoReferencia: r.resolucao,
           ...(versao === "provisorio"
-            ? { dataPublicacaoProvisorio: new Date().toISOString().slice(0, 10) }
+            ? {
+                dataPublicacaoProvisorio: new Date().toISOString().slice(0, 10),
+                // A FJP dá cerca de 15 dias para recurso; a data pode ser
+                // corrigida na aba "Prazo de recurso".
+                dataLimiteRecurso: new Date(Date.now() + 15 * 86400000)
+                  .toISOString()
+                  .slice(0, 10),
+              }
             : { dataPublicacaoDefinitivo: new Date().toISOString().slice(0, 10) }),
         },
       });
