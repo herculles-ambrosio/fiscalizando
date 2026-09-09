@@ -505,7 +505,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
                             (projeção +
                             {projecaoDe(f)!
                               .tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}{" "}
-)
+                            {unidade})
+
                           </span>
                         )}
                       </li>
