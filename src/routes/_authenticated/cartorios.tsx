@@ -361,20 +361,41 @@ function LinhaCartorio({
   aliquota: number;
 }) {
   const salvar = useSalvarDeclaracao();
-  const [base, setBase] = useState(linha.baseDeclarada?.toString() ?? "");
-  const [pago, setPago] = useState(linha.issPago?.toString() ?? "");
+  const exibir = (v: number | null | undefined) => (v == null ? "" : formatarValorGrid(v));
+  const [base, setBase] = useState(exibir(linha.baseDeclarada));
+  const [pago, setPago] = useState(exibir(linha.issPago));
 
   useEffect(() => {
-    setBase(linha.baseDeclarada?.toString() ?? "");
-    setPago(linha.issPago?.toString() ?? "");
+    setBase(exibir(linha.baseDeclarada));
+    setPago(exibir(linha.issPago));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linha.baseDeclarada, linha.issPago]);
 
-  const numero = (v: string) => Number(v.replace(/\./g, "").replace(",", ".")) || 0;
+  /** Aceita "2500,50", "2.500,50", "2500.50" e devolve o número correspondente. */
+  const numero = (v: string) => {
+    const limpo = v.replace(/[^\d.,-]/g, "");
+    if (!limpo) return 0;
+    let normalizado: string;
+    if (limpo.includes(",")) {
+      normalizado = limpo.replace(/\./g, "").replace(",", ".");
+    } else {
+      const partes = limpo.split(".");
+      normalizado =
+        partes.length > 1 && partes[partes.length - 1].length !== 3
+          ? `${partes.slice(0, -1).join("")}.${partes[partes.length - 1]}`
+          : partes.join("");
+    }
+    const n = Number(normalizado);
+    return Number.isFinite(n) ? n : 0;
+  };
 
   function gravar() {
     const baseNum = numero(base);
     const pagoNum = numero(pago);
+    setBase(base.trim() === "" ? "" : formatarValorGrid(baseNum));
+    setPago(pago.trim() === "" ? "" : formatarValorGrid(pagoNum));
     if (baseNum === (linha.baseDeclarada ?? 0) && pagoNum === (linha.issPago ?? 0)) return;
+
     salvar.mutate(
       {
         competencia,
