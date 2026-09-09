@@ -266,6 +266,18 @@ function FiscalizaCartorio() {
           <CargaDados competenciaAtual={competencia} />
         </TabsContent>
 
+        <TabsContent value="cargas" className="pt-4">
+          <CargasView />
+        </TabsContent>
+
+        <TabsContent value="documentos" className="pt-4">
+          <DocumentosView competencia={competencia} />
+        </TabsContent>
+
+        <TabsContent value="modelos" className="pt-4">
+          <ModelosCartorioView competencia={competencia} />
+        </TabsContent>
+
         <TabsContent value="config" className="pt-4">
           <ConfiguracaoAliquota />
         </TabsContent>
