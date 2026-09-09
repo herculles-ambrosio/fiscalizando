@@ -750,8 +750,10 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
                 checked={somenteComarca}
                 onChange={(e) => setSomenteComarca(e.target.checked)}
               />
-              Trazer apenas a comarca de {municipio?.nome ?? "prefeitura ativa"} (desmarque para
-              trazer o estado inteiro)
+              Trazer apenas os cartórios de {municipio?.nome ?? "prefeitura ativa"} — quando o
+              município não é sede de comarca, o sistema procura pelo nome da serventia (desmarque
+              para trazer o estado inteiro)
+
             </label>
           </div>
 
