@@ -48,6 +48,10 @@ import { lerDeclaracoes, lerEmolumentos, MESES_NOME } from "@/lib/cartorios/pars
 import { buscarPortalCartorios } from "@/lib/cartorios/portal.functions";
 import { formatarMoeda } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
+import CargasView from "@/components/cartorios/CargasView";
+import DocumentosView from "@/components/cartorios/DocumentosView";
+import ModelosCartorioView from "@/components/cartorios/ModelosCartorioView";
+
 
 export const Route = createFileRoute("/_authenticated/cartorios")({
   head: () => ({
