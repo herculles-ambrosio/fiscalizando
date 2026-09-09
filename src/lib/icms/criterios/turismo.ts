@@ -108,38 +108,35 @@ function montarLinha(cabeca: string[], valores: string[]): LinhaTurismo | null {
   const numericos = valores.filter((v) => RE_NUM.test(v)).length;
   if (numericos < 5 || !RE_NUM.test(valores[5] ?? "")) return null;
 
-  const primeiro = cabeca[0] ?? "";
-  if (!/^\d{1,3}[.ºo)]?$/.test(primeiro)) return null;
-
-  const palavras = cabeca.slice(1);
-  if (!palavras.length) return null;
-
-
-  let encontrado: { oficial: ReturnType<typeof municipioExato>; corte: number } | null = null;
-  for (let corte = Math.min(palavras.length, 7); corte >= 1; corte--) {
-    const oficial = municipioExato(palavras.slice(0, corte).join(" "));
-    if (oficial) {
-      encontrado = { oficial, corte };
-      break;
-    }
-  }
-  if (!encontrado?.oficial) return null;
-
   const indice = num(valores[5] ?? "");
   if (indice == null) return null;
 
-  return {
-    municipio: encontrado.oficial.chave,
-    municipioNome: encontrado.oficial.nome,
-    circuito: palavras.slice(encontrado.corte).join(" ").trim(),
-    nota: num(valores[0] ?? ""),
-    rlpc: num(valores[1] ?? ""),
-    irc: num(valores[2] ?? ""),
-    notaIrc: num(valores[3] ?? ""),
-    iit: num(valores[4] ?? ""),
-    indice,
-  };
+  // O trecho antes dos valores pode trazer sobras de outra matéria da página do
+  // Diário; o que interessa é o último "nº do quadro" seguido de um município.
+  for (let k = cabeca.length - 1; k >= 0; k--) {
+    if (!/^\d{1,3}[.ºo)]?$/.test(cabeca[k] ?? "")) continue;
+    const palavras = cabeca.slice(k + 1);
+    if (!palavras.length) continue;
+
+    for (let corte = Math.min(palavras.length, 7); corte >= 1; corte--) {
+      const oficial = municipioExato(palavras.slice(0, corte).join(" "));
+      if (!oficial) continue;
+      return {
+        municipio: oficial.chave,
+        municipioNome: oficial.nome,
+        circuito: palavras.slice(corte).join(" ").trim(),
+        nota: num(valores[0] ?? ""),
+        rlpc: num(valores[1] ?? ""),
+        irc: num(valores[2] ?? ""),
+        notaIrc: num(valores[3] ?? ""),
+        iit: num(valores[4] ?? ""),
+        indice,
+      };
+    }
+  }
+  return null;
 }
+
 
 export function extrairTurismo(paginas: PaginaTexto[]): ResultadoTabela {
   const lidas = new Map<string, LinhaTurismo>();
