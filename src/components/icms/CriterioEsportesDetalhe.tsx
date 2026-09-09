@@ -26,6 +26,7 @@ import {
   type FonteRelatorio,
 } from "@/hooks/useEsportes";
 import { normalizarMunicipio } from "@/lib/icms/esportes/parser";
+import { CRITERIO_POR_SLUG } from "@/lib/icms/criterios";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
 const numero = (v: number | null | undefined) =>
