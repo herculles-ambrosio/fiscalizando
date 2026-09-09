@@ -480,7 +480,8 @@ export function RepasseEducacaoFjp({
                           "Índice no portal (%)",
                           "Índice calculado (%)",
                           "Diferença de índice",
-                          "Repassado (R$)",
+                          "Valor pago (R$)",
+                          "Origem do valor",
                           "Esperado (R$)",
                           "Diferença (R$)",
                         ],
@@ -490,6 +491,11 @@ export function RepasseEducacaoFjp({
                           l.ieCalculado ?? "",
                           l.difIndice ?? "",
                           l.valor ?? "",
+                          l.origem === "planilha"
+                            ? "Planilha"
+                            : l.origem === "portal"
+                              ? "Portal FJP"
+                              : "",
                           l.esperado ?? "",
                           l.difValor ?? "",
                         ]),
