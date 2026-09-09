@@ -12,6 +12,7 @@ import {
   MapPin,
   Scale,
   Settings,
+  Stamp,
 
   TrendingUp,
   Users,
@@ -55,6 +56,9 @@ const NAV_SUPERADMIN = [
   { to: "/consultoria/usuarios", rotulo: "Usuários", icone: Users },
   { to: "/consultoria/codigos-sef", rotulo: "Códigos SEF", icone: MapPin },
 ];
+
+// Módulo Fiscaliza Cartório — ISS das serventias extrajudiciais.
+const NAV_CARTORIO = [{ to: "/cartorios", rotulo: "Fiscaliza Cartório", icone: Stamp }];
 
 // Módulo ICMS (Lei Robin Hood) — os 18 critérios de distribuição.
 const NAV_ICMS_OPERACAO = [
@@ -107,10 +111,22 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }, [municipioId, pathname, navigate, queryClient]);
 
   // Produto ativo: Apura VAF (padrão) ou ICMS Robin Hood.
-  const produto: "vaf" | "icms" = pathname.startsWith("/icms") ? "icms" : "vaf";
+  const produto: "vaf" | "icms" | "cartorio" = pathname.startsWith("/icms")
+    ? "icms"
+    : pathname.startsWith("/cartorios")
+      ? "cartorio"
+      : "vaf";
 
   const grupos =
-    produto === "icms"
+    produto === "cartorio"
+      ? [
+          { rotulo: "Operação", itens: NAV_CARTORIO },
+          {
+            rotulo: "Administração",
+            itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
+          },
+        ]
+    : produto === "icms"
       ? [
           { rotulo: "Operação", itens: NAV_ICMS_OPERACAO },
           { rotulo: "Análise", itens: NAV_ICMS_ANALISE },
@@ -179,6 +195,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
           >
             ICMS
+          </Link>
+          <Link
+            to="/cartorios"
+            onClick={limparTela}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
+              produto === "cartorio"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+            )}
+          >
+            Cartório
           </Link>
         </div>
 
