@@ -26,6 +26,12 @@ import {
   limparCriterio,
   registrarImportacao,
 } from "@/lib/icms/criterios.functions";
+import {
+  gravarDadosConstitutivos,
+  gravarRecursosEducacao,
+  limparEducacao,
+  salvarCalendarioEducacao,
+} from "@/lib/icms/educacao.functions";
 import { extrairTabelaCriterio } from "@/lib/icms/criterios/tabela";
 import { useImportacoes, useItensReferencia, type FonteRelatorio } from "@/hooks/useCriterios";
 import type { Pipeline } from "@/lib/icms/criterios/pipelines";
