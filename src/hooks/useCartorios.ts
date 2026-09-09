@@ -402,6 +402,156 @@ export function useSalvarDeclaracao() {
   });
 }
 
+export type ResumoMunicipio = {
+  municipioId: string;
+  nome: string;
+  aliquota: number;
+  cartorios: number;
+  meses: number;
+  emolumentos: number;
+  issDevido: number;
+  issDeclarado: number;
+  issPago: number;
+  diferenca: number;
+  semDeclaracao: number;
+};
+
+/**
+ * Resumo consolidado por município: cartórios fiscalizados, ISS devido,
+ * declarado, pago e o total acumulado no período escolhido.
+ */
+export function useResumoMunicipios(ano: number | null) {
+  return useQuery({
+    queryKey: ["cartorio-resumo-municipios", ano],
+    queryFn: async (): Promise<ResumoMunicipio[]> => {
+      const emolQ = supabase
+        .from("cartorio_emolumentos")
+        .select(
+          "municipio_id, competencia_ano, competencia_mes, cns, tipo_servico, serventia_nome, emolumentos",
+        )
+        .limit(20000);
+      const declQ = supabase
+        .from("cartorio_declaracoes")
+        .select(
+          "municipio_id, competencia_ano, competencia_mes, cns, tipo_servico, serventia_nome, iss_declarado, iss_pago",
+        )
+        .limit(20000);
+      if (ano) {
+        emolQ.eq("competencia_ano", ano);
+        declQ.eq("competencia_ano", ano);
+      }
+      const [emol, decl, cfg, muns] = await Promise.all([
+        emolQ,
+        declQ,
+        supabase.from("cartorio_config").select("municipio_id, aliquota_iss"),
+        supabase.from("municipios").select("id, nome").order("nome"),
+      ]);
+      if (emol.error) throw emol.error;
+      if (decl.error) throw decl.error;
+      if (cfg.error) throw cfg.error;
+      if (muns.error) throw muns.error;
+
+      const aliquotas = new Map(
+        (cfg.data ?? []).map((c) => [c.municipio_id as string, Number(c.aliquota_iss ?? 5)]),
+      );
+      const nomes = new Map((muns.data ?? []).map((m) => [m.id as string, m.nome as string]));
+
+      // Declarações indexadas por município + competência + serventia.
+      const declaradas = new Map<string, { iss: number; pago: number }>();
+      const marca = (
+        mun: string,
+        ano_: number,
+        mes: number,
+        id: string,
+        iss: number,
+        pago: number,
+      ) => {
+        const k = `${mun}|${ano_}|${mes}|${chave(id)}`;
+        const atual = declaradas.get(k);
+        declaradas.set(k, { iss: (atual?.iss ?? 0) + iss, pago: (atual?.pago ?? 0) + pago });
+      };
+      for (const d of decl.data ?? []) {
+        const iss = Number(d.iss_declarado ?? 0);
+        const pago = Number(d.iss_pago ?? 0);
+        marca(
+          d.municipio_id as string,
+          d.competencia_ano as number,
+          d.competencia_mes as number,
+          String(d.cns),
+          iss,
+          pago,
+        );
+        if (d.serventia_nome)
+          marca(
+            d.municipio_id as string,
+            d.competencia_ano as number,
+            d.competencia_mes as number,
+            d.serventia_nome,
+            iss,
+            pago,
+          );
+      }
+
+      const acc = new Map<
+        string,
+        ResumoMunicipio & { cnsSet: Set<string>; mesesSet: Set<string>; usadas: Set<string> }
+      >();
+
+      for (const e of emol.data ?? []) {
+        const mun = e.municipio_id as string;
+        let r = acc.get(mun);
+        if (!r) {
+          r = {
+            municipioId: mun,
+            nome: nomes.get(mun) ?? "Município",
+            aliquota: aliquotas.get(mun) ?? 5,
+            cartorios: 0,
+            meses: 0,
+            emolumentos: 0,
+            issDevido: 0,
+            issDeclarado: 0,
+            issPago: 0,
+            diferenca: 0,
+            semDeclaracao: 0,
+            cnsSet: new Set(),
+            mesesSet: new Set(),
+            usadas: new Set(),
+          };
+          acc.set(mun, r);
+        }
+        const valor = Number(e.emolumentos ?? 0);
+        r.emolumentos += valor;
+        r.issDevido += (valor * r.aliquota) / 100;
+        r.cnsSet.add(String(e.cns));
+        r.mesesSet.add(`${e.competencia_ano}-${e.competencia_mes}`);
+
+        const base = `${mun}|${e.competencia_ano}|${e.competencia_mes}|`;
+        const kCns = base + chave(String(e.cns));
+        const kNome = base + chave(e.serventia_nome ?? "");
+        const usarCns = declaradas.has(kCns) ? kCns : declaradas.has(kNome) ? kNome : null;
+        if (!usarCns) {
+          r.semDeclaracao += 1;
+          continue;
+        }
+        if (r.usadas.has(usarCns)) continue;
+        r.usadas.add(usarCns);
+        const d = declaradas.get(usarCns)!;
+        r.issDeclarado += d.iss;
+        r.issPago += d.pago;
+      }
+
+      return [...acc.values()]
+        .map(({ cnsSet, mesesSet, usadas, ...r }) => ({
+          ...r,
+          cartorios: cnsSet.size,
+          meses: mesesSet.size,
+          diferenca: r.issDevido - r.issDeclarado,
+        }))
+        .sort((a, b) => b.diferenca - a.diferenca);
+    },
+  });
+}
+
 export function useExcluirCompetenciaCartorio() {
   const { municipioId } = useMunicipioAtivo();
   const qc = useQueryClient();
