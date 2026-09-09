@@ -102,8 +102,6 @@ export function useFiscalizacaoCartorio(competencia: Competencia | null) {
     queryKey: ["cartorio-fiscalizacao", municipioId, competencia?.ano, competencia?.mes, aliquota],
     enabled: !!municipioId && !!competencia,
     queryFn: async (): Promise<LinhaFiscalizacao[]> => {
-      const filtro = (q: ReturnType<typeof supabase.from>) => q;
-      void filtro;
       const [emol, decl] = await Promise.all([
         supabase
           .from("cartorio_emolumentos")
@@ -130,7 +128,7 @@ export function useFiscalizacaoCartorio(competencia: Competencia | null) {
       }
 
       const linhas: LinhaFiscalizacao[] = (emol.data ?? []).map((e) => {
-        const d = declaradas.get(chave(String(e.cns))) ?? declaradas.get(chave(e.serventia_nome));
+        const d = declaradas.get(chave(String(e.cns))) ?? declaradas.get(chave(e.serventia_nome ?? ""));
         const emolumentos = Number(e.emolumentos ?? 0);
         const issDevido = (emolumentos * aliquota) / 100;
         const baseDeclarada = d ? Number(d.base_declarada ?? 0) : null;
