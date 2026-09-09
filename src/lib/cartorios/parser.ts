@@ -310,6 +310,7 @@ export async function lerDeclaracoes(arquivo: File): Promise<ResultadoLeitura<Li
     .map((c, i) => (usados.has(i) ? null : String(c ?? "").trim()))
     .filter((c): c is string => !!c);
 
+  const municipioTopo = municipioNoTopo(matriz, iCab);
   const linhas: LinhaDeclaracao[] = [];
   for (let i = iCab + 1; i < matriz.length; i++) {
     const linha = matriz[i]!;
@@ -322,7 +323,10 @@ export async function lerDeclaracoes(arquivo: File): Promise<ResultadoLeitura<Li
     linhas.push({
       cns: cns || nome,
       nome: nome || null,
+      municipio:
+        idx.municipio >= 0 ? String(linha[idx.municipio] ?? "").trim() || null : municipioTopo,
       tipoServico: idx.tipo >= 0 ? String(linha[idx.tipo] ?? "").trim() : "",
+
       baseDeclarada: idx.base >= 0 ? numeroBr(linha[idx.base]) : 0,
       issDeclarado: idx.issDeclarado >= 0 ? numeroBr(linha[idx.issDeclarado]) : 0,
       issPago: idx.issPago >= 0 ? numeroBr(linha[idx.issPago]) : 0,
