@@ -26,6 +26,7 @@ import {
   type FonteRelatorio,
 } from "@/hooks/useEsportes";
 import { normalizarMunicipio } from "@/lib/icms/esportes/parser";
+import { CRITERIO_POR_SLUG } from "@/lib/icms/criterios";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
 const numero = (v: number | null | undefined) =>
@@ -65,6 +66,9 @@ export function CriterioEsportesDetalhe() {
   const pesoRcl = (atividades ?? []).find((a) => a.peso_rcl != null)?.peso_rcl ?? null;
   const codigosPontuando = new Set((atividades ?? []).map((a) => a.atividade_codigo));
   const faltantes = (referencia ?? []).filter((r) => !codigosPontuando.has(r.codigo));
+  const potencialTotal = pesoRcl
+    ? faltantes.reduce((s, r) => s + Number(r.peso) * pesoRcl * 15 * 10, 0)
+    : null;
 
   const [busca, setBusca] = useState("");
   const rankingFiltrado = (ranking ?? []).filter((l) =>
@@ -108,6 +112,7 @@ export function CriterioEsportesDetalhe() {
       <Tabs defaultValue="municipio">
         <TabsList>
           <TabsTrigger value="municipio">Detalhamento do município</TabsTrigger>
+          <TabsTrigger value="melhorar">Como melhorar</TabsTrigger>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           {perfil?.ehConsultoria && <TabsTrigger value="ingestao">Ingestão de dados</TabsTrigger>}
         </TabsList>
@@ -284,6 +289,62 @@ export function CriterioEsportesDetalhe() {
               </Card>
             </>
           )}
+        </TabsContent>
+
+        <TabsContent value="melhorar" className="space-y-4 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">O que fazer para pontuar mais</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {!!faltantes.length && (
+                <div className="rounded-md border border-amber-300 bg-amber-50 p-3 dark:bg-amber-950/20">
+                  <p className="font-medium">
+                    Atividades sem pontuação no último relatório
+                    {potencialTotal != null && (
+                      <> — expectativa de até +{numero(potencialTotal)} pontos</>
+                    )}
+                    :
+                  </p>
+                  <ul className="mt-1 list-disc space-y-1 pl-5">
+                    {faltantes.map((r) => {
+                      const potencial = pesoRcl ? Number(r.peso) * pesoRcl * 15 * 10 : null;
+                      return (
+                        <li key={r.codigo}>
+                          {r.nome_oficial}
+                          {(r as unknown as { requisito?: string }).requisito
+                            ? ` — ${(r as unknown as { requisito?: string }).requisito}`
+                            : ""}
+                          {potencial != null && (
+                            <span className="font-medium text-emerald-700 dark:text-emerald-400">
+                              {" "}
+                              (projeção +{numero(potencial)} pontos)
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+              {!faltantes.length && !!linhaMunicipio && (
+                <p className="text-muted-foreground">
+                  O município já pontua em todas as atividades do Anexo V. Para subir no ranking,
+                  amplie o número de atletas e modalidades em cada atividade.
+                </p>
+              )}
+              <ul className="list-disc space-y-1 pl-5">
+                {(CRITERIO_POR_SLUG.get("esportes")?.comoMelhorar ?? []).map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted-foreground">
+                Projeção estimada pelo peso da atividade no Anexo V × peso da receita per capita do
+                município × faixa máxima de atletas e modalidades. Serve como ordem de grandeza para
+                priorizar as ações.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="ranking" className="space-y-3 pt-4">
