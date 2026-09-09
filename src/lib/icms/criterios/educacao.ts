@@ -105,7 +105,7 @@ function numero(v: unknown): number | null {
 }
 
 function casa(cabecalho: string, chaves: string[]): boolean {
-  const c = normalizarTexto(cabecalho);
+  const c = normalizarTexto(cabecalho).toLowerCase();
   return chaves.some((k) => c === k || c.includes(k));
 }
 
@@ -128,7 +128,7 @@ function acharCabecalho(linhas: Linha[]): { indice: number; colunas: string[] } 
 
 function escolherAba(wb: XLSX.WorkBook, chaves: string[]): string | null {
   for (const nome of wb.SheetNames) {
-    const n = normalizarTexto(nome);
+    const n = normalizarTexto(nome).toLowerCase();
     if (chaves.some((k) => n.includes(k))) return nome;
   }
   return null;
@@ -173,7 +173,7 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
       const coluna = celulas.length >= 3 ? celulas[1]! : (celulas[0] ?? "");
       const descricao = celulas.length >= 3 ? celulas[2]! : (celulas[1] ?? "");
       if (!coluna || !descricao) continue;
-      const c = normalizarTexto(coluna);
+      const c = normalizarTexto(coluna).toLowerCase();
       if (c === "variavel" || c.startsWith("nome abreviado")) continue;
       dicionario.push({ coluna, descricao });
     }
@@ -248,7 +248,7 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
   const municipiosComDados = new Set<string>();
   const abasDados = wb.SheetNames.filter((nome) => {
     if (nome === abaIndices) return false;
-    const n = normalizarTexto(nome);
+    const n = normalizarTexto(nome).toLowerCase();
     return ABAS_CONSTITUTIVAS.some((k) => n.includes(k)) || n.includes("constitutiv");
   });
   for (const nomeAba of abasDados) {
@@ -287,10 +287,10 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
     if (cab) {
       const colMunicipio = cab.colunas.findIndex((c) => c && casa(c, CHAVES_MUNICIPIO));
       const colItem = cab.colunas.findIndex(
-        (c) => c && /contestad|objeto|item|solicitac|pedido/.test(normalizarTexto(c)),
+        (c) => c && /contestad|objeto|item|solicitac|pedido/.test(normalizarTexto(c).toLowerCase()),
       );
       const colResultado = cab.colunas.findIndex(
-        (c) => c && /resultado|decisao|parecer|situacao/.test(normalizarTexto(c)),
+        (c) => c && /resultado|decisao|parecer|situacao/.test(normalizarTexto(c).toLowerCase()),
       );
       for (let i = cab.indice + 1; i < linhas.length; i++) {
         const l = linhas[i] ?? [];
