@@ -52,6 +52,8 @@ import {
   type LinhaEmolumento,
 } from "@/lib/cartorios/parser";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { usePreferencia } from "@/hooks/usePreferencia";
+
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -112,8 +114,27 @@ function FiscalizaCartorio() {
   }, [chaveComp]);
 
   const { data: config } = useCartorioConfig();
-  const { data: linhas, isFetching } = useFiscalizacaoCartorio(competencia);
+  const { data: todasLinhas, isFetching } = useFiscalizacaoCartorio(competencia);
   const aliquota = config?.aliquota_iss ?? 5;
+
+  /** Alguns municípios não cobram ISS de serventias vagas — a escolha fica gravada no perfil. */
+  const { valor: incluirVagos, definir: definirIncluirVagos } = usePreferencia(
+    "cartorio-incluir-vagos",
+    true,
+  );
+
+  const vagos = useMemo(
+    () => (todasLinhas ?? []).filter((l) => (l.status ?? "").toLowerCase().includes("vag")).length,
+    [todasLinhas],
+  );
+
+  const linhas = useMemo(
+    () =>
+      incluirVagos
+        ? todasLinhas
+        : (todasLinhas ?? []).filter((l) => !(l.status ?? "").toLowerCase().includes("vag")),
+    [todasLinhas, incluirVagos],
+  );
 
   const totais = useMemo(() => {
     const l = linhas ?? [];
@@ -127,6 +148,7 @@ function FiscalizaCartorio() {
   }, [linhas]);
 
   const diferenca = totais.devido - totais.declarado;
+
 
   return (
     <div className="space-y-5">
@@ -201,13 +223,29 @@ function FiscalizaCartorio() {
               )}
 
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-base">
                     {MESES_NOME[competencia.mes - 1]} de {competencia.ano}
                     {isFetching && <span className="ml-2 text-xs text-muted-foreground">…</span>}
                   </CardTitle>
+                  <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={incluirVagos ? "com" : "sem"}
+                    onValueChange={(v) => definirIncluirVagos(v === "com")}
+                  >
+                    <SelectTrigger className="h-9 w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="com">
+                        Incluir cartórios vagos{vagos ? ` (${vagos})` : ""}
+                      </SelectItem>
+                      <SelectItem value="sem">Somente cartórios providos</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button
                     variant="outline"
+
                     size="sm"
                     onClick={() =>
                       baixarCsv(
@@ -248,7 +286,9 @@ function FiscalizaCartorio() {
                     <Download className="mr-2 size-4" />
                     CSV
                   </Button>
+                  </div>
                 </CardHeader>
+
                 <CardContent className="overflow-x-auto p-0">
                   <Table>
                     <TableHeader>
