@@ -5,9 +5,9 @@
  * trocado ou parcela ainda não repassada.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, Plus, RefreshCw, Search, X } from "lucide-react";
+import { Download, FileSpreadsheet, Plus, RefreshCw, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,9 +59,75 @@ export function RepasseEducacaoFjp({
   const [erroLista, setErroLista] = useState<string | null>(null);
   const [filtro, setFiltro] = useState("");
   const [escolhidos, setEscolhidos] = useState<MunicipioFjp[]>([]);
-  const [exercicio, setExercicio] = useState<number>(new Date().getFullYear());
+  const [exercicio, setExercicio] = useState<number>(
+    anoBase ? anoBase + 2 : new Date().getFullYear(),
+  );
   const [linhas, setLinhas] = useState<LinhaPortal[]>([]);
   const [buscando, setBuscando] = useState(false);
+  // Valores lidos da planilha real de repasses (tem prioridade sobre o portal).
+  const [planilha, setPlanilha] = useState<Map<string, number>>(new Map());
+  const [nomeArquivo, setNomeArquivo] = useState<string | null>(null);
+  const arquivoRef = useRef<HTMLInputElement>(null);
+
+  // Ao trocar o ano-base do relatório, o repasse acontece dois anos depois.
+  useEffect(() => {
+    if (anoBase) setExercicio(anoBase + 2);
+  }, [anoBase]);
+
+  async function lerPlanilha(arquivo: File) {
+    try {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.read(await arquivo.arrayBuffer(), { type: "array" });
+      const mapa = new Map<string, number>();
+      for (const aba of wb.SheetNames) {
+        const linhasAba = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[aba]!, {
+          header: 1,
+          raw: true,
+        });
+        for (const linha of linhasAba) {
+          if (!Array.isArray(linha)) continue;
+          const nome = linha.find((c) => typeof c === "string" && c.trim().length > 2) as
+            | string
+            | undefined;
+          if (!nome) continue;
+          const chave = normalizarMunicipio(nome);
+          const numeros = linha
+            .map((c) =>
+              typeof c === "number"
+                ? c
+                : typeof c === "string" &&
+                    /^[\d.,\s]+$/.test(c.trim()) &&
+                    c.trim().length > 0
+                  ? Number(c.replace(/\./g, "").replace(",", ".").trim())
+                  : null,
+            )
+            .filter((n): n is number => n != null && Number.isFinite(n) && n > 0);
+          // O repasse é o maior número da linha (índices e quantidades são menores).
+          const valor = numeros.length ? Math.max(...numeros) : null;
+          if (valor != null && valor >= 100 && !mapa.has(chave)) mapa.set(chave, valor);
+        }
+      }
+      if (!mapa.size) {
+        toast.error("Não encontrei valores de repasse por município nessa planilha.");
+        return;
+      }
+      setPlanilha(mapa);
+      setNomeArquivo(arquivo.name);
+      toast.success(`${mapa.size} município(s) lidos da planilha.`);
+    } catch {
+      toast.error("Não foi possível ler a planilha. Envie o arquivo .xlsx original.");
+    }
+  }
+
+  function adicionarDaPlanilha() {
+    const novos: MunicipioFjp[] = [];
+    for (const m of lista) {
+      if (!planilha.has(normalizarMunicipio(m.nome))) continue;
+      if (escolhidos.some((e) => e.id === m.id)) continue;
+      novos.push(m);
+    }
+    setEscolhidos((a) => [...a, ...novos].slice(0, 40));
+  }
 
   useEffect(() => {
     let vivo = true;
@@ -92,20 +158,46 @@ export function RepasseEducacaoFjp({
     return mapa;
   }, [ranking]);
 
-  const resultado = useMemo(
-    () =>
-      linhas.map((l) => {
-        const calc = indicePorMunicipio.get(normalizarMunicipio(l.nome)) ?? null;
-        const ieCalculado = calc?.indice ?? null;
-        const fator = l.valor != null && l.indice ? l.valor / l.indice : null;
-        const esperado = fator != null && ieCalculado != null ? ieCalculado * fator : null;
-        const difValor = esperado != null && l.valor != null ? esperado - l.valor : null;
-        const difIndice =
-          ieCalculado != null && l.indice != null ? ieCalculado - l.indice : null;
-        return { ...l, ieCalculado, esperado, difValor, difIndice };
-      }),
-    [linhas, indicePorMunicipio],
-  );
+  const resultado = useMemo(() => {
+    const porId = new Map(linhas.map((l) => [l.id, l]));
+    const base = escolhidos.length
+      ? escolhidos.map(
+          (m) =>
+            porId.get(m.id) ?? {
+              id: m.id,
+              nome: m.nome,
+              valor: null,
+              indice: null,
+              meses: 0,
+              erro: null,
+            },
+        )
+      : linhas;
+    return base.map((l) => {
+      const chave = normalizarMunicipio(l.nome);
+      const calc = indicePorMunicipio.get(chave) ?? null;
+      const ieCalculado = calc?.indice ?? null;
+      const daPlanilha = planilha.get(chave) ?? null;
+      const valor = daPlanilha ?? l.valor;
+      const origem: "planilha" | "portal" | null =
+        daPlanilha != null ? "planilha" : l.valor != null ? "portal" : null;
+      const fator = valor != null && l.indice ? valor / l.indice : null;
+      const esperado = fator != null && ieCalculado != null ? ieCalculado * fator : null;
+      const difValor = esperado != null && valor != null ? esperado - valor : null;
+      const difIndice = ieCalculado != null && l.indice != null ? ieCalculado - l.indice : null;
+      return { ...l, valor, origem, ieCalculado, esperado, difValor, difIndice };
+    });
+  }, [linhas, escolhidos, indicePorMunicipio, planilha]);
+
+  const totais = useMemo(() => {
+    let pago = 0;
+    let esperado = 0;
+    for (const l of resultado) {
+      if (l.valor != null) pago += l.valor;
+      if (l.esperado != null) esperado += l.esperado;
+    }
+    return { pago, esperado, dif: esperado - pago };
+  }, [resultado]);
 
   const sugestoes = useMemo(() => {
     const termo = filtro.trim().toLowerCase();
@@ -213,6 +305,44 @@ export function RepasseEducacaoFjp({
               {buscando ? "Consultando o portal…" : "Baixar e comparar"}
             </Button>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={arquivoRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void lerPlanilha(f);
+                e.target.value = "";
+              }}
+            />
+            <Button variant="outline" onClick={() => arquivoRef.current?.click()}>
+              <FileSpreadsheet className="mr-2 size-4" />
+              Enviar planilha de repasse
+            </Button>
+            <Button variant="outline" onClick={adicionarDaPlanilha} disabled={!planilha.size}>
+              Adicionar municípios da planilha
+            </Button>
+            {nomeArquivo && (
+              <Badge variant="secondary" className="gap-1">
+                {nomeArquivo} — {planilha.size} município(s)
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlanilha(new Map());
+                    setNomeArquivo(null);
+                  }}
+                  aria-label="Remover planilha"
+                >
+                  <X className="size-3" />
+                </button>
+              </Badge>
+            )}
+            <span className="text-xs text-muted-foreground">
+              Quando o município está na planilha, o valor pago vem dela; nos demais, do portal.
+            </span>
+          </div>
           {!!escolhidos.length && (
             <div className="flex flex-wrap gap-1">
               {escolhidos.map((m) => (
@@ -245,7 +375,8 @@ export function RepasseEducacaoFjp({
                       <th className="py-2 text-right">Índice no portal</th>
                       <th className="py-2 text-right">Índice calculado</th>
                       <th className="py-2 text-right">Diferença</th>
-                      <th className="py-2 text-right">Repassado</th>
+                      <th className="py-2 text-right">Valor pago</th>
+                      <th className="py-2 text-center">Origem</th>
                       <th className="py-2 text-right">Esperado pelo cálculo</th>
                       <th className="py-2 text-right">Diferença em R$</th>
                     </tr>
@@ -286,6 +417,13 @@ export function RepasseEducacaoFjp({
                         <td className="py-2 text-right">
                           {l.valor == null ? "—" : formatarMoeda(l.valor)}
                         </td>
+                        <td className="py-2 text-center text-xs text-muted-foreground">
+                          {l.origem === "planilha"
+                            ? "Planilha"
+                            : l.origem === "portal"
+                              ? "Portal FJP"
+                              : "—"}
+                        </td>
                         <td className="py-2 text-right">
                           {l.esperado == null ? "—" : formatarMoeda(l.esperado)}
                         </td>
@@ -303,6 +441,26 @@ export function RepasseEducacaoFjp({
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot>
+                    <tr className="border-t font-medium">
+                      <td className="py-2">Total</td>
+                      <td colSpan={3} />
+                      <td className="py-2 text-right">{formatarMoeda(totais.pago)}</td>
+                      <td />
+                      <td className="py-2 text-right">{formatarMoeda(totais.esperado)}</td>
+                      <td
+                        className={`py-2 text-right ${
+                          totais.dif > 0
+                            ? "text-emerald-600"
+                            : totais.dif < 0
+                              ? "text-destructive"
+                              : ""
+                        }`}
+                      >
+                        {formatarMoeda(totais.dif)}
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
               <div className="flex justify-between gap-2">
@@ -322,7 +480,8 @@ export function RepasseEducacaoFjp({
                           "Índice no portal (%)",
                           "Índice calculado (%)",
                           "Diferença de índice",
-                          "Repassado (R$)",
+                          "Valor pago (R$)",
+                          "Origem do valor",
                           "Esperado (R$)",
                           "Diferença (R$)",
                         ],
@@ -332,6 +491,11 @@ export function RepasseEducacaoFjp({
                           l.ieCalculado ?? "",
                           l.difIndice ?? "",
                           l.valor ?? "",
+                          l.origem === "planilha"
+                            ? "Planilha"
+                            : l.origem === "portal"
+                              ? "Portal FJP"
+                              : "",
                           l.esperado ?? "",
                           l.difValor ?? "",
                         ]),

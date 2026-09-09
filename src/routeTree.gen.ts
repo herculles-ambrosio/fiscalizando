@@ -40,6 +40,7 @@ import { Route as AuthenticatedIcmsFjpRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedIcmsImportacoesRouteImport } from './routes/_authenticated/icms/importacoes'
 import { Route as AuthenticatedIcmsPlanoRouteImport } from './routes/_authenticated/icms/plano'
 import { Route as AuthenticatedIcmsPrazosRouteImport } from './routes/_authenticated/icms/prazos'
+import { Route as AuthenticatedIcmsRepasseEducacaoRouteImport } from './routes/_authenticated/icms/repasse-educacao'
 import { Route as AuthenticatedIcmsCriterioSlugRouteImport } from './routes/_authenticated/icms/criterio.$slug'
 import { Route as ApiPublicHooksReceitaFilaRouteImport } from './routes/api/public/hooks/receita-fila'
 
@@ -211,6 +212,12 @@ const AuthenticatedIcmsPrazosRoute = AuthenticatedIcmsPrazosRouteImport.update({
   path: '/prazos',
   getParentRoute: () => AuthenticatedIcmsRouteRoute,
 } as any)
+const AuthenticatedIcmsRepasseEducacaoRoute =
+  AuthenticatedIcmsRepasseEducacaoRouteImport.update({
+    id: '/repasse-educacao',
+    path: '/repasse-educacao',
+    getParentRoute: () => AuthenticatedIcmsRouteRoute,
+  } as any)
 const AuthenticatedIcmsCriterioSlugRoute =
   AuthenticatedIcmsCriterioSlugRouteImport.update({
     id: '/criterio/$slug',
@@ -254,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
+  '/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
   '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
@@ -287,6 +295,7 @@ export interface FileRoutesByTo {
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
+  '/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
   '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
@@ -323,6 +332,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/_authenticated/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/_authenticated/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
+  '/_authenticated/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
   '/_authenticated/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
@@ -359,6 +369,7 @@ export interface FileRouteTypes {
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms/prazos'
+    | '/icms/repasse-educacao'
     | '/icms/'
     | '/icms/criterio/$slug'
     | '/api/public/hooks/receita-fila'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms/prazos'
+    | '/icms/repasse-educacao'
     | '/icms'
     | '/icms/criterio/$slug'
     | '/api/public/hooks/receita-fila'
@@ -427,6 +439,7 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/importacoes'
     | '/_authenticated/icms/plano'
     | '/_authenticated/icms/prazos'
+    | '/_authenticated/icms/repasse-educacao'
     | '/_authenticated/icms/'
     | '/_authenticated/icms/criterio/$slug'
     | '/api/public/hooks/receita-fila'
@@ -657,6 +670,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIcmsPrazosRouteImport
       parentRoute: typeof AuthenticatedIcmsRouteRoute
     }
+    '/_authenticated/icms/repasse-educacao': {
+      id: '/_authenticated/icms/repasse-educacao'
+      path: '/repasse-educacao'
+      fullPath: '/icms/repasse-educacao'
+      preLoaderRoute: typeof AuthenticatedIcmsRepasseEducacaoRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
     '/_authenticated/icms/criterio/$slug': {
       id: '/_authenticated/icms/criterio/$slug'
       path: '/criterio/$slug'
@@ -704,6 +724,7 @@ interface AuthenticatedIcmsRouteRouteChildren {
   AuthenticatedIcmsImportacoesRoute: typeof AuthenticatedIcmsImportacoesRoute
   AuthenticatedIcmsPlanoRoute: typeof AuthenticatedIcmsPlanoRoute
   AuthenticatedIcmsPrazosRoute: typeof AuthenticatedIcmsPrazosRoute
+  AuthenticatedIcmsRepasseEducacaoRoute: typeof AuthenticatedIcmsRepasseEducacaoRoute
   AuthenticatedIcmsIndexRoute: typeof AuthenticatedIcmsIndexRoute
   AuthenticatedIcmsCriterioSlugRoute: typeof AuthenticatedIcmsCriterioSlugRoute
 }
@@ -718,6 +739,8 @@ const AuthenticatedIcmsRouteRouteChildren: AuthenticatedIcmsRouteRouteChildren =
     AuthenticatedIcmsImportacoesRoute: AuthenticatedIcmsImportacoesRoute,
     AuthenticatedIcmsPlanoRoute: AuthenticatedIcmsPlanoRoute,
     AuthenticatedIcmsPrazosRoute: AuthenticatedIcmsPrazosRoute,
+    AuthenticatedIcmsRepasseEducacaoRoute:
+      AuthenticatedIcmsRepasseEducacaoRoute,
     AuthenticatedIcmsIndexRoute: AuthenticatedIcmsIndexRoute,
     AuthenticatedIcmsCriterioSlugRoute: AuthenticatedIcmsCriterioSlugRoute,
   }
