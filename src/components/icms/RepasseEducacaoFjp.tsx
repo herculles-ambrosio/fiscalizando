@@ -375,7 +375,8 @@ export function RepasseEducacaoFjp({
                       <th className="py-2 text-right">Índice no portal</th>
                       <th className="py-2 text-right">Índice calculado</th>
                       <th className="py-2 text-right">Diferença</th>
-                      <th className="py-2 text-right">Repassado</th>
+                      <th className="py-2 text-right">Valor pago</th>
+                      <th className="py-2 text-center">Origem</th>
                       <th className="py-2 text-right">Esperado pelo cálculo</th>
                       <th className="py-2 text-right">Diferença em R$</th>
                     </tr>
