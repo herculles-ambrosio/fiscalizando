@@ -25,6 +25,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useConfiguracao } from "@/hooks/useConfiguracao";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+
 import { useCartorioConfig, useFiscalizacaoCartorio, type Competencia } from "@/hooks/useCartorios";
 import { useModelosCartorio } from "@/hooks/useCartorioModelos";
 import {
@@ -42,6 +44,8 @@ type Filtro = "diferenca" | "sem_declaracao" | "todos";
 
 export default function DocumentosView({ competencia }: { competencia: Competencia | null }) {
   const { data: config } = useConfiguracao();
+  const { municipio } = useMunicipioAtivo();
+
   const { data: cartorioConfig } = useCartorioConfig();
   const { data: linhas } = useFiscalizacaoCartorio(competencia);
   const { data: modelos } = useModelosCartorio();
@@ -188,6 +192,17 @@ export default function DocumentosView({ competencia }: { competencia: Competenc
 
   const totalDiferenca = selecionados.reduce((s, x) => s + Math.max(x.diferencaIss ?? 0, 0), 0);
 
+  const semAcento = (t: string) =>
+    t
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  const nomeCabecalho = config?.nome_prefeitura ?? "";
+  const cabecalhoDivergente =
+    !!nomeCabecalho &&
+    !!municipio?.nome &&
+    !semAcento(nomeCabecalho).includes(semAcento(municipio.nome));
+
   return (
     <div className="space-y-4">
       {!config?.nome_prefeitura && (
@@ -196,6 +211,14 @@ export default function DocumentosView({ competencia }: { competencia: Competenc
           Configurações. Preencha-a antes de emitir.
         </p>
       )}
+
+      {cabecalhoDivergente && (
+        <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          Atenção: o cabeçalho salvo é de “{nomeCabecalho}”, mas a prefeitura ativa é{" "}
+          {municipio?.nome}. Corrija os dados na tela Configurações antes de emitir os documentos.
+        </p>
+      )}
+
 
       <Card>
         <CardHeader>

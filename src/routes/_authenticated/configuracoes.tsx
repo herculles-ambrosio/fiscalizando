@@ -58,7 +58,14 @@ function Configuracoes() {
   const admin = perfil?.ehConsultoria || perfil?.papel === "prefeitura_admin";
 
   useEffect(() => {
-    if (!config) return;
+    if (isLoading) return;
+    if (!config) {
+      // Prefeitura sem configuração salva: limpa o formulário para não
+      // reaproveitar (e regravar) os dados da prefeitura anterior.
+      setValores({ ...CONFIG_VAZIA });
+      setBrasaoPath(null);
+      return;
+    }
     setValores({
       nome_prefeitura: config.nome_prefeitura,
       estado: config.estado,
@@ -71,7 +78,8 @@ function Configuracoes() {
       texto_assinatura: config.texto_assinatura,
     });
     setBrasaoPath(config.brasao_path);
-  }, [config]);
+  }, [config, isLoading, municipioId]);
+
 
   useEffect(() => {
     let ativo = true;
