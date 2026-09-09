@@ -42,6 +42,8 @@ type Filtro = "diferenca" | "sem_declaracao" | "todos";
 
 export default function DocumentosView({ competencia }: { competencia: Competencia | null }) {
   const { data: config } = useConfiguracao();
+  const { municipio } = useMunicipioAtivo();
+
   const { data: cartorioConfig } = useCartorioConfig();
   const { data: linhas } = useFiscalizacaoCartorio(competencia);
   const { data: modelos } = useModelosCartorio();
