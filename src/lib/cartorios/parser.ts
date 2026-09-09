@@ -184,6 +184,9 @@ export async function lerEmolumentos(arquivo: File): Promise<ResultadoLeitura<Li
     }
   }
 
+  const municipioTopo = municipioNoTopo(matriz, iCab);
+
+
   const linhas: LinhaEmolumento[] = [];
   for (let i = iCab + 1; i < matriz.length; i++) {
     const linha = matriz[i]!;
