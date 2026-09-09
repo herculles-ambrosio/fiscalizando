@@ -66,6 +66,9 @@ export function CriterioEsportesDetalhe() {
   const pesoRcl = (atividades ?? []).find((a) => a.peso_rcl != null)?.peso_rcl ?? null;
   const codigosPontuando = new Set((atividades ?? []).map((a) => a.atividade_codigo));
   const faltantes = (referencia ?? []).filter((r) => !codigosPontuando.has(r.codigo));
+  const potencialTotal = pesoRcl
+    ? faltantes.reduce((s, r) => s + Number(r.peso) * pesoRcl * 15 * 10, 0)
+    : null;
 
   const [busca, setBusca] = useState("");
   const rankingFiltrado = (ranking ?? []).filter((l) =>
