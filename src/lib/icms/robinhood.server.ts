@@ -235,3 +235,39 @@ export async function coletarValoresMunicipio(
   lerRelatorio(relatorio, "valor", TODOS_MESES, destino);
   return [...destino.values()].sort((a, b) => a.mes - b.mes || a.criterio.localeCompare(b.criterio));
 }
+
+/**
+ * Índice e valor repassado de um único critério, somados no ano, direto do
+ * portal da FJP. Usado para conferir o índice publicado com o que o município
+ * efetivamente recebeu naquele critério.
+ */
+export async function coletarCriterioAnual(
+  municipioFjpId: number,
+  exercicio: number,
+  slug: string,
+): Promise<{ valor: number | null; indice: number | null; meses: number }> {
+  const destino = new Map<string, RegistroColetado>();
+  const [indices, valores] = await Promise.all([
+    pegarJson<Relatorio>(
+      `${API}/valores/relatorio?municipio_id=${municipioFjpId}&ano=${exercicio}&categoria_id=1`,
+    ),
+    pegarJson<Relatorio>(
+      `${API}/valores/relatorio?municipio_id=${municipioFjpId}&ano=${exercicio}&categoria_id=2`,
+    ),
+  ]);
+  lerRelatorio(indices, "indice", TODOS_MESES, destino);
+  lerRelatorio(valores, "valor", TODOS_MESES, destino);
+
+  const linhas = [...destino.values()].filter((r) => r.criterio === slug);
+  if (!linhas.length) return { valor: null, indice: null, meses: 0 };
+
+  let valor: number | null = null;
+  for (const l of linhas) if (l.valor != null) valor = (valor ?? 0) + l.valor;
+
+  // O índice do critério é o mesmo em todos os meses do exercício: usa o
+  // último mês informado, não a soma.
+  const comIndice = linhas.filter((l) => l.indice != null).sort((a, b) => a.mes - b.mes);
+  const indice = comIndice.length ? (comIndice[comIndice.length - 1]!.indice as number) : null;
+
+  return { valor, indice, meses: linhas.filter((l) => l.valor != null).length };
+}

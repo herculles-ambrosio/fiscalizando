@@ -20,6 +20,7 @@ import { AreasSemCadastroIef } from "@/components/icms/AreasSemCadastroIef";
 import { HabilitacaoTurismo } from "@/components/icms/HabilitacaoTurismo";
 import { PrazoRecursoEducacao } from "@/components/icms/PrazoRecursoEducacao";
 import { DadosConstitutivosEducacao } from "@/components/icms/DadosConstitutivosEducacao";
+import { RepasseEducacaoFjp } from "@/components/icms/RepasseEducacaoFjp";
 
 import { usePerfil } from "@/hooks/usePerfil";
 import { PIPELINE_POR_SLUG } from "@/lib/icms/criterios/pipelines";
@@ -236,6 +237,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
           {ehTurismo && <TabsTrigger value="habilitacao">Habilitação na Secult</TabsTrigger>}
           {ehEducacao && <TabsTrigger value="prazo">Prazo de recurso</TabsTrigger>}
           {ehEducacao && <TabsTrigger value="constitutivos">Dados constitutivos</TabsTrigger>}
+          {ehEducacao && <TabsTrigger value="repasse">Repasse × índice</TabsTrigger>}
           {pipeline && consultoria && <TabsTrigger value="importar">Importar relatório</TabsTrigger>}
         </TabsList>
 
@@ -604,6 +606,11 @@ function DetalheGenerico({ slug }: { slug: string }) {
               municipio={chaveMunicipio}
               municipioNome={municipio?.nome ?? "—"}
             />
+          </TabsContent>
+        )}
+        {ehEducacao && (
+          <TabsContent value="repasse" className="pt-4">
+            <RepasseEducacaoFjp anoBase={ano} fonte={fonte} />
           </TabsContent>
         )}
         {pipeline && consultoria && (
