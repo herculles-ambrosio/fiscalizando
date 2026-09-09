@@ -24,7 +24,7 @@ export type Pipeline = {
   /** palavras que precisam aparecer no link/nome do PDF */
   palavrasChave: string[];
   /** parser usado na leitura */
-  formato: "memoria_calculo" | "tabela_itens";
+  formato: "memoria_calculo" | "tabela_itens" | "planilha";
   /** rótulo da coluna que traz a nota/pontuação final do município */
   colunasTotal: string[];
   /** explicação exibida na tela de ingestão */
@@ -95,6 +95,27 @@ export const PIPELINES: Pipeline[] = [
     colunasTotal: ["pontuacao", "indice", "total", "iqr"],
     comoFunciona:
       "Varre a página oficial de publicações do ICMS Ecológico do ano (SEMAD) e traz as tabelas trimestrais das resoluções (saneamento, unidades de conservação e mata seca) e as tabelas de Fator de Qualidade (preliminar e final).",
+  },
+  {
+    slug: "educacao",
+    nome: "Educação",
+    orgao: "Fundação João Pinheiro (FJP) com a SEE-MG",
+    hosts: [
+      "robin-hood.fjp.mg.gov.br",
+      "www.robin-hood.fjp.mg.gov.br",
+      "robin-hood-historico.fjp.mg.gov.br",
+      "fjp.mg.gov.br",
+      "www.fjp.mg.gov.br",
+    ],
+    paginasBusca: [
+      "https://robin-hood.fjp.mg.gov.br/noticias",
+      "https://robin-hood.fjp.mg.gov.br/",
+    ],
+    palavrasChave: ["educa", "iqe", "indice", "índice"],
+    formato: "planilha",
+    colunasTotal: ["iqe", "indice de participacao", "indice"],
+    comoFunciona:
+      "Lê a planilha publicada pela FJP com os índices do critério Educação: os quatro componentes (Desempenho, Rendimento, Atendimento e Gestão Escolar), o Índice de Qualidade e o índice de participação, além dos dados constitutivos, dos recursos administrativos e da nota técnica do ano.",
   },
 ];
 
