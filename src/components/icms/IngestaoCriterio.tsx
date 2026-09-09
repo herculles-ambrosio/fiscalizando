@@ -56,8 +56,15 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   const gravarRanking = useServerFn(gravarRankingCriterio);
   const gravarItens = useServerFn(gravarItensCriterio);
   const registrar = useServerFn(registrarImportacao);
+  const limparEdu = useServerFn(limparEducacao);
+  const gravarDados = useServerFn(gravarDadosConstitutivos);
+  const gravarRecursos = useServerFn(gravarRecursosEducacao);
+  const salvarCalendario = useServerFn(salvarCalendarioEducacao);
+  const planilha = pipeline.formato === "planilha";
 
-  const [anoBase, setAnoBase] = useState<number>(new Date().getFullYear() - 2);
+  const [anoBase, setAnoBase] = useState<number>(
+    planilha ? new Date().getFullYear() + 1 : new Date().getFullYear() - 2,
+  );
   const [fonte, setFonte] = useState<FonteRelatorio>("definitivo");
   const [url, setUrl] = useState("");
   const [texto, setTexto] = useState("");
