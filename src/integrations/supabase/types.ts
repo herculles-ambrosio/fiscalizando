@@ -255,6 +255,230 @@ export type Database = {
           },
         ]
       }
+      cartorio_config: {
+        Row: {
+          aliquota_iss: number
+          atualizado_em: string
+          criado_em: string
+          municipio_id: string
+          observacao: string | null
+        }
+        Insert: {
+          aliquota_iss?: number
+          atualizado_em?: string
+          criado_em?: string
+          municipio_id: string
+          observacao?: string | null
+        }
+        Update: {
+          aliquota_iss?: number
+          atualizado_em?: string
+          criado_em?: string
+          municipio_id?: string
+          observacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartorio_config_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: true
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cartorio_declaracoes: {
+        Row: {
+          arquivo_nome: string | null
+          atualizado_em: string
+          base_declarada: number
+          cns: string
+          competencia_ano: number
+          competencia_mes: number
+          criado_em: string
+          criado_por: string | null
+          id: string
+          iss_declarado: number
+          iss_pago: number
+          municipio_id: string
+          observacao: string | null
+          origem: string
+          serventia_nome: string | null
+          tipo_servico: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          atualizado_em?: string
+          base_declarada?: number
+          cns: string
+          competencia_ano: number
+          competencia_mes: number
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          iss_declarado?: number
+          iss_pago?: number
+          municipio_id: string
+          observacao?: string | null
+          origem?: string
+          serventia_nome?: string | null
+          tipo_servico?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          atualizado_em?: string
+          base_declarada?: number
+          cns?: string
+          competencia_ano?: number
+          competencia_mes?: number
+          criado_em?: string
+          criado_por?: string | null
+          id?: string
+          iss_declarado?: number
+          iss_pago?: number
+          municipio_id?: string
+          observacao?: string | null
+          origem?: string
+          serventia_nome?: string | null
+          tipo_servico?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartorio_declaracoes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cartorio_emolumentos: {
+        Row: {
+          arquivo_nome: string | null
+          atualizado_em: string
+          cns: string
+          comarca: string | null
+          competencia_ano: number
+          competencia_mes: number
+          criado_em: string
+          criado_por: string | null
+          despesa: number
+          emolumentos: number
+          fonte: string
+          id: string
+          municipio_id: string
+          outras_receitas: number
+          recompe: number
+          serventia_nome: string
+          status: string | null
+          tfj: number
+          tipo_servico: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          atualizado_em?: string
+          cns: string
+          comarca?: string | null
+          competencia_ano: number
+          competencia_mes: number
+          criado_em?: string
+          criado_por?: string | null
+          despesa?: number
+          emolumentos?: number
+          fonte?: string
+          id?: string
+          municipio_id: string
+          outras_receitas?: number
+          recompe?: number
+          serventia_nome: string
+          status?: string | null
+          tfj?: number
+          tipo_servico?: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          atualizado_em?: string
+          cns?: string
+          comarca?: string | null
+          competencia_ano?: number
+          competencia_mes?: number
+          criado_em?: string
+          criado_por?: string | null
+          despesa?: number
+          emolumentos?: number
+          fonte?: string
+          id?: string
+          municipio_id?: string
+          outras_receitas?: number
+          recompe?: number
+          serventia_nome?: string
+          status?: string | null
+          tfj?: number
+          tipo_servico?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartorio_emolumentos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cartorio_serventias: {
+        Row: {
+          atualizado_em: string
+          cnpj: string | null
+          cns: string
+          comarca: string | null
+          criado_em: string
+          id: string
+          inscricao_municipal: string | null
+          municipio_id: string
+          nome: string
+          observacao: string | null
+          status: string | null
+          tipo_servico: string
+        }
+        Insert: {
+          atualizado_em?: string
+          cnpj?: string | null
+          cns: string
+          comarca?: string | null
+          criado_em?: string
+          id?: string
+          inscricao_municipal?: string | null
+          municipio_id: string
+          nome: string
+          observacao?: string | null
+          status?: string | null
+          tipo_servico?: string
+        }
+        Update: {
+          atualizado_em?: string
+          cnpj?: string | null
+          cns?: string
+          comarca?: string | null
+          criado_em?: string
+          id?: string
+          inscricao_municipal?: string | null
+          municipio_id?: string
+          nome?: string
+          observacao?: string | null
+          status?: string | null
+          tipo_servico?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartorio_serventias_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       configuracoes_municipio: {
         Row: {
           atualizado_em: string
