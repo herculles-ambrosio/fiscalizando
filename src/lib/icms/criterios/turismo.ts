@@ -64,44 +64,56 @@ function remontarSemDecimal(cauda: string[]): string[] | null {
   ];
 }
 
-/** Lê uma linha do quadro; devolve `null` quando a linha não é de município. */
-export function lerLinhaTurismo(texto: string): LinhaTurismo | null {
+/**
+ * Lê uma linha do quadro. Como a publicação é uma página de jornal em várias
+ * colunas, uma mesma linha pode carregar dois municípios (um de cada coluna),
+ * então a leitura devolve todos os que forem encontrados.
+ */
+export function lerLinhasTurismo(texto: string): LinhaTurismo[] {
   const tokens = texto.replace(/\s+/g, " ").trim().split(" ");
-  if (tokens.length < 8) return null;
+  if (tokens.length < 8) return [];
 
-  // O bloco de valores é a primeira sequência longa de células numéricas depois
-  // do nome do município/circuito. Palavras de colunas vizinhas grudadas no fim
-  // da linha (o PDF é uma página de jornal em várias colunas) ficam de fora.
-  let inicio = -1;
-  let fim = -1;
-  for (let i = 0; i < tokens.length; i++) {
-    if (!CELULA.test(tokens[i] ?? "")) continue;
+  const achados: LinhaTurismo[] = [];
+  let cursor = 0;
+  let i = 0;
+  while (i < tokens.length) {
+    if (!CELULA.test(tokens[i] ?? "")) {
+      i++;
+      continue;
+    }
     let j = i;
     while (j < tokens.length && CELULA.test(tokens[j] ?? "")) j++;
-    if (j - i >= 6) {
-      inicio = i;
-      fim = j;
-      break;
+    if (j - i < 6) {
+      i = j;
+      continue;
     }
+    const corrida = tokens.slice(i, j);
+    // Onze células = decimais quebrados pelo extrator; seis = decimais intactos.
+    const quebrado = corrida.length >= 11 ? remontarSemDecimal(corrida.slice(0, 11)) : null;
+    const valores = quebrado ?? corrida.slice(0, 6);
+    const linha = montarLinha(tokens.slice(cursor, i), valores);
+    if (linha) achados.push(linha);
+    cursor = i + (quebrado ? 11 : 6);
     i = j;
   }
-  if (inicio < 0) return null;
+  return achados;
+}
 
-  const corrida = tokens.slice(inicio, fim);
-  // Onze células = decimais quebrados pelo extrator; seis = decimais intactos.
-  const quebrado = corrida.length >= 11 ? remontarSemDecimal(corrida.slice(0, 11)) : null;
-  const valores = quebrado ?? corrida.slice(0, 6);
+/** Compatibilidade: devolve apenas o primeiro município encontrado na linha. */
+export function lerLinhaTurismo(texto: string): LinhaTurismo | null {
+  return lerLinhasTurismo(texto)[0] ?? null;
+}
+
+function montarLinha(cabeca: string[], valores: string[]): LinhaTurismo | null {
   const numericos = valores.filter((v) => RE_NUM.test(v)).length;
   if (numericos < 5 || !RE_NUM.test(valores[5] ?? "")) return null;
-
-  const cabeca = tokens.slice(0, inicio);
-
 
   const primeiro = cabeca[0] ?? "";
   if (!/^\d{1,3}[.ºo)]?$/.test(primeiro)) return null;
 
   const palavras = cabeca.slice(1);
   if (!palavras.length) return null;
+
 
   let encontrado: { oficial: ReturnType<typeof municipioExato>; corte: number } | null = null;
   for (let corte = Math.min(palavras.length, 7); corte >= 1; corte--) {
