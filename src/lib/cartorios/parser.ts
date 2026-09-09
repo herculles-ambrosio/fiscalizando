@@ -14,6 +14,7 @@ export type LinhaEmolumento = {
   cns: string;
   nome: string;
   comarca: string | null;
+  municipio: string | null;
   tipoServico: string;
   status: string | null;
   emolumentos: number;
@@ -24,6 +25,7 @@ export type LinhaEmolumento = {
   mes: number | null;
   ano: number | null;
 };
+
 
 export type LinhaDeclaracao = {
   cns: string;
