@@ -120,6 +120,23 @@ function DetalheGenerico({ slug }: { slug: string }) {
   }, [referencia, pontuados, filtroPontuacao]);
 
   /**
+   * Projeção de pontos de um item: primeiro tenta o que o próprio relatório
+   * mostra (mediana/teto entre quem já pontua o item); quando o item não tem
+   * linha própria no relatório (ex.: subitens da habilitação de Turismo), cai
+   * no peso de referência do item.
+   */
+  const projecaoDe = useMemo(
+    () => (r: { codigo: string; peso: number | null }) => {
+      const observado = potencial?.get(r.codigo);
+      if (observado) return { tipico: observado.tipico, maximo: observado.maximo, observado: true, municipios: observado.municipios };
+      const peso = r.peso ?? 0;
+      if (peso > 0) return { tipico: peso, maximo: peso, observado: false, municipios: 0 };
+      return null;
+    },
+    [potencial],
+  );
+
+  /**
    * Quanto o município pode somar nos itens hoje zerados: usa a pontuação
    * típica (mediana) de quem já cumpre o item no mesmo relatório, com o teto
    * observado como referência máxima.
@@ -128,13 +145,13 @@ function DetalheGenerico({ slug }: { slug: string }) {
     let tipico = 0;
     let maximo = 0;
     for (const f of faltantes) {
-      const p = potencial?.get(f.codigo);
+      const p = projecaoDe(f);
       if (!p) continue;
       tipico += p.tipico;
       maximo += p.maximo;
     }
     return { tipico, maximo };
-  }, [faltantes, potencial]);
+  }, [faltantes, projecaoDe]);
 
 
   if (!criterio) {
