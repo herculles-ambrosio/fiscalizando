@@ -87,10 +87,30 @@ export function useDadosConstitutivos(
       }
       const medias = new Map<string, number>();
       for (const [coluna, s] of soma) medias.set(coluna, s.n ? s.total / s.n : 0);
-      return { linhas, medias };
+      return { linhas, medias, atendidas: etapasAtendidas(linhas) };
     },
   });
 }
+
+/** Direção desejada de cada indicador (maior_melhor por padrão). */
+export function useMetadadosIndicadores() {
+  return useQuery({
+    queryKey: ["educacao-metadados-indicador"],
+    staleTime: 60 * 60 * 1000,
+    queryFn: async (): Promise<Map<string, Direcao>> => {
+      const { data, error } = await (supabase as any)
+        .from("educacao_metadados_indicador")
+        .select("indicador, direcao_desejada");
+      if (error) throw error;
+      const mapa = new Map<string, Direcao>();
+      for (const l of (data ?? []) as { indicador: string; direcao_desejada: Direcao }[]) {
+        mapa.set(l.indicador.toLowerCase(), l.direcao_desejada);
+      }
+      return mapa;
+    },
+  });
+}
+
 
 export function useRecursosEducacao(exercicio: number | null, municipio: string | null) {
   return useQuery({
