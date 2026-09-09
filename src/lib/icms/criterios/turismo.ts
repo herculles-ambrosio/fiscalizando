@@ -69,19 +69,33 @@ export function lerLinhaTurismo(texto: string): LinhaTurismo | null {
   const tokens = texto.replace(/\s+/g, " ").trim().split(" ");
   if (tokens.length < 8) return null;
 
-  // Conta quantas células numéricas encerram a linha para saber se o PDF veio
-  // com os decimais preservados (6 células) ou quebrados (11 células).
-  let inicio = tokens.length;
-  while (inicio > 0 && CELULA.test(tokens[inicio - 1] ?? "")) inicio--;
-  const cauda = tokens.slice(inicio);
+  // O bloco de valores é a primeira sequência longa de células numéricas depois
+  // do nome do município/circuito. Palavras de colunas vizinhas grudadas no fim
+  // da linha (o PDF é uma página de jornal em várias colunas) ficam de fora.
+  let inicio = -1;
+  let fim = -1;
+  for (let i = 0; i < tokens.length; i++) {
+    if (!CELULA.test(tokens[i] ?? "")) continue;
+    let j = i;
+    while (j < tokens.length && CELULA.test(tokens[j] ?? "")) j++;
+    if (j - i >= 6) {
+      inicio = i;
+      fim = j;
+      break;
+    }
+    i = j;
+  }
+  if (inicio < 0) return null;
 
-  const quebrado = remontarSemDecimal(cauda.slice(-11));
-  const usados = quebrado ? 11 : 6;
-  const valores = quebrado ?? tokens.slice(-6);
+  const corrida = tokens.slice(inicio, fim);
+  // Onze células = decimais quebrados pelo extrator; seis = decimais intactos.
+  const quebrado = corrida.length >= 11 ? remontarSemDecimal(corrida.slice(0, 11)) : null;
+  const valores = quebrado ?? corrida.slice(0, 6);
   const numericos = valores.filter((v) => RE_NUM.test(v)).length;
   if (numericos < 5 || !RE_NUM.test(valores[5] ?? "")) return null;
 
-  const cabeca = tokens.slice(0, tokens.length - usados);
+  const cabeca = tokens.slice(0, inicio);
+
 
   const primeiro = cabeca[0] ?? "";
   if (!/^\d{1,3}[.ºo)]?$/.test(primeiro)) return null;
