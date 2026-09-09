@@ -88,6 +88,7 @@ export const descobrirRelatoriosCriterio = createServerFn({ method: "POST" })
         // extensão no link) ou downloads da biblioteca da Secult.
         if (
           !/\.pdf(\?|$)/i.test(href) &&
+          !/\.xlsx?(\?|$)/i.test(href) &&
           !/\/documents\/d\//i.test(href) &&
           !/\/download\/(category|file)\//i.test(href)
         )
