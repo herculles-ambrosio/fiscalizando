@@ -22,11 +22,13 @@ export function ConferenciaFjp({
   nomeCriterio,
   pesoLegalPct,
   indiceRelatorio,
+  anoBase,
 }: {
   slug: string;
   nomeCriterio: string;
   pesoLegalPct: number | null;
   indiceRelatorio: number | null;
+  anoBase?: number | null;
 }) {
   const { data: exercicios } = useIcmsExercicios();
   const exercicio = exercicios?.[0] ?? null;
@@ -94,6 +96,15 @@ export function ConferenciaFjp({
             </p>
           </div>
         </div>
+        {anoBase != null && (
+          <p className="text-xs text-muted-foreground">
+            Relatório do ano-base {anoBase} (publicado em {anoBase + 1}), que gera o repasse de{" "}
+            {anoBase + 2}
+            {info.exercicio !== anoBase + 2
+              ? ` — a conferência acima usa o repasse de ${info.exercicio}, então a comparação é apenas indicativa.`
+              : "."}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">
           Valor de 1 ponto de índice no exercício: {valorPonto != null ? moeda(valorPonto) : "—"}.
           Cálculo: recebido ÷ (índice do relatório × valor do ponto) = peso implícito.

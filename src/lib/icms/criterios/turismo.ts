@@ -43,60 +43,112 @@ export type LinhaTurismo = {
   indice: number;
 };
 
-/** Lê uma linha do quadro; devolve `null` quando a linha não é de município. */
-export function lerLinhaTurismo(texto: string): LinhaTurismo | null {
-  const tokens = texto.replace(/\s+/g, " ").trim().split(" ");
-  if (tokens.length < 8) return null;
+const CELULA = /^-?\d{1,3}(?:\.\d{3})*(?:,\d+)?$|^-?\d+(?:\.\d+)?$|^S\.?\s?I\.?$/i;
 
-  // O relatório usa "S.I." (sem informação) em algumas colunas, então a célula
-  // pode não ser numérica — o que importa é o bloco final de seis valores.
-  const valores = tokens.slice(-6);
+/**
+ * Em algumas publicações o extrator do PDF perde a vírgula/ponto decimal e a
+ * linha chega como "9 25 4888 50 7 64 75 0 010830 0 196900". Nesse caso a
+ * cauda tem onze números em vez de seis, e cada valor decimal vem quebrado em
+ * duas partes (inteiro e casas decimais).
+ */
+function remontarSemDecimal(cauda: string[]): string[] | null {
+  if (cauda.length !== 11) return null;
+  const j = (a: string, b: string) => `${a}.${b}`;
+  return [
+    j(cauda[0]!, cauda[1]!),
+    j(cauda[2]!, cauda[3]!),
+    cauda[4]!,
+    j(cauda[5]!, cauda[6]!),
+    j(cauda[7]!, cauda[8]!),
+    j(cauda[9]!, cauda[10]!),
+  ];
+}
+
+/**
+ * Lê uma linha do quadro. Como a publicação é uma página de jornal em várias
+ * colunas, uma mesma linha pode carregar dois municípios (um de cada coluna),
+ * então a leitura devolve todos os que forem encontrados.
+ */
+export function lerLinhasTurismo(texto: string): LinhaTurismo[] {
+  const tokens = texto.replace(/\s+/g, " ").trim().split(" ");
+  if (tokens.length < 8) return [];
+
+  const achados: LinhaTurismo[] = [];
+  let cursor = 0;
+  let i = 0;
+  while (i < tokens.length) {
+    if (!CELULA.test(tokens[i] ?? "")) {
+      i++;
+      continue;
+    }
+    let j = i;
+    while (j < tokens.length && CELULA.test(tokens[j] ?? "")) j++;
+    if (j - i < 6) {
+      i = j;
+      continue;
+    }
+    const corrida = tokens.slice(i, j);
+    // Onze células = decimais quebrados pelo extrator; seis = decimais intactos.
+    const quebrado = corrida.length >= 11 ? remontarSemDecimal(corrida.slice(0, 11)) : null;
+    const valores = quebrado ?? corrida.slice(0, 6);
+    const linha = montarLinha(tokens.slice(cursor, i), valores);
+    if (linha) achados.push(linha);
+    cursor = i + (quebrado ? 11 : 6);
+    i = j;
+  }
+  return achados;
+}
+
+/** Compatibilidade: devolve apenas o primeiro município encontrado na linha. */
+export function lerLinhaTurismo(texto: string): LinhaTurismo | null {
+  return lerLinhasTurismo(texto)[0] ?? null;
+}
+
+function montarLinha(cabeca: string[], valores: string[]): LinhaTurismo | null {
   const numericos = valores.filter((v) => RE_NUM.test(v)).length;
   if (numericos < 5 || !RE_NUM.test(valores[5] ?? "")) return null;
-
-
-  const cabeca = tokens.slice(0, -6);
-  const primeiro = cabeca[0] ?? "";
-  if (!/^\d{1,3}[.ºo)]?$/.test(primeiro)) return null;
-
-  const palavras = cabeca.slice(1);
-  if (!palavras.length) return null;
-
-  let encontrado: { oficial: ReturnType<typeof municipioExato>; corte: number } | null = null;
-  for (let corte = Math.min(palavras.length, 7); corte >= 1; corte--) {
-    const oficial = municipioExato(palavras.slice(0, corte).join(" "));
-    if (oficial) {
-      encontrado = { oficial, corte };
-      break;
-    }
-  }
-  if (!encontrado?.oficial) return null;
 
   const indice = num(valores[5] ?? "");
   if (indice == null) return null;
 
-  return {
-    municipio: encontrado.oficial.chave,
-    municipioNome: encontrado.oficial.nome,
-    circuito: palavras.slice(encontrado.corte).join(" ").trim(),
-    nota: num(valores[0] ?? ""),
-    rlpc: num(valores[1] ?? ""),
-    irc: num(valores[2] ?? ""),
-    notaIrc: num(valores[3] ?? ""),
-    iit: num(valores[4] ?? ""),
-    indice,
-  };
+  // O trecho antes dos valores pode trazer sobras de outra matéria da página do
+  // Diário; o que interessa é o último "nº do quadro" seguido de um município.
+  for (let k = cabeca.length - 1; k >= 0; k--) {
+    if (!/^\d{1,3}[.ºo)]?$/.test(cabeca[k] ?? "")) continue;
+    const palavras = cabeca.slice(k + 1);
+    if (!palavras.length) continue;
+
+    for (let corte = Math.min(palavras.length, 7); corte >= 1; corte--) {
+      const oficial = municipioExato(palavras.slice(0, corte).join(" "));
+      if (!oficial) continue;
+      return {
+        municipio: oficial.chave,
+        municipioNome: oficial.nome,
+        circuito: palavras.slice(corte).join(" ").trim(),
+        nota: num(valores[0] ?? ""),
+        rlpc: num(valores[1] ?? ""),
+        irc: num(valores[2] ?? ""),
+        notaIrc: num(valores[3] ?? ""),
+        iit: num(valores[4] ?? ""),
+        indice,
+      };
+    }
+  }
+  return null;
 }
+
 
 export function extrairTurismo(paginas: PaginaTexto[]): ResultadoTabela {
   const lidas = new Map<string, LinhaTurismo>();
 
   for (const pagina of paginas) {
     for (const linha of pagina.linhas) {
-      const l = lerLinhaTurismo(linha.texto);
-      if (l && !lidas.has(l.municipio)) lidas.set(l.municipio, l);
+      for (const l of lerLinhasTurismo(linha.texto)) {
+        if (!lidas.has(l.municipio)) lidas.set(l.municipio, l);
+      }
     }
   }
+
 
   const itens: ItemMunicipio[] = [];
   const registrar = (
