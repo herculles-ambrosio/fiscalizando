@@ -419,7 +419,6 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   const [buscando, setBuscando] = useState(false);
   const [confirmacao, setConfirmacao] = useState<{
     encontrados: string[];
-    seguir: () => void;
   } | null>(null);
   const refEmol = useRef<HTMLInputElement>(null);
   const refDecl = useRef<HTMLInputElement>(null);
@@ -428,11 +427,10 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
 
   /**
    * Só aceita planilha da prefeitura ativa. Quando a única referência é a
-   * comarca (que abrange cidades vizinhas), pede confirmação em vez de barrar.
+   * comarca (que abrange cidades vizinhas), bloqueia e oferece trocar de prefeitura.
    */
   function municipioConfere(
     linhas: { municipio?: string | null; comarca?: string | null }[],
-    seguir: () => void,
   ): boolean {
     const conf = conferirMunicipio(linhas, municipio?.nome);
     if (conf.ok) return true;
@@ -443,7 +441,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
       );
       return false;
     }
-    setConfirmacao({ encontrados: conf.encontrados, seguir });
+    setConfirmacao({ encontrados: conf.encontrados });
     return false;
   }
 
