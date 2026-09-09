@@ -44,7 +44,24 @@ import {
   type Competencia,
   type LinhaFiscalizacao,
 } from "@/hooks/useCartorios";
-import { lerDeclaracoes, lerEmolumentos, MESES_NOME } from "@/lib/cartorios/parser";
+import {
+  conferirMunicipio,
+  lerDeclaracoes,
+  lerEmolumentos,
+  MESES_NOME,
+} from "@/lib/cartorios/parser";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 import { buscarPortalCartorios } from "@/lib/cartorios/portal.functions";
 import { formatarMoeda } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
