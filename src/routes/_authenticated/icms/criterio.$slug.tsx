@@ -234,6 +234,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           {ehMeioAmbiente && <TabsTrigger value="ief">Cadastro no IEF</TabsTrigger>}
           {ehTurismo && <TabsTrigger value="habilitacao">Habilitação na Secult</TabsTrigger>}
+          {ehEducacao && <TabsTrigger value="prazo">Prazo de recurso</TabsTrigger>}
+          {ehEducacao && <TabsTrigger value="constitutivos">Dados constitutivos</TabsTrigger>}
           {pipeline && consultoria && <TabsTrigger value="importar">Importar relatório</TabsTrigger>}
         </TabsList>
 
@@ -582,6 +584,26 @@ function DetalheGenerico({ slug }: { slug: string }) {
         {ehTurismo && (
           <TabsContent value="habilitacao" className="pt-4">
             <HabilitacaoTurismo ano={ano} fonte={fonte} />
+          </TabsContent>
+        )}
+        {ehEducacao && (
+          <TabsContent value="prazo" className="pt-4">
+            <PrazoRecursoEducacao
+              exercicio={ano}
+              versao={versaoEducacao}
+              municipio={chaveMunicipio}
+              consultoria={consultoria}
+            />
+          </TabsContent>
+        )}
+        {ehEducacao && (
+          <TabsContent value="constitutivos" className="pt-4">
+            <DadosConstitutivosEducacao
+              exercicio={ano}
+              versao={versaoEducacao}
+              municipio={chaveMunicipio}
+              municipioNome={municipio?.nome ?? "—"}
+            />
           </TabsContent>
         )}
         {pipeline && consultoria && (
