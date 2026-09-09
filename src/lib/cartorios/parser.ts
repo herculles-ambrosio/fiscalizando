@@ -14,6 +14,7 @@ export type LinhaEmolumento = {
   cns: string;
   nome: string;
   comarca: string | null;
+  municipio: string | null;
   tipoServico: string;
   status: string | null;
   emolumentos: number;
@@ -25,9 +26,11 @@ export type LinhaEmolumento = {
   ano: number | null;
 };
 
+
 export type LinhaDeclaracao = {
   cns: string;
   nome: string | null;
+  municipio: string | null;
   tipoServico: string;
   baseDeclarada: number;
   issDeclarado: number;
@@ -35,6 +38,7 @@ export type LinhaDeclaracao = {
   mes: number | null;
   ano: number | null;
 };
+
 
 export type ResultadoLeitura<T> = {
   linhas: T[];
@@ -140,6 +144,68 @@ function indicePor(cabecalho: string[], termos: string[]): number {
   return cabecalho.findIndex((c) => termos.some((t) => c.includes(t)));
 }
 
+/** Procura "Município: Abre Campo" nas linhas impressas acima da tabela. */
+function municipioNoTopo(matriz: unknown[][], ateLinha: number): string | null {
+  for (let i = 0; i < ateLinha; i++) {
+    for (const celula of matriz[i] ?? []) {
+      const texto = String(celula ?? "").trim();
+      const m = /(?:munic[ií]pio|cidade|comarca)\s*[:\-]\s*(.+)$/i.exec(texto);
+      const achado = m?.[1]?.trim();
+      if (achado && achado.length > 2) return achado;
+    }
+  }
+  return null;
+}
+
+export type ConferenciaMunicipio = {
+  /** true quando o arquivo bate com a prefeitura ativa ou não traz essa informação. */
+  ok: boolean;
+  /** de onde veio a informação usada na conferência */
+  base: "municipio" | "comarca" | "indefinido";
+  /** nomes de município/comarca encontrados no arquivo */
+  encontrados: string[];
+};
+
+/**
+ * Confere se a planilha enviada é da prefeitura selecionada.
+ * Usa a coluna de município quando existe; senão, a comarca (que pode abranger
+ * cidades vizinhas, por isso a tela permite confirmar manualmente nesse caso).
+ */
+export function conferirMunicipio(
+  linhas: { municipio?: string | null; comarca?: string | null }[],
+  nomeAtivo: string | null | undefined,
+): ConferenciaMunicipio {
+  if (!nomeAtivo) return { ok: true, base: "indefinido", encontrados: [] };
+  const alvo = chave(nomeAtivo);
+
+  const juntar = (campo: "municipio" | "comarca") => {
+    const nomes = new Set<string>();
+    for (const l of linhas) {
+      const v = (l[campo] ?? "").toString().trim();
+      if (v) nomes.add(v);
+    }
+    return [...nomes];
+  };
+
+  const municipios = juntar("municipio");
+  if (municipios.length) {
+    return {
+      ok: municipios.some((n) => chave(n) === alvo),
+      base: "municipio",
+      encontrados: municipios,
+    };
+  }
+
+  const comarcas = juntar("comarca");
+  if (comarcas.length) {
+    return { ok: comarcas.some((n) => chave(n) === alvo), base: "comarca", encontrados: comarcas };
+  }
+
+  return { ok: true, base: "indefinido", encontrados: [] };
+}
+
+
+
 /** Lista de serventias do portal do TJMG. */
 export async function lerEmolumentos(arquivo: File): Promise<ResultadoLeitura<LinhaEmolumento>> {
   const matriz = await lerMatriz(arquivo);
@@ -154,6 +220,8 @@ export async function lerEmolumentos(arquivo: File): Promise<ResultadoLeitura<Li
     nome: indicePor(cabecalho, ["nomedaserventia", "serventia", "cartorio"]),
     cns: indicePor(cabecalho, ["codigocns", "cns"]),
     comarca: indicePor(cabecalho, ["comarca"]),
+    municipio: indicePor(cabecalho, ["municipio", "cidade"]),
+
     tipo: indicePor(cabecalho, ["tipodeservico", "tiposervico"]),
     status: indicePor(cabecalho, ["status", "situacao"]),
     emolumentos: indicePor(cabecalho, ["emolumento"]),
@@ -178,6 +246,9 @@ export async function lerEmolumentos(arquivo: File): Promise<ResultadoLeitura<Li
     }
   }
 
+  const municipioTopo = municipioNoTopo(matriz, iCab);
+
+
   const linhas: LinhaEmolumento[] = [];
   for (let i = iCab + 1; i < matriz.length; i++) {
     const linha = matriz[i]!;
@@ -191,6 +262,9 @@ export async function lerEmolumentos(arquivo: File): Promise<ResultadoLeitura<Li
       cns,
       nome,
       comarca: idx.comarca >= 0 ? String(linha[idx.comarca] ?? "").trim() || null : null,
+      municipio:
+        idx.municipio >= 0 ? String(linha[idx.municipio] ?? "").trim() || null : municipioTopo,
+
       tipoServico: idx.tipo >= 0 ? String(linha[idx.tipo] ?? "").trim() : "",
       status: idx.status >= 0 ? String(linha[idx.status] ?? "").trim() || null : null,
       emolumentos: numeroBr(linha[idx.emolumentos]),
@@ -224,7 +298,9 @@ export async function lerDeclaracoes(arquivo: File): Promise<ResultadoLeitura<Li
     base: indicePor(cabecalho, ["basedecalculo", "basedeclarada", "base", "receita", "faturamento"]),
     issDeclarado: indicePor(cabecalho, ["issdeclarado", "issdevido", "valoriss", "iss"]),
     issPago: indicePor(cabecalho, ["isspago", "recolhido", "pago"]),
+    municipio: indicePor(cabecalho, ["municipio", "cidade"]),
     competencia: indicePor(cabecalho, ["mesano", "competencia", "periodo"]),
+
   };
   if (idx.cns < 0 && idx.nome < 0)
     throw new Error("A planilha precisa ter a coluna do CNS ou do nome do cartório.");
@@ -234,6 +310,7 @@ export async function lerDeclaracoes(arquivo: File): Promise<ResultadoLeitura<Li
     .map((c, i) => (usados.has(i) ? null : String(c ?? "").trim()))
     .filter((c): c is string => !!c);
 
+  const municipioTopo = municipioNoTopo(matriz, iCab);
   const linhas: LinhaDeclaracao[] = [];
   for (let i = iCab + 1; i < matriz.length; i++) {
     const linha = matriz[i]!;
@@ -246,7 +323,10 @@ export async function lerDeclaracoes(arquivo: File): Promise<ResultadoLeitura<Li
     linhas.push({
       cns: cns || nome,
       nome: nome || null,
+      municipio:
+        idx.municipio >= 0 ? String(linha[idx.municipio] ?? "").trim() || null : municipioTopo,
       tipoServico: idx.tipo >= 0 ? String(linha[idx.tipo] ?? "").trim() : "",
+
       baseDeclarada: idx.base >= 0 ? numeroBr(linha[idx.base]) : 0,
       issDeclarado: idx.issDeclarado >= 0 ? numeroBr(linha[idx.issDeclarado]) : 0,
       issPago: idx.issPago >= 0 ? numeroBr(linha[idx.issPago]) : 0,
