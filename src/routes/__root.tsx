@@ -40,6 +40,23 @@ function NotFoundComponent() {
 // Após um novo deploy, a aba antiga aponta para arquivos que não existem mais.
 // Nesse caso recarregamos uma única vez em vez de mostrar tela de erro.
 const CHAVE_RECARGA = "recarga-versao-nova";
+/**
+ * Recarrega a página quando o navegador tenta buscar um arquivo de uma versão
+ * anterior do app (acontece logo depois de uma publicação ou de uma alteração
+ * enquanto a página está aberta). A recarga é permitida no máximo uma vez a
+ * cada 20 segundos, o que evita tela em branco definitiva sem correr o risco
+ * de entrar em laço de recargas.
+ */
+const INTERVALO_RECARGA_MS = 20_000;
+
+function tentarRecarregar() {
+  if (typeof window === "undefined") return false;
+  const ultima = Number(sessionStorage.getItem(CHAVE_RECARGA) ?? 0);
+  if (Date.now() - ultima < INTERVALO_RECARGA_MS) return false;
+  sessionStorage.setItem(CHAVE_RECARGA, String(Date.now()));
+  window.location.reload();
+  return true;
+}
 
 function ehModuloDesatualizado(error: unknown) {
   const msg = error instanceof Error ? error.message : String(error);
@@ -54,13 +71,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    if (ehModuloDesatualizado(error) && typeof window !== "undefined") {
-      if (!sessionStorage.getItem(CHAVE_RECARGA)) {
-        sessionStorage.setItem(CHAVE_RECARGA, "1");
-        window.location.reload();
-        return;
-      }
-    }
+    if (ehModuloDesatualizado(error) && tentarRecarregar()) return;
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
@@ -152,14 +163,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    // Carregou bem: libera nova tentativa de recarga em deploys futuros.
-    sessionStorage.removeItem(CHAVE_RECARGA);
     const aoFalharPrecarga = (evento: Event) => {
       evento.preventDefault();
-      if (!sessionStorage.getItem(CHAVE_RECARGA)) {
-        sessionStorage.setItem(CHAVE_RECARGA, "1");
-        window.location.reload();
-      }
+      tentarRecarregar();
     };
     window.addEventListener("vite:preloadError", aoFalharPrecarga);
     return () => window.removeEventListener("vite:preloadError", aoFalharPrecarga);
