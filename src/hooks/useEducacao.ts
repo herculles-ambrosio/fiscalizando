@@ -114,3 +114,66 @@ export function useRecursosEducacao(exercicio: number | null, municipio: string 
     },
   });
 }
+
+/** Todos os calendários cadastrados, para o painel de prazos de recurso. */
+export function useCalendariosEducacao() {
+  return useQuery({
+    queryKey: ["educacao-calendarios"],
+    queryFn: async (): Promise<CalendarioEducacao[]> => {
+      const { data, error } = await supabase
+        .from("educacao_calendario")
+        .select("*")
+        .order("exercicio", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as CalendarioEducacao[];
+    },
+  });
+}
+
+export type OutlierMunicipio = {
+  municipio: string;
+  municipioNome: string;
+  fora: number;
+  total: number;
+  piores: { coluna: string; valor: number | null; media: number | null; dif: number | null }[];
+};
+
+/**
+ * Municípios com números brutos fora da média estadual, calculados no banco
+ * (são dezenas de milhares de linhas por exercício).
+ */
+export function useOutliersEducacao(
+  exercicio: number | null,
+  versao: VersaoEducacao,
+  limite = 40,
+) {
+  return useQuery({
+    queryKey: ["educacao-outliers", exercicio, versao, limite],
+    enabled: !!exercicio,
+    staleTime: 10 * 60 * 1000,
+    queryFn: async (): Promise<OutlierMunicipio[]> => {
+      const { data, error } = await (supabase.rpc as any)("educacao_outliers", {
+        p_exercicio: exercicio!,
+        p_versao: versao,
+        p_limite: limite,
+      });
+      if (error) throw error;
+      const linhas = (data ?? []) as {
+        mun: string;
+        mun_nome: string;
+        fora: number;
+        total: number;
+        piores: OutlierMunicipio["piores"];
+      }[];
+      return linhas
+        .map((l) => ({
+          municipio: l.mun,
+          municipioNome: l.mun_nome,
+          fora: Number(l.fora ?? 0),
+          total: Number(l.total ?? 0),
+          piores: l.piores ?? [],
+        }))
+        .sort((a, b) => b.fora - a.fora || a.municipioNome.localeCompare(b.municipioNome, "pt-BR"));
+    },
+  });
+}
