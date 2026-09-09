@@ -196,6 +196,7 @@ export function extrairEducacao(dados: ArrayBuffer | Uint8Array): ResultadoEduca
       for (const c of cab.colunas) {
         if (!c) continue;
         const usada =
+          casa(c, COLUNAS_IDENTIFICACAO) ||
           casa(c, CHAVES_MUNICIPIO) ||
           casa(c, CHAVES_IQE) ||
           casa(c, CHAVES_INDICE) ||
