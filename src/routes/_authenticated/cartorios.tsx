@@ -409,7 +409,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
   const importarDecl = useImportarDeclaracoes();
   const excluir = useExcluirCompetenciaCartorio();
   const { data: competencias } = useCompetenciasCartorio();
-  const { municipio } = useMunicipioAtivo();
+  const { municipio, municipios, podeTrocar, trocar } = useMunicipioAtivo();
   const buscar = useServerFn(buscarPortalCartorios);
 
   const [mes, setMes] = useState(String(new Date().getMonth() + 1));
@@ -668,21 +668,34 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
             <AlertDialogTitle>Conferir a prefeitura do arquivo</AlertDialogTitle>
             <AlertDialogDescription>
               A prefeitura ativa é <strong>{municipio?.nome}</strong>, mas o arquivo traz apenas a
-              comarca {confirmacao?.encontrados.slice(0, 3).join(", ")}. Se estes cartórios
-              realmente atendem {municipio?.nome}, pode continuar; caso contrário, cancele e troque
-              a prefeitura.
+              comarca {confirmacao?.encontrados.slice(0, 3).join(", ")}. A carga foi bloqueada:
+              troque para a prefeitura correta e envie o arquivo de novo.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {podeTrocar && (
+            <div className="px-1">
+              <Select
+                onValueChange={(id) => {
+                  trocar(id);
+                  setConfirmacao(null);
+                  toast.success("Prefeitura trocada. Envie o arquivo novamente.");
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Escolher outra prefeitura…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {municipios.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.nome}/{m.uf}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                confirmacao?.seguir();
-                setConfirmacao(null);
-              }}
-            >
-              Carregar assim mesmo
-            </AlertDialogAction>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
