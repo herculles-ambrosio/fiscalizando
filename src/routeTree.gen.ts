@@ -24,6 +24,7 @@ import { Route as AuthenticatedEvolucaoRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedIcmsRouteRouteImport } from './routes/_authenticated/icms/route'
 import { Route as AuthenticatedImpugnacaoRouteImport } from './routes/_authenticated/impugnacao'
+import { Route as AuthenticatedImpugnacoesRouteImport } from './routes/_authenticated/impugnacoes'
 import { Route as AuthenticatedIndiceRouteImport } from './routes/_authenticated/indice'
 import { Route as AuthenticatedModelosRouteImport } from './routes/_authenticated/modelos'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
@@ -125,6 +126,12 @@ const AuthenticatedImpugnacaoRoute = AuthenticatedImpugnacaoRouteImport.update({
   path: '/impugnacao',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedImpugnacoesRoute =
+  AuthenticatedImpugnacoesRouteImport.update({
+    id: '/impugnacoes',
+    path: '/impugnacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedIndiceRoute = AuthenticatedIndiceRouteImport.update({
   id: '/indice',
   path: '/indice',
@@ -265,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/impugnacao': typeof AuthenticatedImpugnacaoRoute
+  '/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/indice': typeof AuthenticatedIndiceRoute
   '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
@@ -302,6 +310,7 @@ export interface FileRoutesByTo {
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/impugnacao': typeof AuthenticatedImpugnacaoRoute
+  '/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/indice': typeof AuthenticatedIndiceRoute
   '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
@@ -342,6 +351,7 @@ export interface FileRoutesById {
   '/_authenticated/evolucao': typeof AuthenticatedEvolucaoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/impugnacao': typeof AuthenticatedImpugnacaoRoute
+  '/_authenticated/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/_authenticated/indice': typeof AuthenticatedIndiceRoute
   '/_authenticated/modelos': typeof AuthenticatedModelosRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/evolucao'
     | '/historico'
     | '/impugnacao'
+    | '/impugnacoes'
     | '/indice'
     | '/modelos'
     | '/nova-apuracao'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/evolucao'
     | '/historico'
     | '/impugnacao'
+    | '/impugnacoes'
     | '/indice'
     | '/modelos'
     | '/nova-apuracao'
@@ -458,6 +470,7 @@ export interface FileRouteTypes {
     | '/_authenticated/evolucao'
     | '/_authenticated/historico'
     | '/_authenticated/impugnacao'
+    | '/_authenticated/impugnacoes'
     | '/_authenticated/indice'
     | '/_authenticated/modelos'
     | '/_authenticated/nova-apuracao'
@@ -593,6 +606,13 @@ declare module '@tanstack/react-router' {
       path: '/impugnacao'
       fullPath: '/impugnacao'
       preLoaderRoute: typeof AuthenticatedImpugnacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/impugnacoes': {
+      id: '/_authenticated/impugnacoes'
+      path: '/impugnacoes'
+      fullPath: '/impugnacoes'
+      preLoaderRoute: typeof AuthenticatedImpugnacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/indice': {
@@ -824,6 +844,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEvolucaoRoute: typeof AuthenticatedEvolucaoRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedImpugnacaoRoute: typeof AuthenticatedImpugnacaoRoute
+  AuthenticatedImpugnacoesRoute: typeof AuthenticatedImpugnacoesRoute
   AuthenticatedIndiceRoute: typeof AuthenticatedIndiceRoute
   AuthenticatedModelosRoute: typeof AuthenticatedModelosRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
@@ -847,6 +868,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEvolucaoRoute: AuthenticatedEvolucaoRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedImpugnacaoRoute: AuthenticatedImpugnacaoRoute,
+  AuthenticatedImpugnacoesRoute: AuthenticatedImpugnacoesRoute,
   AuthenticatedIndiceRoute: AuthenticatedIndiceRoute,
   AuthenticatedModelosRoute: AuthenticatedModelosRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,

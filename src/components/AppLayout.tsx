@@ -50,6 +50,7 @@ const NAV_ANALISE = [
   { to: "/estatisticas", rotulo: "Estatísticas", icone: PieChart },
   { to: "/oficios", rotulo: "Ofícios", icone: FileSignature },
   { to: "/impugnacao", rotulo: "Impugnação", icone: Gavel },
+  { to: "/impugnacoes", rotulo: "Impugnações pendentes", icone: ClipboardList },
 ];
 
 const NAV_ADMIN = [{ to: "/configuracoes", rotulo: "Configurações", icone: Settings }];
