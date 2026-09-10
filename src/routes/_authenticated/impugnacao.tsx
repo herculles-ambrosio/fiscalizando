@@ -539,6 +539,7 @@ function ImpugnacaoPagina() {
                       setId(s.id);
                       setNome(s.nome);
                       setExercicio(s.exercicio);
+                      setAnoBaseManual(true);
                       setAnoBase(s.ano_base ?? s.exercicio - 2);
                       setResolucao(s.resolucao);
                       setResolucaoData(s.resolucao_data ?? "");
