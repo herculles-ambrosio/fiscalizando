@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, Download, Loader2 } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, Calculator, Download, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMunicipios } from "@/hooks/useMunicipio";
+import { useMunicipioAtivo, useMunicipios } from "@/hooks/useMunicipio";
 import {
   useAcoesPanorama,
   useImpugnacoesPanorama,
@@ -106,10 +106,17 @@ function PaginaEstatisticas() {
   const { data: acoes } = useAcoesPanorama();
   const { data: impugnacoes } = useImpugnacoesPanorama();
   const { data: oficios } = useOficiosPanorama();
+  const { trocar: trocarMunicipio, podeTrocar } = useMunicipioAtivo();
 
   const [texto, setTexto] = useState("");
   const [ordem, setOrdem] = useState<Ordem>("variacao");
   const [detalhe, setDetalhe] = useState<LinhaPanorama | null>(null);
+
+  /** Leva o usuário ao Índice do VAF já com a prefeitura da linha ativa. */
+  function irApurar(linha: LinhaPanorama) {
+    if (podeTrocar) trocarMunicipio(linha.municipioId);
+    void navigate({ to: "/analises", search: { aba: "indice" } });
+  }
 
   const lista = useMemo(() => indices ?? [], [indices]);
   const exercicios = useMemo(
@@ -433,7 +440,18 @@ function PaginaEstatisticas() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <SituacaoBadge linha={l} />
+                      <div className="space-y-1.5">
+                        <SituacaoBadge linha={l} />
+                        {(!l.base || !l.alvo) && (
+                          <AcaoApurar
+                            linha={l}
+                            anoBase={anoBase}
+                            anoAlvo={anoAlvo}
+                            tipo={tipo}
+                            onApurar={() => irApurar(l)}
+                          />
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       <Providencia linha={l} />
@@ -514,6 +532,24 @@ function PaginaEstatisticas() {
               <div className="space-y-6 px-4 pb-6">
                 <Composicao titulo={`Ano-base ${anoBase}`} registro={detalhe.base} />
                 <Composicao titulo={`Comparado ${anoAlvo}`} registro={detalhe.alvo} />
+                {(!detalhe.base || !detalhe.alvo) && (
+                  <div className="space-y-2 rounded-md border border-dashed p-3">
+                    <p className="text-sm text-muted-foreground">
+                      Para este município entrar no comparativo, apure o índice em Análises do
+                      VAF: suba o arquivo da SEFAZ, apure e clique em “Salvar apuração”.
+                    </p>
+                    <AcaoApurar
+                      linha={detalhe}
+                      anoBase={anoBase}
+                      anoAlvo={anoAlvo}
+                      tipo={tipo}
+                      onApurar={() => {
+                        setDetalhe(null);
+                        irApurar(detalhe);
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Providências</p>
                   <ul className="space-y-1 text-sm text-muted-foreground">
@@ -599,6 +635,42 @@ function Composicao({
           </div>
         ))}
       </dl>
+    </div>
+  );
+}
+
+function AcaoApurar({
+  linha,
+  anoBase,
+  anoAlvo,
+  tipo,
+  onApurar,
+}: {
+  linha: LinhaPanorama;
+  anoBase: number;
+  anoAlvo: number;
+  tipo: TipoAlvo;
+  onApurar: () => void;
+}) {
+  const falta = !linha.base
+    ? !linha.alvo
+      ? `faltam os índices de ${anoBase} e ${anoAlvo}`
+      : `falta o índice de ${anoBase}`
+    : `falta o índice de ${anoAlvo} (${tipo === "definitivo" ? "definitivo" : "provisório"})`;
+  return (
+    <div className="space-y-1">
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 text-xs"
+        onClick={(e) => {
+          e.stopPropagation();
+          onApurar();
+        }}
+      >
+        <Calculator className="mr-1.5 h-3.5 w-3.5" /> Fazer apuração
+      </Button>
+      <p className="text-[11px] text-muted-foreground">{falta}</p>
     </div>
   );
 }
