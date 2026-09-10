@@ -180,6 +180,9 @@ function ImpugnacaoPagina() {
     cidadeData: config?.cidade_data ?? null,
     signatarioNome: config?.signatario_nome ?? null,
     signatarioCargo: config?.signatario_cargo ?? null,
+    cnpj: cnpjPrefeitura.trim() || null,
+    consultorNome: consultorNome.trim() || null,
+    consultorCargo: "Consultor Tributário",
   };
 
   function alterar(indice: number, campo: keyof ItemImpugnacao, valor: string) {
