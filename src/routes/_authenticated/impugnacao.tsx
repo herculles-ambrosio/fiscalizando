@@ -106,6 +106,8 @@ function ImpugnacaoPagina() {
   const [indice, setIndice] = useState(
     busca.indice ? busca.indice.toLocaleString("pt-BR", { minimumFractionDigits: 7, maximumFractionDigits: 7 }) : "",
   );
+  const [cnpjPrefeitura, setCnpjPrefeitura] = useState("");
+  const [consultorNome, setConsultorNome] = useState("");
   const [observacao, setObservacao] = useState("");
   const [itens, setItens] = useState<ItemImpugnacao[]>([]);
   const [gerando, setGerando] = useState<"docx" | "xlsx" | "zip" | null>(null);
@@ -178,6 +180,9 @@ function ImpugnacaoPagina() {
     cidadeData: config?.cidade_data ?? null,
     signatarioNome: config?.signatario_nome ?? null,
     signatarioCargo: config?.signatario_cargo ?? null,
+    cnpj: cnpjPrefeitura.trim() || null,
+    consultorNome: consultorNome.trim() || null,
+    consultorCargo: "Consultor Tributário",
   };
 
   function alterar(indice: number, campo: keyof ItemImpugnacao, valor: string) {
@@ -306,6 +311,24 @@ function ImpugnacaoPagina() {
           <div className="space-y-1.5">
             <Label>Prefeitura</Label>
             <Input value={config?.nome_prefeitura ?? municipio?.nome ?? ""} readOnly />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="imp-cnpj">CNPJ da prefeitura</Label>
+            <Input
+              id="imp-cnpj"
+              placeholder="00.000.000/0001-00"
+              value={cnpjPrefeitura}
+              onChange={(e) => setCnpjPrefeitura(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="imp-consultor">Consultor responsável (opcional)</Label>
+            <Input
+              id="imp-consultor"
+              placeholder="Nome do consultor que assina junto"
+              value={consultorNome}
+              onChange={(e) => setConsultorNome(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="imp-nome">Identificação interna</Label>
