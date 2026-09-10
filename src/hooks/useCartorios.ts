@@ -10,6 +10,23 @@ import { chave, type LinhaDeclaracao, type LinhaEmolumento } from "@/lib/cartori
 
 export type Competencia = { ano: number; mes: number };
 
+/**
+ * Antes de gravar: confere que há prefeitura ativa e sessão válida. Sem isso o
+ * banco recusa a linha pela política de acesso e a carga para no meio.
+ */
+async function exigirContexto(municipioId: string | null): Promise<string> {
+  if (!municipioId) {
+    throw new Error(
+      "Nenhuma prefeitura ativa selecionada. Escolha a prefeitura antes de importar.",
+    );
+  }
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) {
+    throw new Error("Sua sessão expirou. Entre novamente e refaça a importação.");
+  }
+  return data.user.id;
+}
+
 export type CargaCartorio = {
   id: string;
   tipo: "emolumentos" | "declaracoes";
