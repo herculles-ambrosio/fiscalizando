@@ -9,7 +9,9 @@
  */
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Download, Search } from "lucide-react";
+import { ChevronDown, Download, HelpCircle, Search } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { descricaoIndicador } from "@/lib/icms/educacao/glossario";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
