@@ -52,6 +52,22 @@ type LinhaClassificada = {
   classe: Classificacao;
 };
 
+/** Explica, em linguagem simples, o que o indicador mede. */
+function Explicacao({ indicador }: { indicador: string }) {
+  const texto = descricaoIndicador(indicador);
+  if (!texto) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" aria-label={`O que é ${indicador}`} className="shrink-0">
+          <HelpCircle className="size-3.5 text-muted-foreground" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs text-xs leading-relaxed">{texto}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 function Tabela({ linhas }: { linhas: LinhaClassificada[] }) {
   return (
     <div className="overflow-auto">
