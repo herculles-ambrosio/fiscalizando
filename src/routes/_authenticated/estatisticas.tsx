@@ -639,6 +639,42 @@ function Composicao({
   );
 }
 
+function AcaoApurar({
+  linha,
+  anoBase,
+  anoAlvo,
+  tipo,
+  onApurar,
+}: {
+  linha: LinhaPanorama;
+  anoBase: number;
+  anoAlvo: number;
+  tipo: TipoAlvo;
+  onApurar: () => void;
+}) {
+  const falta = !linha.base
+    ? !linha.alvo
+      ? `faltam os índices de ${anoBase} e ${anoAlvo}`
+      : `falta o índice de ${anoBase}`
+    : `falta o índice de ${anoAlvo} (${tipo === "definitivo" ? "definitivo" : "provisório"})`;
+  return (
+    <div className="space-y-1">
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 text-xs"
+        onClick={(e) => {
+          e.stopPropagation();
+          onApurar();
+        }}
+      >
+        <Calculator className="mr-1.5 h-3.5 w-3.5" /> Fazer apuração
+      </Button>
+      <p className="text-[11px] text-muted-foreground">{falta}</p>
+    </div>
+  );
+}
+
 function SituacaoBadge({ linha }: { linha: LinhaPanorama }) {
   const rotulo = ROTULO_SITUACAO[linha.situacao];
   if (linha.situacao === "subiu")
