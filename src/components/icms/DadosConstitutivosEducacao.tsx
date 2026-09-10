@@ -252,6 +252,19 @@ export function DadosConstitutivosEducacao({
               )}
             </section>
 
+            {neutros.length ? (
+              <Collapsible defaultOpen>
+                <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-left text-sm">
+                  <ChevronDown className="size-4 text-muted-foreground" />
+                  <span className="font-semibold">Demais indicadores (dentro da média)</span>
+                  <Badge variant="secondary">{neutros.length}</Badge>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3">
+                  <Tabela linhas={neutros} />
+                </CollapsibleContent>
+              </Collapsible>
+            ) : null}
+
             {naoAplicaveis.length ? (
               <Collapsible>
                 <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-left text-sm">
