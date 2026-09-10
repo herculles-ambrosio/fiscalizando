@@ -102,7 +102,7 @@ export function construirDocPlano(
 ): Document {
   const situacoesReceita = contexto.situacoesReceita ?? null;
   const timbrado: ImagensTimbrado = imagens ?? { marca: null, marcaDagua: null };
-  const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const total = potencialConsolidado(acoes);
 
   const filhos: Array<Paragraph | Table> = [
     new Paragraph({

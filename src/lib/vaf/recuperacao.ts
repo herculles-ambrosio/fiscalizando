@@ -285,6 +285,33 @@ export function montarPlanoRecuperacao(
   });
 }
 
+/**
+ * Potencial mapeado sem dupla contagem: um mesmo contribuinte pode aparecer em
+ * várias ações (diligência, queda expressiva, omissão…), mas o dinheiro em jogo
+ * é o mesmo. Por isso cada inscrição entra uma única vez, pelo maior valor que
+ * lhe é atribuído, e as ações guarda-chuva (impugnação) ficam de fora.
+ */
+export function potencialConsolidado(acoes: AcaoRecuperacao[]): number {
+  const porContribuinte = new Map<string, number>();
+  let semContribuintes = 0;
+  for (const a of acoes) {
+    if (a.agregadora) continue;
+    if (!a.contribuintes.length) {
+      semContribuintes += a.valorRecuperavel;
+      continue;
+    }
+    const campo = a.campoValor ?? "diferenca";
+    for (const c of a.contribuintes) {
+      const chave = chaveIe(c.inscricao_estadual) || (c.cnpj ?? c.nome ?? "");
+      const valor = Math.abs(c[campo]);
+      porContribuinte.set(chave, Math.max(porContribuinte.get(chave) ?? 0, valor));
+    }
+  }
+  let total = semContribuintes;
+  for (const v of porContribuinte.values()) total += v;
+  return total;
+}
+
 function moeda(v: number): string {
   return v.toLocaleString("pt-BR", {
     style: "currency",
@@ -304,7 +331,7 @@ export function textoPlanoRecuperacao(
   acoes: AcaoRecuperacao[],
   situacoesReceita?: MapaReceitaPorIe | null,
 ): string {
-  const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const total = potencialConsolidado(acoes);
   const linhas = [
     "Plano de recuperação do VAF",
     `Potencial total mapeado: ${moeda(total)}`,

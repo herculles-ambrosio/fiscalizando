@@ -337,7 +337,7 @@ function blocosPlano(
   acoes: AcaoRecuperacao[],
   situacoesReceita?: MapaReceitaPorIe | null,
 ): Bloco[] {
-  const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const total = potencialConsolidado(acoes);
   const blocos: Bloco[] = [
     { tipo: "secao", texto: "Plano de recuperação" },
     { tipo: "texto", bold: true, texto: `Potencial total mapeado: ${moeda(total)}` },
