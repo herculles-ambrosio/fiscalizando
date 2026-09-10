@@ -1,4 +1,5 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, CheckSquare, ChevronLeft, ChevronRight, ChevronsUpDown, Loader2, Search, X } from "lucide-react";
 import {
@@ -47,7 +48,7 @@ import {
 } from "@/lib/vaf/apurar";
 import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 import { toast } from "sonner";
-import { Columns3, RefreshCw } from "lucide-react";
+import { Columns3, Gavel, RefreshCw } from "lucide-react";
 import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
 import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
@@ -185,6 +186,7 @@ const COLUNAS_SERVIDOR = new Set<ColunaOrdenavel>([
 ]);
 
 export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo?: string }) {
+  const navigate = useNavigate();
   const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
   const [cnae, setCnae] = useState<string>("TODOS");
   const [cadastral, setCadastral] = useState<SituacaoCadastral | "TODOS">("TODOS");
@@ -754,6 +756,33 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               selecionados={selecionados}
             />
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            title="Levar os contribuintes marcados para a impugnação do índice provisório"
+            onClick={() => {
+              if (!selecionados.length) {
+                toast.error("Marque os contribuintes que entram na impugnação.");
+                return;
+              }
+              void navigate({
+                to: "/impugnacao",
+                search: {
+                  carga: cargaId,
+                  ids: selecionados.join(","),
+                  ...(carga?.exercicio ? { exercicio: carga.exercicio } : {}),
+                },
+              });
+            }}
+          >
+            <Gavel className="mr-2 h-4 w-4" />
+            Montar impugnação
+            {selecionados.length > 0 && (
+              <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+                {selecionados.length}
+              </span>
+            )}
+          </Button>
         </div>
       </div>
 

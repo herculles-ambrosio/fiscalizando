@@ -5,6 +5,7 @@ import {
   BookOpen,
   CalendarClock,
   FileUp,
+  Gavel,
   History,
   FileSignature,
   ListChecks,
@@ -48,6 +49,7 @@ const NAV_ANALISE = [
   { to: "/analises", rotulo: "Análises do VAF", icone: TrendingUp },
   { to: "/estatisticas", rotulo: "Estatísticas", icone: PieChart },
   { to: "/oficios", rotulo: "Ofícios", icone: FileSignature },
+  { to: "/impugnacao", rotulo: "Impugnação", icone: Gavel },
 ];
 
 const NAV_ADMIN = [{ to: "/configuracoes", rotulo: "Configurações", icone: Settings }];
