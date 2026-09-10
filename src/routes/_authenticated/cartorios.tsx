@@ -527,14 +527,21 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
     origem: string,
   ) {
     if (!municipioConfere(linhas)) return;
-    const total = await importarEmol.mutateAsync({
+    const r = await importarEmol.mutateAsync({
       linhas,
       competencia: comp,
       arquivoNome: origem,
     });
     setMes(String(comp.mes));
     setAno(String(comp.ano));
-    toast.success(`${total} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`);
+    toast.success(
+      `${r.gravadas} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`,
+    );
+    if (r.ignoradas) {
+      toast.warning(
+        `${r.ignoradas} cartório(s) não puderam ser gravados e ficaram de fora desta competência.`,
+      );
+    }
   }
 
   async function enviarEmolumentos(arquivo: File) {
