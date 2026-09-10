@@ -440,7 +440,18 @@ function PaginaEstatisticas() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <SituacaoBadge linha={l} />
+                      <div className="space-y-1.5">
+                        <SituacaoBadge linha={l} />
+                        {(!l.base || !l.alvo) && (
+                          <AcaoApurar
+                            linha={l}
+                            anoBase={anoBase}
+                            anoAlvo={anoAlvo}
+                            tipo={tipo}
+                            onApurar={() => irApurar(l)}
+                          />
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       <Providencia linha={l} />
@@ -521,6 +532,24 @@ function PaginaEstatisticas() {
               <div className="space-y-6 px-4 pb-6">
                 <Composicao titulo={`Ano-base ${anoBase}`} registro={detalhe.base} />
                 <Composicao titulo={`Comparado ${anoAlvo}`} registro={detalhe.alvo} />
+                {(!detalhe.base || !detalhe.alvo) && (
+                  <div className="space-y-2 rounded-md border border-dashed p-3">
+                    <p className="text-sm text-muted-foreground">
+                      Para este município entrar no comparativo, apure o índice em Análises do
+                      VAF: suba o arquivo da SEFAZ, apure e clique em “Salvar apuração”.
+                    </p>
+                    <AcaoApurar
+                      linha={detalhe}
+                      anoBase={anoBase}
+                      anoAlvo={anoAlvo}
+                      tipo={tipo}
+                      onApurar={() => {
+                        setDetalhe(null);
+                        irApurar(detalhe);
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Providências</p>
                   <ul className="space-y-1 text-sm text-muted-foreground">
