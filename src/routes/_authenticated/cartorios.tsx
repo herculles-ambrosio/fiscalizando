@@ -73,6 +73,7 @@ import { baixarCsv, montarCsv } from "@/lib/csv";
 import CargasView from "@/components/cartorios/CargasView";
 import DocumentosView from "@/components/cartorios/DocumentosView";
 import ModelosCartorioView from "@/components/cartorios/ModelosCartorioView";
+import ResumoMunicipiosView from "@/components/cartorios/ResumoMunicipiosView";
 
 
 export const Route = createFileRoute("/_authenticated/cartorios")({
@@ -179,6 +180,7 @@ function FiscalizaCartorio() {
       <Tabs defaultValue={competencias?.length ? "fiscalizacao" : "importar"}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="fiscalizacao">Fiscalização</TabsTrigger>
+          <TabsTrigger value="resumo">Resumo por município</TabsTrigger>
           <TabsTrigger value="importar">Carga de dados</TabsTrigger>
           <TabsTrigger value="cargas">Meses carregados</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
@@ -324,6 +326,10 @@ function FiscalizaCartorio() {
               </Card>
             </>
           )}
+        </TabsContent>
+
+        <TabsContent value="resumo" className="pt-4">
+          <ResumoMunicipiosView />
         </TabsContent>
 
         <TabsContent value="importar" className="pt-4">
