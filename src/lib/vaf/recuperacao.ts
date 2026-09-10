@@ -98,6 +98,7 @@ export function montarPlanoRecuperacao(
     const valor = soma(omissos, "vafBase");
     acoes.push({
       chave: "omissos",
+      campoValor: "vafBase",
       titulo: "Notificar contribuintes que deixaram de declarar",
       motivo: `${omissos.length} contribuinte(s) que geravam VAF no arquivo base não aparecem no arquivo comparado, retirando ${moeda(valor)} da base do município.`,
       comoFazer:
@@ -120,6 +121,7 @@ export function montarPlanoRecuperacao(
     const valor = soma(zerados, "vafBase");
     acoes.push({
       chave: "zerados",
+      campoValor: "vafBase",
       titulo: "Ofício de retificação para declarações zeradas",
       motivo: `${zerados.length} contribuinte(s) declararam VAF zerado tendo apurado ${moeda(valor)} no arquivo base — normalmente erro de preenchimento ou entrega sem movimento indevida.`,
       comoFazer:
@@ -149,6 +151,7 @@ export function montarPlanoRecuperacao(
     const valor = soma(discrepantes, "diferenca");
     acoes.push({
       chave: "discrepantes",
+      campoValor: "diferenca",
       titulo: "Notificar quedas expressivas para justificativa",
       motivo: `${discrepantes.length} contribuinte(s) reduziram o VAF em mais de ${LIMITES.quedaPct}% (queda somada de ${moeda(valor)}), o que pode indicar erro de escrituração, transferência de faturamento ou mudança de estabelecimento.`,
       comoFazer:
@@ -172,6 +175,7 @@ export function montarPlanoRecuperacao(
     const valor = soma(cadastro, "vafBase");
     acoes.push({
       chave: "cadastro",
+      campoValor: "vafBase",
       titulo: "Conferência cadastral (endereço, CNAE e município do estabelecimento)",
       motivo: `${cadastro.length} contribuinte(s) estão sem nome e/ou CNPJ completos nos arquivos, o que costuma acompanhar cadastro estadual desatualizado — endereço em outro município leva o VAF para o lugar errado.`,
       comoFazer:
@@ -206,6 +210,7 @@ export function montarPlanoRecuperacao(
   if (d.diferenca < 0) {
     acoes.push({
       chave: "impugnacao",
+      agregadora: true,
       titulo: "Preparar impugnação do índice provisório",
       motivo: `A projeção aponta perda de ${moeda(Math.abs(d.diferenca))} de valor adicionado${exercicio ? ` no exercício ${exercicio}` : ""}. Se o índice publicado não refletir as retificações obtidas, cabe impugnação.`,
       comoFazer:
@@ -229,6 +234,7 @@ export function montarPlanoRecuperacao(
     if (top.length)
     acoes.push({
       chave: "diligencia",
+      campoValor: "diferenca",
       titulo: "Diligência in loco nos maiores impactos",
       motivo: `As ${top.length} maiores quedas somam ${moeda(valor)} — concentração alta o bastante para justificar contato direto.`,
       comoFazer:
