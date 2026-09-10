@@ -622,7 +622,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         .select("id")
         .eq("carga_id", cargaId);
 
-      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (filtros.length) q = q.overlaps("situacoes", filtros);
       if (cnae !== "TODOS") q = q.eq("cnae", cnae);
       if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
       if (termo)
@@ -630,12 +630,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           `nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`,
         );
 
-      const { data, error } = await q.limit(10000);
+      const { data, error } = await q.limit(50000);
       if (error) throw error;
       const ids = (data ?? []).map((d) => d.id);
       setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+      toast.success(`${ids.length} contribuinte(s) selecionado(s) — todos os filtros atuais.`);
     } catch (err) {
       console.error(err);
+      toast.error("Não foi possível selecionar todos os contribuintes.");
     } finally {
       setSelecionandoTodos(false);
     }
