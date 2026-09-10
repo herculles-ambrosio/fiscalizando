@@ -204,7 +204,7 @@ function ImpugnacaoPagina() {
     );
   }
 
-  async function baixar(tipo: "docx" | "xlsx" | "zip") {
+  async function baixar(tipo: "docx" | "xlsx" | "anexos" | "zip") {
     if (!itens.length) {
       toast.error("Inclua ao menos um contribuinte na impugnação.");
       return;
@@ -214,12 +214,21 @@ function ImpugnacaoPagina() {
       const base = nomeBaseArquivo(dados, municipio?.nome ?? null);
       const planilha = () => planilhaImpugnacao(dados, municipio?.nome ?? null);
       if (tipo === "xlsx") {
-        baixarArquivo(planilha(), `${base}_contribuintes.xlsx`);
+        baixarArquivo(planilha(), `${base}_anexo-I_contribuintes.xlsx`);
+      } else if (tipo === "anexos") {
+        const { gerarAnexosImpugnacao } = await import("@/lib/vaf/impugnacaoAnexos");
+        const { anexoII, anexoIII } = await gerarAnexosImpugnacao(dados, ctx);
+        baixarArquivo(anexoII, `${base}_anexo-II_demonstrativo.docx`);
+        baixarArquivo(anexoIII, `${base}_anexo-III_fichas.docx`);
       } else {
         const { gerarDocxImpugnacao } = await import("@/lib/vaf/impugnacaoDocx");
         const doc = await gerarDocxImpugnacao(dados, ctx);
         if (tipo === "docx") baixarArquivo(doc, `${base}.docx`);
-        else baixarArquivo(await zipImpugnacao(doc, planilha(), base), `${base}.zip`);
+        else {
+          const { gerarAnexosImpugnacao } = await import("@/lib/vaf/impugnacaoAnexos");
+          const anexos = await gerarAnexosImpugnacao(dados, ctx);
+          baixarArquivo(await zipImpugnacao(doc, planilha(), base, anexos), `${base}.zip`);
+        }
       }
       toast.success("Arquivo gerado.");
     } catch (erro) {
@@ -230,6 +239,7 @@ function ImpugnacaoPagina() {
       setGerando(null);
     }
   }
+
 
   function gravar() {
     if (!municipioId) {
