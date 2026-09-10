@@ -29,6 +29,13 @@ export type AcaoRecuperacao = {
   ignorados: MovimentoDeclarante[];
   /** base legal / fonte da prática */
   fundamento?: string;
+  /** campo do contribuinte que compõe o valor da ação (para não somar duas vezes) */
+  campoValor?: "vafBase" | "diferenca";
+  /**
+   * Ação guarda-chuva: o valor dela já é a soma do que as demais ações tratam
+   * (ex.: impugnação do índice). Fica fora do potencial consolidado.
+   */
+  agregadora?: boolean;
 };
 
 /**
@@ -91,6 +98,7 @@ export function montarPlanoRecuperacao(
     const valor = soma(omissos, "vafBase");
     acoes.push({
       chave: "omissos",
+      campoValor: "vafBase",
       titulo: "Notificar contribuintes que deixaram de declarar",
       motivo: `${omissos.length} contribuinte(s) que geravam VAF no arquivo base não aparecem no arquivo comparado, retirando ${moeda(valor)} da base do município.`,
       comoFazer:
@@ -113,6 +121,7 @@ export function montarPlanoRecuperacao(
     const valor = soma(zerados, "vafBase");
     acoes.push({
       chave: "zerados",
+      campoValor: "vafBase",
       titulo: "Ofício de retificação para declarações zeradas",
       motivo: `${zerados.length} contribuinte(s) declararam VAF zerado tendo apurado ${moeda(valor)} no arquivo base — normalmente erro de preenchimento ou entrega sem movimento indevida.`,
       comoFazer:
@@ -142,6 +151,7 @@ export function montarPlanoRecuperacao(
     const valor = soma(discrepantes, "diferenca");
     acoes.push({
       chave: "discrepantes",
+      campoValor: "diferenca",
       titulo: "Notificar quedas expressivas para justificativa",
       motivo: `${discrepantes.length} contribuinte(s) reduziram o VAF em mais de ${LIMITES.quedaPct}% (queda somada de ${moeda(valor)}), o que pode indicar erro de escrituração, transferência de faturamento ou mudança de estabelecimento.`,
       comoFazer:
@@ -165,6 +175,7 @@ export function montarPlanoRecuperacao(
     const valor = soma(cadastro, "vafBase");
     acoes.push({
       chave: "cadastro",
+      campoValor: "vafBase",
       titulo: "Conferência cadastral (endereço, CNAE e município do estabelecimento)",
       motivo: `${cadastro.length} contribuinte(s) estão sem nome e/ou CNPJ completos nos arquivos, o que costuma acompanhar cadastro estadual desatualizado — endereço em outro município leva o VAF para o lugar errado.`,
       comoFazer:
@@ -199,6 +210,7 @@ export function montarPlanoRecuperacao(
   if (d.diferenca < 0) {
     acoes.push({
       chave: "impugnacao",
+      agregadora: true,
       titulo: "Preparar impugnação do índice provisório",
       motivo: `A projeção aponta perda de ${moeda(Math.abs(d.diferenca))} de valor adicionado${exercicio ? ` no exercício ${exercicio}` : ""}. Se o índice publicado não refletir as retificações obtidas, cabe impugnação.`,
       comoFazer:
@@ -222,6 +234,7 @@ export function montarPlanoRecuperacao(
     if (top.length)
     acoes.push({
       chave: "diligencia",
+      campoValor: "diferenca",
       titulo: "Diligência in loco nos maiores impactos",
       motivo: `As ${top.length} maiores quedas somam ${moeda(valor)} — concentração alta o bastante para justificar contato direto.`,
       comoFazer:
@@ -272,6 +285,33 @@ export function montarPlanoRecuperacao(
   });
 }
 
+/**
+ * Potencial mapeado sem dupla contagem: um mesmo contribuinte pode aparecer em
+ * várias ações (diligência, queda expressiva, omissão…), mas o dinheiro em jogo
+ * é o mesmo. Por isso cada inscrição entra uma única vez, pelo maior valor que
+ * lhe é atribuído, e as ações guarda-chuva (impugnação) ficam de fora.
+ */
+export function potencialConsolidado(acoes: AcaoRecuperacao[]): number {
+  const porContribuinte = new Map<string, number>();
+  let semContribuintes = 0;
+  for (const a of acoes) {
+    if (a.agregadora) continue;
+    if (!a.contribuintes.length) {
+      semContribuintes += a.valorRecuperavel;
+      continue;
+    }
+    const campo = a.campoValor ?? "diferenca";
+    for (const c of a.contribuintes) {
+      const chave = chaveIe(c.inscricao_estadual) || (c.cnpj ?? c.nome ?? "");
+      const valor = Math.abs(c[campo]);
+      porContribuinte.set(chave, Math.max(porContribuinte.get(chave) ?? 0, valor));
+    }
+  }
+  let total = semContribuintes;
+  for (const v of porContribuinte.values()) total += v;
+  return total;
+}
+
 function moeda(v: number): string {
   return v.toLocaleString("pt-BR", {
     style: "currency",
@@ -291,7 +331,7 @@ export function textoPlanoRecuperacao(
   acoes: AcaoRecuperacao[],
   situacoesReceita?: MapaReceitaPorIe | null,
 ): string {
-  const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const total = potencialConsolidado(acoes);
   const linhas = [
     "Plano de recuperação do VAF",
     `Potencial total mapeado: ${moeda(total)}`,

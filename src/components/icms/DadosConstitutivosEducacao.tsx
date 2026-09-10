@@ -9,7 +9,14 @@
  */
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Download, Search } from "lucide-react";
+import { ChevronDown, Download, HelpCircle, Search } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { descricaoIndicador } from "@/lib/icms/educacao/glossario";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +57,24 @@ type LinhaClassificada = {
   classe: Classificacao;
 };
 
+/** Explica, em linguagem simples, o que o indicador mede. */
+function Explicacao({ indicador }: { indicador: string }) {
+  const texto = descricaoIndicador(indicador);
+  if (!texto) return null;
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button type="button" aria-label={`O que é ${indicador}`} className="shrink-0">
+            <HelpCircle className="size-3.5 text-muted-foreground" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-xs leading-relaxed">{texto}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 function Tabela({ linhas }: { linhas: LinhaClassificada[] }) {
   return (
     <div className="overflow-auto">
@@ -65,7 +90,12 @@ function Tabela({ linhas }: { linhas: LinhaClassificada[] }) {
         <tbody>
           {linhas.map((l) => (
             <tr key={l.coluna_origem} className="border-b last:border-0">
-              <td className="py-2 pr-3">{l.coluna_origem}</td>
+              <td className="py-2 pr-3">
+                <span className="inline-flex items-center gap-1">
+                  {l.coluna_origem}
+                  <Explicacao indicador={l.indicador} />
+                </span>
+              </td>
               <td className="py-2 text-right">
                 {l.valor_num == null ? (l.valor_texto ?? "—") : numeroBr(l.valor_num)}
               </td>

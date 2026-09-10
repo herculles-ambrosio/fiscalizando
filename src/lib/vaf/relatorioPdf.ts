@@ -4,7 +4,7 @@ import marcaAsset from "@/assets/timbrado-logo.png.asset.json";
 import marcaDaguaAsset from "@/assets/timbrado-dagua.png.asset.json";
 import { CONTATO_HTECH } from "@/lib/reportTimbrado";
 import type { DiagnosticoEvolucao, FatorVariacao } from "./diagnostico";
-import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
+import { ROTULO_PRIORIDADE, potencialConsolidado, type AcaoRecuperacao } from "./recuperacao";
 
 /**
  * Geração de relatórios em PDF com o papel timbrado H-Tech Minas
@@ -337,7 +337,7 @@ function blocosPlano(
   acoes: AcaoRecuperacao[],
   situacoesReceita?: MapaReceitaPorIe | null,
 ): Bloco[] {
-  const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const total = potencialConsolidado(acoes);
   const blocos: Bloco[] = [
     { tipo: "secao", texto: "Plano de recuperação" },
     { tipo: "texto", bold: true, texto: `Potencial total mapeado: ${moeda(total)}` },

@@ -20,7 +20,7 @@ import {
   rodapeTimbrado,
   type ImagensTimbrado,
 } from "@/lib/reportTimbrado";
-import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
+import { ROTULO_PRIORIDADE, potencialConsolidado, type AcaoRecuperacao } from "./recuperacao";
 
 const FONTE = "Arial";
 const LARGURA = 9026; // A4 com margens de 1"
@@ -102,7 +102,7 @@ export function construirDocPlano(
 ): Document {
   const situacoesReceita = contexto.situacoesReceita ?? null;
   const timbrado: ImagensTimbrado = imagens ?? { marca: null, marcaDagua: null };
-  const total = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const total = potencialConsolidado(acoes);
 
   const filhos: Array<Paragraph | Table> = [
     new Paragraph({
