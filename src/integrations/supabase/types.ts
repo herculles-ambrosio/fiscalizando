@@ -1604,6 +1604,75 @@ export type Database = {
           },
         ]
       }
+      impugnacoes: {
+        Row: {
+          ano_base: number | null
+          atualizado_em: string
+          carga_id: string | null
+          criado_em: string
+          criado_por: string | null
+          exercicio: number
+          id: string
+          indice_publicado: number | null
+          itens: Json
+          municipio_id: string
+          nome: string
+          observacao: string | null
+          resolucao: string
+          resolucao_data: string | null
+          status: string
+        }
+        Insert: {
+          ano_base?: number | null
+          atualizado_em?: string
+          carga_id?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          exercicio: number
+          id?: string
+          indice_publicado?: number | null
+          itens?: Json
+          municipio_id: string
+          nome: string
+          observacao?: string | null
+          resolucao?: string
+          resolucao_data?: string | null
+          status?: string
+        }
+        Update: {
+          ano_base?: number | null
+          atualizado_em?: string
+          carga_id?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          exercicio?: number
+          id?: string
+          indice_publicado?: number | null
+          itens?: Json
+          municipio_id?: string
+          nome?: string
+          observacao?: string | null
+          resolucao?: string
+          resolucao_data?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impugnacoes_carga_id_fkey"
+            columns: ["carga_id"]
+            isOneToOne: false
+            referencedRelation: "cargas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impugnacoes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       indices_apurados: {
         Row: {
           acerto_credito: number
