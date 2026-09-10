@@ -135,3 +135,16 @@ export function descricaoIndicador(indicador: string): string | null {
   if (!texto) return null;
   return etapa ? `${texto} Etapa medida: ${etapa}.` : texto;
 }
+
+/** Título legível a partir da chave normalizada (ex.: taxa_abandono → Taxa abandono). */
+function titulo(chave: string): string {
+  const t = chave.replace(/_/g, " ").trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+export type VerbeteEducacao = { chave: string; titulo: string; descricao: string };
+
+/** Todos os indicadores explicados, para a tela de glossário. */
+export const GLOSSARIO_EDUCACAO: VerbeteEducacao[] = Object.entries(DESCRICOES)
+  .map(([chave, descricao]) => ({ chave, titulo: titulo(chave), descricao }))
+  .sort((a, b) => a.titulo.localeCompare(b.titulo, "pt-BR"));

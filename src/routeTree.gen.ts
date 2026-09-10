@@ -38,6 +38,7 @@ import { Route as AuthenticatedIcmsComparativoRouteImport } from './routes/_auth
 import { Route as AuthenticatedIcmsCriteriosRouteImport } from './routes/_authenticated/icms/criterios'
 import { Route as AuthenticatedIcmsEsportesRouteImport } from './routes/_authenticated/icms/esportes'
 import { Route as AuthenticatedIcmsFjpRouteImport } from './routes/_authenticated/icms/fjp'
+import { Route as AuthenticatedIcmsGlossarioRouteImport } from './routes/_authenticated/icms/glossario'
 import { Route as AuthenticatedIcmsImportacoesRouteImport } from './routes/_authenticated/icms/importacoes'
 import { Route as AuthenticatedIcmsPlanoRouteImport } from './routes/_authenticated/icms/plano'
 import { Route as AuthenticatedIcmsPrazosRouteImport } from './routes/_authenticated/icms/prazos'
@@ -202,6 +203,12 @@ const AuthenticatedIcmsFjpRoute = AuthenticatedIcmsFjpRouteImport.update({
   path: '/fjp',
   getParentRoute: () => AuthenticatedIcmsRouteRoute,
 } as any)
+const AuthenticatedIcmsGlossarioRoute =
+  AuthenticatedIcmsGlossarioRouteImport.update({
+    id: '/glossario',
+    path: '/glossario',
+    getParentRoute: () => AuthenticatedIcmsRouteRoute,
+  } as any)
 const AuthenticatedIcmsImportacoesRoute =
   AuthenticatedIcmsImportacoesRouteImport.update({
     id: '/importacoes',
@@ -265,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
   '/icms/esportes': typeof AuthenticatedIcmsEsportesRoute
   '/icms/fjp': typeof AuthenticatedIcmsFjpRoute
+  '/icms/glossario': typeof AuthenticatedIcmsGlossarioRoute
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
@@ -300,6 +308,7 @@ export interface FileRoutesByTo {
   '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
   '/icms/esportes': typeof AuthenticatedIcmsEsportesRoute
   '/icms/fjp': typeof AuthenticatedIcmsFjpRoute
+  '/icms/glossario': typeof AuthenticatedIcmsGlossarioRoute
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
@@ -338,6 +347,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
   '/_authenticated/icms/esportes': typeof AuthenticatedIcmsEsportesRoute
   '/_authenticated/icms/fjp': typeof AuthenticatedIcmsFjpRoute
+  '/_authenticated/icms/glossario': typeof AuthenticatedIcmsGlossarioRoute
   '/_authenticated/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/_authenticated/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/_authenticated/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/icms/criterios'
     | '/icms/esportes'
     | '/icms/fjp'
+    | '/icms/glossario'
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms/prazos'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/icms/criterios'
     | '/icms/esportes'
     | '/icms/fjp'
+    | '/icms/glossario'
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms/prazos'
@@ -448,6 +460,7 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/criterios'
     | '/_authenticated/icms/esportes'
     | '/_authenticated/icms/fjp'
+    | '/_authenticated/icms/glossario'
     | '/_authenticated/icms/importacoes'
     | '/_authenticated/icms/plano'
     | '/_authenticated/icms/prazos'
@@ -668,6 +681,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIcmsFjpRouteImport
       parentRoute: typeof AuthenticatedIcmsRouteRoute
     }
+    '/_authenticated/icms/glossario': {
+      id: '/_authenticated/icms/glossario'
+      path: '/glossario'
+      fullPath: '/icms/glossario'
+      preLoaderRoute: typeof AuthenticatedIcmsGlossarioRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
     '/_authenticated/icms/importacoes': {
       id: '/_authenticated/icms/importacoes'
       path: '/importacoes'
@@ -740,6 +760,7 @@ interface AuthenticatedIcmsRouteRouteChildren {
   AuthenticatedIcmsCriteriosRoute: typeof AuthenticatedIcmsCriteriosRoute
   AuthenticatedIcmsEsportesRoute: typeof AuthenticatedIcmsEsportesRoute
   AuthenticatedIcmsFjpRoute: typeof AuthenticatedIcmsFjpRoute
+  AuthenticatedIcmsGlossarioRoute: typeof AuthenticatedIcmsGlossarioRoute
   AuthenticatedIcmsImportacoesRoute: typeof AuthenticatedIcmsImportacoesRoute
   AuthenticatedIcmsPlanoRoute: typeof AuthenticatedIcmsPlanoRoute
   AuthenticatedIcmsPrazosRoute: typeof AuthenticatedIcmsPrazosRoute
@@ -755,6 +776,7 @@ const AuthenticatedIcmsRouteRouteChildren: AuthenticatedIcmsRouteRouteChildren =
     AuthenticatedIcmsCriteriosRoute: AuthenticatedIcmsCriteriosRoute,
     AuthenticatedIcmsEsportesRoute: AuthenticatedIcmsEsportesRoute,
     AuthenticatedIcmsFjpRoute: AuthenticatedIcmsFjpRoute,
+    AuthenticatedIcmsGlossarioRoute: AuthenticatedIcmsGlossarioRoute,
     AuthenticatedIcmsImportacoesRoute: AuthenticatedIcmsImportacoesRoute,
     AuthenticatedIcmsPlanoRoute: AuthenticatedIcmsPlanoRoute,
     AuthenticatedIcmsPrazosRoute: AuthenticatedIcmsPrazosRoute,

@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   Building2,
+  BookOpen,
   CalendarClock,
   FileUp,
   History,
@@ -73,6 +74,7 @@ const NAV_ICMS_ANALISE = [
   { to: "/icms/repasse-educacao", rotulo: "Repasse da Educação", icone: Scale },
   { to: "/icms/plano", rotulo: "Plano de melhoria", icone: ListChecks },
   { to: "/icms/importacoes", rotulo: "Relatórios importados", icone: FileUp },
+  { to: "/icms/glossario", rotulo: "Glossário", icone: BookOpen },
 ];
 
 
