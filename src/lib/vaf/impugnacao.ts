@@ -131,14 +131,20 @@ export function baixarArquivo(blob: Blob, nome: string): void {
   URL.revokeObjectURL(url);
 }
 
-/** ZIP com a petição e a planilha de contribuintes. */
+/** ZIP com a petição, a planilha (Anexo I) e os anexos II e III. */
 export async function zipImpugnacao(
   documento: Blob,
   planilha: Blob,
   base: string,
+  anexos?: { anexoII: Blob; anexoIII: Blob } | null,
 ): Promise<Blob> {
   const zip = new JSZip();
   zip.file(`${base}.docx`, documento);
-  zip.file(`${base}_contribuintes.xlsx`, planilha);
+  zip.file(`${base}_anexo-I_contribuintes.xlsx`, planilha);
+  if (anexos) {
+    zip.file(`${base}_anexo-II_demonstrativo.docx`, anexos.anexoII);
+    zip.file(`${base}_anexo-III_fichas.docx`, anexos.anexoIII);
+  }
   return zip.generateAsync({ type: "blob" });
 }
+

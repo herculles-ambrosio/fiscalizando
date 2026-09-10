@@ -330,16 +330,17 @@ export function construirDocImpugnacao(
   );
   filhos.push(
     paragrafo(
-      "Anexo II – Demonstrativos e relatórios utilizados no levantamento das divergências, se disponíveis;",
+      `Anexo II – Demonstrativo do levantamento e da metodologia utilizada na apuração das divergências – ano-base ${anoBase} (arquivo .docx);`,
       { justificado: true, after: 40 },
     ),
   );
   filhos.push(
-    paragrafo("Anexo III – Outros documentos comprobatórios pertinentes às situações individualizadas.", {
-      justificado: true,
-      after: 120,
-    }),
+    paragrafo(
+      `Anexo III – Fichas individuais dos ${dados.itens.length} contribuinte(s) contestado(s), com a divergência apontada, os valores envolvidos e espaço para juntada dos documentos comprobatórios (arquivo .docx).`,
+      { justificado: true, after: 120 },
+    ),
   );
+
 
   return new Document({
     styles: { default: { document: { run: { font: FONTE, size: 20 } } } },
