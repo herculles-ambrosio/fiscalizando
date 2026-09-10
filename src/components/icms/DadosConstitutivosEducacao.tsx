@@ -143,6 +143,7 @@ export function DadosConstitutivosEducacao({
   const atencao = linhas.filter((l) => l.classe === "atencao");
   const positivos = linhas.filter((l) => l.classe === "positivo");
   const naoAplicaveis = linhas.filter((l) => l.classe === "nao_aplicavel");
+  const neutros = linhas.filter((l) => l.classe === "neutro");
   const atendidas = data?.atendidas ?? { anosIniciais: true, anosFinais: true };
   const etapasFora = [
     !atendidas.anosFinais ? "Anos Finais" : null,
@@ -250,6 +251,19 @@ export function DadosConstitutivosEducacao({
                 <p className="text-sm text-muted-foreground">Nenhum destaque positivo.</p>
               )}
             </section>
+
+            {neutros.length ? (
+              <Collapsible defaultOpen>
+                <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-left text-sm">
+                  <ChevronDown className="size-4 text-muted-foreground" />
+                  <span className="font-semibold">Demais indicadores (dentro da média)</span>
+                  <Badge variant="secondary">{neutros.length}</Badge>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3">
+                  <Tabela linhas={neutros} />
+                </CollapsibleContent>
+              </Collapsible>
+            ) : null}
 
             {naoAplicaveis.length ? (
               <Collapsible>

@@ -10,6 +10,23 @@ import { chave, type LinhaDeclaracao, type LinhaEmolumento } from "@/lib/cartori
 
 export type Competencia = { ano: number; mes: number };
 
+/**
+ * Antes de gravar: confere que há prefeitura ativa e sessão válida. Sem isso o
+ * banco recusa a linha pela política de acesso e a carga para no meio.
+ */
+async function exigirContexto(municipioId: string | null): Promise<string> {
+  if (!municipioId) {
+    throw new Error(
+      "Nenhuma prefeitura ativa selecionada. Escolha a prefeitura antes de importar.",
+    );
+  }
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) {
+    throw new Error("Sua sessão expirou. Entre novamente e refaça a importação.");
+  }
+  return data.user.id;
+}
+
 export type CargaCartorio = {
   id: string;
   tipo: "emolumentos" | "declaracoes";
@@ -241,7 +258,7 @@ export function useImportarEmolumentos() {
       arquivoNome: string;
       fonte?: string;
     }) => {
-      const { data: sessao } = await supabase.auth.getUser();
+      const usuarioId = await exigirContexto(municipioId);
       const registros = dados.linhas.map((l) => ({
         municipio_id: municipioId!,
         competencia_ano: l.ano ?? dados.competencia.ano,
@@ -258,7 +275,7 @@ export function useImportarEmolumentos() {
         outras_receitas: l.outrasReceitas,
         fonte: dados.fonte ?? "arquivo",
         arquivo_nome: dados.arquivoNome,
-        criado_por: sessao.user?.id ?? null,
+        criado_por: usuarioId,
       }));
       for (let i = 0; i < registros.length; i += 500) {
         const { error } = await supabase
@@ -295,7 +312,7 @@ export function useImportarEmolumentos() {
         arquivoNome: dados.arquivoNome,
         origem: dados.fonte ?? "arquivo",
         linhas: registros.length,
-        criadoPor: sessao.user?.id ?? null,
+        criadoPor: usuarioId,
       });
       return registros.length;
     },
@@ -318,7 +335,7 @@ export function useImportarDeclaracoes() {
       competencia: Competencia;
       arquivoNome: string;
     }) => {
-      const { data: sessao } = await supabase.auth.getUser();
+      const usuarioId = await exigirContexto(municipioId);
       const registros = dados.linhas.map((l) => ({
         municipio_id: municipioId!,
         competencia_ano: l.ano ?? dados.competencia.ano,
@@ -331,7 +348,7 @@ export function useImportarDeclaracoes() {
         iss_pago: l.issPago,
         origem: "planilha",
         arquivo_nome: dados.arquivoNome,
-        criado_por: sessao.user?.id ?? null,
+        criado_por: usuarioId,
       }));
       for (let i = 0; i < registros.length; i += 500) {
         const { error } = await supabase
@@ -351,7 +368,7 @@ export function useImportarDeclaracoes() {
         arquivoNome: dados.arquivoNome,
         origem: "planilha",
         linhas: registros.length,
-        criadoPor: sessao.user?.id ?? null,
+        criadoPor: usuarioId,
       });
       return registros.length;
     },
@@ -378,7 +395,7 @@ export function useSalvarDeclaracao() {
       issPago: number;
       observacao: string | null;
     }) => {
-      const { data: sessao } = await supabase.auth.getUser();
+      const usuarioId = await exigirContexto(municipioId);
       const { error } = await supabase.from("cartorio_declaracoes").upsert(
         {
           municipio_id: municipioId!,
@@ -392,7 +409,7 @@ export function useSalvarDeclaracao() {
           iss_pago: dados.issPago,
           origem: "manual",
           observacao: dados.observacao,
-          criado_por: sessao.user?.id ?? null,
+          criado_por: usuarioId,
         },
         { onConflict: "municipio_id,competencia_ano,competencia_mes,cns,tipo_servico" },
       );
