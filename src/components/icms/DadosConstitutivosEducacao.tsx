@@ -10,7 +10,12 @@
 
 import { useMemo, useState } from "react";
 import { ChevronDown, Download, HelpCircle, Search } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { descricaoIndicador } from "@/lib/icms/educacao/glossario";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,14 +62,16 @@ function Explicacao({ indicador }: { indicador: string }) {
   const texto = descricaoIndicador(indicador);
   if (!texto) return null;
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button type="button" aria-label={`O que é ${indicador}`} className="shrink-0">
-          <HelpCircle className="size-3.5 text-muted-foreground" />
-        </button>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs text-xs leading-relaxed">{texto}</TooltipContent>
-    </Tooltip>
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button type="button" aria-label={`O que é ${indicador}`} className="shrink-0">
+            <HelpCircle className="size-3.5 text-muted-foreground" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-xs leading-relaxed">{texto}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
