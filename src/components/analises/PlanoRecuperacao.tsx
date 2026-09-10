@@ -128,6 +128,8 @@ type Props = {
   cargaId?: string | null;
   /** situação cadastral por IE — cancelados/baixados/bloqueados saem das ações */
   situacoesCadastrais?: MapaSituacoesCadastrais | null;
+  /** índice provisório apurado no arquivo atual, levado para a impugnação */
+  indiceProvisorio?: number | null;
 };
 
 export type SalvarStatus = (entradas: EntradaStatus | EntradaStatus[]) => void;
@@ -140,6 +142,7 @@ export default function PlanoRecuperacao({
   referencia,
   cargaId,
   situacoesCadastrais,
+  indiceProvisorio,
 }: Props) {
   const acoes = useMemo(
     () =>
@@ -299,7 +302,10 @@ export default function PlanoRecuperacao({
     window.sessionStorage.setItem(CHAVE_ITENS_IMPUGNACAO, JSON.stringify(itens));
     void navigate({
       to: "/impugnacao",
-      search: exercicio ? { exercicio } : {},
+      search: {
+        ...(exercicio ? { exercicio } : {}),
+        ...(indiceProvisorio ? { indice: indiceProvisorio } : {}),
+      },
     });
   }
 

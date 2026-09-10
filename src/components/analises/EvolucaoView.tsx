@@ -1134,6 +1134,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             municipioNome={municipioRelatorio?.nome ?? null}
             referencia={`${base.nome}::${atual.nome}`}
             situacoesCadastrais={situacoesCadastrais ?? null}
+            indiceProvisorio={atual.apuracao.indice ?? null}
           />
 
 

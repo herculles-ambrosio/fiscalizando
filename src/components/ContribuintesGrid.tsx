@@ -187,7 +187,9 @@ const COLUNAS_SERVIDOR = new Set<ColunaOrdenavel>([
 
 export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo?: string }) {
   const navigate = useNavigate();
-  const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
+  /** Situações marcadas; lista vazia = todas. Permite combinar Omissos + Zerados + … */
+  const [filtros, setFiltros] = useState<Situacao[]>([]);
+  const filtroChave = filtros.join("|");
   const [cnae, setCnae] = useState<string>("TODOS");
   const [cadastral, setCadastral] = useState<SituacaoCadastral | "TODOS">("TODOS");
   const [cnaeAberto, setCnaeAberto] = useState(false);
@@ -243,7 +245,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   });
 
   const { data, isFetching } = useQuery({
-    queryKey: ["contribuintes", cargaId, filtro, cnae, cadastral, termo, pagina, ordem.coluna, ordem.asc],
+    queryKey: ["contribuintes", cargaId, filtroChave, cnae, cadastral, termo, pagina, ordem.coluna, ordem.asc],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
@@ -257,7 +259,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         .order("id", { ascending: true })
         .range(pagina * POR_PAGINA, pagina * POR_PAGINA + POR_PAGINA - 1);
 
-      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (filtros.length) q = q.overlaps("situacoes", filtros);
       if (cnae !== "TODOS") q = q.eq("cnae", cnae);
       if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
       if (termo) q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
@@ -276,7 +278,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const filtroReceitaAtivo = receitaFiltro !== "TODOS";
 
   const { data: todasLinhas, isFetching: carregandoTodas } = useQuery({
-    queryKey: ["contribuintes-todos", cargaId, filtro, cnae, cadastral, termo, ordem.coluna, ordem.asc],
+    queryKey: ["contribuintes-todos", cargaId, filtroChave, cnae, cadastral, termo, ordem.coluna, ordem.asc],
     enabled: filtroReceitaAtivo,
     placeholderData: keepPreviousData,
     queryFn: async () => {
@@ -291,7 +293,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         .order("id", { ascending: true })
         .limit(20000);
 
-      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (filtros.length) q = q.overlaps("situacoes", filtros);
       if (cnae !== "TODOS") q = q.eq("cnae", cnae);
       if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
       if (termo)
@@ -519,7 +521,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     if (filtroReceitaAtivo) return linhasOrdenadas.map((c) => c.cnpj);
 
     let q = supabase.from("contribuintes_apurados").select("cnpj").eq("carga_id", cargaId);
-    if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+    if (filtros.length) q = q.overlaps("situacoes", filtros);
     else q = q.not("situacoes", "cs", "{SOMENTE_RETORNO}");
     if (cnae !== "TODOS") q = q.eq("cnae", cnae);
     if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
@@ -620,7 +622,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         .select("id")
         .eq("carga_id", cargaId);
 
-      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (filtros.length) q = q.overlaps("situacoes", filtros);
       if (cnae !== "TODOS") q = q.eq("cnae", cnae);
       if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
       if (termo)
@@ -628,12 +630,14 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
           `nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`,
         );
 
-      const { data, error } = await q.limit(10000);
+      const { data, error } = await q.limit(50000);
       if (error) throw error;
       const ids = (data ?? []).map((d) => d.id);
       setSelecionados((atual) => [...new Set([...atual, ...ids])]);
+      toast.success(`${ids.length} contribuinte(s) selecionado(s) — todos os filtros atuais.`);
     } catch (err) {
       console.error(err);
+      toast.error("Não foi possível selecionar todos os contribuintes.");
     } finally {
       setSelecionandoTodos(false);
     }
@@ -788,26 +792,40 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
 
       <div className="flex flex-wrap items-center gap-2">
-        {(["TODOS", ...SITUACOES] as const).map((s) => (
-          <Button
-            key={s}
-            size="sm"
-            variant={filtro === s ? "default" : "outline"}
-            onClick={() => {
-              setFiltro(s);
-              setPagina(0);
-            }}
-          >
-            {s === "TODOS" ? "Todos" : ROTULO_SITUACAO[s]}
-            <span
-              className={`ml-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
-                filtro === s ? "bg-primary-foreground/20" : "bg-muted text-muted-foreground"
-              }`}
+        {(["TODOS", ...SITUACOES] as const).map((s) => {
+          const ativo = s === "TODOS" ? filtros.length === 0 : filtros.includes(s);
+          return (
+            <Button
+              key={s}
+              size="sm"
+              variant={ativo ? "default" : "outline"}
+              title={
+                s === "TODOS"
+                  ? "Mostrar todas as situações"
+                  : "Clique para somar esta situação ao filtro (pode marcar várias)"
+              }
+              onClick={() => {
+                setPagina(0);
+                setFiltros((atual) =>
+                  s === "TODOS"
+                    ? []
+                    : atual.includes(s)
+                      ? atual.filter((x) => x !== s)
+                      : [...atual, s],
+                );
+              }}
             >
-              {contagens ? contagens[s] : "…"}
-            </span>
-          </Button>
-        ))}
+              {s === "TODOS" ? "Todos" : ROTULO_SITUACAO[s]}
+              <span
+                className={`ml-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
+                  ativo ? "bg-primary-foreground/20" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {contagens ? contagens[s] : "…"}
+              </span>
+            </Button>
+          );
+        })}
 
         <Popover open={cnaeAberto} onOpenChange={setCnaeAberto}>
           <PopoverTrigger asChild>
@@ -953,17 +971,16 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">
+                      {/* Marca TODOS os contribuintes dos filtros atuais, não só a página. */}
                       <Checkbox
                         checked={todosMarcados}
-                        disabled={!linhasPagina.length}
-                        aria-label="Selecionar todos desta página"
-                        onCheckedChange={(v) =>
-                          setSelecionados((atual) =>
-                            v
-                              ? [...new Set([...atual, ...linhasPagina.map((c) => c.id)])]
-                              : atual.filter((id) => !linhasPagina.some((c) => c.id === id)),
-                          )
-                        }
+                        disabled={!linhasPagina.length || selecionandoTodos}
+                        aria-label="Selecionar todos os contribuintes dos filtros atuais"
+                        title="Marca todos os contribuintes dos filtros atuais, em todas as páginas"
+                        onCheckedChange={(v) => {
+                          if (v) void selecionarTodos();
+                          else setSelecionados([]);
+                        }}
                       />
 
                     </TableHead>
