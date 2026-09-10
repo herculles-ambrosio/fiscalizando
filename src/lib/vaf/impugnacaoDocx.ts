@@ -43,6 +43,11 @@ export type ContextoImpugnacao = {
   cidadeData: string | null;
   signatarioNome: string | null;
   signatarioCargo: string | null;
+  /** CNPJ da prefeitura, citado na qualificação da peça */
+  cnpj?: string | null;
+  /** consultor responsável pelo acompanhamento do VAF (assinatura adicional) */
+  consultorNome?: string | null;
+  consultorCargo?: string | null;
 };
 
 function texto(t: string, o: { bold?: boolean; size?: number } = {}) {
