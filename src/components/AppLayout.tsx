@@ -4,6 +4,7 @@ import {
   Building2,
   BookOpen,
   CalendarClock,
+  ClipboardList,
   FileUp,
   Gavel,
   History,
