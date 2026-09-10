@@ -7,6 +7,9 @@ import * as XLSX from "xlsx";
 import JSZip from "jszip";
 import { nomeArquivoSeguro } from "@/lib/oficios/texto";
 
+/** Chave usada para levar os contribuintes marcados até a tela de impugnação. */
+export const CHAVE_ITENS_IMPUGNACAO = "impugnacao:itens";
+
 export type ItemImpugnacao = {
   /** inscrição estadual do contribuinte contestado */
   ie: string;

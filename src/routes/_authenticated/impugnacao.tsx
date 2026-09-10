@@ -34,6 +34,7 @@ import {
 import { formatarCnpj } from "@/lib/format";
 import {
   baixarArquivo,
+  CHAVE_ITENS_IMPUGNACAO,
   diferencaItem,
   moedaBr,
   motivoSugerido,
@@ -44,8 +45,6 @@ import {
   type DadosImpugnacao,
   type ItemImpugnacao,
 } from "@/lib/vaf/impugnacao";
-
-export const CHAVE_ITENS_IMPUGNACAO = "impugnacao:itens";
 
 type Busca = { carga?: string; ids?: string; exercicio?: number };
 
