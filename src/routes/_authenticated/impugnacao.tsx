@@ -101,6 +101,8 @@ function ImpugnacaoPagina() {
   const [nome, setNome] = useState("Impugnação do índice provisório");
   const [exercicio, setExercicio] = useState<number>(busca.exercicio ?? anoAtual + 1);
   const [anoBase, setAnoBase] = useState<number>((busca.exercicio ?? anoAtual + 1) - 2);
+  /** enquanto o ano-base não for editado à mão, ele acompanha o exercício */
+  const [anoBaseManual, setAnoBaseManual] = useState(false);
   const [resolucao, setResolucao] = useState("Resolução SEF nº 6.069/2026");
   const [resolucaoData, setResolucaoData] = useState("");
   const [indice, setIndice] = useState(
@@ -110,7 +112,12 @@ function ImpugnacaoPagina() {
   const [consultorNome, setConsultorNome] = useState("");
   const [observacao, setObservacao] = useState("");
   const [itens, setItens] = useState<ItemImpugnacao[]>([]);
-  const [gerando, setGerando] = useState<"docx" | "xlsx" | "zip" | null>(null);
+  const [gerando, setGerando] = useState<"docx" | "xlsx" | "anexos" | "zip" | null>(null);
+
+  useEffect(() => {
+    if (!anoBaseManual) setAnoBase(exercicio - 2);
+  }, [exercicio, anoBaseManual]);
+
 
   const ids = useMemo(
     () => (busca.ids ?? "").split(",").map((s) => s.trim()).filter(Boolean),
