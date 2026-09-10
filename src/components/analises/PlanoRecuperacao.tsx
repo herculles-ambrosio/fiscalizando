@@ -142,6 +142,7 @@ export default function PlanoRecuperacao({
   referencia,
   cargaId,
   situacoesCadastrais,
+  indiceProvisorio,
 }: Props) {
   const acoes = useMemo(
     () =>
