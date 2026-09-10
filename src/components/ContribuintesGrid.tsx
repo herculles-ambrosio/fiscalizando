@@ -971,17 +971,16 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">
+                      {/* Marca TODOS os contribuintes dos filtros atuais, não só a página. */}
                       <Checkbox
                         checked={todosMarcados}
-                        disabled={!linhasPagina.length}
-                        aria-label="Selecionar todos desta página"
-                        onCheckedChange={(v) =>
-                          setSelecionados((atual) =>
-                            v
-                              ? [...new Set([...atual, ...linhasPagina.map((c) => c.id)])]
-                              : atual.filter((id) => !linhasPagina.some((c) => c.id === id)),
-                          )
-                        }
+                        disabled={!linhasPagina.length || selecionandoTodos}
+                        aria-label="Selecionar todos os contribuintes dos filtros atuais"
+                        title="Marca todos os contribuintes dos filtros atuais, em todas as páginas"
+                        onCheckedChange={(v) => {
+                          if (v) void selecionarTodos();
+                          else setSelecionados([]);
+                        }}
                       />
 
                     </TableHead>
