@@ -1,4 +1,5 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, CheckSquare, ChevronLeft, ChevronRight, ChevronsUpDown, Loader2, Search, X } from "lucide-react";
 import {
@@ -47,7 +48,7 @@ import {
 } from "@/lib/vaf/apurar";
 import { descricaoCnae, formatarCnae, formatarCodigoCnae } from "@/lib/vaf/cnae";
 import { toast } from "sonner";
-import { Columns3, RefreshCw } from "lucide-react";
+import { Columns3, Gavel, RefreshCw } from "lucide-react";
 import { SituacaoReceitaBadge } from "@/components/SituacaoReceitaBadge";
 import { useConsultarReceita, useSituacoesReceita } from "@/hooks/useSituacoesReceita";
 import { ProgressoConsultaReceita } from "@/components/receita/ProgressoConsultaReceita";
