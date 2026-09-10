@@ -29,6 +29,13 @@ export type AcaoRecuperacao = {
   ignorados: MovimentoDeclarante[];
   /** base legal / fonte da prática */
   fundamento?: string;
+  /** campo do contribuinte que compõe o valor da ação (para não somar duas vezes) */
+  campoValor?: "vafBase" | "diferenca";
+  /**
+   * Ação guarda-chuva: o valor dela já é a soma do que as demais ações tratam
+   * (ex.: impugnação do índice). Fica fora do potencial consolidado.
+   */
+  agregadora?: boolean;
 };
 
 /**
