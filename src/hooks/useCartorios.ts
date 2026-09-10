@@ -310,15 +310,20 @@ export function useImportarEmolumentos() {
         arquivo_nome: dados.arquivoNome,
         criado_por: usuarioId,
       }));
-      for (let i = 0; i < registros.length; i += 500) {
-        const { error } = await supabase
-          .from("cartorio_emolumentos")
-          .upsert(registros.slice(i, i + 500), {
-            onConflict: "municipio_id,competencia_ano,competencia_mes,cns,tipo_servico",
-          });
-        if (error) throw error;
+      const emol = await gravarEmLotes(
+        "cartorio_emolumentos",
+        registros,
+        "municipio_id,competencia_ano,competencia_mes,cns,tipo_servico",
+      );
+      if (!emol.gravadas) {
+        throw new Error(
+          emol.motivo
+            ? `Nenhum cartório pôde ser gravado: ${emol.motivo}`
+            : "Nenhum cartório pôde ser gravado.",
+        );
       }
       // Mantém o cadastro de serventias em dia com o que veio do portal.
+      // Falha aqui não invalida os emolumentos já gravados.
       const serventias = new Map<string, (typeof registros)[number]>();
       for (const r of registros) serventias.set(`${r.cns}|${r.tipo_servico}`, r);
       const cadastro = [...serventias.values()].map((r) => ({
@@ -329,12 +334,7 @@ export function useImportarEmolumentos() {
         tipo_servico: r.tipo_servico,
         status: r.status,
       }));
-      for (let i = 0; i < cadastro.length; i += 500) {
-        const { error } = await supabase
-          .from("cartorio_serventias")
-          .upsert(cadastro.slice(i, i + 500), { onConflict: "municipio_id,cns,tipo_servico" });
-        if (error) throw error;
-      }
+      await gravarEmLotes("cartorio_serventias", cadastro, "municipio_id,cns,tipo_servico");
       await registrarCarga({
         municipioId: municipioId!,
         tipo: "emolumentos",
@@ -344,10 +344,10 @@ export function useImportarEmolumentos() {
         },
         arquivoNome: dados.arquivoNome,
         origem: dados.fonte ?? "arquivo",
-        linhas: registros.length,
+        linhas: emol.gravadas,
         criadoPor: usuarioId,
       });
-      return registros.length;
+      return { gravadas: emol.gravadas, ignoradas: emol.ignoradas, motivo: emol.motivo };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cartorio-competencias", municipioId] });
