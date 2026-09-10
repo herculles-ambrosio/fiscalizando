@@ -249,7 +249,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {grupo.rotulo}
               </p>
               {grupo.itens.map((item) => {
-                const ativo = item.to === "/icms" ? pathname === "/icms" : pathname.startsWith(item.to);
+                const ativo =
+                  item.to === "/icms" || item.to === "/impugnacao"
+                    ? pathname === item.to
+                    : pathname.startsWith(item.to);
                 return (
                   <Link
                     key={item.to}
