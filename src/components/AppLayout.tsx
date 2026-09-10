@@ -4,6 +4,7 @@ import {
   Building2,
   BookOpen,
   CalendarClock,
+  ClipboardList,
   FileUp,
   Gavel,
   History,
@@ -50,6 +51,7 @@ const NAV_ANALISE = [
   { to: "/estatisticas", rotulo: "Estatísticas", icone: PieChart },
   { to: "/oficios", rotulo: "Ofícios", icone: FileSignature },
   { to: "/impugnacao", rotulo: "Impugnação", icone: Gavel },
+  { to: "/impugnacoes", rotulo: "Impugnações pendentes", icone: ClipboardList },
 ];
 
 const NAV_ADMIN = [{ to: "/configuracoes", rotulo: "Configurações", icone: Settings }];
@@ -247,7 +249,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 {grupo.rotulo}
               </p>
               {grupo.itens.map((item) => {
-                const ativo = item.to === "/icms" ? pathname === "/icms" : pathname.startsWith(item.to);
+                const ativo =
+                  item.to === "/icms" || item.to === "/impugnacao"
+                    ? pathname === item.to
+                    : pathname.startsWith(item.to);
                 return (
                   <Link
                     key={item.to}

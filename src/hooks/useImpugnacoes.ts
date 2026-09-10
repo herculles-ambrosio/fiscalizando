@@ -15,8 +15,22 @@ export type ImpugnacaoSalva = {
   observacao: string | null;
   itens: ItemImpugnacao[];
   status: string;
+  protocolo_numero: string | null;
+  protocolado_em: string | null;
   criado_em: string;
 };
+
+/** Etapas do acompanhamento de uma impugnação até a decisão da SEF/MG. */
+export const STATUS_IMPUGNACAO = [
+  { valor: "rascunho", rotulo: "Rascunho" },
+  { valor: "pronta", rotulo: "Pronta para protocolar" },
+  { valor: "protocolada", rotulo: "Protocolada" },
+  { valor: "deferida", rotulo: "Deferida" },
+  { valor: "indeferida", rotulo: "Indeferida" },
+] as const;
+
+export const rotuloStatus = (v: string): string =>
+  STATUS_IMPUGNACAO.find((s) => s.valor === v)?.rotulo ?? v;
 
 export function useImpugnacoes(municipioId: string | null) {
   return useQuery({
@@ -77,6 +91,32 @@ export function useSalvarImpugnacao() {
         .single();
       if (error) throw error;
       return data.id as string;
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["impugnacoes"] }),
+  });
+}
+
+export type DadosAcompanhamento = {
+  id: string;
+  status: string;
+  protocoloNumero: string | null;
+  protocoladoEm: string | null;
+};
+
+/** Atualiza situação, número e data de protocolo de uma impugnação salva. */
+export function useAtualizarAcompanhamento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (d: DadosAcompanhamento) => {
+      const { error } = await supabase
+        .from("impugnacoes")
+        .update({
+          status: d.status,
+          protocolo_numero: d.protocoloNumero?.trim() ? d.protocoloNumero.trim() : null,
+          protocolado_em: d.protocoladoEm || null,
+        })
+        .eq("id", d.id);
+      if (error) throw error;
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["impugnacoes"] }),
   });
