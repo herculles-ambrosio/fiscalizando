@@ -257,6 +257,44 @@ export default function PlanoRecuperacao({
       .catch(() => toast.error("Não foi possível copiar."));
   }
 
+  /**
+   * Leva os contribuintes com achados (ou apenas os marcados) para a tela de
+   * impugnação do índice provisório, sem duplicar quem aparece em mais de uma ação.
+   */
+  function montarImpugnacao() {
+    const marcadas = new Set(sel.marcadas);
+    const porIe = new Map<string, ItemImpugnacao>();
+    for (const a of acoes) {
+      if (a.agregadora) continue;
+      for (const c of a.contribuintes) {
+        const ie = chaveIe(c.inscricao_estadual);
+        if (marcadas.size && !marcadas.has(ie)) continue;
+        const valor = Math.abs(a.campoValor === "vafBase" ? c.vafBase : c.diferenca);
+        const atual = porIe.get(ie);
+        if (atual && diferencaItem(atual) >= valor) continue;
+        porIe.set(ie, {
+          ie: c.inscricao_estadual,
+          cnpj: c.cnpj,
+          nome: c.nome,
+          motivo: a.motivo,
+          vafApurado: Math.abs(c.vafAtual),
+          vafCorreto: Math.abs(c.vafAtual) + valor,
+          observacao: a.titulo,
+        });
+      }
+    }
+    const itens = [...porIe.values()];
+    if (!itens.length) {
+      toast.error("Nenhum contribuinte para impugnar nesta análise.");
+      return;
+    }
+    window.sessionStorage.setItem(CHAVE_ITENS_IMPUGNACAO, JSON.stringify(itens));
+    void navigate({
+      to: "/impugnacao",
+      search: exercicio ? { exercicio } : {},
+    });
+  }
+
   const contextoRelatorio = () => ({
     municipio: nomeMunicipioRelatorio,
     exercicio: exercicio ?? null,
