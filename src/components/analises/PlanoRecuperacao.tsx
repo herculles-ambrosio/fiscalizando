@@ -8,11 +8,18 @@ import {
   FileText,
   Loader2,
   ArrowUpDown,
+  Gavel,
   Paperclip,
   Target,
 } from "lucide-react";
 
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import {
+  CHAVE_ITENS_IMPUGNACAO,
+  diferencaItem,
+  type ItemImpugnacao,
+} from "@/lib/vaf/impugnacao";
 import { useReceitaPorIe } from "@/hooks/useReceitaPorIe";
 import {
   BarraSelecaoReceita,
@@ -164,6 +171,7 @@ export default function PlanoRecuperacao({
   }, [acoes]);
   const receita = useReceitaPorIe(municipio?.id ?? null, entradasReceita);
   const sel = useSelecaoIes();
+  const navigate = useNavigate();
 
   const motivoDe = (c: { inscricao_estadual: string }) =>
     (situacoesCadastrais?.[chaveIe(c.inscricao_estadual)] || "NAO_INFORMADA").toUpperCase();
