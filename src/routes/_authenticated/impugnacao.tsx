@@ -46,13 +46,20 @@ import {
   type ItemImpugnacao,
 } from "@/lib/vaf/impugnacao";
 
-type Busca = { carga?: string | undefined; ids?: string | undefined; exercicio?: number | undefined };
+type Busca = {
+  carga?: string | undefined;
+  ids?: string | undefined;
+  exercicio?: number | undefined;
+  /** Índice provisório publicado, trazido de Análises do VAF. */
+  indice?: number | undefined;
+};
 
 export const Route = createFileRoute("/_authenticated/impugnacao")({
   validateSearch: (s: Record<string, unknown>): Busca => ({
     carga: typeof s["carga"] === "string" ? s["carga"] : undefined,
     ids: typeof s["ids"] === "string" ? s["ids"] : undefined,
     exercicio: Number(s["exercicio"]) > 0 ? Number(s["exercicio"]) : undefined,
+    indice: Number(s["indice"]) > 0 ? Number(s["indice"]) : undefined,
   }),
   head: () => ({
     meta: [
