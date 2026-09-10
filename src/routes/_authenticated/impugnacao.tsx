@@ -313,6 +313,24 @@ function ImpugnacaoPagina() {
             <Input value={config?.nome_prefeitura ?? municipio?.nome ?? ""} readOnly />
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="imp-cnpj">CNPJ da prefeitura</Label>
+            <Input
+              id="imp-cnpj"
+              placeholder="00.000.000/0001-00"
+              value={cnpjPrefeitura}
+              onChange={(e) => setCnpjPrefeitura(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="imp-consultor">Consultor responsável (opcional)</Label>
+            <Input
+              id="imp-consultor"
+              placeholder="Nome do consultor que assina junto"
+              value={consultorNome}
+              onChange={(e) => setConsultorNome(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="imp-nome">Identificação interna</Label>
             <Input id="imp-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
           </div>
