@@ -328,6 +328,10 @@ function FiscalizaCartorio() {
           )}
         </TabsContent>
 
+        <TabsContent value="resumo" className="pt-4">
+          <ResumoMunicipiosView />
+        </TabsContent>
+
         <TabsContent value="importar" className="pt-4">
           <CargaDados competenciaAtual={competencia} />
         </TabsContent>
