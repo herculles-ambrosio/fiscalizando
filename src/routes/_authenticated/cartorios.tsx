@@ -73,6 +73,7 @@ import { baixarCsv, montarCsv } from "@/lib/csv";
 import CargasView from "@/components/cartorios/CargasView";
 import DocumentosView from "@/components/cartorios/DocumentosView";
 import ModelosCartorioView from "@/components/cartorios/ModelosCartorioView";
+import ResumoMunicipiosView from "@/components/cartorios/ResumoMunicipiosView";
 
 
 export const Route = createFileRoute("/_authenticated/cartorios")({
