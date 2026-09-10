@@ -521,7 +521,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
     if (filtroReceitaAtivo) return linhasOrdenadas.map((c) => c.cnpj);
 
     let q = supabase.from("contribuintes_apurados").select("cnpj").eq("carga_id", cargaId);
-    if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+    if (filtros.length) q = q.overlaps("situacoes", filtros);
     else q = q.not("situacoes", "cs", "{SOMENTE_RETORNO}");
     if (cnae !== "TODOS") q = q.eq("cnae", cnae);
     if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
