@@ -241,7 +241,7 @@ export default function PlanoRecuperacao({
     });
   };
 
-  const totalPotencial = acoes.reduce((s, a) => s + a.valorRecuperavel, 0);
+  const totalPotencial = potencialConsolidado(acoes);
   const concluidas = acoes.filter(
     (a) => statusPorChave.get(chaveStatus(a.chave)) === "concluida",
   ).length;
