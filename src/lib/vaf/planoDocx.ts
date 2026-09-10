@@ -20,7 +20,7 @@ import {
   rodapeTimbrado,
   type ImagensTimbrado,
 } from "@/lib/reportTimbrado";
-import { ROTULO_PRIORIDADE, type AcaoRecuperacao } from "./recuperacao";
+import { ROTULO_PRIORIDADE, potencialConsolidado, type AcaoRecuperacao } from "./recuperacao";
 
 const FONTE = "Arial";
 const LARGURA = 9026; // A4 com margens de 1"
