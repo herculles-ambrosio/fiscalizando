@@ -1618,6 +1618,8 @@ export type Database = {
           municipio_id: string
           nome: string
           observacao: string | null
+          protocolado_em: string | null
+          protocolo_numero: string | null
           resolucao: string
           resolucao_data: string | null
           status: string
@@ -1635,6 +1637,8 @@ export type Database = {
           municipio_id: string
           nome: string
           observacao?: string | null
+          protocolado_em?: string | null
+          protocolo_numero?: string | null
           resolucao?: string
           resolucao_data?: string | null
           status?: string
@@ -1652,6 +1656,8 @@ export type Database = {
           municipio_id?: string
           nome?: string
           observacao?: string | null
+          protocolado_em?: string | null
+          protocolo_numero?: string | null
           resolucao?: string
           resolucao_data?: string | null
           status?: string
