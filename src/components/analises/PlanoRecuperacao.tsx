@@ -390,8 +390,9 @@ export default function PlanoRecuperacao({
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Potencial mapeado: {formatarMoeda(totalPotencial)}</AlertTitle>
             <AlertDescription className="text-xs">
-              O valor soma o que cada ação pode recuperar ou preservar. Ele não é cumulativo com o
-              índice já publicado: parte depende de retificação dentro do prazo da SEFAZ.
+              Cada contribuinte é contado uma única vez, mesmo quando aparece em mais de uma ação
+              (diligência, queda expressiva, omissão), pelo maior valor em jogo. Não é cumulativo
+              com o índice já publicado: parte depende de retificação dentro do prazo da SEFAZ.
             </AlertDescription>
           </Alert>
 
