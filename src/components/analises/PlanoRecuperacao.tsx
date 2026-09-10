@@ -302,7 +302,10 @@ export default function PlanoRecuperacao({
     window.sessionStorage.setItem(CHAVE_ITENS_IMPUGNACAO, JSON.stringify(itens));
     void navigate({
       to: "/impugnacao",
-      search: exercicio ? { exercicio } : {},
+      search: {
+        ...(exercicio ? { exercicio } : {}),
+        ...(indiceProvisorio ? { indice: indiceProvisorio } : {}),
+      },
     });
   }
 
