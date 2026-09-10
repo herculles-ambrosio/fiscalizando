@@ -103,7 +103,9 @@ function ImpugnacaoPagina() {
   const [anoBase, setAnoBase] = useState<number>((busca.exercicio ?? anoAtual + 1) - 2);
   const [resolucao, setResolucao] = useState("Resolução SEF nº 6.069/2026");
   const [resolucaoData, setResolucaoData] = useState("");
-  const [indice, setIndice] = useState("");
+  const [indice, setIndice] = useState(
+    busca.indice ? busca.indice.toLocaleString("pt-BR", { minimumFractionDigits: 7, maximumFractionDigits: 7 }) : "",
+  );
   const [observacao, setObservacao] = useState("");
   const [itens, setItens] = useState<ItemImpugnacao[]>([]);
   const [gerando, setGerando] = useState<"docx" | "xlsx" | "zip" | null>(null);

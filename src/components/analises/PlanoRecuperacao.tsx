@@ -128,6 +128,8 @@ type Props = {
   cargaId?: string | null;
   /** situação cadastral por IE — cancelados/baixados/bloqueados saem das ações */
   situacoesCadastrais?: MapaSituacoesCadastrais | null;
+  /** índice provisório apurado no arquivo atual, levado para a impugnação */
+  indiceProvisorio?: number | null;
 };
 
 export type SalvarStatus = (entradas: EntradaStatus | EntradaStatus[]) => void;
