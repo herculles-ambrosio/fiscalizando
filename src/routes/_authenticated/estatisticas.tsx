@@ -106,10 +106,17 @@ function PaginaEstatisticas() {
   const { data: acoes } = useAcoesPanorama();
   const { data: impugnacoes } = useImpugnacoesPanorama();
   const { data: oficios } = useOficiosPanorama();
+  const { trocar: trocarMunicipio, podeTrocar } = useMunicipioAtivo();
 
   const [texto, setTexto] = useState("");
   const [ordem, setOrdem] = useState<Ordem>("variacao");
   const [detalhe, setDetalhe] = useState<LinhaPanorama | null>(null);
+
+  /** Leva o usuário ao Índice do VAF já com a prefeitura da linha ativa. */
+  function irApurar(linha: LinhaPanorama) {
+    if (podeTrocar) trocarMunicipio(linha.municipioId);
+    void navigate({ to: "/analises", search: { aba: "indice" } });
+  }
 
   const lista = useMemo(() => indices ?? [], [indices]);
   const exercicios = useMemo(
