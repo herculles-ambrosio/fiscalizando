@@ -73,6 +73,7 @@ import {
   csvIgnorados,
   baixarCsvIgnorados,
   chaveIe,
+  potencialConsolidado,
   ROTULO_PRIORIDADE,
   type AcaoRecuperacao,
   type MapaSituacoesCadastrais,
