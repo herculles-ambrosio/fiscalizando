@@ -187,7 +187,9 @@ const COLUNAS_SERVIDOR = new Set<ColunaOrdenavel>([
 
 export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo?: string }) {
   const navigate = useNavigate();
-  const [filtro, setFiltro] = useState<Situacao | "TODOS">("TODOS");
+  /** Situações marcadas; lista vazia = todas. Permite combinar Omissos + Zerados + … */
+  const [filtros, setFiltros] = useState<Situacao[]>([]);
+  const filtroChave = filtros.join("|");
   const [cnae, setCnae] = useState<string>("TODOS");
   const [cadastral, setCadastral] = useState<SituacaoCadastral | "TODOS">("TODOS");
   const [cnaeAberto, setCnaeAberto] = useState(false);
