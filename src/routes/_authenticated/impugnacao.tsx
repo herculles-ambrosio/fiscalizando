@@ -101,6 +101,8 @@ function ImpugnacaoPagina() {
   const [nome, setNome] = useState("Impugnação do índice provisório");
   const [exercicio, setExercicio] = useState<number>(busca.exercicio ?? anoAtual + 1);
   const [anoBase, setAnoBase] = useState<number>((busca.exercicio ?? anoAtual + 1) - 2);
+  /** enquanto o ano-base não for editado à mão, ele acompanha o exercício */
+  const [anoBaseManual, setAnoBaseManual] = useState(false);
   const [resolucao, setResolucao] = useState("Resolução SEF nº 6.069/2026");
   const [resolucaoData, setResolucaoData] = useState("");
   const [indice, setIndice] = useState(
@@ -110,7 +112,12 @@ function ImpugnacaoPagina() {
   const [consultorNome, setConsultorNome] = useState("");
   const [observacao, setObservacao] = useState("");
   const [itens, setItens] = useState<ItemImpugnacao[]>([]);
-  const [gerando, setGerando] = useState<"docx" | "xlsx" | "zip" | null>(null);
+  const [gerando, setGerando] = useState<"docx" | "xlsx" | "anexos" | "zip" | null>(null);
+
+  useEffect(() => {
+    if (!anoBaseManual) setAnoBase(exercicio - 2);
+  }, [exercicio, anoBaseManual]);
+
 
   const ids = useMemo(
     () => (busca.ids ?? "").split(",").map((s) => s.trim()).filter(Boolean),
@@ -197,7 +204,7 @@ function ImpugnacaoPagina() {
     );
   }
 
-  async function baixar(tipo: "docx" | "xlsx" | "zip") {
+  async function baixar(tipo: "docx" | "xlsx" | "anexos" | "zip") {
     if (!itens.length) {
       toast.error("Inclua ao menos um contribuinte na impugnação.");
       return;
@@ -207,12 +214,21 @@ function ImpugnacaoPagina() {
       const base = nomeBaseArquivo(dados, municipio?.nome ?? null);
       const planilha = () => planilhaImpugnacao(dados, municipio?.nome ?? null);
       if (tipo === "xlsx") {
-        baixarArquivo(planilha(), `${base}_contribuintes.xlsx`);
+        baixarArquivo(planilha(), `${base}_anexo-I_contribuintes.xlsx`);
+      } else if (tipo === "anexos") {
+        const { gerarAnexosImpugnacao } = await import("@/lib/vaf/impugnacaoAnexos");
+        const { anexoII, anexoIII } = await gerarAnexosImpugnacao(dados, ctx);
+        baixarArquivo(anexoII, `${base}_anexo-II_demonstrativo.docx`);
+        baixarArquivo(anexoIII, `${base}_anexo-III_fichas.docx`);
       } else {
         const { gerarDocxImpugnacao } = await import("@/lib/vaf/impugnacaoDocx");
         const doc = await gerarDocxImpugnacao(dados, ctx);
         if (tipo === "docx") baixarArquivo(doc, `${base}.docx`);
-        else baixarArquivo(await zipImpugnacao(doc, planilha(), base), `${base}.zip`);
+        else {
+          const { gerarAnexosImpugnacao } = await import("@/lib/vaf/impugnacaoAnexos");
+          const anexos = await gerarAnexosImpugnacao(dados, ctx);
+          baixarArquivo(await zipImpugnacao(doc, planilha(), base, anexos), `${base}.zip`);
+        }
       }
       toast.success("Arquivo gerado.");
     } catch (erro) {
@@ -223,6 +239,7 @@ function ImpugnacaoPagina() {
       setGerando(null);
     }
   }
+
 
   function gravar() {
     if (!municipioId) {
@@ -277,12 +294,21 @@ function ImpugnacaoPagina() {
           </Button>
           <Button variant="outline" onClick={() => baixar("xlsx")} disabled={gerando !== null}>
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Planilha (XLSX)
+            Anexo I (XLSX)
+          </Button>
+          <Button variant="outline" onClick={() => baixar("anexos")} disabled={gerando !== null}>
+            {gerando === "anexos" ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="mr-2 h-4 w-4" />
+            )}
+            Anexos II e III
           </Button>
           <Button variant="outline" onClick={() => baixar("docx")} disabled={gerando !== null}>
             <FileText className="mr-2 h-4 w-4" />
             Impugnação (DOCX)
           </Button>
+
           <Button onClick={() => baixar("zip")} disabled={gerando !== null}>
             {gerando === "zip" ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -349,9 +375,16 @@ function ImpugnacaoPagina() {
               id="imp-anobase"
               type="number"
               value={anoBase}
-              onChange={(e) => setAnoBase(Number(e.target.value) || anoAtual - 2)}
+              onChange={(e) => {
+                setAnoBaseManual(true);
+                setAnoBase(Number(e.target.value) || anoAtual - 2);
+              }}
             />
+            <p className="text-xs text-muted-foreground">
+              Ano do movimento econômico contestado; usado em todo o texto da petição.
+            </p>
           </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="imp-resolucao">Resolução impugnada</Label>
             <Input
@@ -506,6 +539,7 @@ function ImpugnacaoPagina() {
                       setId(s.id);
                       setNome(s.nome);
                       setExercicio(s.exercicio);
+                      setAnoBaseManual(true);
                       setAnoBase(s.ano_base ?? s.exercicio - 2);
                       setResolucao(s.resolucao);
                       setResolucaoData(s.resolucao_data ?? "");
