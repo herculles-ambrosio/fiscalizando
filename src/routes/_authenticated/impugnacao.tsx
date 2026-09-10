@@ -375,9 +375,16 @@ function ImpugnacaoPagina() {
               id="imp-anobase"
               type="number"
               value={anoBase}
-              onChange={(e) => setAnoBase(Number(e.target.value) || anoAtual - 2)}
+              onChange={(e) => {
+                setAnoBaseManual(true);
+                setAnoBase(Number(e.target.value) || anoAtual - 2);
+              }}
             />
+            <p className="text-xs text-muted-foreground">
+              Ano do movimento econômico contestado; usado em todo o texto da petição.
+            </p>
           </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="imp-resolucao">Resolução impugnada</Label>
             <Input
