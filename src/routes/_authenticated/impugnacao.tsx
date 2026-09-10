@@ -294,12 +294,21 @@ function ImpugnacaoPagina() {
           </Button>
           <Button variant="outline" onClick={() => baixar("xlsx")} disabled={gerando !== null}>
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Planilha (XLSX)
+            Anexo I (XLSX)
+          </Button>
+          <Button variant="outline" onClick={() => baixar("anexos")} disabled={gerando !== null}>
+            {gerando === "anexos" ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="mr-2 h-4 w-4" />
+            )}
+            Anexos II e III
           </Button>
           <Button variant="outline" onClick={() => baixar("docx")} disabled={gerando !== null}>
             <FileText className="mr-2 h-4 w-4" />
             Impugnação (DOCX)
           </Button>
+
           <Button onClick={() => baixar("zip")} disabled={gerando !== null}>
             {gerando === "zip" ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
