@@ -106,6 +106,8 @@ function ImpugnacaoPagina() {
   const [indice, setIndice] = useState(
     busca.indice ? busca.indice.toLocaleString("pt-BR", { minimumFractionDigits: 7, maximumFractionDigits: 7 }) : "",
   );
+  const [cnpjPrefeitura, setCnpjPrefeitura] = useState("");
+  const [consultorNome, setConsultorNome] = useState("");
   const [observacao, setObservacao] = useState("");
   const [itens, setItens] = useState<ItemImpugnacao[]>([]);
   const [gerando, setGerando] = useState<"docx" | "xlsx" | "zip" | null>(null);
