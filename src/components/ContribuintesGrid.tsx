@@ -245,7 +245,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   });
 
   const { data, isFetching } = useQuery({
-    queryKey: ["contribuintes", cargaId, filtro, cnae, cadastral, termo, pagina, ordem.coluna, ordem.asc],
+    queryKey: ["contribuintes", cargaId, filtroChave, cnae, cadastral, termo, pagina, ordem.coluna, ordem.asc],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
@@ -259,7 +259,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         .order("id", { ascending: true })
         .range(pagina * POR_PAGINA, pagina * POR_PAGINA + POR_PAGINA - 1);
 
-      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (filtros.length) q = q.overlaps("situacoes", filtros);
       if (cnae !== "TODOS") q = q.eq("cnae", cnae);
       if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
       if (termo) q = q.or(`nome.ilike.%${termo}%,cnpj.ilike.%${termo}%,inscricao_estadual.ilike.%${termo}%`);
@@ -278,7 +278,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
   const filtroReceitaAtivo = receitaFiltro !== "TODOS";
 
   const { data: todasLinhas, isFetching: carregandoTodas } = useQuery({
-    queryKey: ["contribuintes-todos", cargaId, filtro, cnae, cadastral, termo, ordem.coluna, ordem.asc],
+    queryKey: ["contribuintes-todos", cargaId, filtroChave, cnae, cadastral, termo, ordem.coluna, ordem.asc],
     enabled: filtroReceitaAtivo,
     placeholderData: keepPreviousData,
     queryFn: async () => {
@@ -293,7 +293,7 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
         .order("id", { ascending: true })
         .limit(20000);
 
-      if (filtro !== "TODOS") q = q.contains("situacoes", [filtro]);
+      if (filtros.length) q = q.overlaps("situacoes", filtros);
       if (cnae !== "TODOS") q = q.eq("cnae", cnae);
       if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
       if (termo)
