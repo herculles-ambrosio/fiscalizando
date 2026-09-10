@@ -346,6 +346,10 @@ export default function PlanoRecuperacao({
               <ClipboardCopy className="h-3.5 w-3.5" />
               Copiar plano
             </Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={montarImpugnacao}>
+              <Gavel className="h-3.5 w-3.5" />
+              Montar impugnação
+            </Button>
             <Button
               variant="outline"
               size="sm"
