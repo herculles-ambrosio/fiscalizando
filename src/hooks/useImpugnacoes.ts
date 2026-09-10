@@ -15,8 +15,22 @@ export type ImpugnacaoSalva = {
   observacao: string | null;
   itens: ItemImpugnacao[];
   status: string;
+  protocolo_numero: string | null;
+  protocolado_em: string | null;
   criado_em: string;
 };
+
+/** Etapas do acompanhamento de uma impugnação até a decisão da SEF/MG. */
+export const STATUS_IMPUGNACAO = [
+  { valor: "rascunho", rotulo: "Rascunho" },
+  { valor: "pronta", rotulo: "Pronta para protocolar" },
+  { valor: "protocolada", rotulo: "Protocolada" },
+  { valor: "deferida", rotulo: "Deferida" },
+  { valor: "indeferida", rotulo: "Indeferida" },
+] as const;
+
+export const rotuloStatus = (v: string): string =>
+  STATUS_IMPUGNACAO.find((s) => s.valor === v)?.rotulo ?? v;
 
 export function useImpugnacoes(municipioId: string | null) {
   return useQuery({
