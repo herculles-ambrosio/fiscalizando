@@ -754,6 +754,33 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
               selecionados={selecionados}
             />
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            title="Levar os contribuintes marcados para a impugnação do índice provisório"
+            onClick={() => {
+              if (!selecionados.length) {
+                toast.error("Marque os contribuintes que entram na impugnação.");
+                return;
+              }
+              void navigate({
+                to: "/impugnacao",
+                search: {
+                  carga: cargaId,
+                  ids: selecionados.join(","),
+                  ...(carga?.exercicio ? { exercicio: carga.exercicio } : {}),
+                },
+              });
+            }}
+          >
+            <Gavel className="mr-2 h-4 w-4" />
+            Montar impugnação
+            {selecionados.length > 0 && (
+              <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+                {selecionados.length}
+              </span>
+            )}
+          </Button>
         </div>
       </div>
 
