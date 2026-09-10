@@ -96,6 +96,32 @@ export function useSalvarImpugnacao() {
   });
 }
 
+export type DadosAcompanhamento = {
+  id: string;
+  status: string;
+  protocoloNumero: string | null;
+  protocoladoEm: string | null;
+};
+
+/** Atualiza situação, número e data de protocolo de uma impugnação salva. */
+export function useAtualizarAcompanhamento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (d: DadosAcompanhamento) => {
+      const { error } = await supabase
+        .from("impugnacoes")
+        .update({
+          status: d.status,
+          protocolo_numero: d.protocoloNumero?.trim() ? d.protocoloNumero.trim() : null,
+          protocolado_em: d.protocoladoEm || null,
+        })
+        .eq("id", d.id);
+      if (error) throw error;
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["impugnacoes"] }),
+  });
+}
+
 export function useExcluirImpugnacao() {
   const qc = useQueryClient();
   return useMutation({
