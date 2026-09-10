@@ -67,7 +67,12 @@ function Tabela({ linhas }: { linhas: LinhaClassificada[] }) {
         <tbody>
           {linhas.map((l) => (
             <tr key={l.coluna_origem} className="border-b last:border-0">
-              <td className="py-2 pr-3">{l.coluna_origem}</td>
+              <td className="py-2 pr-3">
+                <span className="inline-flex items-center gap-1">
+                  {l.coluna_origem}
+                  <Explicacao indicador={l.indicador} />
+                </span>
+              </td>
               <td className="py-2 text-right">
                 {l.valor_num == null ? (l.valor_texto ?? "—") : numeroBr(l.valor_num)}
               </td>
