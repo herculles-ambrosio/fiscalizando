@@ -143,6 +143,7 @@ export function DadosConstitutivosEducacao({
   const atencao = linhas.filter((l) => l.classe === "atencao");
   const positivos = linhas.filter((l) => l.classe === "positivo");
   const naoAplicaveis = linhas.filter((l) => l.classe === "nao_aplicavel");
+  const neutros = linhas.filter((l) => l.classe === "neutro");
   const atendidas = data?.atendidas ?? { anosIniciais: true, anosFinais: true };
   const etapasFora = [
     !atendidas.anosFinais ? "Anos Finais" : null,
