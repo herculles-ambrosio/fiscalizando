@@ -792,26 +792,40 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
 
       <div className="flex flex-wrap items-center gap-2">
-        {(["TODOS", ...SITUACOES] as const).map((s) => (
-          <Button
-            key={s}
-            size="sm"
-            variant={filtro === s ? "default" : "outline"}
-            onClick={() => {
-              setFiltro(s);
-              setPagina(0);
-            }}
-          >
-            {s === "TODOS" ? "Todos" : ROTULO_SITUACAO[s]}
-            <span
-              className={`ml-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
-                filtro === s ? "bg-primary-foreground/20" : "bg-muted text-muted-foreground"
-              }`}
+        {(["TODOS", ...SITUACOES] as const).map((s) => {
+          const ativo = s === "TODOS" ? filtros.length === 0 : filtros.includes(s);
+          return (
+            <Button
+              key={s}
+              size="sm"
+              variant={ativo ? "default" : "outline"}
+              title={
+                s === "TODOS"
+                  ? "Mostrar todas as situações"
+                  : "Clique para somar esta situação ao filtro (pode marcar várias)"
+              }
+              onClick={() => {
+                setPagina(0);
+                setFiltros((atual) =>
+                  s === "TODOS"
+                    ? []
+                    : atual.includes(s)
+                      ? atual.filter((x) => x !== s)
+                      : [...atual, s],
+                );
+              }}
             >
-              {contagens ? contagens[s] : "…"}
-            </span>
-          </Button>
-        ))}
+              {s === "TODOS" ? "Todos" : ROTULO_SITUACAO[s]}
+              <span
+                className={`ml-2 rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
+                  ativo ? "bg-primary-foreground/20" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {contagens ? contagens[s] : "…"}
+              </span>
+            </Button>
+          );
+        })}
 
         <Popover open={cnaeAberto} onOpenChange={setCnaeAberto}>
           <PopoverTrigger asChild>
