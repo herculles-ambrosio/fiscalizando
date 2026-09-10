@@ -180,6 +180,7 @@ function FiscalizaCartorio() {
       <Tabs defaultValue={competencias?.length ? "fiscalizacao" : "importar"}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="fiscalizacao">Fiscalização</TabsTrigger>
+          <TabsTrigger value="resumo">Resumo por município</TabsTrigger>
           <TabsTrigger value="importar">Carga de dados</TabsTrigger>
           <TabsTrigger value="cargas">Meses carregados</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
