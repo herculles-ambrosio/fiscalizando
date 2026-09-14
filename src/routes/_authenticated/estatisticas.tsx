@@ -58,6 +58,7 @@ import {
   useImpugnacoesPanorama,
   useIndicesPanorama,
   useOficiosPanorama,
+  useIndicesResolucao,
 } from "@/hooks/usePanoramaMunicipios";
 import {
   montarPanorama,
@@ -116,6 +117,7 @@ function PaginaEstatisticas() {
   const { data: acoes } = useAcoesPanorama();
   const { data: impugnacoes } = useImpugnacoesPanorama();
   const { data: oficios } = useOficiosPanorama();
+  const { data: resolucao } = useIndicesResolucao();
   const { trocar: trocarMunicipio, podeTrocar } = useMunicipioAtivo();
 
   const [texto, setTexto] = useState("");
@@ -145,8 +147,14 @@ function PaginaEstatisticas() {
 
   const lista = useMemo(() => indices ?? [], [indices]);
   const exercicios = useMemo(
-    () => [...new Set(lista.map((i) => i.exercicio))].sort((a, b) => b - a),
-    [lista],
+    () =>
+      [
+        ...new Set([
+          ...lista.map((i) => i.exercicio),
+          ...(resolucao ?? []).flatMap((r) => [r.ano_a, r.ano_b]),
+        ]),
+      ].sort((a, b) => b - a),
+    [lista, resolucao],
   );
 
   const anoAlvo = busca.alvo ?? exercicios[0] ?? new Date().getFullYear();
@@ -178,12 +186,13 @@ function PaginaEstatisticas() {
         acoes: acoes ?? [],
         impugnacoes: impugnacoes ?? [],
         oficios: oficios ?? [],
+        resolucao: resolucao ?? [],
         anoBase,
         anoAlvo,
         tipo,
         remessa,
       }),
-    [municipios, lista, acoes, impugnacoes, oficios, anoBase, anoAlvo, tipo, remessa],
+    [municipios, lista, acoes, impugnacoes, oficios, resolucao, anoBase, anoAlvo, tipo, remessa],
   );
 
   const visiveis = useMemo(() => {

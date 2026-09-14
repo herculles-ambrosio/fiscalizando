@@ -410,3 +410,51 @@ export function csvEvolucao(
   ];
   return out.map((linha) => linha.map((c) => esc(String(c))).join(";")).join("\n");
 }
+
+export type ImpactoContribuinte = {
+  inscricao_estadual: string;
+  nome: string | null;
+  cnpj: string | null;
+  vafAtual: number;
+  vafBase: number;
+  /** Percentual que o contribuinte representa do VAF total do arquivo comparado. */
+  participacaoPct: number;
+  /** Participação acumulada, do maior para o menor. */
+  acumuladoPct: number;
+  /** Parcela do índice do município atribuível ao contribuinte. */
+  pontosIndice: number | null;
+  variacaoPct: number | null;
+};
+
+/**
+ * Peso de cada contribuinte no VAF do arquivo comparado/estimado: quanto ele
+ * representa do total e quanto disso se converte em índice do município.
+ */
+export function impactoPorContribuinte(
+  movimentos: MovimentoDeclarante[],
+  indiceAtual: number | null,
+): { linhas: ImpactoContribuinte[]; total: number } {
+  const positivos = movimentos.filter((m) => m.vafAtual > 0);
+  const total = positivos.reduce((s, m) => s + m.vafAtual, 0);
+  const ordenados = [...positivos].sort((a, b) => b.vafAtual - a.vafAtual);
+
+  let acumulado = 0;
+  const linhas = ordenados.map((m) => {
+    const participacaoPct = total > 0 ? (m.vafAtual / total) * 100 : 0;
+    acumulado += participacaoPct;
+    return {
+      inscricao_estadual: m.inscricao_estadual,
+      nome: m.nome,
+      cnpj: m.cnpj,
+      vafAtual: m.vafAtual,
+      vafBase: m.vafBase,
+      participacaoPct,
+      acumuladoPct: acumulado,
+      pontosIndice:
+        indiceAtual != null && total > 0 ? (indiceAtual * m.vafAtual) / total : null,
+      variacaoPct: m.variacaoPct,
+    };
+  });
+
+  return { linhas, total };
+}

@@ -1793,6 +1793,74 @@ export type Database = {
           },
         ]
       }
+      indices_resolucao: {
+        Row: {
+          ano_a: number
+          ano_b: number
+          atualizado_em: string
+          codigo_mun: string
+          criado_em: string
+          criado_por: string | null
+          exercicio_aplicacao: number
+          fonte_url: string | null
+          id: string
+          indice_a: number | null
+          indice_b: number | null
+          media_indices: number | null
+          municipio_id: string | null
+          municipio_nome: string
+          resolucao: string
+          vaf_a: number | null
+          vaf_b: number | null
+        }
+        Insert: {
+          ano_a: number
+          ano_b: number
+          atualizado_em?: string
+          codigo_mun: string
+          criado_em?: string
+          criado_por?: string | null
+          exercicio_aplicacao: number
+          fonte_url?: string | null
+          id?: string
+          indice_a?: number | null
+          indice_b?: number | null
+          media_indices?: number | null
+          municipio_id?: string | null
+          municipio_nome: string
+          resolucao: string
+          vaf_a?: number | null
+          vaf_b?: number | null
+        }
+        Update: {
+          ano_a?: number
+          ano_b?: number
+          atualizado_em?: string
+          codigo_mun?: string
+          criado_em?: string
+          criado_por?: string | null
+          exercicio_aplicacao?: number
+          fonte_url?: string | null
+          id?: string
+          indice_a?: number | null
+          indice_b?: number | null
+          media_indices?: number | null
+          municipio_id?: string | null
+          municipio_nome?: string
+          resolucao?: string
+          vaf_a?: number | null
+          vaf_b?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indices_resolucao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs_lease: {
         Row: {
           atualizado_em: string
@@ -1878,22 +1946,28 @@ export type Database = {
       }
       municipios: {
         Row: {
+          cliente: boolean
           codigo_sef: string
           criado_em: string
+          fonte_indice: string
           id: string
           nome: string
           uf: string
         }
         Insert: {
+          cliente?: boolean
           codigo_sef: string
           criado_em?: string
+          fonte_indice?: string
           id?: string
           nome: string
           uf?: string
         }
         Update: {
+          cliente?: boolean
           codigo_sef?: string
           criado_em?: string
+          fonte_indice?: string
           id?: string
           nome?: string
           uf?: string

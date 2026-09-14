@@ -1,15 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import EditarPrefeitura, { type PrefeituraEdicao } from "@/components/consultoria/EditarPrefeitura";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +62,8 @@ type Linha = {
   nome: string;
   uf: string;
   codigo_sef: string;
+  cliente: boolean;
+  fonte_indice: string;
   exercicio: number | null;
   omissos: number | null;
   zerados: number | null;
@@ -68,14 +79,17 @@ function Prefeituras() {
   const [nome, setNome] = useState("");
   const [uf, setUf] = useState("MG");
   const [codigo, setCodigo] = useState("");
+  const [novoCliente, setNovoCliente] = useState("sim");
+  const [novaFonte, setNovaFonte] = useState("apuracao");
   const [salvando, setSalvando] = useState(false);
+  const [editando, setEditando] = useState<PrefeituraEdicao | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["carteira"],
     queryFn: async (): Promise<Linha[]> => {
       const { data: municipios, error } = await supabase
         .from("municipios")
-        .select("id, nome, uf, codigo_sef")
+        .select("id, nome, uf, codigo_sef, cliente, fonte_indice")
         .order("nome");
       if (error) throw error;
 
@@ -107,9 +121,14 @@ function Prefeituras() {
   async function criar(e: React.FormEvent) {
     e.preventDefault();
     setSalvando(true);
-    const { error } = await supabase
-      .from("municipios")
-      .insert({ nome: nome.trim(), uf: uf.trim().toUpperCase(), codigo_sef: codigo.trim() });
+    const ehCliente = novoCliente === "sim";
+    const { error } = await supabase.from("municipios").insert({
+      nome: nome.trim(),
+      uf: uf.trim().toUpperCase(),
+      codigo_sef: codigo.trim(),
+      cliente: ehCliente,
+      fonte_indice: ehCliente ? "apuracao" : novaFonte,
+    });
     setSalvando(false);
     if (error) {
       toast.error("Não foi possível cadastrar a prefeitura.", { description: error.message });
@@ -129,7 +148,8 @@ function Prefeituras() {
         <div>
           <h1 className="text-2xl font-semibold">Prefeituras</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Carteira atendida pela consultoria. Clique em uma linha para trabalhar naquele município.
+            Carteira atendida pela consultoria. Clique em uma linha para trabalhar naquele
+            município.
           </p>
         </div>
         {perfil?.ehSuperadmin && (
@@ -147,12 +167,24 @@ function Prefeituras() {
               <form onSubmit={criar} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Município</Label>
-                  <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required maxLength={120} />
+                  <Input
+                    id="nome"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    required
+                    maxLength={120}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="uf">UF</Label>
-                    <Input id="uf" value={uf} onChange={(e) => setUf(e.target.value)} required maxLength={2} />
+                    <Input
+                      id="uf"
+                      value={uf}
+                      onChange={(e) => setUf(e.target.value)}
+                      required
+                      maxLength={2}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="codigo">Código SEF</Label>
@@ -163,6 +195,36 @@ function Prefeituras() {
                       required
                       maxLength={20}
                     />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Situação comercial</Label>
+                    <Select value={novoCliente} onValueChange={setNovoCliente}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sim">É cliente</SelectItem>
+                        <SelectItem value="nao">Não é cliente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Origem dos índices</Label>
+                    <Select
+                      value={novoCliente === "sim" ? "apuracao" : novaFonte}
+                      onValueChange={setNovaFonte}
+                      disabled={novoCliente === "sim"}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="apuracao">Apurações no sistema</SelectItem>
+                        <SelectItem value="resolucao">Índices da Resolução SEF</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <DialogFooter>
@@ -189,10 +251,12 @@ function Prefeituras() {
                 <TableRow>
                   <TableHead>Município</TableHead>
                   <TableHead>Código SEF</TableHead>
+                  <TableHead>Cliente</TableHead>
                   <TableHead>Último exercício</TableHead>
                   <TableHead className="text-right">Omissos</TableHead>
                   <TableHead className="text-right">Zerados</TableHead>
                   <TableHead className="text-right">Discrepantes</TableHead>
+                  <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -209,15 +273,37 @@ function Prefeituras() {
                       {m.nome}/{m.uf}
                     </TableCell>
                     <TableCell>{m.codigo_sef}</TableCell>
+                    <TableCell>
+                      <Badge variant={m.cliente ? "default" : "outline"}>
+                        {m.cliente
+                          ? "Cliente"
+                          : m.fonte_indice === "resolucao"
+                            ? "Resolução SEF"
+                            : "Não é cliente"}
+                      </Badge>
+                    </TableCell>
                     <TableCell>{m.exercicio ?? "—"}</TableCell>
                     <TableCell className="text-right">{m.omissos ?? "—"}</TableCell>
                     <TableCell className="text-right">{m.zerados ?? "—"}</TableCell>
                     <TableCell className="text-right">{m.discrepantes ?? "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditando(m);
+                        }}
+                      >
+                        <Pencil className="mr-1 h-3.5 w-3.5" />
+                        Editar
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {(data ?? []).length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                       Nenhuma prefeitura cadastrada.
                     </TableCell>
                   </TableRow>
@@ -227,6 +313,13 @@ function Prefeituras() {
           )}
         </CardContent>
       </Card>
+
+      <EditarPrefeitura
+        prefeitura={editando}
+        onOpenChange={(aberto) => {
+          if (!aberto) setEditando(null);
+        }}
+      />
     </div>
   );
 }

@@ -86,24 +86,84 @@ export type LinhaPanorama = {
   providencias: Providencias;
 };
 
+/** Índices publicados em resolução da SEF-MG, usados por prefeituras não clientes. */
+export type ResolucaoPanorama = {
+  municipio_id: string | null;
+  resolucao: string;
+  ano_a: number;
+  indice_a: number | null;
+  ano_b: number;
+  indice_b: number | null;
+  media_indices: number | null;
+};
+
+function indiceDaResolucao(
+  linhas: ResolucaoPanorama[],
+  municipioId: string,
+  exercicio: number,
+  tipo: TipoAlvo,
+): IndicePanorama | null {
+  for (const r of linhas.filter((l) => l.municipio_id === municipioId)) {
+    const indice = r.ano_a === exercicio ? r.indice_a : r.ano_b === exercicio ? r.indice_b : null;
+    if (indice == null) continue;
+    return {
+      id: `resolucao-${r.resolucao}-${municipioId}-${exercicio}`,
+      municipio_id: municipioId,
+      exercicio,
+      tipo_indice: tipo,
+      competencia_mes: null,
+      competencia_ano: null,
+      estimado: false,
+      indice: Number(indice),
+      valor_liquido: 0,
+      vaf_proprio: 0,
+      credito_externo: 0,
+      credito_interno: 0,
+      credito_proprio: 0,
+      debito: 0,
+      vaf_estadual: 0,
+      arquivo_nome: `Resolução SEF ${r.resolucao}`,
+      criado_em: new Date(0).toISOString(),
+    };
+  }
+  return null;
+}
+
 export function montarPanorama(params: {
-  municipios: { id: string; nome: string }[];
+  municipios: { id: string; nome: string; cliente?: boolean; fonte_indice?: string }[];
   indices: IndicePanorama[];
   acoes: AcaoPanorama[];
   impugnacoes: ImpugnacaoPanorama[];
   oficios: OficioPanorama[];
+  resolucao?: ResolucaoPanorama[];
   anoBase: number;
   anoAlvo: number;
   tipo: TipoAlvo;
   remessa: number | null;
 }): LinhaPanorama[] {
-  const { municipios, indices, acoes, impugnacoes, oficios, anoBase, anoAlvo, tipo, remessa } =
-    params;
+  const {
+    municipios,
+    indices,
+    acoes,
+    impugnacoes,
+    oficios,
+    resolucao = [],
+    anoBase,
+    anoAlvo,
+    tipo,
+    remessa,
+  } = params;
 
   return municipios.map((m) => {
     const doMunicipio = indices.filter((i) => i.municipio_id === m.id);
-    const base = apuracaoBase(doMunicipio, anoBase);
-    const alvo = apuracaoAlvo(doMunicipio, anoAlvo, tipo, remessa);
+    // prefeituras que não são clientes podem usar os índices publicados em resolução
+    const usaResolucao = m.cliente === false && m.fonte_indice === "resolucao";
+    const base =
+      apuracaoBase(doMunicipio, anoBase) ??
+      (usaResolucao ? indiceDaResolucao(resolucao, m.id, anoBase, "definitivo") : null);
+    const alvo =
+      apuracaoAlvo(doMunicipio, anoAlvo, tipo, remessa) ??
+      (usaResolucao ? indiceDaResolucao(resolucao, m.id, anoAlvo, tipo) : null);
 
     const iBase = base ? Number(base.indice) : null;
     const iAlvo = alvo ? Number(alvo.indice) : null;
