@@ -595,7 +595,7 @@ function PaginaEstatisticas() {
       )}
 
       <Sheet open={!!detalhe} onOpenChange={(v) => !v && setDetalhe(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent className="w-full overflow-y-auto sm:max-w-3xl">
           {detalhe && (
             <>
               <SheetHeader>
@@ -626,39 +626,15 @@ function PaginaEstatisticas() {
                     />
                   </div>
                 )}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Providências</p>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    <li>
-                      Plano de recuperação: {detalhe.providencias.acoes} ações ·{" "}
-                      {detalhe.providencias.acoesOficio} com ofício enviado ·{" "}
-                      {detalhe.providencias.acoesConcluidas} concluídas
-                    </li>
-                    <li>
-                      A recuperar: {formatarMoeda(detalhe.providencias.valorRecuperavel)}
-                    </li>
-                    <li>Ofícios emitidos no exercício: {detalhe.providencias.oficios}</li>
-                  </ul>
-                  {detalhe.providencias.impugnacoes.length ? (
-                    <ul className="space-y-1 text-sm">
-                      {detalhe.providencias.impugnacoes.map((i) => (
-                        <li key={i.id} className="flex flex-wrap items-center gap-2">
-                          <Badge variant="secondary">{rotuloStatus(i.status)}</Badge>
-                          <span>{i.nome}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {i.protocolo_numero ? `SEI ${i.protocolo_numero}` : "sem protocolo"}
-                            {i.protocolado_em
-                              ? ` · ${new Date(`${i.protocolado_em}T12:00:00`).toLocaleDateString("pt-BR")}`
-                              : ""}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Nenhuma impugnação montada para este exercício.
-                    </p>
-                  )}
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">Providências em {anoAlvo}</p>
+                  <PlanoMunicipio
+                    linha={detalhe}
+                    exercicio={anoAlvo}
+                    aba={abaPlano}
+                    onAba={setAbaPlano}
+                    irPara={irPara}
+                  />
                 </div>
               </div>
             </>
