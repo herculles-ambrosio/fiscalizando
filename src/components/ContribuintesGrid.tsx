@@ -65,6 +65,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  cnpjValido,
   limparCnpj,
   ROTULO_SITUACAO_RECEITA,
   SITUACOES_RECEITA,
@@ -522,7 +523,6 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
     let q = supabase.from("contribuintes_apurados").select("cnpj").eq("carga_id", cargaId);
     if (filtros.length) q = q.overlaps("situacoes", filtros);
-    else q = q.not("situacoes", "cs", "{SOMENTE_RETORNO}");
     if (cnae !== "TODOS") q = q.eq("cnae", cnae);
     if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
     if (termo)
@@ -558,18 +558,23 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
       });
       return;
     }
-    if (!cnpjs.some((c) => limparCnpj(c))) {
+    // O arquivo de retorno às vezes traz números que não são CNPJ: não gastamos
+    // tentativas com eles, mas avisamos quantos ficaram de fora.
+    const validos = cnpjs.filter((c) => cnpjValido(c));
+    const descartados = cnpjs.filter((c) => limparCnpj(c) && !cnpjValido(c)).length;
+    if (!validos.length) {
       toast.error("Nenhum CNPJ válido no escopo escolhido.");
       return;
     }
     consulta.mutate(
-      { cnpjs, forcar },
+      { cnpjs: validos, forcar },
       {
         onSuccess: (r) => {
           const semResposta = r.falhas.length;
           const naoEncontrados = r.naoEncontrados?.length ?? 0;
           const descricao = [
             r.cache ? `${r.cache} já estavam em cache` : null,
+            descartados ? `${descartados} com CNPJ inválido no arquivo` : null,
             naoEncontrados ? `${naoEncontrados} não constam nas bases públicas` : null,
             semResposta
               ? `${semResposta} sem resposta das bases agora — clique novamente em alguns minutos para consultar só esses`
