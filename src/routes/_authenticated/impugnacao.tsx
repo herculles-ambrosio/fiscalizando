@@ -88,6 +88,31 @@ const numero = (v: string): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/** Campo monetário: enquanto digita mantém o texto do usuário; formata ao sair. */
+function EntradaMoeda({
+  valor,
+  aoMudar,
+  ...resto
+}: { valor: number; aoMudar: (v: number) => void } & Omit<
+  React.ComponentProps<typeof Input>,
+  "value" | "onChange"
+>) {
+  const formatar = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+  const [texto, setTexto] = useState<string | null>(null);
+  return (
+    <Input
+      {...resto}
+      value={texto ?? formatar(valor)}
+      onChange={(e) => {
+        setTexto(e.target.value);
+        aoMudar(numero(e.target.value));
+      }}
+      onBlur={() => setTexto(null)}
+    />
+  );
+}
+
+
 function ImpugnacaoPagina() {
   const busca = Route.useSearch();
   const { municipio, municipioId } = useMunicipioAtivo();
@@ -466,21 +491,25 @@ function ImpugnacaoPagina() {
                         />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Input
+                        <EntradaMoeda
                           className="text-right"
-                          value={i.vafApurado.toLocaleString("pt-BR", {
-                            minimumFractionDigits: 2,
-                          })}
-                          onChange={(e) => alterar(n, "vafApurado", e.target.value)}
+                          valor={i.vafApurado}
+                          aoMudar={(v) =>
+                            setItens((a) =>
+                              a.map((x, k) => (k === n ? { ...x, vafApurado: v } : x)),
+                            )
+                          }
                         />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Input
+                        <EntradaMoeda
                           className="text-right"
-                          value={i.vafCorreto.toLocaleString("pt-BR", {
-                            minimumFractionDigits: 2,
-                          })}
-                          onChange={(e) => alterar(n, "vafCorreto", e.target.value)}
+                          valor={i.vafCorreto}
+                          aoMudar={(v) =>
+                            setItens((a) =>
+                              a.map((x, k) => (k === n ? { ...x, vafCorreto: v } : x)),
+                            )
+                          }
                         />
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-right tabular-nums">
@@ -543,7 +572,14 @@ function ImpugnacaoPagina() {
                       setAnoBase(s.ano_base ?? s.exercicio - 2);
                       setResolucao(s.resolucao);
                       setResolucaoData(s.resolucao_data ?? "");
-                      setIndice(s.indice_publicado != null ? String(s.indice_publicado) : "");
+                      setIndice(
+                        s.indice_publicado != null
+                          ? Number(s.indice_publicado).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 7,
+                              maximumFractionDigits: 7,
+                            })
+                          : "",
+                      );
                       setObservacao(s.observacao ?? "");
                       setItens(s.itens ?? []);
                       toast.success("Impugnação carregada.");
