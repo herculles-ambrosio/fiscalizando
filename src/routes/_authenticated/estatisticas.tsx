@@ -458,7 +458,7 @@ function PaginaEstatisticas() {
                   <TableRow
                     key={l.municipioId}
                     className="cursor-pointer"
-                    onClick={() => setDetalhe(l)}
+                    onClick={() => abrirDetalhe(l)}
                   >
                     <TableCell className="font-medium">{l.nome}</TableCell>
                     <TableCell className="text-right font-mono text-xs tabular-nums">
@@ -509,7 +509,20 @@ function PaginaEstatisticas() {
                       </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      <Providencia linha={l} />
+                      <div className="space-y-1.5">
+                        <Providencia linha={l} />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            abrirDetalhe(l, "plano");
+                          }}
+                        >
+                          <ClipboardList className="mr-1.5 h-3.5 w-3.5" /> Ver plano
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
