@@ -572,7 +572,14 @@ function ImpugnacaoPagina() {
                       setAnoBase(s.ano_base ?? s.exercicio - 2);
                       setResolucao(s.resolucao);
                       setResolucaoData(s.resolucao_data ?? "");
-                      setIndice(s.indice_publicado != null ? String(s.indice_publicado) : "");
+                      setIndice(
+                        s.indice_publicado != null
+                          ? Number(s.indice_publicado).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 7,
+                              maximumFractionDigits: 7,
+                            })
+                          : "",
+                      );
                       setObservacao(s.observacao ?? "");
                       setItens(s.itens ?? []);
                       toast.success("Impugnação carregada.");
