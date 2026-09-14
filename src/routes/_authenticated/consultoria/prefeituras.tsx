@@ -53,6 +53,8 @@ type Linha = {
   nome: string;
   uf: string;
   codigo_sef: string;
+  cliente: boolean;
+  fonte_indice: string;
   exercicio: number | null;
   omissos: number | null;
   zerados: number | null;
@@ -68,14 +70,17 @@ function Prefeituras() {
   const [nome, setNome] = useState("");
   const [uf, setUf] = useState("MG");
   const [codigo, setCodigo] = useState("");
+  const [novoCliente, setNovoCliente] = useState("sim");
+  const [novaFonte, setNovaFonte] = useState("apuracao");
   const [salvando, setSalvando] = useState(false);
+  const [editando, setEditando] = useState<PrefeituraEdicao | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["carteira"],
     queryFn: async (): Promise<Linha[]> => {
       const { data: municipios, error } = await supabase
         .from("municipios")
-        .select("id, nome, uf, codigo_sef")
+        .select("id, nome, uf, codigo_sef, cliente, fonte_indice")
         .order("nome");
       if (error) throw error;
 
@@ -107,9 +112,14 @@ function Prefeituras() {
   async function criar(e: React.FormEvent) {
     e.preventDefault();
     setSalvando(true);
-    const { error } = await supabase
-      .from("municipios")
-      .insert({ nome: nome.trim(), uf: uf.trim().toUpperCase(), codigo_sef: codigo.trim() });
+    const ehCliente = novoCliente === "sim";
+    const { error } = await supabase.from("municipios").insert({
+      nome: nome.trim(),
+      uf: uf.trim().toUpperCase(),
+      codigo_sef: codigo.trim(),
+      cliente: ehCliente,
+      fonte_indice: ehCliente ? "apuracao" : novaFonte,
+    });
     setSalvando(false);
     if (error) {
       toast.error("Não foi possível cadastrar a prefeitura.", { description: error.message });
