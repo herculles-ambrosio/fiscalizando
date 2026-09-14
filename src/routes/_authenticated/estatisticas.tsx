@@ -17,8 +17,11 @@ import {
   YAxis,
 } from "recharts";
 import {
+  ArrowDown,
   ArrowDownRight,
   ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
   ArrowUpRight,
   Calculator,
   ClipboardList,
@@ -74,7 +77,8 @@ import { ROTULO_STATUS_ACAO, type StatusAcao } from "@/hooks/useAcoesRecuperacao
 import { PlanoMunicipio, type AbaPlano } from "@/components/estatisticas/PlanoMunicipio";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
-type Ordem = "variacao" | "indice" | "nome";
+type Ordem = "variacao" | "indice_base" | "indice_atual" | "nome" | "situacao";
+type Direcao = "asc" | "desc";
 
 const num = (v: unknown): number | null => {
   const n = Number(v);
@@ -121,7 +125,18 @@ function PaginaEstatisticas() {
   const { trocar: trocarMunicipio, podeTrocar } = useMunicipioAtivo();
 
   const [texto, setTexto] = useState("");
+  const [situacaoFiltro, setSituacaoFiltro] = useState<string>("todas");
   const [ordem, setOrdem] = useState<Ordem>("variacao");
+  const [direcao, setDirecao] = useState<Direcao>("desc");
+
+  /** Alterna a direção ao clicar de novo na mesma coluna. */
+  function ordenarPor(coluna: Ordem) {
+    if (coluna === ordem) setDirecao((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setOrdem(coluna);
+      setDirecao(coluna === "nome" || coluna === "situacao" ? "asc" : "desc");
+    }
+  }
   const [detalhe, setDetalhe] = useState<LinhaPanorama | null>(null);
   const [abaPlano, setAbaPlano] = useState<AbaPlano>("plano");
 
@@ -197,16 +212,27 @@ function PaginaEstatisticas() {
 
   const visiveis = useMemo(() => {
     const alvo = texto.trim().toLowerCase();
-    const filtradas = alvo
-      ? linhas.filter((l) => l.nome.toLowerCase().includes(alvo))
-      : [...linhas];
+    const filtradas = linhas.filter((l) => {
+      if (alvo && !l.nome.toLowerCase().includes(alvo)) return false;
+      if (situacaoFiltro !== "todas" && l.situacao !== situacaoFiltro) return false;
+      return true;
+    });
+    const fator = direcao === "asc" ? 1 : -1;
     filtradas.sort((a, b) => {
-      if (ordem === "nome") return a.nome.localeCompare(b.nome, "pt-BR");
-      if (ordem === "indice") return Number(b.alvo?.indice ?? -1) - Number(a.alvo?.indice ?? -1);
-      return (b.variacao ?? -Infinity) - (a.variacao ?? -Infinity);
+      let cmp = 0;
+      if (ordem === "nome") cmp = a.nome.localeCompare(b.nome, "pt-BR");
+      else if (ordem === "situacao")
+        cmp = ROTULO_SITUACAO[a.situacao].localeCompare(ROTULO_SITUACAO[b.situacao], "pt-BR");
+      else if (ordem === "indice_base")
+        cmp = Number(a.base?.indice ?? -1) - Number(b.base?.indice ?? -1);
+      else if (ordem === "indice_atual")
+        cmp = Number(a.alvo?.indice ?? -1) - Number(b.alvo?.indice ?? -1);
+      else cmp = (a.variacao ?? -Infinity) - (b.variacao ?? -Infinity);
+      if (cmp === 0) cmp = a.nome.localeCompare(b.nome, "pt-BR");
+      return cmp * fator;
     });
     return filtradas;
-  }, [linhas, texto, ordem]);
+  }, [linhas, texto, situacaoFiltro, ordem, direcao]);
 
   const comparados = linhas.filter((l) => l.base && l.alvo);
   const resumo = {
@@ -413,15 +439,17 @@ function PaginaEstatisticas() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ordem">Ordenar por</Label>
-            <Select value={ordem} onValueChange={(v) => setOrdem(v as Ordem)}>
-              <SelectTrigger id="ordem" className="w-44">
+            <Label htmlFor="filtro-situacao">Situação</Label>
+            <Select value={situacaoFiltro} onValueChange={setSituacaoFiltro}>
+              <SelectTrigger id="filtro-situacao" className="w-44">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="variacao">Maior variação</SelectItem>
-                <SelectItem value="indice">Maior índice atual</SelectItem>
-                <SelectItem value="nome">Nome</SelectItem>
+                <SelectItem value="todas">Todas</SelectItem>
+                <SelectItem value="subiu">Subiu</SelectItem>
+                <SelectItem value="caiu">Caiu</SelectItem>
+                <SelectItem value="estavel">Estável</SelectItem>
+                <SelectItem value="sem_apuracao">Sem apuração</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -459,13 +487,13 @@ function PaginaEstatisticas() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Município</TableHead>
-                  <TableHead className="text-right">Índice {anoBase}</TableHead>
+                  <Cabecalho rotulo="Município" coluna="nome" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} />
+                  <Cabecalho rotulo={`Índice ${anoBase}`} coluna="indice_base" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
                   <TableHead className="text-right">Valor {anoBase}</TableHead>
-                  <TableHead className="text-right">Índice {anoAlvo}</TableHead>
+                  <Cabecalho rotulo={`Índice ${anoAlvo}`} coluna="indice_atual" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
                   <TableHead className="text-right">Valor {anoAlvo}</TableHead>
-                  <TableHead className="text-right">Variação</TableHead>
-                  <TableHead>Situação</TableHead>
+                  <Cabecalho rotulo="Variação" coluna="variacao" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
+                  <Cabecalho rotulo="Situação" coluna="situacao" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} />
                   <TableHead>Providências</TableHead>
                 </TableRow>
               </TableHeader>
@@ -781,6 +809,45 @@ function Providencia({ linha }: { linha: LinhaPanorama }) {
       )}
       {p.oficios > 0 && <p>{p.oficios} ofícios emitidos</p>}
     </div>
+  );
+}
+
+/** Cabeçalho de coluna clicável: clica para ordenar, clica de novo para inverter. */
+function Cabecalho({
+  rotulo,
+  coluna,
+  ordem,
+  direcao,
+  onOrdenar,
+  direita,
+}: {
+  rotulo: string;
+  coluna: Ordem;
+  ordem: Ordem;
+  direcao: Direcao;
+  onOrdenar: (coluna: Ordem) => void;
+  direita?: boolean;
+}) {
+  const ativo = ordem === coluna;
+  return (
+    <TableHead className={direita ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => onOrdenar(coluna)}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${direita ? "flex-row-reverse" : ""} ${ativo ? "text-foreground" : "text-muted-foreground"}`}
+      >
+        {rotulo}
+        {ativo ? (
+          direcao === "asc" ? (
+            <ArrowUp className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
   );
 }
 
