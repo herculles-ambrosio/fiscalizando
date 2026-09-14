@@ -491,21 +491,25 @@ function ImpugnacaoPagina() {
                         />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Input
+                        <EntradaMoeda
                           className="text-right"
-                          value={i.vafApurado.toLocaleString("pt-BR", {
-                            minimumFractionDigits: 2,
-                          })}
-                          onChange={(e) => alterar(n, "vafApurado", e.target.value)}
+                          valor={i.vafApurado}
+                          aoMudar={(v) =>
+                            setItens((a) =>
+                              a.map((x, k) => (k === n ? { ...x, vafApurado: v } : x)),
+                            )
+                          }
                         />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Input
+                        <EntradaMoeda
                           className="text-right"
-                          value={i.vafCorreto.toLocaleString("pt-BR", {
-                            minimumFractionDigits: 2,
-                          })}
-                          onChange={(e) => alterar(n, "vafCorreto", e.target.value)}
+                          valor={i.vafCorreto}
+                          aoMudar={(v) =>
+                            setItens((a) =>
+                              a.map((x, k) => (k === n ? { ...x, vafCorreto: v } : x)),
+                            )
+                          }
                         />
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-right tabular-nums">
