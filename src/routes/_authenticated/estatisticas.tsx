@@ -254,6 +254,39 @@ function PaginaEstatisticas() {
     baixarCsv(`panorama-vaf-${anoBase}-x-${anoAlvo}.csv`, csv);
   }
 
+  /** Uma linha por contribuinte do plano de recuperação, de todos os municípios visíveis. */
+  function exportarPlano() {
+    const linhasCsv = visiveis.flatMap((l) =>
+      l.providencias.acoesDetalhe.map((a) => [
+        l.nome,
+        a.inscricao_estadual,
+        a.cnpj ?? "",
+        a.nome_contribuinte ?? "",
+        a.acao_titulo,
+        Number(a.valor_recuperavel ?? 0)
+          .toFixed(2)
+          .replace(".", ","),
+        ROTULO_STATUS_ACAO[a.status as StatusAcao] ?? a.status,
+        a.observacao ?? "",
+      ]),
+    );
+    const csv = montarCsv(
+      [
+        "Município",
+        "Inscrição estadual",
+        "CNPJ",
+        "Contribuinte",
+        "Ação",
+        "A recuperar",
+        "Situação",
+        "Observação",
+      ],
+      linhasCsv,
+    );
+    baixarCsv(`plano-recuperacao-${anoAlvo}.csv`, csv);
+  }
+
+
   if (carregandoMunicipios || carregandoIndices) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
