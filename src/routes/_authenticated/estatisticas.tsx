@@ -122,7 +122,18 @@ function PaginaEstatisticas() {
   const { trocar: trocarMunicipio, podeTrocar } = useMunicipioAtivo();
 
   const [texto, setTexto] = useState("");
+  const [situacaoFiltro, setSituacaoFiltro] = useState<string>("todas");
   const [ordem, setOrdem] = useState<Ordem>("variacao");
+  const [direcao, setDirecao] = useState<Direcao>("desc");
+
+  /** Alterna a direção ao clicar de novo na mesma coluna. */
+  function ordenarPor(coluna: Ordem) {
+    if (coluna === ordem) setDirecao((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setOrdem(coluna);
+      setDirecao(coluna === "nome" || coluna === "situacao" ? "asc" : "desc");
+    }
+  }
   const [detalhe, setDetalhe] = useState<LinhaPanorama | null>(null);
   const [abaPlano, setAbaPlano] = useState<AbaPlano>("plano");
 
