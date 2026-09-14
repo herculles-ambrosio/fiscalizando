@@ -41,8 +41,7 @@ import { formatarCnpj, formatarData, formatarDataHora, formatarMoeda } from "@/l
 
 export type AbaPlano = "plano" | "oficios" | "impugnacoes";
 
-const rotuloAcao = (s: string): string =>
-  ROTULO_STATUS_ACAO[s as StatusAcao] ?? s;
+const rotuloAcao = (s: string): string => ROTULO_STATUS_ACAO[s as StatusAcao] ?? s;
 
 function StatusAcaoBadge({ status }: { status: string }) {
   const classe = CORES_STATUS_ACAO[status as StatusAcao] ?? "border-border bg-muted";
@@ -109,7 +108,9 @@ export function PlanoMunicipio({
     <Tabs value={aba} onValueChange={(v) => onAba(v as AbaPlano)} className="space-y-4">
       <TabsList>
         <TabsTrigger value="plano">Plano ({acoes.length})</TabsTrigger>
-        <TabsTrigger value="oficios">Ofícios ({oficios?.length ?? linha.providencias.oficios})</TabsTrigger>
+        <TabsTrigger value="oficios">
+          Ofícios ({oficios?.length ?? linha.providencias.oficios})
+        </TabsTrigger>
         <TabsTrigger value="impugnacoes">Impugnações ({impugnacoes.length})</TabsTrigger>
       </TabsList>
 
@@ -119,10 +120,7 @@ export function PlanoMunicipio({
             <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
               <Resumo rotulo="Contribuintes" valor={String(contribuintes)} />
               <Resumo rotulo="Valor no plano" valor={formatarMoeda(total)} />
-              <Resumo
-                rotulo="Com ofício enviado"
-                valor={String(linha.providencias.acoesOficio)}
-              />
+              <Resumo rotulo="Com ofício enviado" valor={String(linha.providencias.acoesOficio)} />
               <Resumo rotulo="Concluídas" valor={String(linha.providencias.acoesConcluidas)} />
             </div>
             <div className="flex flex-wrap items-center gap-2">

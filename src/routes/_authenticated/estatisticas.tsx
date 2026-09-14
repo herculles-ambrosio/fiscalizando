@@ -294,7 +294,6 @@ function PaginaEstatisticas() {
     baixarCsv(`plano-recuperacao-${anoAlvo}.csv`, csv);
   }
 
-
   if (carregandoMunicipios || carregandoIndices) {
     return (
       <div className="flex h-64 items-center justify-center text-muted-foreground">
@@ -582,7 +581,14 @@ function PaginaEstatisticas() {
           <CardContent>
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={dadosIndices} margin={{ left: 8, right: 8 }}>
-                <XAxis dataKey="nome" fontSize={11} interval={0} angle={-20} textAnchor="end" height={70} />
+                <XAxis
+                  dataKey="nome"
+                  fontSize={11}
+                  interval={0}
+                  angle={-20}
+                  textAnchor="end"
+                  height={70}
+                />
                 <YAxis fontSize={11} tickFormatter={(v: number) => v.toFixed(3)} />
                 <ChartTooltip formatter={(v: number) => formatarIndice(v)} />
                 <Legend />
@@ -611,8 +617,8 @@ function PaginaEstatisticas() {
                 {(!detalhe.base || !detalhe.alvo) && (
                   <div className="space-y-2 rounded-md border border-dashed p-3">
                     <p className="text-sm text-muted-foreground">
-                      Para este município entrar no comparativo, apure o índice em Análises do
-                      VAF: suba o arquivo da SEFAZ, apure e clique em “Salvar apuração”.
+                      Para este município entrar no comparativo, apure o índice em Análises do VAF:
+                      suba o arquivo da SEFAZ, apure e clique em “Salvar apuração”.
                     </p>
                     <AcaoApurar
                       linha={detalhe}
@@ -645,13 +651,7 @@ function PaginaEstatisticas() {
   );
 }
 
-function Composicao({
-  titulo,
-  registro,
-}: {
-  titulo: string;
-  registro: LinhaPanorama["base"];
-}) {
+function Composicao({ titulo, registro }: { titulo: string; registro: LinhaPanorama["base"] }) {
   if (!registro) {
     return (
       <div>
@@ -731,7 +731,10 @@ function SituacaoBadge({ linha }: { linha: LinhaPanorama }) {
   const rotulo = ROTULO_SITUACAO[linha.situacao];
   if (linha.situacao === "subiu")
     return (
-      <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" variant="secondary">
+      <Badge
+        className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+        variant="secondary"
+      >
         <ArrowUpRight className="mr-1 h-3 w-3" /> {rotulo}
       </Badge>
     );
