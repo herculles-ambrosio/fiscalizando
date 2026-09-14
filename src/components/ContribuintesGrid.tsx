@@ -65,6 +65,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  cnpjValido,
   limparCnpj,
   ROTULO_SITUACAO_RECEITA,
   SITUACOES_RECEITA,
@@ -522,7 +523,6 @@ export function ContribuintesGrid({ cargaId, titulo }: { cargaId: string; titulo
 
     let q = supabase.from("contribuintes_apurados").select("cnpj").eq("carga_id", cargaId);
     if (filtros.length) q = q.overlaps("situacoes", filtros);
-    else q = q.not("situacoes", "cs", "{SOMENTE_RETORNO}");
     if (cnae !== "TODOS") q = q.eq("cnae", cnae);
     if (cadastral !== "TODOS") q = q.eq("situacao_cadastral", cadastral);
     if (termo)
