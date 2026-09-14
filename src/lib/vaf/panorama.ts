@@ -108,6 +108,8 @@ function indiceDaResolucao(
   for (const r of linhas.filter((l) => l.municipio_id === municipioId)) {
     const indice = r.ano_a === exercicio ? r.indice_a : r.ano_b === exercicio ? r.indice_b : null;
     if (indice == null) continue;
+    // o anexo publica o VAF individual do município no mesmo ano do índice
+    const vaf = Number((r.ano_a === exercicio ? r.vaf_a : r.vaf_b) ?? 0);
     return {
       id: `resolucao-${r.resolucao}-${municipioId}-${exercicio}`,
       municipio_id: municipioId,
