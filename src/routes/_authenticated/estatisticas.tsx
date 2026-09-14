@@ -209,16 +209,27 @@ function PaginaEstatisticas() {
 
   const visiveis = useMemo(() => {
     const alvo = texto.trim().toLowerCase();
-    const filtradas = alvo
-      ? linhas.filter((l) => l.nome.toLowerCase().includes(alvo))
-      : [...linhas];
+    const filtradas = linhas.filter((l) => {
+      if (alvo && !l.nome.toLowerCase().includes(alvo)) return false;
+      if (situacaoFiltro !== "todas" && l.situacao !== situacaoFiltro) return false;
+      return true;
+    });
+    const fator = direcao === "asc" ? 1 : -1;
     filtradas.sort((a, b) => {
-      if (ordem === "nome") return a.nome.localeCompare(b.nome, "pt-BR");
-      if (ordem === "indice") return Number(b.alvo?.indice ?? -1) - Number(a.alvo?.indice ?? -1);
-      return (b.variacao ?? -Infinity) - (a.variacao ?? -Infinity);
+      let cmp = 0;
+      if (ordem === "nome") cmp = a.nome.localeCompare(b.nome, "pt-BR");
+      else if (ordem === "situacao")
+        cmp = ROTULO_SITUACAO[a.situacao].localeCompare(ROTULO_SITUACAO[b.situacao], "pt-BR");
+      else if (ordem === "indice_base")
+        cmp = Number(a.base?.indice ?? -1) - Number(b.base?.indice ?? -1);
+      else if (ordem === "indice_atual")
+        cmp = Number(a.alvo?.indice ?? -1) - Number(b.alvo?.indice ?? -1);
+      else cmp = (a.variacao ?? -Infinity) - (b.variacao ?? -Infinity);
+      if (cmp === 0) cmp = a.nome.localeCompare(b.nome, "pt-BR");
+      return cmp * fator;
     });
     return filtradas;
-  }, [linhas, texto, ordem]);
+  }, [linhas, texto, situacaoFiltro, ordem, direcao]);
 
   const comparados = linhas.filter((l) => l.base && l.alvo);
   const resumo = {
