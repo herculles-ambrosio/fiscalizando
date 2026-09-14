@@ -812,6 +812,45 @@ function Providencia({ linha }: { linha: LinhaPanorama }) {
   );
 }
 
+/** Cabeçalho de coluna clicável: clica para ordenar, clica de novo para inverter. */
+function Cabecalho({
+  rotulo,
+  coluna,
+  ordem,
+  direcao,
+  onOrdenar,
+  direita,
+}: {
+  rotulo: string;
+  coluna: Ordem;
+  ordem: Ordem;
+  direcao: Direcao;
+  onOrdenar: (coluna: Ordem) => void;
+  direita?: boolean;
+}) {
+  const ativo = ordem === coluna;
+  return (
+    <TableHead className={direita ? "text-right" : undefined}>
+      <button
+        type="button"
+        onClick={() => onOrdenar(coluna)}
+        className={`inline-flex items-center gap-1 hover:text-foreground ${direita ? "flex-row-reverse" : ""} ${ativo ? "text-foreground" : "text-muted-foreground"}`}
+      >
+        {rotulo}
+        {ativo ? (
+          direcao === "asc" ? (
+            <ArrowUp className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
+  );
+}
+
 function Kpi({ rotulo, valor, apoio }: { rotulo: string; valor: string; apoio?: string }) {
   return (
     <Card>
