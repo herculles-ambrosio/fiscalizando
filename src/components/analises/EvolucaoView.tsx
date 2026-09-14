@@ -1081,6 +1081,40 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
+                  titulo={`Média dos índices${
+                    anoDoArquivo(base.nome) && anoDoArquivo(atual.nome)
+                      ? ` ${anoDoArquivo(base.nome)}/${anoDoArquivo(atual.nome)}`
+                      : ""
+                  }`}
+                  ajuda={
+                    <>
+                      <p>
+                        Média simples entre o índice do arquivo base ({rotuloArquivo(base)}) e o do
+                        arquivo comparado/estimado ({rotuloArquivo(atual)}).
+                      </p>
+                      <p>
+                        É esse valor que a SEF-MG aplica no repasse do exercício seguinte ao da
+                        última apuração.
+                      </p>
+                    </>
+                  }
+                />
+                <p className="break-words font-display text-lg font-semibold text-primary">
+                  {base.apuracao.indice > 0 && atual.apuracao.indice > 0
+                    ? `${formatarIndice((base.apuracao.indice + atual.apuracao.indice) / 2)}%`
+                    : "—"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {base.apuracao.indice > 0 && atual.apuracao.indice > 0
+                    ? "(índice base + índice comparado) ÷ 2"
+                    : "Faltam os índices dos dois arquivos para calcular a média."}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="space-y-1 p-4">
+                <RotuloKpi
                   titulo="VAF estadual"
                   ajuda={
                     <>
