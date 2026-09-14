@@ -69,6 +69,8 @@ export type Providencias = {
   valorRecuperavel: number;
   impugnacoes: ImpugnacaoPanorama[];
   oficios: number;
+  /** Ações do plano do exercício comparado, uma por contribuinte. */
+  acoesDetalhe: AcaoPanorama[];
 };
 
 export type LinhaPanorama = {
