@@ -409,9 +409,14 @@ function PaginaEstatisticas() {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" onClick={exportar} className="ml-auto">
-            <Download className="mr-2 h-4 w-4" /> Exportar CSV
-          </Button>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button variant="outline" onClick={exportar}>
+              <Download className="mr-2 h-4 w-4" /> Exportar CSV
+            </Button>
+            <Button variant="outline" onClick={exportarPlano}>
+              <Download className="mr-2 h-4 w-4" /> Exportar plano detalhado
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
