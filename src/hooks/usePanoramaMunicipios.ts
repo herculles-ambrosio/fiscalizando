@@ -46,10 +46,17 @@ export function useIndicesPanorama() {
 }
 
 export type AcaoPanorama = {
+  id: string;
   municipio_id: string;
   exercicio: number | null;
   status: string;
   valor_recuperavel: number;
+  acao_titulo: string;
+  inscricao_estadual: string;
+  nome_contribuinte: string | null;
+  cnpj: string | null;
+  observacao: string | null;
+  atualizado_em: string;
 };
 
 export function useAcoesPanorama() {
@@ -59,7 +66,9 @@ export function useAcoesPanorama() {
     queryFn: async (): Promise<AcaoPanorama[]> => {
       const { data, error } = await supabase
         .from("acoes_recuperacao")
-        .select("municipio_id, exercicio, status, valor_recuperavel");
+        .select(
+          "id, municipio_id, exercicio, status, valor_recuperavel, acao_titulo, inscricao_estadual, nome_contribuinte, cnpj, observacao, atualizado_em",
+        );
       if (error) throw error;
       return (data ?? []) as unknown as AcaoPanorama[];
     },
