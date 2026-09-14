@@ -21,8 +21,10 @@ export const CONFIG_VAZIA: ConfiguracaoMunicipio = {
   texto_assinatura: "Secretaria Municipal da Fazenda",
 };
 
-export function useConfiguracao() {
-  const { municipioId } = useMunicipioAtivo();
+/** Configuração do município ativo ou, quando informado, de outro município. */
+export function useConfiguracao(municipioAlvo?: string | null) {
+  const { municipioId: ativo } = useMunicipioAtivo();
+  const municipioId = municipioAlvo !== undefined ? municipioAlvo : ativo;
 
   return useQuery({
     queryKey: ["configuracao", municipioId],
@@ -39,8 +41,9 @@ export function useConfiguracao() {
   });
 }
 
-export function useSalvarConfiguracao() {
-  const { municipioId } = useMunicipioAtivo();
+export function useSalvarConfiguracao(municipioAlvo?: string | null) {
+  const { municipioId: ativo } = useMunicipioAtivo();
+  const municipioId = municipioAlvo !== undefined ? municipioAlvo : ativo;
   const queryClient = useQueryClient();
 
   return useMutation({
