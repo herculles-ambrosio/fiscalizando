@@ -74,7 +74,8 @@ import { ROTULO_STATUS_ACAO, type StatusAcao } from "@/hooks/useAcoesRecuperacao
 import { PlanoMunicipio, type AbaPlano } from "@/components/estatisticas/PlanoMunicipio";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
-type Ordem = "variacao" | "indice" | "nome";
+type Ordem = "variacao" | "indice_base" | "indice_atual" | "nome" | "situacao";
+type Direcao = "asc" | "desc";
 
 const num = (v: unknown): number | null => {
   const n = Number(v);
