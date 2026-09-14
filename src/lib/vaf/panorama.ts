@@ -91,8 +91,10 @@ export type ResolucaoPanorama = {
   municipio_id: string | null;
   resolucao: string;
   ano_a: number;
+  vaf_a?: number | null;
   indice_a: number | null;
   ano_b: number;
+  vaf_b?: number | null;
   indice_b: number | null;
   media_indices: number | null;
 };
@@ -106,6 +108,8 @@ function indiceDaResolucao(
   for (const r of linhas.filter((l) => l.municipio_id === municipioId)) {
     const indice = r.ano_a === exercicio ? r.indice_a : r.ano_b === exercicio ? r.indice_b : null;
     if (indice == null) continue;
+    // o anexo publica o VAF individual do município no mesmo ano do índice
+    const vaf = Number((r.ano_a === exercicio ? r.vaf_a : r.vaf_b) ?? 0);
     return {
       id: `resolucao-${r.resolucao}-${municipioId}-${exercicio}`,
       municipio_id: municipioId,
@@ -115,8 +119,8 @@ function indiceDaResolucao(
       competencia_ano: null,
       estimado: false,
       indice: Number(indice),
-      valor_liquido: 0,
-      vaf_proprio: 0,
+      valor_liquido: vaf,
+      vaf_proprio: vaf,
       credito_externo: 0,
       credito_interno: 0,
       credito_proprio: 0,

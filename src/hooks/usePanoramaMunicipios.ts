@@ -154,7 +154,9 @@ export function useIndicesResolucao() {
     queryFn: async (): Promise<ResolucaoPanorama[]> => {
       const { data, error } = await supabase
         .from("indices_resolucao")
-        .select("municipio_id, resolucao, ano_a, indice_a, ano_b, indice_b, media_indices");
+        .select(
+          "municipio_id, resolucao, ano_a, vaf_a, indice_a, ano_b, vaf_b, indice_b, media_indices",
+        );
       if (error) throw error;
       return (data ?? []) as unknown as ResolucaoPanorama[];
     },
