@@ -175,6 +175,36 @@ function Prefeituras() {
                     />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Situação comercial</Label>
+                    <Select value={novoCliente} onValueChange={setNovoCliente}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sim">É cliente</SelectItem>
+                        <SelectItem value="nao">Não é cliente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Origem dos índices</Label>
+                    <Select
+                      value={novoCliente === "sim" ? "apuracao" : novaFonte}
+                      onValueChange={setNovaFonte}
+                      disabled={novoCliente === "sim"}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="apuracao">Apurações no sistema</SelectItem>
+                        <SelectItem value="resolucao">Índices da Resolução SEF</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <DialogFooter>
                   <Button type="submit" disabled={salvando}>
                     {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -199,10 +229,12 @@ function Prefeituras() {
                 <TableRow>
                   <TableHead>Município</TableHead>
                   <TableHead>Código SEF</TableHead>
+                  <TableHead>Cliente</TableHead>
                   <TableHead>Último exercício</TableHead>
                   <TableHead className="text-right">Omissos</TableHead>
                   <TableHead className="text-right">Zerados</TableHead>
                   <TableHead className="text-right">Discrepantes</TableHead>
+                  <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -219,15 +251,37 @@ function Prefeituras() {
                       {m.nome}/{m.uf}
                     </TableCell>
                     <TableCell>{m.codigo_sef}</TableCell>
+                    <TableCell>
+                      <Badge variant={m.cliente ? "default" : "outline"}>
+                        {m.cliente
+                          ? "Cliente"
+                          : m.fonte_indice === "resolucao"
+                            ? "Resolução SEF"
+                            : "Não é cliente"}
+                      </Badge>
+                    </TableCell>
                     <TableCell>{m.exercicio ?? "—"}</TableCell>
                     <TableCell className="text-right">{m.omissos ?? "—"}</TableCell>
                     <TableCell className="text-right">{m.zerados ?? "—"}</TableCell>
                     <TableCell className="text-right">{m.discrepantes ?? "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditando(m);
+                        }}
+                      >
+                        <Pencil className="mr-1 h-3.5 w-3.5" />
+                        Editar
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {(data ?? []).length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                       Nenhuma prefeitura cadastrada.
                     </TableCell>
                   </TableRow>
@@ -237,6 +291,13 @@ function Prefeituras() {
           )}
         </CardContent>
       </Card>
+
+      <EditarPrefeitura
+        prefeitura={editando}
+        onOpenChange={(aberto) => {
+          if (!aberto) setEditando(null);
+        }}
+      />
     </div>
   );
 }
