@@ -148,7 +148,8 @@ function Prefeituras() {
         <div>
           <h1 className="text-2xl font-semibold">Prefeituras</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Carteira atendida pela consultoria. Clique em uma linha para trabalhar naquele município.
+            Carteira atendida pela consultoria. Clique em uma linha para trabalhar naquele
+            município.
           </p>
         </div>
         {perfil?.ehSuperadmin && (
@@ -166,12 +167,24 @@ function Prefeituras() {
               <form onSubmit={criar} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Município</Label>
-                  <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} required maxLength={120} />
+                  <Input
+                    id="nome"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    required
+                    maxLength={120}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="uf">UF</Label>
-                    <Input id="uf" value={uf} onChange={(e) => setUf(e.target.value)} required maxLength={2} />
+                    <Input
+                      id="uf"
+                      value={uf}
+                      onChange={(e) => setUf(e.target.value)}
+                      required
+                      maxLength={2}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="codigo">Código SEF</Label>

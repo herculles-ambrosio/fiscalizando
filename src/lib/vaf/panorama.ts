@@ -104,8 +104,7 @@ function indiceDaResolucao(
   tipo: TipoAlvo,
 ): IndicePanorama | null {
   for (const r of linhas.filter((l) => l.municipio_id === municipioId)) {
-    const indice =
-      r.ano_a === exercicio ? r.indice_a : r.ano_b === exercicio ? r.indice_b : null;
+    const indice = r.ano_a === exercicio ? r.indice_a : r.ano_b === exercicio ? r.indice_b : null;
     if (indice == null) continue;
     return {
       id: `resolucao-${r.resolucao}-${municipioId}-${exercicio}`,

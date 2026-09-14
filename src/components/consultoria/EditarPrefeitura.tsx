@@ -76,7 +76,11 @@ export default function EditarPrefeitura({
       setValores(resto);
       setBrasaoPath(brasao_path);
     } else {
-      setValores({ ...CONFIG_VAZIA, nome_prefeitura: `PREFEITURA MUNICIPAL DE ${prefeitura.nome.toUpperCase()}`, cidade_data: prefeitura.nome });
+      setValores({
+        ...CONFIG_VAZIA,
+        nome_prefeitura: `PREFEITURA MUNICIPAL DE ${prefeitura.nome.toUpperCase()}`,
+        cidade_data: prefeitura.nome,
+      });
       setBrasaoPath(null);
     }
   }, [config, prefeitura]);
@@ -177,9 +181,7 @@ export default function EditarPrefeitura({
                 <Input
                   id={campo.chave}
                   value={valores[campo.chave]}
-                  onChange={(e) =>
-                    setValores((v) => ({ ...v, [campo.chave]: e.target.value }))
-                  }
+                  onChange={(e) => setValores((v) => ({ ...v, [campo.chave]: e.target.value }))}
                 />
               </div>
             ))}
