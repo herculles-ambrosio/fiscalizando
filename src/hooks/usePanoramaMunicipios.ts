@@ -79,10 +79,12 @@ export type ImpugnacaoPanorama = {
   id: string;
   municipio_id: string;
   exercicio: number;
+  ano_base: number | null;
   nome: string;
   status: string;
   protocolo_numero: string | null;
   protocolado_em: string | null;
+  itens: ItemImpugnacao[] | null;
 };
 
 export function useImpugnacoesPanorama() {
@@ -92,7 +94,9 @@ export function useImpugnacoesPanorama() {
     queryFn: async (): Promise<ImpugnacaoPanorama[]> => {
       const { data, error } = await supabase
         .from("impugnacoes")
-        .select("id, municipio_id, exercicio, nome, status, protocolo_numero, protocolado_em")
+        .select(
+          "id, municipio_id, exercicio, ano_base, nome, status, protocolo_numero, protocolado_em, itens",
+        )
         .order("criado_em", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as ImpugnacaoPanorama[];
