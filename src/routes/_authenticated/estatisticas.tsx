@@ -60,7 +60,7 @@ import {
 import { formatarIndice } from "@/lib/vaf/indice";
 import { rotuloRemessa } from "@/lib/vaf/tipoRetorno";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
-import { rotuloStatus, STATUS_IMPUGNACAO } from "@/hooks/useImpugnacoes";
+import { rotuloStatus } from "@/hooks/useImpugnacoes";
 import { ROTULO_STATUS_ACAO, type StatusAcao } from "@/hooks/useAcoesRecuperacao";
 import { PlanoMunicipio, type AbaPlano } from "@/components/estatisticas/PlanoMunicipio";
 import { baixarCsv, montarCsv } from "@/lib/csv";
