@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { CONFIG_VAZIA, useConfiguracao, useSalvarConfiguracao } from "@/hooks/useConfiguracao";
 import type { ConfiguracaoMunicipio } from "@/lib/oficios/zerados";
+import { chaveNome } from "@/lib/vaf/resolucao";
 
 export type PrefeituraEdicao = {
   id: string;
