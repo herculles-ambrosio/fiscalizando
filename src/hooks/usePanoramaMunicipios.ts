@@ -121,3 +121,26 @@ export function useOficiosPanorama() {
     },
   });
 }
+
+/**
+ * Ofícios emitidos de um município no exercício comparado — consultado só
+ * quando o painel de detalhe abre, para não pesar a lista principal.
+ */
+export function useOficiosMunicipio(municipioId: string | null, exercicio: number | null) {
+  return useQuery({
+    queryKey: ["panorama-oficios-detalhe", municipioId, exercicio],
+    enabled: !!municipioId && !!exercicio,
+    staleTime: 60 * 1000,
+    queryFn: async (): Promise<EmissaoRegistro[]> => {
+      const { data, error } = await supabase
+        .from("oficios_emitidos")
+        .select("*")
+        .eq("municipio_id", municipioId!)
+        .eq("exercicio", exercicio!)
+        .order("criado_em", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as unknown as EmissaoRegistro[];
+    },
+  });
+}
