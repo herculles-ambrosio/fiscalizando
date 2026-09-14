@@ -88,6 +88,31 @@ const numero = (v: string): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/** Campo monetário: enquanto digita mantém o texto do usuário; formata ao sair. */
+function EntradaMoeda({
+  valor,
+  aoMudar,
+  ...resto
+}: { valor: number; aoMudar: (v: number) => void } & Omit<
+  React.ComponentProps<typeof Input>,
+  "value" | "onChange"
+>) {
+  const formatar = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+  const [texto, setTexto] = useState<string | null>(null);
+  return (
+    <Input
+      {...resto}
+      value={texto ?? formatar(valor)}
+      onChange={(e) => {
+        setTexto(e.target.value);
+        aoMudar(numero(e.target.value));
+      }}
+      onBlur={() => setTexto(null)}
+    />
+  );
+}
+
+
 function ImpugnacaoPagina() {
   const busca = Route.useSearch();
   const { municipio, municipioId } = useMunicipioAtivo();
