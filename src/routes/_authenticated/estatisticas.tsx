@@ -436,15 +436,17 @@ function PaginaEstatisticas() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ordem">Ordenar por</Label>
-            <Select value={ordem} onValueChange={(v) => setOrdem(v as Ordem)}>
-              <SelectTrigger id="ordem" className="w-44">
+            <Label htmlFor="filtro-situacao">Situação</Label>
+            <Select value={situacaoFiltro} onValueChange={setSituacaoFiltro}>
+              <SelectTrigger id="filtro-situacao" className="w-44">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="variacao">Maior variação</SelectItem>
-                <SelectItem value="indice">Maior índice atual</SelectItem>
-                <SelectItem value="nome">Nome</SelectItem>
+                <SelectItem value="todas">Todas</SelectItem>
+                <SelectItem value="subiu">Subiu</SelectItem>
+                <SelectItem value="caiu">Caiu</SelectItem>
+                <SelectItem value="estavel">Estável</SelectItem>
+                <SelectItem value="sem_apuracao">Sem apuração</SelectItem>
               </SelectContent>
             </Select>
           </div>
