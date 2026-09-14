@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { CONFIG_VAZIA, useConfiguracao, useSalvarConfiguracao } from "@/hooks/useConfiguracao";
 import type { ConfiguracaoMunicipio } from "@/lib/oficios/zerados";
+import { chaveNome } from "@/lib/vaf/resolucao";
 
 export type PrefeituraEdicao = {
   id: string;
@@ -102,19 +103,66 @@ export default function EditarPrefeitura({
     toast.success("Brasão carregado. Salve para concluir.");
   }
 
+  /**
+   * Ao marcar a prefeitura para usar os índices da Resolução SEF, vincula na
+   * hora as linhas do anexo a este município (por código ou nome), para que a
+   * apuração já apareça em Estatísticas sem nova importação.
+   */
+  async function vincularResolucao(): Promise<number> {
+    if (!prefeitura) return 0;
+    const { data, error } = await supabase
+      .from("indices_resolucao")
+      .select("id, codigo_mun, municipio_nome")
+      .is("municipio_id", null);
+    if (error) throw error;
+    const chave = chaveNome(prefeitura.nome);
+    const codigo = String(Number(prefeitura.codigo_sef || "0"));
+    const alvos = (data ?? []).filter(
+      (l) =>
+        chaveNome(l.municipio_nome ?? "") === chave ||
+        (codigo !== "0" && String(Number(l.codigo_mun)) === codigo),
+    );
+    if (!alvos.length) return 0;
+    const { error: erroVinculo } = await supabase
+      .from("indices_resolucao")
+      .update({ municipio_id: prefeitura.id })
+      .in(
+        "id",
+        alvos.map((l) => l.id),
+      );
+    if (erroVinculo) throw erroVinculo;
+    return alvos.length;
+  }
+
   async function salvar() {
     if (!prefeitura) return;
     setSalvando(true);
     try {
+      const ehCliente = cliente === "sim";
       const { error } = await supabase
         .from("municipios")
-        .update({ cliente: cliente === "sim", fonte_indice: fonte })
+        .update({ cliente: ehCliente, fonte_indice: fonte })
         .eq("id", prefeitura.id);
       if (error) throw error;
       await salvarConfig.mutateAsync({ ...valores, brasao_path: brasaoPath });
+
+      let vinculados = 0;
+      if (!ehCliente && fonte === "resolucao") {
+        vinculados = await vincularResolucao();
+        queryClient.invalidateQueries({ queryKey: ["indices-resolucao"] });
+      }
+
       queryClient.invalidateQueries({ queryKey: ["carteira"] });
       queryClient.invalidateQueries({ queryKey: ["municipios"] });
-      toast.success("Prefeitura atualizada.");
+      if (!ehCliente && fonte === "resolucao") {
+        toast.success(
+          vinculados
+            ? "Prefeitura atualizada. Índices da Resolução SEF já disponíveis em Estatísticas."
+            : "Prefeitura atualizada, mas nenhum índice da Resolução SEF foi encontrado para ela. Importe a resolução em Índices da Resolução.",
+        );
+      } else {
+        toast.success("Prefeitura atualizada.");
+      }
       onOpenChange(false);
     } catch (erro) {
       toast.error("Não foi possível salvar.", {
