@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { ItemImpugnacao } from "@/lib/vaf/impugnacao";
+import type { EmissaoRegistro } from "@/lib/oficios/registro";
 
 /**
  * Dados do panorama comparativo entre municípios: índices apurados e as
