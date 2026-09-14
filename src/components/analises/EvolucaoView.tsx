@@ -1328,6 +1328,14 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               </Card>
             </TabsContent>
 
+            <TabsContent value="impacto">
+              <ImpactoContribuintes
+                movimentos={declarantes.todos}
+                indiceAtual={atual.apuracao.indice || null}
+                nomeArquivo={`${prefixoArquivo}-impacto-contribuintes.csv`}
+              />
+            </TabsContent>
+
             <TabsContent value="municipios">
               <div className="grid gap-4 lg:grid-cols-2">
                 {[
