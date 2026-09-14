@@ -120,6 +120,7 @@ export function montarPanorama(params: {
         .reduce((s, a) => s + Number(a.valor_recuperavel ?? 0), 0),
       impugnacoes: impugnacoes.filter((i) => i.municipio_id === m.id && i.exercicio === anoAlvo),
       oficios: oficios.filter((o) => o.municipio_id === m.id && o.exercicio === anoAlvo).length,
+      acoesDetalhe: acoesMun,
     };
 
     return {
