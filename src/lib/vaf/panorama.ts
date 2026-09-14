@@ -91,8 +91,10 @@ export type ResolucaoPanorama = {
   municipio_id: string | null;
   resolucao: string;
   ano_a: number;
+  vaf_a?: number | null;
   indice_a: number | null;
   ano_b: number;
+  vaf_b?: number | null;
   indice_b: number | null;
   media_indices: number | null;
 };
