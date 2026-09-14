@@ -186,12 +186,13 @@ function PaginaEstatisticas() {
         acoes: acoes ?? [],
         impugnacoes: impugnacoes ?? [],
         oficios: oficios ?? [],
+        resolucao: resolucao ?? [],
         anoBase,
         anoAlvo,
         tipo,
         remessa,
       }),
-    [municipios, lista, acoes, impugnacoes, oficios, anoBase, anoAlvo, tipo, remessa],
+    [municipios, lista, acoes, impugnacoes, oficios, resolucao, anoBase, anoAlvo, tipo, remessa],
   );
 
   const visiveis = useMemo(() => {
