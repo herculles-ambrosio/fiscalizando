@@ -1,15 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "@/hooks/usePerfil";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import EditarPrefeitura, { type PrefeituraEdicao } from "@/components/consultoria/EditarPrefeitura";
 import {
   Dialog,
   DialogContent,
