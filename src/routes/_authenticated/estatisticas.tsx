@@ -16,7 +16,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, Calculator, Download, Loader2 } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  Calculator,
+  ClipboardList,
+  Download,
+  Loader2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +69,8 @@ import { formatarIndice } from "@/lib/vaf/indice";
 import { rotuloRemessa } from "@/lib/vaf/tipoRetorno";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { rotuloStatus } from "@/hooks/useImpugnacoes";
+import { ROTULO_STATUS_ACAO, type StatusAcao } from "@/hooks/useAcoesRecuperacao";
+import { PlanoMunicipio, type AbaPlano } from "@/components/estatisticas/PlanoMunicipio";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
 type Ordem = "variacao" | "indice" | "nome";
@@ -111,11 +121,26 @@ function PaginaEstatisticas() {
   const [texto, setTexto] = useState("");
   const [ordem, setOrdem] = useState<Ordem>("variacao");
   const [detalhe, setDetalhe] = useState<LinhaPanorama | null>(null);
+  const [abaPlano, setAbaPlano] = useState<AbaPlano>("plano");
 
   /** Leva o usuário ao Índice do VAF já com a prefeitura da linha ativa. */
   function irApurar(linha: LinhaPanorama) {
     if (podeTrocar) trocarMunicipio(linha.municipioId);
     void navigate({ to: "/analises", search: { aba: "indice" } });
+  }
+
+  /** Abre a tela de origem da providência já na prefeitura da linha aberta. */
+  function irPara(destino: "analises" | "oficios" | "impugnacoes") {
+    if (detalhe && podeTrocar) trocarMunicipio(detalhe.municipioId);
+    setDetalhe(null);
+    if (destino === "analises") void navigate({ to: "/analises", search: { aba: "evolucao" } });
+    else if (destino === "oficios") void navigate({ to: "/oficios", search: { aba: "emitidos" } });
+    else void navigate({ to: "/impugnacoes" });
+  }
+
+  function abrirDetalhe(linha: LinhaPanorama, aba: AbaPlano = "plano") {
+    setAbaPlano(aba);
+    setDetalhe(linha);
   }
 
   const lista = useMemo(() => indices ?? [], [indices]);
@@ -235,6 +260,38 @@ function PaginaEstatisticas() {
       ]),
     );
     baixarCsv(`panorama-vaf-${anoBase}-x-${anoAlvo}.csv`, csv);
+  }
+
+  /** Uma linha por contribuinte do plano de recuperação, de todos os municípios visíveis. */
+  function exportarPlano() {
+    const linhasCsv = visiveis.flatMap((l) =>
+      l.providencias.acoesDetalhe.map((a) => [
+        l.nome,
+        a.inscricao_estadual,
+        a.cnpj ?? "",
+        a.nome_contribuinte ?? "",
+        a.acao_titulo,
+        Number(a.valor_recuperavel ?? 0)
+          .toFixed(2)
+          .replace(".", ","),
+        ROTULO_STATUS_ACAO[a.status as StatusAcao] ?? a.status,
+        a.observacao ?? "",
+      ]),
+    );
+    const csv = montarCsv(
+      [
+        "Município",
+        "Inscrição estadual",
+        "CNPJ",
+        "Contribuinte",
+        "Ação",
+        "A recuperar",
+        "Situação",
+        "Observação",
+      ],
+      linhasCsv,
+    );
+    baixarCsv(`plano-recuperacao-${anoAlvo}.csv`, csv);
   }
 
   if (carregandoMunicipios || carregandoIndices) {
@@ -359,9 +416,14 @@ function PaginaEstatisticas() {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" onClick={exportar} className="ml-auto">
-            <Download className="mr-2 h-4 w-4" /> Exportar CSV
-          </Button>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button variant="outline" onClick={exportar}>
+              <Download className="mr-2 h-4 w-4" /> Exportar CSV
+            </Button>
+            <Button variant="outline" onClick={exportarPlano}>
+              <Download className="mr-2 h-4 w-4" /> Exportar plano detalhado
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -403,7 +465,7 @@ function PaginaEstatisticas() {
                   <TableRow
                     key={l.municipioId}
                     className="cursor-pointer"
-                    onClick={() => setDetalhe(l)}
+                    onClick={() => abrirDetalhe(l)}
                   >
                     <TableCell className="font-medium">{l.nome}</TableCell>
                     <TableCell className="text-right font-mono text-xs tabular-nums">
@@ -454,7 +516,20 @@ function PaginaEstatisticas() {
                       </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      <Providencia linha={l} />
+                      <div className="space-y-1.5">
+                        <Providencia linha={l} />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            abrirDetalhe(l, "plano");
+                          }}
+                        >
+                          <ClipboardList className="mr-1.5 h-3.5 w-3.5" /> Ver plano
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -506,7 +581,14 @@ function PaginaEstatisticas() {
           <CardContent>
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={dadosIndices} margin={{ left: 8, right: 8 }}>
-                <XAxis dataKey="nome" fontSize={11} interval={0} angle={-20} textAnchor="end" height={70} />
+                <XAxis
+                  dataKey="nome"
+                  fontSize={11}
+                  interval={0}
+                  angle={-20}
+                  textAnchor="end"
+                  height={70}
+                />
                 <YAxis fontSize={11} tickFormatter={(v: number) => v.toFixed(3)} />
                 <ChartTooltip formatter={(v: number) => formatarIndice(v)} />
                 <Legend />
@@ -519,7 +601,7 @@ function PaginaEstatisticas() {
       )}
 
       <Sheet open={!!detalhe} onOpenChange={(v) => !v && setDetalhe(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent className="w-full overflow-y-auto sm:max-w-3xl">
           {detalhe && (
             <>
               <SheetHeader>
@@ -535,8 +617,8 @@ function PaginaEstatisticas() {
                 {(!detalhe.base || !detalhe.alvo) && (
                   <div className="space-y-2 rounded-md border border-dashed p-3">
                     <p className="text-sm text-muted-foreground">
-                      Para este município entrar no comparativo, apure o índice em Análises do
-                      VAF: suba o arquivo da SEFAZ, apure e clique em “Salvar apuração”.
+                      Para este município entrar no comparativo, apure o índice em Análises do VAF:
+                      suba o arquivo da SEFAZ, apure e clique em “Salvar apuração”.
                     </p>
                     <AcaoApurar
                       linha={detalhe}
@@ -550,39 +632,15 @@ function PaginaEstatisticas() {
                     />
                   </div>
                 )}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Providências</p>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    <li>
-                      Plano de recuperação: {detalhe.providencias.acoes} ações ·{" "}
-                      {detalhe.providencias.acoesOficio} com ofício enviado ·{" "}
-                      {detalhe.providencias.acoesConcluidas} concluídas
-                    </li>
-                    <li>
-                      A recuperar: {formatarMoeda(detalhe.providencias.valorRecuperavel)}
-                    </li>
-                    <li>Ofícios emitidos no exercício: {detalhe.providencias.oficios}</li>
-                  </ul>
-                  {detalhe.providencias.impugnacoes.length ? (
-                    <ul className="space-y-1 text-sm">
-                      {detalhe.providencias.impugnacoes.map((i) => (
-                        <li key={i.id} className="flex flex-wrap items-center gap-2">
-                          <Badge variant="secondary">{rotuloStatus(i.status)}</Badge>
-                          <span>{i.nome}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {i.protocolo_numero ? `SEI ${i.protocolo_numero}` : "sem protocolo"}
-                            {i.protocolado_em
-                              ? ` · ${new Date(`${i.protocolado_em}T12:00:00`).toLocaleDateString("pt-BR")}`
-                              : ""}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Nenhuma impugnação montada para este exercício.
-                    </p>
-                  )}
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">Providências em {anoAlvo}</p>
+                  <PlanoMunicipio
+                    linha={detalhe}
+                    exercicio={anoAlvo}
+                    aba={abaPlano}
+                    onAba={setAbaPlano}
+                    irPara={irPara}
+                  />
                 </div>
               </div>
             </>
@@ -593,13 +651,7 @@ function PaginaEstatisticas() {
   );
 }
 
-function Composicao({
-  titulo,
-  registro,
-}: {
-  titulo: string;
-  registro: LinhaPanorama["base"];
-}) {
+function Composicao({ titulo, registro }: { titulo: string; registro: LinhaPanorama["base"] }) {
   if (!registro) {
     return (
       <div>
@@ -679,7 +731,10 @@ function SituacaoBadge({ linha }: { linha: LinhaPanorama }) {
   const rotulo = ROTULO_SITUACAO[linha.situacao];
   if (linha.situacao === "subiu")
     return (
-      <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" variant="secondary">
+      <Badge
+        className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+        variant="secondary"
+      >
         <ArrowUpRight className="mr-1 h-3 w-3" /> {rotulo}
       </Badge>
     );

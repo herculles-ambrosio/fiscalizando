@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { ItemImpugnacao } from "@/lib/vaf/impugnacao";
+import type { EmissaoRegistro } from "@/lib/oficios/registro";
 
 /**
  * Dados do panorama comparativo entre municípios: índices apurados e as
@@ -46,10 +48,17 @@ export function useIndicesPanorama() {
 }
 
 export type AcaoPanorama = {
+  id: string;
   municipio_id: string;
   exercicio: number | null;
   status: string;
   valor_recuperavel: number;
+  acao_titulo: string;
+  inscricao_estadual: string;
+  nome_contribuinte: string | null;
+  cnpj: string | null;
+  observacao: string | null;
+  atualizado_em: string;
 };
 
 export function useAcoesPanorama() {
@@ -59,7 +68,9 @@ export function useAcoesPanorama() {
     queryFn: async (): Promise<AcaoPanorama[]> => {
       const { data, error } = await supabase
         .from("acoes_recuperacao")
-        .select("municipio_id, exercicio, status, valor_recuperavel");
+        .select(
+          "id, municipio_id, exercicio, status, valor_recuperavel, acao_titulo, inscricao_estadual, nome_contribuinte, cnpj, observacao, atualizado_em",
+        );
       if (error) throw error;
       return (data ?? []) as unknown as AcaoPanorama[];
     },
@@ -70,10 +81,12 @@ export type ImpugnacaoPanorama = {
   id: string;
   municipio_id: string;
   exercicio: number;
+  ano_base: number | null;
   nome: string;
   status: string;
   protocolo_numero: string | null;
   protocolado_em: string | null;
+  itens: ItemImpugnacao[] | null;
 };
 
 export function useImpugnacoesPanorama() {
@@ -83,7 +96,9 @@ export function useImpugnacoesPanorama() {
     queryFn: async (): Promise<ImpugnacaoPanorama[]> => {
       const { data, error } = await supabase
         .from("impugnacoes")
-        .select("id, municipio_id, exercicio, nome, status, protocolo_numero, protocolado_em")
+        .select(
+          "id, municipio_id, exercicio, ano_base, nome, status, protocolo_numero, protocolado_em, itens",
+        )
         .order("criado_em", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as ImpugnacaoPanorama[];
@@ -103,6 +118,29 @@ export function useOficiosPanorama() {
         .select("municipio_id, exercicio");
       if (error) throw error;
       return (data ?? []) as unknown as OficioPanorama[];
+    },
+  });
+}
+
+/**
+ * Ofícios emitidos de um município no exercício comparado — consultado só
+ * quando o painel de detalhe abre, para não pesar a lista principal.
+ */
+export function useOficiosMunicipio(municipioId: string | null, exercicio: number | null) {
+  return useQuery({
+    queryKey: ["panorama-oficios-detalhe", municipioId, exercicio],
+    enabled: !!municipioId && !!exercicio,
+    staleTime: 60 * 1000,
+    queryFn: async (): Promise<EmissaoRegistro[]> => {
+      const { data, error } = await supabase
+        .from("oficios_emitidos")
+        .select("*")
+        .eq("municipio_id", municipioId!)
+        .eq("exercicio", exercicio!)
+        .order("criado_em", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as unknown as EmissaoRegistro[];
     },
   });
 }
