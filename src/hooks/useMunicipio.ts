@@ -3,7 +3,14 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePerfil } from "./usePerfil";
 
-export type Municipio = { id: string; nome: string; uf: string; codigo_sef: string };
+export type Municipio = {
+  id: string;
+  nome: string;
+  uf: string;
+  codigo_sef: string;
+  cliente: boolean;
+  fonte_indice: string;
+};
 
 const CHAVE = "vaf.municipio_ativo";
 const ouvintes = new Set<(id: string | null) => void>();
@@ -26,7 +33,7 @@ export function useMunicipios() {
     queryFn: async (): Promise<Municipio[]> => {
       const { data, error } = await supabase
         .from("municipios")
-        .select("id, nome, uf, codigo_sef")
+        .select("id, nome, uf, codigo_sef, cliente, fonte_indice")
         .order("nome");
       if (error) throw error;
       return data ?? [];
