@@ -17,8 +17,11 @@ import {
   YAxis,
 } from "recharts";
 import {
+  ArrowDown,
   ArrowDownRight,
   ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
   ArrowUpRight,
   Calculator,
   ClipboardList,
