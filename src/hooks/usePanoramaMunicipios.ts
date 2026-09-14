@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { ItemImpugnacao } from "@/lib/vaf/impugnacao";
 import type { EmissaoRegistro } from "@/lib/oficios/registro";
+import type { ResolucaoPanorama } from "@/lib/vaf/panorama";
 
 /**
  * Dados do panorama comparativo entre municípios: índices apurados e as
@@ -141,6 +142,21 @@ export function useOficiosMunicipio(municipioId: string | null, exercicio: numbe
         .limit(500);
       if (error) throw error;
       return (data ?? []) as unknown as EmissaoRegistro[];
+    },
+  });
+}
+
+/** Índices publicados nas resoluções da SEF-MG (usados por prefeituras não clientes). */
+export function useIndicesResolucao() {
+  return useQuery({
+    queryKey: ["indices-resolucao"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<ResolucaoPanorama[]> => {
+      const { data, error } = await supabase
+        .from("indices_resolucao")
+        .select("municipio_id, resolucao, ano_a, indice_a, ano_b, indice_b, media_indices");
+      if (error) throw error;
+      return (data ?? []) as unknown as ResolucaoPanorama[];
     },
   });
 }
