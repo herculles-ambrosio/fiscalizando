@@ -71,6 +71,7 @@ import { useSituacoesCadastrais } from "@/hooks/useSituacoesCadastrais";
 import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
 import OutrasReceitas from "@/components/analises/OutrasReceitas";
+import ImpactoContribuintes from "@/components/analises/ImpactoContribuintes";
 
 function rotuloArquivo(a: ArquivoEvolucao): string {
   const remessa = remessaDoArquivo(a.nome);
@@ -1181,6 +1182,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               <TabsTrigger value="sairam">Deixaram de declarar ({declarantes.sairam.length})</TabsTrigger>
               <TabsTrigger value="entraram">Novos ({declarantes.entraram.length})</TabsTrigger>
               <TabsTrigger value="variacao">Variação por contribuinte</TabsTrigger>
+              <TabsTrigger value="impacto">Impacto por contribuinte</TabsTrigger>
               <TabsTrigger value="municipios">Municípios</TabsTrigger>
               <TabsTrigger value="outras">Outras receitas</TabsTrigger>
             </TabsList>
