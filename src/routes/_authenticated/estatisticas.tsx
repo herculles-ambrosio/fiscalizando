@@ -113,11 +113,26 @@ function PaginaEstatisticas() {
   const [texto, setTexto] = useState("");
   const [ordem, setOrdem] = useState<Ordem>("variacao");
   const [detalhe, setDetalhe] = useState<LinhaPanorama | null>(null);
+  const [abaPlano, setAbaPlano] = useState<AbaPlano>("plano");
 
   /** Leva o usuário ao Índice do VAF já com a prefeitura da linha ativa. */
   function irApurar(linha: LinhaPanorama) {
     if (podeTrocar) trocarMunicipio(linha.municipioId);
     void navigate({ to: "/analises", search: { aba: "indice" } });
+  }
+
+  /** Abre a tela de origem da providência já na prefeitura da linha aberta. */
+  function irPara(destino: "analises" | "oficios" | "impugnacoes") {
+    if (detalhe && podeTrocar) trocarMunicipio(detalhe.municipioId);
+    setDetalhe(null);
+    if (destino === "analises") void navigate({ to: "/analises", search: { aba: "evolucao" } });
+    else if (destino === "oficios") void navigate({ to: "/oficios", search: { aba: "emitidos" } });
+    else void navigate({ to: "/impugnacoes" });
+  }
+
+  function abrirDetalhe(linha: LinhaPanorama, aba: AbaPlano = "plano") {
+    setAbaPlano(aba);
+    setDetalhe(linha);
   }
 
   const lista = useMemo(() => indices ?? [], [indices]);
