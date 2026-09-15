@@ -8,6 +8,13 @@
       "when": 1789401195777,
       "tag": "0000_municipios_cliente_e_indices_resolucao",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789480883919,
+      "tag": "0001_grants_indices_resolucao",
+      "breakpoints": true
     }
   ]
 }
