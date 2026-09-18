@@ -557,12 +557,17 @@ function ComparativoIcms() {
                       <TableRow>
                         <TableHead className="w-12">#</TableHead>
                         <TableHead className="min-w-40">Município</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">
+                          População
+                          {populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
+                        </TableHead>
                         {MESES.map((m) => (
                           <TableHead key={m} className="text-right whitespace-nowrap">
                             {m}
                           </TableHead>
                         ))}
                         <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">R$ / habitante</TableHead>
                         <TableHead className="text-right whitespace-nowrap">Peso Anexo I</TableHead>
                         <TableHead className="text-right whitespace-nowrap">
                           Pontuação real
