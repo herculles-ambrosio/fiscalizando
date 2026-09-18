@@ -23,6 +23,7 @@ import {
 import { buscarResolucao } from "@/lib/vaf/resolucao.functions";
 import { casarMunicipios, parseAnexoResolucao, type AnexoResolucao } from "@/lib/vaf/resolucao";
 import { formatarIndice } from "@/lib/vaf/indice";
+import { useResolucoesCarregadas } from "@/hooks/useIndiceAplicado";
 
 export const Route = createFileRoute("/_authenticated/consultoria/resolucao")({
   head: () => ({
@@ -50,6 +51,7 @@ const URL_PADRAO =
 
 function ImportarResolucao() {
   const { data: municipios } = useMunicipios();
+  const { data: carregadas = [] } = useResolucoesCarregadas();
   const buscar = useServerFn(buscarResolucao);
   const queryClient = useQueryClient();
 
@@ -128,6 +130,8 @@ function ImportarResolucao() {
       return;
     }
     queryClient.invalidateQueries({ queryKey: ["indices-resolucao"] });
+    queryClient.invalidateQueries({ queryKey: ["resolucoes-carregadas"] });
+    queryClient.invalidateQueries({ queryKey: ["indice-aplicado"] });
     toast.success(`${registros.length} municípios gravados.`);
   }
 
@@ -140,6 +144,40 @@ function ImportarResolucao() {
           estatísticas das prefeituras que não são clientes.
         </p>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Resoluções já importadas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {carregadas.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma resolução importada ainda.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Resolução</TableHead>
+                  <TableHead>Aplicação</TableHead>
+                  <TableHead>Anos de apuração</TableHead>
+                  <TableHead className="text-right">Municípios</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {carregadas.map((r) => (
+                  <TableRow key={r.resolucao}>
+                    <TableCell className="font-medium">{r.resolucao}</TableCell>
+                    <TableCell>{r.exercicio_aplicacao}</TableCell>
+                    <TableCell>
+                      {r.ano_a}/{r.ano_b}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">{r.municipios}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-3">

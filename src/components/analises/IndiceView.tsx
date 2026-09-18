@@ -32,11 +32,17 @@ import {
 import { podeRevalidar } from "@/lib/vaf/revalidarIndice";
 import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
+import { IndiceAplicadoBase } from "@/components/vaf/IndiceAplicado";
 import OutrasReceitas from "@/components/analises/OutrasReceitas";
 import { extrairOutrasEntradas } from "@/lib/vaf/outrasEntradas";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";
 import { decodificarArquivo } from "@/lib/vaf/parser";
-import { anoDoArquivo, remessaDoArquivo, rotuloRemessa, REMESSA_MAXIMA } from "@/lib/vaf/tipoRetorno";
+import {
+  anoDoArquivo,
+  remessaDoArquivo,
+  rotuloRemessa,
+  REMESSA_MAXIMA,
+} from "@/lib/vaf/tipoRetorno";
 import {
   apurarIndice,
   conferirLiquido,
@@ -58,8 +64,6 @@ import {
 import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 
 import { baixarCsv as baixarCsvArquivo, montarCsv } from "@/lib/csv";
-
-
 
 function Kpi({
   rotulo,
@@ -116,7 +120,6 @@ function Kpi({
     </div>
   );
 }
-
 
 function LinhaValor({
   rotulo,
@@ -182,7 +185,11 @@ function TabelaMunicipios({
               <TableCell className="text-right font-mono text-xs">{formatarMoeda(l.nff)}</TableCell>
               <TableCell className="text-right font-mono">{formatarMoeda(l.valor)}</TableCell>
               <TableCell className="text-right text-muted-foreground">
-                {(total ? (l.valor / total) * 100 : 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
+                {(total ? (l.valor / total) * 100 : 0).toLocaleString("pt-BR", {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}
+                %
               </TableCell>
             </TableRow>
           ))}
@@ -197,10 +204,18 @@ function TabelaMunicipios({
         <TableFooter>
           <TableRow>
             <TableCell colSpan={2}>Total</TableCell>
-            <TableCell className="text-right font-mono text-xs">{formatarMoeda(soma((l) => l.af))}</TableCell>
-            <TableCell className="text-right font-mono text-xs">{formatarMoeda(soma((l) => l.nfa))}</TableCell>
-            <TableCell className="text-right font-mono text-xs">{formatarMoeda(soma((l) => l.nfe))}</TableCell>
-            <TableCell className="text-right font-mono text-xs">{formatarMoeda(soma((l) => l.nff))}</TableCell>
+            <TableCell className="text-right font-mono text-xs">
+              {formatarMoeda(soma((l) => l.af))}
+            </TableCell>
+            <TableCell className="text-right font-mono text-xs">
+              {formatarMoeda(soma((l) => l.nfa))}
+            </TableCell>
+            <TableCell className="text-right font-mono text-xs">
+              {formatarMoeda(soma((l) => l.nfe))}
+            </TableCell>
+            <TableCell className="text-right font-mono text-xs">
+              {formatarMoeda(soma((l) => l.nff))}
+            </TableCell>
             <TableCell className="text-right font-mono">{formatarMoeda(total)}</TableCell>
             <TableCell />
           </TableRow>
@@ -297,7 +312,6 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const { data: cargasRetorno = [] } = useCargasComRetorno(municipioId);
   const revalidar = useRevalidarDetalhamento(municipioId);
 
-
   // calibração é guardada por prefeitura, para não misturar referências ao trocar
   const chaveRef = `${CHAVE_REF}:${municipioId ?? "sem-municipio"}`;
 
@@ -347,10 +361,7 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     }
   }, [texto, vafEstadualRef, fator, municipio?.codigo_sef, planilha]);
 
-  const outrasEntradas = useMemo(
-    () => (texto ? extrairOutrasEntradas(texto) : undefined),
-    [texto],
-  );
+  const outrasEntradas = useMemo(() => (texto ? extrairOutrasEntradas(texto) : undefined), [texto]);
 
   // Índice reaberto a partir do histórico (sem o arquivo original)
   const apuracaoHistorico = useMemo<ApuracaoIndice | null>(
@@ -431,7 +442,6 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     setPaginaNotas(1);
   }, [buscaAdiada, planilha]);
 
-
   // Assim que um retorno mensal é carregado sem o crédito próprio (AF/SIARE),
   // perguntamos se o usuário quer dar carga na planilha do Portal do VAF.
   useEffect(() => {
@@ -478,8 +488,6 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     );
   }
 
-
-
   async function revalidarRegistro(r: IndiceSalvo) {
     setCarregandoDetalhe(true);
     try {
@@ -487,9 +495,7 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
       setDetalheHistorico(detalhe);
       toast.success("Detalhamento reconstruído a partir do arquivo guardado.");
     } catch (e) {
-      toast.error(
-        e instanceof Error ? e.message : "Não foi possível reconstruir o detalhamento.",
-      );
+      toast.error(e instanceof Error ? e.message : "Não foi possível reconstruir o detalhamento.");
     } finally {
       setCarregandoDetalhe(false);
     }
@@ -498,7 +504,18 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   function baixarCsvPlanilha() {
     if (!planilha) return;
     const csv = montarCsv(
-      ["Tipo nota", "Numero/Chave", "Saida", "Remetente", "Nome do remetente", "Municipio remetente", "Destinatario", "Municipio destinatario", "Produto", "Valor"],
+      [
+        "Tipo nota",
+        "Numero/Chave",
+        "Saida",
+        "Remetente",
+        "Nome do remetente",
+        "Municipio remetente",
+        "Destinatario",
+        "Municipio destinatario",
+        "Produto",
+        "Valor",
+      ],
       planilha.notas.map((n) => [
         n.tipoNota,
         n.numero,
@@ -656,7 +673,6 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           <p className="text-sm text-muted-foreground">
             Envie o arquivo de índices da SEF-MG (provisório ou definitivo) ou um retorno mensal —
             neste caso o sistema projeta o índice provisório para previsões.
-
           </p>
         </div>
         <div className="flex gap-2">
@@ -702,12 +718,11 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           <AlertTitle>Período do arquivo será ajustado</AlertTitle>
           <AlertDescription>
             O retorno não trouxe um período apurado válido
-            {periodo.invalido ? " (data fora de faixa)" : ""}. Ao salvar no histórico, o período será
-            corrigido automaticamente para 01/01/{exercicio} a 31/12/{exercicio}.
+            {periodo.invalido ? " (data fora de faixa)" : ""}. Ao salvar no histórico, o período
+            será corrigido automaticamente para 01/01/{exercicio} a 31/12/{exercicio}.
           </AlertDescription>
         </Alert>
       )}
-
 
       {mostrarRelatorio && exercicio && (
         <p className="no-print text-xs text-muted-foreground">
@@ -721,12 +736,13 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
         </p>
       )}
 
-
       {registroHistorico && (
         <Alert className="no-print">
           <AlertTitle className="flex flex-wrap items-center gap-2">
             Índice carregado do histórico
-            <Badge variant={registroHistorico.tipo_indice === "definitivo" ? "default" : "secondary"}>
+            <Badge
+              variant={registroHistorico.tipo_indice === "definitivo" ? "default" : "secondary"}
+            >
               {registroHistorico.tipo_indice === "definitivo"
                 ? "Definitivo"
                 : registroHistorico.estimado
@@ -738,8 +754,10 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             <p>
               Exercício {registroHistorico.exercicio} ·{" "}
               {rotuloRemessa(registroHistorico.competencia_mes)}
-              {registroHistorico.competencia_ano ? ` · entrega ${registroHistorico.competencia_ano}` : ""} ·
-              arquivo{" "}
+              {registroHistorico.competencia_ano
+                ? ` · entrega ${registroHistorico.competencia_ano}`
+                : ""}{" "}
+              · arquivo{" "}
               <span className="font-mono">{registroHistorico.arquivo_nome ?? "não informado"}</span>
               {registroHistorico.origem_credito_proprio === "planilha"
                 ? ` · crédito próprio do Portal do VAF (${registroHistorico.arquivo_credito_proprio ?? "planilha"})`
@@ -802,10 +820,10 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Este arquivo de retorno mensal não traz o registro de índice fechado pela SEF-MG
-              (tipo 16/17). O sistema projeta o índice com os dados do próprio arquivo: créditos
-              externos (registros 11/35), créditos e débitos entre municípios (12/13) — exatos — e
-              VAF próprio somado das declarações (registro 10), que é a parte estimada. Use para
+              Este arquivo de retorno mensal não traz o registro de índice fechado pela SEF-MG (tipo
+              16/17). O sistema projeta o índice com os dados do próprio arquivo: créditos externos
+              (registros 11/35), créditos e débitos entre municípios (12/13) — exatos — e VAF
+              próprio somado das declarações (registro 10), que é a parte estimada. Use para
               previsão e estratégia, não como valor oficial.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -853,7 +871,6 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               produtores={produtores}
               onProdutores={setProdutores}
             />
-
           </CardContent>
         </Card>
       )}
@@ -875,7 +892,6 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
         </div>
       )}
 
-
       {apuracao && !apuracao.estimado && planilha && (
         <Alert className="no-print">
           <AlertTitle>Crédito próprio oficial mantido</AlertTitle>
@@ -887,7 +903,6 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           </AlertDescription>
         </Alert>
       )}
-
 
       {mostrarRelatorio && apuracao && (
         <div id="relatorio-indice" className="space-y-6">
@@ -1001,8 +1016,15 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 </p>
               }
             />
-
           </div>
+
+          {/* Índice publicado pelo Estado e aplicado no exercício (só referência) */}
+          <IndiceAplicadoBase
+            municipioId={municipioId}
+            exercicioAplicacao={exercicio ? exercicio + 2 : null}
+            indiceApurado={apuracao.indice}
+            rotuloApurado="índice apurado nesta tela"
+          />
 
           {/* Blocos VAF A / B / C */}
           <div className="grid gap-4 lg:grid-cols-3">
@@ -1099,8 +1121,8 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                         <div className="space-y-1.5 text-xs">
                           <p className="font-medium">Composição do VAF B</p>
                           <p>
-                            <strong>Crédito interno:</strong> operações interestaduais com
-                            outros municípios (registro 12).
+                            <strong>Crédito interno:</strong> operações interestaduais com outros
+                            municípios (registro 12).
                           </p>
                           <p>
                             <strong>Crédito próprio:</strong> AF/SIARE{" "}
@@ -1160,8 +1182,8 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                             SEF-MG que aumenta o valor líquido.
                           </p>
                           <p>
-                            <strong>Acerto de débito:</strong> ajuste de ofício aplicado pela
-                            SEF-MG que reduz o valor líquido.
+                            <strong>Acerto de débito:</strong> ajuste de ofício aplicado pela SEF-MG
+                            que reduz o valor líquido.
                           </p>
                         </div>
                       </TooltipContent>
@@ -1261,8 +1283,8 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                           )}
                           <li>
                             Confirme exercício {registroHistorico.exercicio} ·{" "}
-                            {rotuloRemessa(registroHistorico.competencia_mes)} e clique em "Salvar no
-                            histórico": o registro é substituído, mantendo o mesmo índice.
+                            {rotuloRemessa(registroHistorico.competencia_mes)} e clique em "Salvar
+                            no histórico": o registro é substituído, mantendo o mesmo índice.
                           </li>
                         </ol>
                       </>
@@ -1314,10 +1336,7 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 </TabsContent>
 
                 <TabsContent value="externos" className="mt-4">
-                  <TabelaContribuintes
-                    linhas={apuracao.creditosExternos}
-                    nomePorIe={nomePorIe}
-                  />
+                  <TabelaContribuintes linhas={apuracao.creditosExternos} nomePorIe={nomePorIe} />
                 </TabsContent>
 
                 <TabsContent value="municipios" className="mt-4 space-y-6">
@@ -1506,10 +1525,9 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     <Alert className="no-print">
                       <AlertTitle>Sem a lista de contribuintes neste arquivo</AlertTitle>
                       <AlertDescription>
-                        O arquivo de retorno trouxe o crédito próprio apenas consolidado
-                        (AF + SIARE = {formatarMoeda(apuracao.creditoProprio)}); a SEF-MG não
-                        detalha as notas nele. Para ver os contribuintes, anexe abaixo, do Portal
-                        do VAF:
+                        O arquivo de retorno trouxe o crédito próprio apenas consolidado (AF + SIARE
+                        = {formatarMoeda(apuracao.creditoProprio)}); a SEF-MG não detalha as notas
+                        nele. Para ver os contribuintes, anexe abaixo, do Portal do VAF:
                         <span className="mt-1 block font-mono text-xs">
                           REL_CREDITO_{(municipio?.nome ?? "MUNICIPIO").toUpperCase()}_….csv
                         </span>
@@ -1584,14 +1602,12 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               Selecione o arquivo de índices ou o retorno mensal (ex.:{" "}
               <span className="font-mono">P443RT…​.txt</span>) para apurar VAF A, VAF B, VAF C,
               valor líquido e índice.
-
             </p>
           </CardContent>
         </Card>
       )}
 
       <HistoricoIndices municipioId={municipioId} onCarregar={carregarDoHistorico} />
-
     </div>
   );
 }

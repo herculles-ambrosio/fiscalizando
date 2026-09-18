@@ -189,6 +189,18 @@ function PaginaEstatisticas() {
   );
   const remessa = busca.remessa && remessas.includes(busca.remessa) ? busca.remessa : null;
 
+  // média publicada em resolução da SEF-MG e aplicada no exercício do repasse
+  const anoAplicacao = anoAlvo + 2;
+  const mediasAplicadas = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const r of resolucao ?? []) {
+      if (!r.municipio_id || r.media_indices == null) continue;
+      if ((r.exercicio_aplicacao ?? r.ano_b + 2) !== anoAplicacao) continue;
+      mapa.set(r.municipio_id, Number(r.media_indices));
+    }
+    return mapa;
+  }, [resolucao, anoAplicacao]);
+
   function trocar(campos: Partial<typeof busca>) {
     navigate({ to: ".", search: (p) => ({ ...p, ...campos }) });
   }
@@ -487,13 +499,47 @@ function PaginaEstatisticas() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <Cabecalho rotulo="Município" coluna="nome" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} />
-                  <Cabecalho rotulo={`Índice ${anoBase}`} coluna="indice_base" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
+                  <Cabecalho
+                    rotulo="Município"
+                    coluna="nome"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                  />
+                  <Cabecalho
+                    rotulo={`Índice ${anoBase}`}
+                    coluna="indice_base"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                    direita
+                  />
                   <TableHead className="text-right">Valor {anoBase}</TableHead>
-                  <Cabecalho rotulo={`Índice ${anoAlvo}`} coluna="indice_atual" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
+                  <Cabecalho
+                    rotulo={`Índice ${anoAlvo}`}
+                    coluna="indice_atual"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                    direita
+                  />
                   <TableHead className="text-right">Valor {anoAlvo}</TableHead>
-                  <Cabecalho rotulo="Variação" coluna="variacao" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
-                  <Cabecalho rotulo="Situação" coluna="situacao" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} />
+                  <TableHead className="text-right">Índice médio aplicado {anoAplicacao}</TableHead>
+                  <Cabecalho
+                    rotulo="Variação"
+                    coluna="variacao"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                    direita
+                  />
+                  <Cabecalho
+                    rotulo="Situação"
+                    coluna="situacao"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                  />
                   <TableHead>Providências</TableHead>
                 </TableRow>
               </TableHeader>
@@ -516,6 +562,11 @@ function PaginaEstatisticas() {
                     </TableCell>
                     <TableCell className="text-right tabular-nums whitespace-nowrap">
                       {l.alvo ? formatarMoeda(Number(l.alvo.valor_liquido)) : "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs tabular-nums">
+                      {mediasAplicadas.has(l.municipioId)
+                        ? formatarIndice(mediasAplicadas.get(l.municipioId)!)
+                        : "—"}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {l.variacao != null ? (

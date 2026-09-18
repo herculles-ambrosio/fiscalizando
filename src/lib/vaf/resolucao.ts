@@ -81,6 +81,13 @@ export function parseAnexoResolucao(conteudo: string): AnexoResolucao {
     const valores = tokens.slice(i + 2, i + 7);
     if (valores.length < 5 || !valores.every(ehNumero)) continue;
 
+    const nums = valores.map(numeroBr);
+    // descarta blocos que não são linhas do anexo (ex.: lista de anos no menu):
+    // índices são percentuais pequenos e o VAF individual é sempre grande
+    const indicesOk = [nums[1], nums[3], nums[4]].every((n) => n != null && n >= 0 && n <= 100);
+    const vafOk = [nums[0], nums[2]].every((n) => n != null && n >= 1000);
+    if (!indicesOk || !vafOk) continue;
+
     linhas.push({
       codigoMun: codigo,
       municipioNome: nome,
