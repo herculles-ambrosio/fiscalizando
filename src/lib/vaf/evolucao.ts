@@ -137,6 +137,8 @@ export type ArquivoEvolucao = {
   nome: string;
   apuracao: ApuracaoIndice;
   declarantes: Declarante[];
+  /** Ano do movimento/apuração escolhido para identificar esta carga. Não altera os cálculos. */
+  anoApuracao?: number;
   /** Ano de aplicação escolhido para apresentar esta apuração. Não altera os cálculos. */
   anoAplicacao?: number;
   /** true quando o arquivo trazia registro 16/17 (índice fechado pela SEF) */
