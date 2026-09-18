@@ -167,6 +167,9 @@ function CaixaArquivo({
   anosDisponiveis,
   onAnoApuracao,
   onAnoAplicacao,
+  resolucoes,
+  resolucaoNumero,
+  onResolucao,
 }: {
   titulo: string;
   descricao: string;
@@ -178,6 +181,9 @@ function CaixaArquivo({
   anosDisponiveis: number[];
   onAnoApuracao: (ano: number) => void;
   onAnoAplicacao: (ano: number) => void;
+  resolucoes?: ResolucaoSef[];
+  resolucaoNumero?: string | null;
+  onResolucao?: (numero: string | null) => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
