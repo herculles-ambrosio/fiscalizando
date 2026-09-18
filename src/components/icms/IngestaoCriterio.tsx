@@ -135,7 +135,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
           r = p;
           divergencias = p.divergencias;
           if (!anoForcado && p.exercicio) ano = p.exercicio;
-          if (p.definitiva !== null) fonteUso = p.definitiva ? "definitivo" : "provisorio";
+          if (p.definitiva !== null) fonteUso = p.definitiva ? "definitivo" : "preliminar";
         }
       }
     }
