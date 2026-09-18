@@ -26,6 +26,17 @@ type Props = {
   nomeMunicipio: string | null;
   /** "pontos" ou "% do critério", conforme o critério. */
   unidade?: string;
+  /**
+   * Itens já carregados por quem chama (usado pelo Esportes, que guarda as
+   * atividades em tabela própria). Quando vem preenchido, o painel não busca
+   * os itens do critério genérico.
+   */
+  itensExternos?: {
+    municipio: string;
+    item_codigo: string | null;
+    item_nome: string;
+    pontuacao: number | null;
+  }[];
 };
 
 const num = (v: number, casas = 2) =>
@@ -44,13 +55,20 @@ export function VizinhosCriterio({
   chaveMunicipio,
   nomeMunicipio,
   unidade = "pontos",
+  itensExternos,
 }: Props) {
   const populacao = usePopulacao();
   const [aberto, setAberto] = useState<string | null>(null);
 
   const regiao = regiaoDe(chaveMunicipio);
   const chavesVizinhas = useMemo(() => vizinhosDe(chaveMunicipio), [chaveMunicipio]);
-  const { data: itens } = useItensCriterioMunicipios(slug, ano, fonte, chavesVizinhas);
+  const { data: itensCriterio } = useItensCriterioMunicipios(
+    slug,
+    ano,
+    fonte,
+    itensExternos ? [] : chavesVizinhas,
+  );
+  const itens = itensExternos ?? itensCriterio;
 
   /** Pontuação por município e item (somando linhas repetidas do relatório). */
   const pontosPorItem = useMemo(() => {

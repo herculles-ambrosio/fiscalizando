@@ -116,3 +116,31 @@ export function useEsportesAtividades(
     },
   });
 }
+
+/**
+ * Atividades pontuadas por um grupo de municípios (o município em análise e os
+ * seus vizinhos), usado no painel de comparação regional do critério Esportes.
+ */
+export function useEsportesAtividadesMunicipios(
+  ano: number | null,
+  fonte: FonteRelatorio | null,
+  municipios: string[],
+) {
+  const chaves = [...new Set(municipios)].sort();
+  return useQuery({
+    queryKey: ["esportes-atividades-varios", ano, fonte, chaves],
+    enabled: !!ano && !!fonte && chaves.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<AtividadeEsportes[]> => {
+      const { data, error } = await supabase
+        .from("esportes_atividade_municipio")
+        .select("*")
+        .eq("ano_base", ano!)
+        .eq("fonte_relatorio", fonte!)
+        .in("municipio", chaves)
+        .limit(20000);
+      if (error) throw error;
+      return (data ?? []) as unknown as AtividadeEsportes[];
+    },
+  });
+}
