@@ -61,7 +61,7 @@ const NAV_CONSULTORIA = [
 const NAV_SUPERADMIN = [
   { to: "/consultoria/usuarios", rotulo: "Usuários", icone: Users },
   { to: "/consultoria/codigos-sef", rotulo: "Códigos SEF", icone: MapPin },
-  { to: "/consultoria/resolucao", rotulo: "Índices da Resolução", icone: FileSignature },
+  { to: "/consultoria/resolucao", rotulo: "Resoluções SEF", icone: FileSignature },
 ];
 
 // Módulo Fiscaliza Cartório — ISS das serventias extrajudiciais.

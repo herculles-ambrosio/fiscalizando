@@ -89,7 +89,11 @@ import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
 import OutrasReceitas from "@/components/analises/OutrasReceitas";
 import ImpactoContribuintes from "@/components/analises/ImpactoContribuintes";
-import { IndiceAplicadoBase } from "@/components/vaf/IndiceAplicado";
+import {
+  useIndiceDaResolucao,
+  useResolucoesSef,
+  type ResolucaoSef,
+} from "@/hooks/useResolucoesSef";
 
 function rotuloArquivo(
   a: ArquivoEvolucao,
@@ -167,6 +171,9 @@ function CaixaArquivo({
   anosDisponiveis,
   onAnoApuracao,
   onAnoAplicacao,
+  resolucoes,
+  resolucaoNumero,
+  onResolucao,
 }: {
   titulo: string;
   descricao: string;
@@ -178,6 +185,9 @@ function CaixaArquivo({
   anosDisponiveis: number[];
   onAnoApuracao: (ano: number) => void;
   onAnoAplicacao: (ano: number) => void;
+  resolucoes?: ResolucaoSef[];
+  resolucaoNumero?: string | null;
+  onResolucao?: (numero: string | null) => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
@@ -263,6 +273,31 @@ function CaixaArquivo({
                 </Select>
               </div>
             </div>
+            {onResolucao && (
+              <div className="space-y-1.5 pt-2">
+                <Label className="text-xs">Resolução de referência</Label>
+                <Select
+                  value={resolucaoNumero ?? "nenhuma"}
+                  onValueChange={(v) => onResolucao(v === "nenhuma" ? null : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sem resolução" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhuma">Sem resolução</SelectItem>
+                    {(resolucoes ?? []).map((r) => (
+                      <SelectItem key={r.id} value={r.numero}>
+                        Resolução {r.numero} · apuração {r.ano_apuracao} · aplicação{" "}
+                        {r.ano_aplicacao}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  A média publicada nessa resolução vira a média base da comparação.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
@@ -567,6 +602,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const [anoApuracaoAtual, setAnoApuracaoAtual] = useState<number | null>(null);
   const [anoAplicacaoBase, setAnoAplicacaoBase] = useState<number | null>(null);
   const [anoAplicacaoAtual, setAnoAplicacaoAtual] = useState<number | null>(null);
+  const [resolucaoBase, setResolucaoBase] = useState<string | null>(null);
+  const { data: resolucoesSef = [] } = useResolucoesSef();
+  const { data: indiceResolucaoBase } = useIndiceDaResolucao(resolucaoBase, municipio?.id ?? null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
   const [perguntarPlanilha, setPerguntarPlanilha] = useState(false);
   const base = useMemo(
@@ -905,6 +943,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           anosDisponiveis={anosDisponiveis}
           onAnoApuracao={setAnoApuracaoBase}
           onAnoAplicacao={setAnoAplicacaoBase}
+          resolucoes={resolucoesSef}
+          resolucaoNumero={resolucaoBase}
+          onResolucao={setResolucaoBase}
         />
         <CaixaArquivo
           titulo="Arquivo atual (remessa a comparar)"
@@ -979,6 +1020,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       ...base,
                       ...(anoApuracaoBase ? { anoApuracao: anoApuracaoBase } : {}),
                       ...(anoAplicacaoBase ? { anoAplicacao: anoAplicacaoBase } : {}),
+                      ...(resolucaoBase ? { resolucaoNumero: resolucaoBase } : {}),
                     },
                     atual: {
                       ...atual,
@@ -1034,6 +1076,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                         setAnoAplicacaoBase(sugerirAnoAplicacao(s.base));
                         setAnoAplicacaoAtual(sugerirAnoAplicacao(s.atual));
                         setVafReferencia(s.vaf_referencia ?? "");
+                        setResolucaoBase(s.base.resolucaoNumero ?? null);
                         toast.success("Evolução carregada.");
                       }}
                     >
@@ -1242,6 +1285,43 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               </CardContent>
             </Card>
 
+            {resolucaoBase && (
+              <Card className="border-primary/40">
+                <CardContent className="space-y-1 p-4">
+                  <RotuloKpi
+                    titulo={`Média dos índices - base (Resolução ${resolucaoBase})`}
+                    ajuda={
+                      <>
+                        <p>
+                          Média publicada pela SEF-MG na Resolução {resolucaoBase}, já calculada
+                          sobre os dois anos de apuração.
+                        </p>
+                        <p>É a referência oficial para saber se o índice subiu ou caiu.</p>
+                      </>
+                    }
+                  />
+                  <p className="break-words font-display text-lg font-semibold">
+                    {indiceResolucaoBase?.media_indices != null
+                      ? `${formatarIndice(indiceResolucaoBase.media_indices)}%`
+                      : "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {indiceResolucaoBase
+                      ? `Índices ${indiceResolucaoBase.ano_a}: ${
+                          indiceResolucaoBase.indice_a != null
+                            ? `${formatarIndice(indiceResolucaoBase.indice_a)}%`
+                            : "—"
+                        } · ${indiceResolucaoBase.ano_b}: ${
+                          indiceResolucaoBase.indice_b != null
+                            ? `${formatarIndice(indiceResolucaoBase.indice_b)}%`
+                            : "—"
+                        }`
+                      : "Município não localizado nessa resolução."}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
@@ -1260,6 +1340,12 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                         É esse valor que a SEF-MG aplica no repasse do exercício seguinte ao da
                         última apuração.
                       </p>
+                      {resolucaoBase && (
+                        <p>
+                          A diferença mostrada compara esta média com a média publicada na Resolução{" "}
+                          {resolucaoBase}.
+                        </p>
+                      )}
                     </>
                   }
                 />
@@ -1268,11 +1354,31 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     ? `${formatarIndice((base.apuracao.indice + atual.apuracao.indice) / 2)}%`
                     : "—"}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {base.apuracao.indice > 0 && atual.apuracao.indice > 0
-                    ? "(índice base + índice comparado) ÷ 2"
-                    : "Faltam os índices dos dois arquivos para calcular a média."}
-                </p>
+                {base.apuracao.indice > 0 &&
+                atual.apuracao.indice > 0 &&
+                indiceResolucaoBase?.media_indices ? (
+                  (() => {
+                    const mediaAtual = (base.apuracao.indice + atual.apuracao.indice) / 2;
+                    const mediaBase = indiceResolucaoBase.media_indices!;
+                    const diferenca = mediaAtual - mediaBase;
+                    const pct = (diferenca / mediaBase) * 100;
+                    return (
+                      <p className="space-x-2 text-xs">
+                        <span className={diferenca >= 0 ? "text-emerald-600" : "text-destructive"}>
+                          {diferenca >= 0 ? "Subiu" : "Caiu"} {formatarIndice(Math.abs(diferenca))}{" "}
+                          ponto(s)
+                        </span>
+                        <Variacao pct={pct} />
+                      </p>
+                    );
+                  })()
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {base.apuracao.indice > 0 && atual.apuracao.indice > 0
+                      ? "(índice base + índice comparado) ÷ 2"
+                      : "Faltam os índices dos dois arquivos para calcular a média."}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -1312,18 +1418,6 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               </CardContent>
             </Card>
           </div>
-
-          {/* Índice publicado pelo Estado e aplicado no exercício (só referência) */}
-          <IndiceAplicadoBase
-            municipioId={municipioRelatorio?.id ?? null}
-            exercicioAplicacao={anoAplicacaoAtual}
-            indiceApurado={
-              base.apuracao.indice > 0 && atual.apuracao.indice > 0
-                ? (base.apuracao.indice + atual.apuracao.indice) / 2
-                : atual.apuracao.indice
-            }
-            rotuloApurado="índice médio desta análise"
-          />
 
           <DiagnosticoVariacao
             base={base}

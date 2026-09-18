@@ -141,6 +141,8 @@ export type ArquivoEvolucao = {
   anoApuracao?: number;
   /** Ano de aplicação escolhido para apresentar esta apuração. Não altera os cálculos. */
   anoAplicacao?: number;
+  /** Número da resolução da SEF-MG usada como referência de média publicada. */
+  resolucaoNumero?: string;
   /** true quando o arquivo trazia registro 16/17 (índice fechado pela SEF) */
   temIndiceFechado: boolean;
   /** outras entradas (registros 07/08/14..23) */

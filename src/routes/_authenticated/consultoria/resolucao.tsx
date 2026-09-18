@@ -1,10 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
-import { Download, Loader2, Save, Search } from "lucide-react";
+import { Download, Loader2, Save, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useMunicipios } from "@/hooks/useMunicipio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,45 +21,53 @@ import {
 import { buscarResolucao } from "@/lib/vaf/resolucao.functions";
 import { casarMunicipios, parseAnexoResolucao, type AnexoResolucao } from "@/lib/vaf/resolucao";
 import { formatarIndice } from "@/lib/vaf/indice";
-import { useResolucoesCarregadas } from "@/hooks/useIndiceAplicado";
+import {
+  useExcluirResolucaoSef,
+  useResolucoesSef,
+  useSalvarResolucaoSef,
+  type ResolucaoSef,
+} from "@/hooks/useResolucoesSef";
 
 export const Route = createFileRoute("/_authenticated/consultoria/resolucao")({
   head: () => ({
     meta: [
-      { title: "Índices da Resolução SEF | Apura VAF 2.0" },
+      { title: "Resoluções SEF | Apura VAF 2.0" },
       {
         name: "description",
         content:
-          "Importe os índices de participação publicados nas resoluções da SEF-MG e use-os nas estatísticas das prefeituras que não são clientes.",
+          "Cadastre as resoluções da SEF-MG com ano de apuração e ano de aplicação e importe os índices publicados de todos os municípios.",
       },
-      { property: "og:title", content: "Índices da Resolução SEF | Apura VAF 2.0" },
+      { property: "og:title", content: "Resoluções SEF | Apura VAF 2.0" },
       {
         property: "og:description",
-        content: "Leitura do anexo das resoluções da SEF-MG com os índices de todos os municípios.",
+        content: "Cadastro das resoluções da SEF-MG com os índices oficiais de participação.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: ImportarResolucao,
+  component: CadastroResolucoes,
 });
 
 const URL_PADRAO =
   "https://www.fazenda.mg.gov.br/empresas/legislacao_tributaria/resolucoes/2026/rr6069_2026.html";
 
-function ImportarResolucao() {
+function CadastroResolucoes() {
   const { data: municipios } = useMunicipios();
-  const { data: carregadas = [] } = useResolucoesCarregadas();
+  const { data: cadastradas = [] } = useResolucoesSef();
+  const salvar = useSalvarResolucaoSef();
+  const excluir = useExcluirResolucaoSef();
   const buscar = useServerFn(buscarResolucao);
-  const queryClient = useQueryClient();
 
   const [url, setUrl] = useState(URL_PADRAO);
   const [colado, setColado] = useState("");
   const [anexo, setAnexo] = useState<AnexoResolucao | null>(null);
-  const [resolucao, setResolucao] = useState("");
-  const [exercicio, setExercicio] = useState("");
+  const [numero, setNumero] = useState("");
+  const [dataPublicacao, setDataPublicacao] = useState("");
+  const [anoApuracao, setAnoApuracao] = useState("");
+  const [anoAplicacao, setAnoAplicacao] = useState("");
+  const [observacao, setObservacao] = useState("");
   const [carregando, setCarregando] = useState(false);
-  const [salvando, setSalvando] = useState(false);
 
   const casadas = useMemo(
     () => (anexo ? casarMunicipios(anexo.linhas, municipios ?? []) : []),
@@ -76,15 +82,19 @@ function ImportarResolucao() {
       return;
     }
     setAnexo(resultado);
-    setResolucao(resultado.resolucao ?? "");
-    setExercicio(resultado.exercicioAplicacao ? String(resultado.exercicioAplicacao) : "");
+    setNumero((atual) => atual || (resultado.resolucao ?? "").split("/")[0] || "");
+    setAnoAplicacao(
+      (atual) =>
+        atual || (resultado.exercicioAplicacao ? String(resultado.exercicioAplicacao) : ""),
+    );
+    setAnoApuracao((atual) => atual || (resultado.anoB ? String(resultado.anoB) : ""));
     toast.success(`${resultado.linhas.length} municípios lidos do anexo.`);
   }
 
-  async function buscarPagina() {
+  async function buscarPagina(endereco = url) {
     setCarregando(true);
     try {
-      aplicar(await buscar({ data: { url } }));
+      aplicar(await buscar({ data: { url: endereco } }));
     } catch (erro) {
       toast.error("Não consegui ler a página da resolução.", {
         description: erro instanceof Error ? erro.message : undefined,
@@ -94,83 +104,107 @@ function ImportarResolucao() {
     }
   }
 
+  function reler(r: ResolucaoSef) {
+    setNumero(r.numero);
+    setAnoApuracao(String(r.ano_apuracao));
+    setAnoAplicacao(String(r.ano_aplicacao));
+    setDataPublicacao(r.data_publicacao ?? "");
+    setObservacao(r.observacao ?? "");
+    if (r.url) {
+      setUrl(r.url);
+      void buscarPagina(r.url);
+    }
+  }
+
   async function gravar() {
     if (!anexo) return;
-    if (!resolucao.trim() || !exercicio.trim()) {
-      toast.error("Informe o número da resolução e o exercício de aplicação.");
+    if (!numero.trim() || !anoApuracao.trim() || !anoAplicacao.trim()) {
+      toast.error("Informe o número da resolução, o ano de apuração e o ano de aplicação.");
       return;
     }
-    if (!anexo.anoA || !anexo.anoB) {
-      toast.error("Não identifiquei os anos das colunas do anexo.");
-      return;
+    try {
+      await salvar.mutateAsync({
+        numero: numero.trim(),
+        dataPublicacao: dataPublicacao || null,
+        url: url || null,
+        anoApuracao: Number(anoApuracao),
+        anoAplicacao: Number(anoAplicacao),
+        anoA: anexo.anoA,
+        anoB: anexo.anoB,
+        observacao: observacao.trim() || null,
+        linhas: casadas,
+      });
+      toast.success(`Resolução ${numero} gravada com ${casadas.length} municípios.`);
+    } catch (erro) {
+      toast.error("Não foi possível gravar a resolução.", {
+        description: erro instanceof Error ? erro.message : undefined,
+      });
     }
-    setSalvando(true);
-    const registros = casadas.map(({ linha, municipioId }) => ({
-      municipio_id: municipioId,
-      codigo_mun: linha.codigoMun,
-      municipio_nome: linha.municipioNome,
-      resolucao: resolucao.trim(),
-      exercicio_aplicacao: Number(exercicio),
-      ano_a: anexo.anoA!,
-      vaf_a: linha.vafA,
-      indice_a: linha.indiceA,
-      ano_b: anexo.anoB!,
-      vaf_b: linha.vafB,
-      indice_b: linha.indiceB,
-      media_indices: linha.mediaIndices,
-      fonte_url: url,
-    }));
-
-    const { error } = await supabase
-      .from("indices_resolucao")
-      .upsert(registros, { onConflict: "resolucao,codigo_mun" });
-    setSalvando(false);
-    if (error) {
-      toast.error("Não foi possível gravar os índices.", { description: error.message });
-      return;
-    }
-    queryClient.invalidateQueries({ queryKey: ["indices-resolucao"] });
-    queryClient.invalidateQueries({ queryKey: ["resolucoes-carregadas"] });
-    queryClient.invalidateQueries({ queryKey: ["indice-aplicado"] });
-    toast.success(`${registros.length} municípios gravados.`);
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Índices da Resolução SEF</h1>
+        <h1 className="text-2xl font-semibold">Resoluções SEF</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Importe o anexo com os índices de todos os municípios mineiros. Esses índices alimentam as
-          estatísticas das prefeituras que não são clientes.
+          Cadastre cada resolução com o ano de apuração e o ano de aplicação. Os índices publicados
+          ficam disponíveis para comparação nas análises do VAF.
         </p>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Resoluções já importadas</CardTitle>
+          <CardTitle className="text-sm">Resoluções cadastradas</CardTitle>
         </CardHeader>
         <CardContent>
-          {carregadas.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma resolução importada ainda.</p>
+          {cadastradas.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma resolução cadastrada ainda.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Resolução</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Apuração</TableHead>
                   <TableHead>Aplicação</TableHead>
-                  <TableHead>Anos de apuração</TableHead>
                   <TableHead className="text-right">Municípios</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {carregadas.map((r) => (
-                  <TableRow key={r.resolucao}>
-                    <TableCell className="font-medium">{r.resolucao}</TableCell>
-                    <TableCell>{r.exercicio_aplicacao}</TableCell>
+                {cadastradas.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium">{r.numero}</TableCell>
                     <TableCell>
-                      {r.ano_a}/{r.ano_b}
+                      {r.data_publicacao
+                        ? new Date(`${r.data_publicacao}T12:00:00`).toLocaleDateString("pt-BR")
+                        : "—"}
                     </TableCell>
+                    <TableCell>{r.ano_apuracao}</TableCell>
+                    <TableCell>{r.ano_aplicacao}</TableCell>
                     <TableCell className="text-right font-mono">{r.municipios}</TableCell>
+                    <TableCell className="space-x-2 text-right">
+                      <Button size="sm" variant="outline" onClick={() => reler(r)}>
+                        Reler
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={excluir.isPending}
+                        onClick={() => {
+                          if (!confirm(`Excluir a resolução ${r.numero} e seus índices?`)) return;
+                          excluir.mutate(r, {
+                            onSuccess: () => toast.success("Resolução excluída."),
+                            onError: (e) =>
+                              toast.error("Não foi possível excluir.", {
+                                description: e instanceof Error ? e.message : undefined,
+                              }),
+                          });
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -188,7 +222,7 @@ function ImportarResolucao() {
             <Label htmlFor="url">Endereço no site da Fazenda de Minas Gerais</Label>
             <Input id="url" value={url} onChange={(e) => setUrl(e.target.value)} />
           </div>
-          <Button onClick={buscarPagina} disabled={carregando}>
+          <Button onClick={() => buscarPagina()} disabled={carregando}>
             {carregando ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -227,15 +261,45 @@ function ImportarResolucao() {
             <CardTitle className="text-sm">3. Conferir e gravar</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
-                <Label htmlFor="res">Resolução</Label>
-                <Input id="res" value={resolucao} onChange={(e) => setResolucao(e.target.value)} />
+                <Label htmlFor="num">Número da resolução</Label>
+                <Input id="num" value={numero} onChange={(e) => setNumero(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ex">Exercício de aplicação</Label>
-                <Input id="ex" value={exercicio} onChange={(e) => setExercicio(e.target.value)} />
+                <Label htmlFor="dt">Data da publicação</Label>
+                <Input
+                  id="dt"
+                  type="date"
+                  value={dataPublicacao}
+                  onChange={(e) => setDataPublicacao(e.target.value)}
+                />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="apu">Ano de apuração</Label>
+                <Input
+                  id="apu"
+                  value={anoApuracao}
+                  onChange={(e) => setAnoApuracao(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="apl">Ano de aplicação</Label>
+                <Input
+                  id="apl"
+                  value={anoAplicacao}
+                  onChange={(e) => setAnoAplicacao(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="obs">Observação</Label>
+              <Input
+                id="obs"
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+                placeholder="Ex.: índice provisório, sujeito a recurso."
+              />
             </div>
 
             <Alert>
@@ -243,7 +307,7 @@ function ImportarResolucao() {
                 {reconhecidos.length} de {casadas.length} municípios reconhecidos
               </AlertTitle>
               <AlertDescription className="text-xs">
-                Anos das colunas: {anexo.anoA ?? "—"} e {anexo.anoB ?? "—"}.
+                Anos das colunas do anexo: {anexo.anoA ?? "—"} e {anexo.anoB ?? "—"}.
                 {naoReconhecidos.length > 0 && (
                   <>
                     {" "}
@@ -292,13 +356,13 @@ function ImportarResolucao() {
               </Table>
             </div>
 
-            <Button onClick={gravar} disabled={salvando}>
-              {salvando ? (
+            <Button onClick={gravar} disabled={salvar.isPending}>
+              {salvar.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              Gravar {casadas.length} municípios
+              Gravar resolução com {casadas.length} municípios
             </Button>
           </CardContent>
         </Card>
