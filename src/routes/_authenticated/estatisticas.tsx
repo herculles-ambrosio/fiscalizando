@@ -189,6 +189,18 @@ function PaginaEstatisticas() {
   );
   const remessa = busca.remessa && remessas.includes(busca.remessa) ? busca.remessa : null;
 
+  // média publicada em resolução da SEF-MG e aplicada no exercício do repasse
+  const anoAplicacao = anoAlvo + 2;
+  const mediasAplicadas = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const r of resolucao ?? []) {
+      if (!r.municipio_id || r.media_indices == null) continue;
+      if ((r.exercicio_aplicacao ?? r.ano_b + 2) !== anoAplicacao) continue;
+      mapa.set(r.municipio_id, Number(r.media_indices));
+    }
+    return mapa;
+  }, [resolucao, anoAplicacao]);
+
   function trocar(campos: Partial<typeof busca>) {
     navigate({ to: ".", search: (p) => ({ ...p, ...campos }) });
   }
