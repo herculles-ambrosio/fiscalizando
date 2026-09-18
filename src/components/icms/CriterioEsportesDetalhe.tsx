@@ -36,6 +36,7 @@ const numero = (v: number | null | undefined) =>
 
 export function CriterioEsportesDetalhe() {
   const { municipio } = useMunicipioAtivo();
+  const populacao = usePopulacao();
   const { data: perfil } = usePerfil();
   const { data: anos } = useEsportesAnos();
   const { data: referencia } = useAtividadesReferencia();
@@ -391,6 +392,9 @@ export function CriterioEsportesDetalhe() {
                   <TableRow>
                     <TableHead className="w-16">#</TableHead>
                     <TableHead>Município</TableHead>
+                    <TableHead className="text-right">
+                      População{populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
+                    </TableHead>
                     <TableHead className="text-right">Atividades</TableHead>
                     <TableHead className="text-right">JIMI</TableHead>
                     <TableHead className="text-right">JEMG</TableHead>
@@ -413,6 +417,9 @@ export function CriterioEsportesDetalhe() {
                         )}
                       </TableCell>
                       <TableCell>{l.municipio_nome}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatarPopulacao(populacao.de(l.municipio_nome))}
+                      </TableCell>
                       <TableCell className="text-right">{numero(l.nota_atividades)}</TableCell>
                       <TableCell className="text-right">{numero(l.nota_jimi)}</TableCell>
                       <TableCell className="text-right">{numero(l.nota_jemg)}</TableCell>
