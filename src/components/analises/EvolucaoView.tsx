@@ -1185,21 +1185,21 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     </>
                   }
                 />
-                <p
-                  className={`break-words font-display text-lg font-semibold ${
-                    atual.apuracao.valorLiquido > base.apuracao.valorLiquido
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : atual.apuracao.valorLiquido < base.apuracao.valorLiquido
-                        ? "text-destructive"
-                        : ""
-                  }`}
-                >
+                <p className="break-words font-display text-lg font-semibold">
                   {formatarMoeda(base.apuracao.valorLiquido)}
                 </p>
                 <p className="text-xs text-muted-foreground">Arquivo: {rotuloBase}</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card
+              className={
+                atual.apuracao.valorLiquido > base.apuracao.valorLiquido
+                  ? "border-normal-foreground/40 bg-normal"
+                  : atual.apuracao.valorLiquido < base.apuracao.valorLiquido
+                    ? "border-destructive/40 bg-omisso"
+                    : undefined
+              }
+            >
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
                   titulo={`Valor líquido - comparado/estimado${anoAplicacaoAtual ? ` ${anoAplicacaoAtual}` : ""}`}
@@ -1221,7 +1221,15 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     </>
                   }
                 />
-                <p className="break-words font-display text-lg font-semibold">
+                <p
+                  className={`break-words font-display text-lg font-semibold ${
+                    atual.apuracao.valorLiquido > base.apuracao.valorLiquido
+                      ? "text-normal-foreground"
+                      : atual.apuracao.valorLiquido < base.apuracao.valorLiquido
+                        ? "text-destructive"
+                        : ""
+                  }`}
+                >
                   {formatarMoeda(atual.apuracao.valorLiquido)}
                 </p>
                 <p className="text-xs text-muted-foreground">Arquivo: {rotuloAtual}</p>
@@ -1237,7 +1245,21 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card
+              className={
+                base.apuracao.indice > 0 &&
+                atual.apuracao.indice > 0 &&
+                indiceResolucaoBase?.media_indices != null
+                  ? (base.apuracao.indice + atual.apuracao.indice) / 2 >
+                    indiceResolucaoBase.media_indices
+                    ? "border-normal-foreground/40 bg-normal"
+                    : (base.apuracao.indice + atual.apuracao.indice) / 2 <
+                        indiceResolucaoBase.media_indices
+                      ? "border-destructive/40 bg-omisso"
+                      : undefined
+                  : undefined
+              }
+            >
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
                   titulo={`Índice de participação - base${anoAplicacaoBase ? ` ${anoAplicacaoBase}` : ""}`}
