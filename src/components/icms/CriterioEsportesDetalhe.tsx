@@ -16,6 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { IngestaoEsportes } from "@/components/icms/IngestaoEsportes";
+import { OndeInscrever } from "@/components/icms/OndeInscrever";
+import { formatarPopulacao, usePopulacao } from "@/hooks/usePopulacao";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { usePerfil } from "@/hooks/usePerfil";
 import {
@@ -345,6 +347,7 @@ export function CriterioEsportesDetalhe() {
               </p>
             </CardContent>
           </Card>
+          <OndeInscrever slug="esportes" />
         </TabsContent>
 
         <TabsContent value="ranking" className="space-y-3 pt-4">
