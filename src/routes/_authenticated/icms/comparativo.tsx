@@ -270,11 +270,14 @@ function ComparativoIcms() {
         ],
         ranking.map((r) => {
           const proprio = normalizarRotulo(r.nome) === meu;
+          const hab = populacao.de(r.nome);
           return [
             r.posicao,
             r.nome,
+            hab != null ? String(hab) : "",
             ...r.meses.map((v) => v.toFixed(2)),
             r.total.toFixed(2),
+            hab ? (r.total / hab).toFixed(2) : "",
             pesoAnexo != null ? (pesoAnexo * 100).toFixed(2) : "",
             valorPontoCriterio != null ? valorPontoCriterio.toFixed(2) : "",
             valorPontoCriterio ? (r.total / valorPontoCriterio).toFixed(8) : "",
