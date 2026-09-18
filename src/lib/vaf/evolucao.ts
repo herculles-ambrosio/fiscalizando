@@ -137,6 +137,8 @@ export type ArquivoEvolucao = {
   nome: string;
   apuracao: ApuracaoIndice;
   declarantes: Declarante[];
+  /** Ano de aplicação escolhido para apresentar esta apuração. Não altera os cálculos. */
+  anoAplicacao?: number;
   /** true quando o arquivo trazia registro 16/17 (índice fechado pela SEF) */
   temIndiceFechado: boolean;
   /** outras entradas (registros 07/08/14..23) */
@@ -364,12 +366,19 @@ export function csvEvolucao(
   declarantes: ComparacaoDeclarantes,
   analise?: string,
   plano?: string,
+  referencias?: { base: string; atual: string },
 ): string {
   const br = (v: number) => v.toFixed(2).replace(".", ",");
   const out: string[][] = [
     ["Comparativo de evolucao"],
     ["Arquivo base", baseNome],
     ["Arquivo atual", atualNome],
+    ...(referencias
+      ? [
+          ["Referência base", referencias.base],
+          ["Referência comparada", referencias.atual],
+        ]
+      : []),
     [],
     ...(analise
       ? [
@@ -381,7 +390,13 @@ export function csvEvolucao(
     ...(plano
       ? [["Plano de recuperacao"], ...plano.split("\n").map((l) => [l]), []]
       : []),
-    ["Indicador", "Base", "Atual", "Diferenca", "Variacao %"],
+    [
+      "Indicador",
+      referencias?.base ?? "Base",
+      referencias?.atual ?? "Atual",
+      "Diferenca",
+      "Variacao %",
+    ],
 
     ...linhas.map((l) => [
       l.rotulo,
@@ -391,7 +406,18 @@ export function csvEvolucao(
       l.variacaoPct === null ? "" : br(l.variacaoPct),
     ]),
     [],
-    ["Situacao", "IE", "CNPJ", "Contribuinte", "VAF base", "VAF atual", "Diferenca", "Cadastro", "Origem nome", "Origem CNPJ"],
+    [
+      "Situacao",
+      "IE",
+      "CNPJ",
+      "Contribuinte",
+      `VAF ${referencias?.base ?? "base"}`,
+      `VAF ${referencias?.atual ?? "atual"}`,
+      "Diferenca",
+      "Cadastro",
+      "Origem nome",
+      "Origem CNPJ",
+    ],
     ...declarantes.todos.map((d) => [
       d.situacao === "saiu" ? "Deixou de declarar" : d.situacao === "entrou" ? "Novo declarante" : "Manteve",
       d.inscricao_estadual,
