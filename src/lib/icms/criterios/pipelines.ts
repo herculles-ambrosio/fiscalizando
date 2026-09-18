@@ -81,6 +81,18 @@ export const PIPELINES: Pipeline[] = [
     colunasTotal: ["indice", "indice de participacao", "iit", "pontuacao", "total"],
     comoFunciona:
       "Lê a publicação oficial dos índices do ICMS Turismo (Secult-MG): uma linha por município habilitado com circuito turístico, nota da habilitação, RLPC, IRC, IIT e o índice de participação no critério.",
+    fontes: [
+      {
+        nome: "Secult-MG — ICMS Turismo",
+        url: "https://www.secult.mg.gov.br/turismo/icms-turismo",
+        oQueTem: "Listas de habilitados, índices por município e resoluções do critério.",
+      },
+      {
+        nome: "Sistema ICMS Turismo",
+        url: "http://www.icmsturismo.mg.gov.br",
+        oQueTem: "Onde o município se habilita, responde notificações e acompanha a pontuação.",
+      },
+    ],
   },
 
   {
