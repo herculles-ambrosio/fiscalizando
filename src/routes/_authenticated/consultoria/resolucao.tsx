@@ -83,8 +83,9 @@ function CadastroResolucoes() {
     }
     setAnexo(resultado);
     setNumero((atual) => atual || (resultado.resolucao ?? "").split("/")[0] || "");
-    setAnoAplicacao((atual) =>
-      atual || (resultado.exercicioAplicacao ? String(resultado.exercicioAplicacao) : ""),
+    setAnoAplicacao(
+      (atual) =>
+        atual || (resultado.exercicioAplicacao ? String(resultado.exercicioAplicacao) : ""),
     );
     setAnoApuracao((atual) => atual || (resultado.anoB ? String(resultado.anoB) : ""));
     toast.success(`${resultado.linhas.length} municípios lidos do anexo.`);

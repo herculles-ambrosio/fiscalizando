@@ -1019,9 +1019,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     base: {
                       ...base,
                       ...(anoApuracaoBase ? { anoApuracao: anoApuracaoBase } : {}),
-                       ...(anoAplicacaoBase ? { anoAplicacao: anoAplicacaoBase } : {}),
-                       ...(resolucaoBase ? { resolucaoNumero: resolucaoBase } : {}),
-                     },
+                      ...(anoAplicacaoBase ? { anoAplicacao: anoAplicacaoBase } : {}),
+                      ...(resolucaoBase ? { resolucaoNumero: resolucaoBase } : {}),
+                    },
                     atual: {
                       ...atual,
                       ...(anoApuracaoAtual ? { anoApuracao: anoApuracaoAtual } : {}),
@@ -1075,8 +1075,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                         setAnoApuracaoAtual(sugerirAnoApuracao(s.atual));
                         setAnoAplicacaoBase(sugerirAnoAplicacao(s.base));
                         setAnoAplicacaoAtual(sugerirAnoAplicacao(s.atual));
-                         setVafReferencia(s.vaf_referencia ?? "");
-                         setResolucaoBase(s.base.resolucaoNumero ?? null);
+                        setVafReferencia(s.vaf_referencia ?? "");
+                        setResolucaoBase(s.base.resolucaoNumero ?? null);
                         toast.success("Evolução carregada.");
                       }}
                     >
@@ -1418,7 +1418,6 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               </CardContent>
             </Card>
           </div>
-
 
           <DiagnosticoVariacao
             base={base}
