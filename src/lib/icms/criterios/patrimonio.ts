@@ -34,8 +34,10 @@ import type { ItemMunicipio, RankingCriterio, ResultadoTabela } from "./tabela";
 
 export type DivergenciaPatrimonio = {
   municipio: string;
-  somaComponentes: number;
-  totalImpresso: number;
+  /** soma dos componentes lidos */
+  esperado: number;
+  /** total impresso no relatório */
+  obtido: number;
 };
 
 export type ResultadoPatrimonio = ResultadoTabela & {
@@ -295,8 +297,8 @@ export function extrairPatrimonioCultural(paginas: PaginaTexto[]): ResultadoPatr
       if (Math.abs(soma - total) > 0.005) {
         divergencias.push({
           municipio: oficial.nome,
-          somaComponentes: Number(soma.toFixed(2)),
-          totalImpresso: total,
+          esperado: Number(soma.toFixed(2)),
+          obtido: total,
         });
       }
 
