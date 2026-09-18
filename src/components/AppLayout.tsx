@@ -78,6 +78,7 @@ const NAV_ICMS_ANALISE = [
   { to: "/icms/prazos", rotulo: "Prazos de recurso", icone: CalendarClock },
   { to: "/icms/repasse-educacao", rotulo: "Repasse da Educação", icone: Scale },
   { to: "/icms/plano", rotulo: "Plano de melhoria", icone: ListChecks },
+  { to: "/icms/sincronizacao", rotulo: "Tabelas oficiais", icone: RefreshCw },
   { to: "/icms/importacoes", rotulo: "Relatórios importados", icone: FileUp },
   { to: "/icms/glossario", rotulo: "Glossário", icone: BookOpen },
 ];
