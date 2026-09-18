@@ -17,8 +17,14 @@ O PDF enviado ("Pontuação Definitiva – Exercício 2027", 33 páginas) é exa
 2. **Conferência automática**: soma dos componentes comparada com a Pontuação Total impressa; divergências aparecem no resumo da importação, e o total do PDF é sempre o que vale.
 3. **Ligação com a tabela de itens** já cadastrada (política, fundo, inventário, educação patrimonial, NH, CP, bens imóveis/móveis, registro imaterial, processos), para o detalhamento item a item funcionar como nos outros critérios.
 4. **Ingestão**: ao enviar o arquivo ou colar o conteúdo em Critérios > Patrimônio Cultural, o sistema reconhece o cabeçalho do IEPHA e usa esse leitor; o exercício (2027) e o tipo (definitiva/preliminar) são lidos do próprio título e sugeridos na tela.
-5. **Detalhamento do critério**: com os números reais, a tela passa a mostrar ranking com posição e população, o que o município já pontua e o que falta em cada quadro, quanto vale cada ponto, comparação com os vizinhos e "onde inscrever" (IEPHA).
-6. **Importar este PDF agora**, para você já ver o exercício 2027 completo na tela.
+5. **Detalhamento do critério**: com os números reais, a tela passa a mostrar ranking com posição e população, o que o município já pontua e o que falta em cada quadro, quanto vale cada ponto e comparação com os vizinhos.
+6. **Onde cadastrar cada item**: em cada item que está pendente, um link direto para o lugar oficial onde a prefeitura resolve aquilo — com o que enviar e o prazo:
+   - Política Municipal de Proteção, Fundo Municipal, Conselho e Inventário: envio anual pelo sistema do IEPHA (SIPAC/e-mail da Gerência de Articulação com Municípios), conforme a Deliberação Normativa CONEP 01/2021 e a Portaria IEPHA 34/2024.
+   - Educação Patrimonial e Investimentos/Despesas (Quadros I-B e III-C): mesmo envio anual, com comprovação de despesas e relatório de ações.
+   - Tombamentos municipais (NH, CP, bens imóveis e móveis) e Registro de bens imateriais: processos protocolados no IEPHA para análise.
+   - Tombamentos estaduais/federais: IEPHA-MG e IPHAN.
+   - Página do programa, formulários e prazos do exercício: links oficiais do IEPHA já usados no painel "Onde inscrever" dos demais critérios.
+7. **Importar este PDF agora**, para você já ver o exercício 2027 completo na tela.
 
 ## Detalhes técnicos
 
@@ -27,3 +33,4 @@ O PDF enviado ("Pontuação Definitiva – Exercício 2027", 33 páginas) é exa
 - Mapeamento coluna → `criterio_itens_referencia` (códigos `pc_*` já cadastrados); faixas de tombamento gravadas como item com a quantidade e a pontuação correspondente.
 - Gravação nas tabelas existentes `criterio_ranking_municipio` e `criterio_item_municipio` (ano-base 2027, fonte definitivo) — nada de esquema novo.
 - Testes do leitor com algumas linhas reais do PDF (Abre Campo, Buenópolis, Braúnas, Brumadinho) cobrindo linha cheia, linha zerada e faixas múltiplas.
+- `src/lib/icms/criterios/cadastro.ts`: ficha de `patrimonio_cultural` ampliada com um `LocalCadastro` por item (`pc_*`), contendo órgão, onde cadastrar, URL, o que enviar e prazo; o painel `OndeInscrever` passa a exibir o link ao lado de cada item pendente no detalhamento.
