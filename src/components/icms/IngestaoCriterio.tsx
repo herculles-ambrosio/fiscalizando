@@ -189,7 +189,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
         registrosItens: r.itens.length,
         municipios,
         naoMapeados: r.naoMapeados,
-        divergencias: [],
+        divergencias,
       },
     });
 
