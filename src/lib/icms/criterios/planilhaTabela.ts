@@ -18,7 +18,9 @@ export type ConteudoPlanilha = {
 function celula(v: unknown): string {
   if (v === null || v === undefined) return "";
   if (typeof v === "number") return String(v).replace(".", ",");
-  return String(v).replace(/\u00a0/g, " ").trim();
+  return String(v)
+    .replace(/\u00a0/g, " ")
+    .trim();
 }
 
 export function paginasDaPlanilha(dados: Uint8Array): ConteudoPlanilha {

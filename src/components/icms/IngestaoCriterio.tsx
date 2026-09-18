@@ -530,8 +530,8 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                 ))}
               </ul>
               <p className="mt-2 text-xs text-muted-foreground">
-                Baixe o arquivo no site do órgão e envie aqui; o sistema lê PDF ou planilha e grava a
-                pontuação real no ranking.
+                Baixe o arquivo no site do órgão e envie aqui; o sistema lê PDF ou planilha e grava
+                a pontuação real no ranking.
               </p>
             </div>
           ) : null}
