@@ -1018,8 +1018,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     base: {
                       ...base,
                       ...(anoApuracaoBase ? { anoApuracao: anoApuracaoBase } : {}),
-                      ...(anoAplicacaoBase ? { anoAplicacao: anoAplicacaoBase } : {}),
-                    },
+                       ...(anoAplicacaoBase ? { anoAplicacao: anoAplicacaoBase } : {}),
+                       ...(resolucaoBase ? { resolucaoNumero: resolucaoBase } : {}),
+                     },
                     atual: {
                       ...atual,
                       ...(anoApuracaoAtual ? { anoApuracao: anoApuracaoAtual } : {}),
