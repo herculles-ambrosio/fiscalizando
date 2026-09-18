@@ -48,8 +48,6 @@ function ordenarCriterios<T extends { criterio: { slug: string; nome: string } }
   });
 }
 
-
-
 export const Route = createFileRoute("/_authenticated/icms/criterios")({
   validateSearch: (search: Record<string, unknown>) => ({
     criterio: typeof search["criterio"] === "string" ? (search["criterio"] as string) : "",
@@ -140,15 +138,19 @@ function CriteriosIcms() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {(diag
-            ? ordenarCriterios(diag.linhas.map((l) => ({ criterio: l.criterio, valorAno: l.valorAno as number | null })))
+            ? ordenarCriterios(
+                diag.linhas.map((l) => ({
+                  criterio: l.criterio,
+                  valorAno: l.valorAno as number | null,
+                })),
+              )
             : ordenarCriterios(CRITERIOS.map((criterio) => ({ criterio, valorAno: null })))
           ).map(({ criterio, valorAno }) => (
             <Card
               key={`card-${criterio.slug}`}
               className={cn(
                 "flex min-h-44 flex-col justify-between",
-                CRITERIOS_DETALHADOS.has(criterio.slug) &&
-                  "border-emerald-500/40 bg-emerald-500/5",
+                CRITERIOS_DETALHADOS.has(criterio.slug) && "border-emerald-500/40 bg-emerald-500/5",
               )}
             >
               <CardContent className="space-y-1 pt-4">
@@ -156,7 +158,9 @@ function CriteriosIcms() {
                   <p className="font-medium leading-tight">{criterio.nome}</p>
                   <div className="flex flex-wrap justify-end gap-1">
                     {CRITERIOS_DETALHADOS.has(criterio.slug) && (
-                      <Badge className="bg-emerald-600 text-primary-foreground">Dados detalhados</Badge>
+                      <Badge className="bg-emerald-600 text-primary-foreground">
+                        Dados detalhados
+                      </Badge>
                     )}
                     {criterio.percentual != null && (
                       <Badge variant="secondary">{criterio.percentual}%</Badge>
@@ -180,28 +184,25 @@ function CriteriosIcms() {
         </div>
       </section>
 
-
-
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
         <Card className="h-fit">
           <CardContent className="max-h-[70vh] space-y-1 overflow-auto p-2">
-            {diag && ordenarCriterios(diag.linhas).map((l) => (
-              <button
-                key={l.criterio.slug}
-                onClick={() => setSlug(l.criterio.slug)}
-                className={cn(
-                  "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                  l.criterio.slug === linha?.criterio.slug
-                    ? "bg-primary/10 font-medium text-primary"
-                    : "hover:bg-muted",
-                )}
-              >
-                <span className="block truncate">{l.criterio.nome}</span>
-                <span className="text-xs text-muted-foreground">
-                  {formatarMoeda(l.valorAno)}
-                </span>
-              </button>
-            ))}
+            {diag &&
+              ordenarCriterios(diag.linhas).map((l) => (
+                <button
+                  key={l.criterio.slug}
+                  onClick={() => setSlug(l.criterio.slug)}
+                  className={cn(
+                    "w-full rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                    l.criterio.slug === linha?.criterio.slug
+                      ? "bg-primary/10 font-medium text-primary"
+                      : "hover:bg-muted",
+                  )}
+                >
+                  <span className="block truncate">{l.criterio.nome}</span>
+                  <span className="text-xs text-muted-foreground">{formatarMoeda(l.valorAno)}</span>
+                </button>
+              ))}
           </CardContent>
         </Card>
 
