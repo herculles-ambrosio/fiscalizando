@@ -62,10 +62,14 @@ function CriteriosIcms() {
     [dados, exercicio],
   );
 
-  // Esportes já vem dos relatórios da SEDESE; os demais aparecem em verde
-  // assim que o primeiro relatório oficial é importado.
+  // Critérios com fonte oficial própria (Esportes, Turismo, Meio Ambiente,
+  // Educação e Patrimônio Cultural) aparecem em destaque mesmo antes da
+  // primeira importação; os demais entram assim que um relatório é importado.
   const criteriosProntos = useMemo(() => {
-    const slugs = new Set<string>(["esportes", ...Object.keys(comDados ?? {})]);
+    const slugs = new Set<string>([
+      ...PIPELINES.map((p) => p.slug),
+      ...Object.keys(comDados ?? {}),
+    ]);
     return CRITERIOS.filter((c) => slugs.has(c.slug)).map((c) => {
       const info = comDados?.[c.slug];
       const anos = info?.anos.slice(0, 3).join(", ");
@@ -78,6 +82,7 @@ function CriteriosIcms() {
       };
     });
   }, [comDados]);
+
 
 
   const linha = useMemo(() => {
