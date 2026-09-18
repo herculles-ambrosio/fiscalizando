@@ -504,6 +504,7 @@ function PaginaEstatisticas() {
                   <TableHead className="text-right">Valor {anoBase}</TableHead>
                   <Cabecalho rotulo={`Índice ${anoAlvo}`} coluna="indice_atual" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
                   <TableHead className="text-right">Valor {anoAlvo}</TableHead>
+                  <TableHead className="text-right">Índice médio aplicado {anoAplicacao}</TableHead>
                   <Cabecalho rotulo="Variação" coluna="variacao" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
                   <Cabecalho rotulo="Situação" coluna="situacao" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} />
                   <TableHead>Providências</TableHead>
