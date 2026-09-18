@@ -1,7 +1,9 @@
 import type { PaginaTexto, LinhaPos } from "./parser";
 
 // O leitor de PDF usa Promise.try, ausente em runtimes mais antigos.
-const P = Promise as unknown as { try?: (fn: (...a: unknown[]) => unknown, ...a: unknown[]) => Promise<unknown> };
+const P = Promise as unknown as {
+  try?: (fn: (...a: unknown[]) => unknown, ...a: unknown[]) => Promise<unknown>;
+};
 if (typeof P.try !== "function") {
   P.try = (fn, ...args) => new Promise((resolve) => resolve(fn(...args)));
 }

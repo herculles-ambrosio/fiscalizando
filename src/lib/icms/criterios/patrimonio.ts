@@ -313,7 +313,9 @@ export function extrairPatrimonioCultural(paginas: PaginaTexto[]): ResultadoPatr
   }
 
   const maior = ranking.reduce((m, r) => Math.max(m, r.notaFinal), 0);
-  ranking.sort((a, b) => b.notaFinal - a.notaFinal || a.municipioNome.localeCompare(b.municipioNome));
+  ranking.sort(
+    (a, b) => b.notaFinal - a.notaFinal || a.municipioNome.localeCompare(b.municipioNome),
+  );
   ranking.forEach((r, i) => {
     r.posicao = i + 1;
     r.indicePercentual = maior > 0 ? Number(((r.notaFinal / maior) * 100).toFixed(4)) : 0;

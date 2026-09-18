@@ -211,7 +211,8 @@ export const FICHAS: Record<string, FichaCriterio> = {
         url: "https://www.mg.gov.br/iepha/pagina/tombamento",
         oQueEnviar:
           "Processo de tombamento instruído: dossiê de pesquisa, parecer técnico, ata do conselho, decreto/deliberação de tombamento e inscrição no livro do tombo.",
-        prazo: "Processos podem ser protocolados durante o ano; a pontuação entra no exercício seguinte.",
+        prazo:
+          "Processos podem ser protocolados durante o ano; a pontuação entra no exercício seguinte.",
         itens: ["Pontuação Tombamentos (Quadros II-B e III-A)"],
       },
       {

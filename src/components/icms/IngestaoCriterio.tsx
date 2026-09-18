@@ -126,9 +126,8 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     // células vazias, então a leitura é posicional e traz o exercício e se a
     // pontuação é provisória ou definitiva no próprio cabeçalho.
     if (pipeline.slug === "patrimonio_cultural") {
-      const { ehRelatorioIepha, extrairPatrimonioCultural } = await import(
-        "@/lib/icms/criterios/patrimonio"
-      );
+      const { ehRelatorioIepha, extrairPatrimonioCultural } =
+        await import("@/lib/icms/criterios/patrimonio");
       if (ehRelatorioIepha(paginas)) {
         const p = extrairPatrimonioCultural(paginas);
         if (p.ranking.length) {
