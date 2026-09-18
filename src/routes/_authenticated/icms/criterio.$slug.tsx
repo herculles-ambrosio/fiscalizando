@@ -33,6 +33,8 @@ import {
   type FonteRelatorio,
 } from "@/hooks/useCriterios";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { OndeInscrever } from "@/components/icms/OndeInscrever";
+import { formatarPopulacao, usePopulacao } from "@/hooks/usePopulacao";
 import { normalizarMunicipio } from "@/lib/icms/esportes/parser";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
@@ -70,6 +72,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
   const { data: perfil } = usePerfil();
   const consultoria = perfil?.papel === "superadmin" || perfil?.papel === "consultor";
   const chaveMunicipio = municipio ? normalizarMunicipio(municipio.nome) : null;
+  const populacao = usePopulacao();
 
   const { data: referencia } = useItensReferenciaCompleta(slug);
   const { data: anos } = useCriterioAnos(slug);
