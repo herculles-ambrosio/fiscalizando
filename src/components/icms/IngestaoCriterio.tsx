@@ -149,17 +149,28 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     setEtapa("Gravando");
     // No Meio Ambiente as publicações se complementam, então uma não apaga a
     // outra; nos demais critérios o relatório novo substitui o anterior.
-    if (!ecologico) await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte } });
+    if (!ecologico)
+      await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte: fonteUso } });
 
     for (let i = 0; i < r.ranking.length; i += 300) {
       await gravarRanking({
-        data: { criterio: pipeline.slug, anoBase: ano, fonte, linhas: r.ranking.slice(i, i + 300) },
+        data: {
+          criterio: pipeline.slug,
+          anoBase: ano,
+          fonte: fonteUso,
+          linhas: r.ranking.slice(i, i + 300),
+        },
       });
       setProgresso(70 + Math.round(((i + 300) / Math.max(r.ranking.length, 1)) * 10));
     }
     for (let i = 0; i < r.itens.length; i += 150) {
       await gravarItens({
-        data: { criterio: pipeline.slug, anoBase: ano, fonte, itens: r.itens.slice(i, i + 150) },
+        data: {
+          criterio: pipeline.slug,
+          anoBase: ano,
+          fonte: fonteUso,
+          itens: r.itens.slice(i, i + 150),
+        },
       });
       setProgresso(80 + Math.round(((i + 150) / Math.max(r.itens.length, 1)) * 20));
     }
