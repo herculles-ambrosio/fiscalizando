@@ -119,8 +119,9 @@ function CriteriosIcms() {
       {criteriosProntos.length > 0 && (
         <section className="space-y-2">
           <h2 className="text-sm font-medium text-muted-foreground">
-            Critérios com relatórios já importados — abra para analisar
+            Critérios com fonte oficial própria — abra para analisar item a item
           </h2>
+
           {criteriosProntos.map((c) => (
             <Card key={`pronto-${c.slug}`} className="border-emerald-500/40 bg-emerald-500/5">
               <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
