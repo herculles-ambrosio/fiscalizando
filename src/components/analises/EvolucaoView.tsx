@@ -1419,17 +1419,6 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             </Card>
           </div>
 
-          {/* Índice publicado pelo Estado e aplicado no exercício (só referência) */}
-          <IndiceAplicadoBase
-            municipioId={municipioRelatorio?.id ?? null}
-            exercicioAplicacao={anoAplicacaoAtual}
-            indiceApurado={
-              base.apuracao.indice > 0 && atual.apuracao.indice > 0
-                ? (base.apuracao.indice + atual.apuracao.indice) / 2
-                : atual.apuracao.indice
-            }
-            rotuloApurado="índice médio desta análise"
-          />
 
           <DiagnosticoVariacao
             base={base}
