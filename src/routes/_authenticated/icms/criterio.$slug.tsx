@@ -246,7 +246,11 @@ function DetalheGenerico({ slug }: { slug: string }) {
 
         <TabsContent value="pontuacao" className="space-y-4 pt-4">
           <Card>
-            <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
+            <CardContent className="grid gap-4 p-4 sm:grid-cols-4">
+              <div className="sm:col-span-4">
+                <p className="text-xs text-muted-foreground">Prefeitura em análise</p>
+                <p className="text-lg font-semibold">{municipio?.nome ?? "—"}</p>
+              </div>
               <div>
                 <p className="text-xs text-muted-foreground">Posição</p>
                 <p className="text-xl font-semibold">
