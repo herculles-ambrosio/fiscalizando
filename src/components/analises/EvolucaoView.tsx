@@ -73,18 +73,30 @@ import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
 import OutrasReceitas from "@/components/analises/OutrasReceitas";
 import ImpactoContribuintes from "@/components/analises/ImpactoContribuintes";
 
-function rotuloArquivo(a: ArquivoEvolucao, anoAplicacao?: number | null): string {
+function rotuloArquivo(
+  a: ArquivoEvolucao,
+  anoApuracao?: number | null,
+  anoAplicacao?: number | null,
+): string {
   const remessa = remessaDoArquivo(a.nome);
-  const ano = anoDoArquivo(a.nome);
-  const rotulo = remessa ? `${rotuloRemessa(remessa)}${ano ? ` · entrega ${ano}` : ""}` : (ano ?? "");
+  const rotulo = remessa ? rotuloRemessa(remessa) : "";
   const arquivo = rotulo ? String(rotulo) : a.nome;
-  return anoAplicacao ? `${arquivo} · aplicação ${anoAplicacao}` : arquivo;
+  const referencias = [
+    anoApuracao ? `apuração ${anoApuracao}` : null,
+    anoAplicacao ? `aplicação ${anoAplicacao}` : null,
+  ].filter(Boolean);
+  return referencias.length > 0 ? `${arquivo} · ${referencias.join(" · ")}` : arquivo;
+}
+
+function sugerirAnoApuracao(a: ArquivoEvolucao | null): number | null {
+  if (!a) return null;
+  return a.anoApuracao ?? anoDoArquivo(a.nome) ?? a.apuracao.anoBase ?? null;
 }
 
 function sugerirAnoAplicacao(a: ArquivoEvolucao | null): number | null {
   if (!a) return null;
   if (a.anoAplicacao) return a.anoAplicacao;
-  const anoMovimento = anoDoArquivo(a.nome) ?? a.apuracao.anoBase;
+  const anoMovimento = sugerirAnoApuracao(a);
   return anoMovimento ? anoMovimento + 1 : null;
 }
 
@@ -133,8 +145,10 @@ function CaixaArquivo({
   arquivo,
   carregando,
   onSelecionar,
+  anoApuracao,
   anoAplicacao,
   anosDisponiveis,
+  onAnoApuracao,
   onAnoAplicacao,
 }: {
   titulo: string;
@@ -142,8 +156,10 @@ function CaixaArquivo({
   arquivo: ArquivoEvolucao | null;
   carregando: boolean;
   onSelecionar: (f: File) => void;
+  anoApuracao: number | null;
   anoAplicacao: number | null;
   anosDisponiveis: number[];
+  onAnoApuracao: (ano: number) => void;
   onAnoAplicacao: (ano: number) => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
@@ -174,7 +190,7 @@ function CaixaArquivo({
           <div className="space-y-1 rounded-md border border-border bg-muted/40 p-3">
             <p className="truncate font-mono text-xs">{arquivo.nome}</p>
             <div className="flex flex-wrap gap-2 pt-1">
-              <Badge variant="secondary">{rotuloArquivo(arquivo)}</Badge>
+              <Badge variant="secondary">{rotuloArquivo(arquivo, anoApuracao, anoAplicacao)}</Badge>
               <Badge variant={arquivo.temIndiceFechado ? "default" : "outline"}>
                 {arquivo.temIndiceFechado
                   ? arquivo.apuracao.tipoIndice === "definitivo"
@@ -184,24 +200,39 @@ function CaixaArquivo({
               </Badge>
               <Badge variant="outline">{arquivo.declarantes.length} declarantes</Badge>
             </div>
-            <div className="space-y-1.5 pt-2">
-              <Label className="text-xs">Ano de aplicação</Label>
-              <Select
-                value={anoAplicacao ? String(anoAplicacao) : ""}
-                onValueChange={(valor) => onAnoAplicacao(Number(valor))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o ano" />
-                </SelectTrigger>
-                <SelectContent>
-                  {anosDisponiveis.map((ano) => (
-                    <SelectItem key={ano} value={String(ano)}>
-                      {ano}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Referência exibida nos cartões e relatórios.</p>
+            <div className="grid gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Ano de Apuração</Label>
+                <Select
+                  value={anoApuracao ? String(anoApuracao) : ""}
+                  onValueChange={(valor) => onAnoApuracao(Number(valor))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {anosDisponiveis.map((ano) => (
+                      <SelectItem key={ano} value={String(ano)}>{ano}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Ano de Aplicação</Label>
+                <Select
+                  value={anoAplicacao ? String(anoAplicacao) : ""}
+                  onValueChange={(valor) => onAnoAplicacao(Number(valor))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {anosDisponiveis.map((ano) => (
+                      <SelectItem key={ano} value={String(ano)}>{ano}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         )}
@@ -489,6 +520,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const { data: municipios } = useMunicipios();
   const [baseArq, setBase] = useState<ArquivoEvolucao | null>(null);
   const [atualArq, setAtual] = useState<ArquivoEvolucao | null>(null);
+  const [anoApuracaoBase, setAnoApuracaoBase] = useState<number | null>(null);
+  const [anoApuracaoAtual, setAnoApuracaoAtual] = useState<number | null>(null);
   const [anoAplicacaoBase, setAnoAplicacaoBase] = useState<number | null>(null);
   const [anoAplicacaoAtual, setAnoAplicacaoAtual] = useState<number | null>(null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
@@ -572,9 +605,11 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
       );
       if (alvo === "base") {
         setBase(analise);
+        setAnoApuracaoBase(sugerirAnoApuracao(analise));
         setAnoAplicacaoBase(sugerirAnoAplicacao(analise));
       } else {
         setAtual(analise);
+        setAnoApuracaoAtual(sugerirAnoApuracao(analise));
         setAnoAplicacaoAtual(sugerirAnoAplicacao(analise));
       }
       // Índice definitivo/provisório já traz o VAF estadual: o parâmetro de
@@ -606,6 +641,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     // limpa a comparação anterior: os arquivos eram de outra prefeitura
     setBase(null);
     setAtual(null);
+    setAnoApuracaoBase(null);
+    setAnoApuracaoAtual(null);
     setAnoAplicacaoBase(null);
     setAnoAplicacaoAtual(null);
     await carregar(file, alvo, true);
@@ -638,18 +675,20 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     for (let a = atualAno + 1; a >= atualAno - 6; a--) anos.add(a);
     if (baseArq?.apuracao.anoBase) anos.add(baseArq.apuracao.anoBase);
     if (atualArq?.apuracao.anoBase) anos.add(atualArq.apuracao.anoBase);
+    if (anoApuracaoBase) anos.add(anoApuracaoBase);
+    if (anoApuracaoAtual) anos.add(anoApuracaoAtual);
     if (anoAplicacaoBase) anos.add(anoAplicacaoBase);
     if (anoAplicacaoAtual) anos.add(anoAplicacaoAtual);
     return [...anos].sort((a, b) => b - a);
-  }, [baseArq, atualArq, anoAplicacaoBase, anoAplicacaoAtual]);
+  }, [baseArq, atualArq, anoApuracaoBase, anoApuracaoAtual, anoAplicacaoBase, anoAplicacaoAtual]);
 
   const rotuloBase = base
-    ? rotuloArquivo(base, anoAplicacaoBase)
+    ? rotuloArquivo(base, anoApuracaoBase, anoAplicacaoBase)
     : anoAplicacaoBase
       ? `Base ${anoAplicacaoBase}`
       : "Base";
   const rotuloAtual = atual
-    ? rotuloArquivo(atual, anoAplicacaoAtual)
+    ? rotuloArquivo(atual, anoApuracaoAtual, anoAplicacaoAtual)
     : anoAplicacaoAtual
       ? `Comparado ${anoAplicacaoAtual}`
       : "Comparado";
@@ -818,8 +857,10 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           arquivo={base}
           carregando={carregando === "base"}
           onSelecionar={(f) => carregar(f, "base")}
+          anoApuracao={anoApuracaoBase}
           anoAplicacao={anoAplicacaoBase}
           anosDisponiveis={anosDisponiveis}
+          onAnoApuracao={setAnoApuracaoBase}
           onAnoAplicacao={setAnoAplicacaoBase}
         />
         <CaixaArquivo
@@ -828,8 +869,10 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           arquivo={atual}
           carregando={carregando === "atual"}
           onSelecionar={(f) => carregar(f, "atual")}
+          anoApuracao={anoApuracaoAtual}
           anoAplicacao={anoAplicacaoAtual}
           anosDisponiveis={anosDisponiveis}
+          onAnoApuracao={setAnoApuracaoAtual}
           onAnoAplicacao={setAnoAplicacaoAtual}
         />
         <Card>
@@ -890,8 +933,16 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     municipioId: municipio.id,
                     nome,
                     vafReferencia,
-                    base: { ...base, ...(anoAplicacaoBase ? { anoAplicacao: anoAplicacaoBase } : {}) },
-                    atual: { ...atual, ...(anoAplicacaoAtual ? { anoAplicacao: anoAplicacaoAtual } : {}) },
+                    base: {
+                      ...base,
+                      ...(anoApuracaoBase ? { anoApuracao: anoApuracaoBase } : {}),
+                      ...(anoAplicacaoBase ? { anoAplicacao: anoAplicacaoBase } : {}),
+                    },
+                    atual: {
+                      ...atual,
+                      ...(anoApuracaoAtual ? { anoApuracao: anoApuracaoAtual } : {}),
+                      ...(anoAplicacaoAtual ? { anoAplicacao: anoAplicacaoAtual } : {}),
+                    },
                   },
                   {
                     onSuccess: () => {
@@ -936,6 +987,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       onClick={() => {
                         setBase(s.base);
                         setAtual(s.atual);
+                        setAnoApuracaoBase(sugerirAnoApuracao(s.base));
+                        setAnoApuracaoAtual(sugerirAnoApuracao(s.atual));
                         setAnoAplicacaoBase(sugerirAnoAplicacao(s.base));
                         setAnoAplicacaoAtual(sugerirAnoAplicacao(s.atual));
                         setVafReferencia(s.vaf_referencia ?? "");
@@ -1319,7 +1372,11 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   <Card key={i}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm">
-                         {i === 0 ? referenciaBase : referenciaAtual} · {rotuloArquivo(arq)}
+                         {i === 0 ? referenciaBase : referenciaAtual} · {rotuloArquivo(
+                           arq,
+                           i === 0 ? anoApuracaoBase : anoApuracaoAtual,
+                           i === 0 ? anoAplicacaoBase : anoAplicacaoAtual,
+                         )}
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
                         {arq.temIndiceFechado
