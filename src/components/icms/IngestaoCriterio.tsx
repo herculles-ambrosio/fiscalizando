@@ -489,7 +489,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             <label className="inline-flex">
               <input
                 type="file"
-                accept={planilha ? ".xlsx,.xls" : "application/pdf"}
+                accept=".pdf,.xlsx,.xls,.csv,application/pdf"
                 className="hidden"
                 disabled={rodando}
                 onChange={async (e) => {
@@ -503,11 +503,38 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
               <Button asChild variant="outline" disabled={rodando}>
                 <span>
                   <Upload className="mr-2 size-4" />
-                  {planilha ? "Enviar planilha do computador" : "Enviar PDF do computador"}
+                  Enviar arquivo do computador (PDF ou planilha)
                 </span>
               </Button>
             </label>
           </div>
+
+          {pipeline.fontes?.length ? (
+            <div className="rounded-md border p-3 text-sm">
+              <p className="mb-2 font-medium">Onde baixar a tabela oficial</p>
+              <ul className="space-y-2">
+                {pipeline.fontes.map((f) => (
+                  <li key={f.url}>
+                    <a
+                      href={f.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-primary underline underline-offset-2"
+                    >
+                      {f.nome}
+                    </a>
+                    {f.oQueTem ? (
+                      <span className="text-muted-foreground"> — {f.oQueTem}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Baixe o arquivo no site do órgão e envie aqui; o sistema lê PDF ou planilha e grava a
+                pontuação real no ranking.
+              </p>
+            </div>
+          ) : null}
 
           <div className="flex gap-2">
             <Input
