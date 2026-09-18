@@ -403,6 +403,11 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
           <p className="text-sm text-muted-foreground">
             Fonte oficial: {pipeline.orgao}. {pipeline.comoFunciona}
           </p>
+          {pipeline.aviso && (
+            <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-800 dark:bg-amber-950/20">
+              {pipeline.aviso}
+            </p>
+          )}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
