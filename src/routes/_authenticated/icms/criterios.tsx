@@ -29,6 +29,26 @@ const CRITERIOS_DETALHADOS = new Set([
   "turismo",
 ]);
 
+const ORDEM_PRINCIPAIS = [
+  "educacao",
+  "patrimonio_cultural",
+  "meio_ambiente",
+  "esportes",
+  "turismo",
+];
+
+function ordenarCriterios<T extends { slug: string; nome: string }>(lista: T[]): T[] {
+  return [...lista].sort((a, b) => {
+    const ia = ORDEM_PRINCIPAIS.indexOf(a.slug);
+    const ib = ORDEM_PRINCIPAIS.indexOf(b.slug);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return a.nome.localeCompare(b.nome, "pt-BR");
+  });
+}
+
+
 export const Route = createFileRoute("/_authenticated/icms/criterios")({
   validateSearch: (search: Record<string, unknown>) => ({
     criterio: typeof search["criterio"] === "string" ? (search["criterio"] as string) : "",
