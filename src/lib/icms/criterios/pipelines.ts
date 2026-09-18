@@ -50,6 +50,18 @@ export const PIPELINES: Pipeline[] = [
     colunasTotal: ["final", "pontuacao final", "total"],
     comoFunciona:
       "Lê o ranking geral e a memória de cálculo por município e atividade (eventos, participantes, modalidades e pontuação).",
+    fontes: [
+      {
+        nome: "Observatório do Esporte — ICMS Esportivo",
+        url: "https://observatoriodoesporte.mg.gov.br/icms-esportivo/",
+        oQueTem: "Ranking geral e memória de cálculo por município (PDF), preliminar e definitiva.",
+      },
+      {
+        nome: "SEDESE — Esportes",
+        url: "https://www.mg.gov.br/sedese/pagina/esportes",
+        oQueTem: "Resoluções, prazos e comunicados do critério.",
+      },
+    ],
   },
   {
     slug: "turismo",
