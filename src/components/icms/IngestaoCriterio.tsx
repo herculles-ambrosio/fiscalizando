@@ -102,7 +102,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     identificacao: string | null,
     anoForcado?: number,
   ) {
-    const ano = anoForcado ?? anoBase;
+    let ano = anoForcado ?? anoBase;
+    let fonteUso: FonteRelatorio = fonte;
+    let divergencias: unknown[] = [];
     setEtapa("Casando as colunas com os itens do critério");
     // Cada órgão publica em um formato: o ICMS Turismo traz um quadro único com
     // circuito, nota, RLPC, IRC, IIT e índice; o ICMS Ecológico traz vários
