@@ -147,22 +147,35 @@ export default function EditarPrefeitura({
       await salvarConfig.mutateAsync({ ...valores, brasao_path: brasaoPath });
 
       let vinculados = 0;
+      let falhaVinculo = false;
       if (!ehCliente && fonte === "resolucao") {
-        vinculados = await vincularResolucao();
-        queryClient.invalidateQueries({ queryKey: ["indices-resolucao"] });
+        try {
+          vinculados = await vincularResolucao();
+          queryClient.invalidateQueries({ queryKey: ["indices-resolucao"] });
+        } catch {
+          // a prefeitura já foi salva; só o vínculo com a resolução falhou
+          falhaVinculo = true;
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ["carteira"] });
       queryClient.invalidateQueries({ queryKey: ["municipios"] });
       if (!ehCliente && fonte === "resolucao") {
-        toast.success(
-          vinculados
-            ? "Prefeitura atualizada. Índices da Resolução SEF já disponíveis em Estatísticas."
-            : "Prefeitura atualizada, mas nenhum índice da Resolução SEF foi encontrado para ela. Importe a resolução em Índices da Resolução.",
-        );
+        if (falhaVinculo) {
+          toast.warning(
+            "Prefeitura atualizada, mas não foi possível consultar os índices da Resolução SEF agora. Tente salvar novamente mais tarde.",
+          );
+        } else {
+          toast.success(
+            vinculados
+              ? "Prefeitura atualizada. Índices da Resolução SEF já disponíveis em Estatísticas."
+              : "Prefeitura atualizada, mas nenhum índice da Resolução SEF foi encontrado para ela. Importe a resolução em Índices da Resolução.",
+          );
+        }
       } else {
         toast.success("Prefeitura atualizada.");
       }
+      if (!falhaVinculo) onOpenChange(false);
       onOpenChange(false);
     } catch (erro) {
       toast.error("Não foi possível salvar.", {
