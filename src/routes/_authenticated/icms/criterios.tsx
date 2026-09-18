@@ -139,8 +139,8 @@ function CriteriosIcms() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {(diag
-            ? diag.linhas.map((l) => ({ criterio: l.criterio, valorAno: l.valorAno as number | null }))
-            : CRITERIOS.map((criterio) => ({ criterio, valorAno: null }))
+            ? ordenarCriterios(diag.linhas.map((l) => ({ criterio: l.criterio, valorAno: l.valorAno as number | null })))
+            : ordenarCriterios(CRITERIOS.map((criterio) => ({ criterio, valorAno: null })))
           ).map(({ criterio, valorAno }) => (
             <Card
               key={`card-${criterio.slug}`}
