@@ -13,6 +13,7 @@ import {
   PieChart,
   LogOut,
   MapPin,
+  RefreshCw,
   Scale,
   Settings,
   Stamp,
