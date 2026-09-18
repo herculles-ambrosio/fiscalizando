@@ -199,6 +199,18 @@ export const PIPELINES: Pipeline[] = [
       "Lê a tabela de pontuação do ICMS Patrimônio Cultural publicada pelo IEPHA-MG (preliminar e definitiva): uma linha por município com a nota de cada quadro da DN CONEP 01/2021 — política municipal, fundo, inventário, educação patrimonial, bens tombados (NH, CP, BI, BM) e registro de bens imateriais — e a pontuação total.",
     aviso:
       "O portal do Governo de Minas bloqueia o download automático da tabela do IEPHA. Baixe a tabela de pontuação no site do IEPHA e envie o arquivo aqui (PDF ou planilha), ou cole o conteúdo — a leitura e a gravação do ranking funcionam igual.",
+    fontes: [
+      {
+        nome: "IEPHA-MG — Programa ICMS Patrimônio Cultural",
+        url: "https://www.mg.gov.br/iepha/pagina/programa-icms-patrimonio-cultural",
+        oQueTem: "Tabelas de pontuação provisória e definitiva, portarias e orientações técnicas.",
+      },
+      {
+        nome: "IEPHA-MG — site institucional",
+        url: "https://www.iepha.mg.gov.br/index.php/programas-e-acoes/icms-patrimonio-cultural",
+        oQueTem: "Espelho das mesmas publicações, com o histórico de exercícios.",
+      },
+    ],
   },
 ];
 
