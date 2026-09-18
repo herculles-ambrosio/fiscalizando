@@ -1246,7 +1246,6 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
                   titulo="VAF estadual"
-
                   ajuda={
                     <>
                       <p>
