@@ -184,7 +184,7 @@ function CriteriosIcms() {
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
         <Card className="h-fit">
           <CardContent className="max-h-[70vh] space-y-1 overflow-auto p-2">
-            {diag?.linhas.map((l) => (
+            {diag && ordenarCriterios(diag.linhas).map((l) => (
               <button
                 key={l.criterio.slug}
                 onClick={() => setSlug(l.criterio.slug)}
