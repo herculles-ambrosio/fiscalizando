@@ -530,6 +530,11 @@ function PaginaEstatisticas() {
                     <TableCell className="text-right tabular-nums whitespace-nowrap">
                       {l.alvo ? formatarMoeda(Number(l.alvo.valor_liquido)) : "—"}
                     </TableCell>
+                    <TableCell className="text-right font-mono text-xs tabular-nums">
+                      {mediasAplicadas.has(l.municipioId)
+                        ? formatarIndice(mediasAplicadas.get(l.municipioId)!)
+                        : "—"}
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {l.variacao != null ? (
                         <span
