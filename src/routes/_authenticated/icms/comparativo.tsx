@@ -597,6 +597,9 @@ function ComparativoIcms() {
                               {r.nome}
                             </span>
                           </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatarPopulacao(populacao.de(r.nome))}
+                          </TableCell>
                           {r.meses.map((v, idx) => (
                             <TableCell key={idx} className="text-right tabular-nums">
                               {v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -604,6 +607,11 @@ function ComparativoIcms() {
                           ))}
                           <TableCell className="text-right font-semibold tabular-nums">
                             {formatarMoeda(r.total)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {populacao.de(r.nome)
+                              ? formatarMoeda(r.total / populacao.de(r.nome)!)
+                              : "—"}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {pesoAnexo != null
