@@ -40,6 +40,12 @@ export function OndeInscrever({ slug }: { slug: string }) {
               <div key={`${l.orgao}-${l.onde}`} className="rounded-md border p-3">
                 <p className="font-medium">{l.orgao}</p>
                 <p className="text-muted-foreground">{l.onde}</p>
+                {l.itens?.length ? (
+                  <p className="mt-1">
+                    <span className="text-xs text-muted-foreground">Resolve: </span>
+                    {l.itens.join(" · ")}
+                  </p>
+                ) : null}
                 {l.oQueEnviar && (
                   <p className="mt-1">
                     <span className="text-xs text-muted-foreground">O que enviar: </span>
