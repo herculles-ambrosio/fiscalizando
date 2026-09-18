@@ -18,6 +18,8 @@ import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
 import { useCriteriosComDados } from "@/hooks/useCriterios";
 import { montarDiagnostico, ROTULO_SITUACAO } from "@/lib/icms/diagnostico";
 import { CRITERIOS, MESES } from "@/lib/icms/criterios";
+import { PIPELINES } from "@/lib/icms/criterios/pipelines";
+
 import { formatarCompacto, formatarMoeda } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
