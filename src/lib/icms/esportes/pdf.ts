@@ -1,7 +1,9 @@
 import type { PaginaTexto, LinhaPos } from "./parser";
 
 // O leitor de PDF usa Promise.try, ausente em runtimes mais antigos.
-const P = Promise as unknown as { try?: (fn: (...a: unknown[]) => unknown, ...a: unknown[]) => Promise<unknown> };
+const P = Promise as unknown as {
+  try?: (fn: (...a: unknown[]) => unknown, ...a: unknown[]) => Promise<unknown>;
+};
 if (typeof P.try !== "function") {
   P.try = (fn, ...args) => new Promise((resolve) => resolve(fn(...args)));
 }
@@ -37,30 +39,40 @@ export async function extrairPaginas(
   for (let n = 1; n <= doc.numPages; n++) {
     const page = await doc.getPage(n);
     const conteudo = await page.getTextContent();
-    const porLinha = new Map<number, { y: number; itens: { x: number; texto: string }[] }>();
+    const porLinha = new Map<
+      number,
+      { y: number; itens: { x: number; largura: number; texto: string }[] }
+    >();
 
-    for (const item of conteudo.items as { str?: string; transform?: number[] }[]) {
+    for (const item of conteudo.items as {
+      str?: string;
+      width?: number;
+      transform?: number[];
+    }[]) {
       const texto = item.str ?? "";
       if (!texto.trim()) continue;
       const x = item.transform?.[4] ?? 0;
       const y = item.transform?.[5] ?? 0;
       const chave = Math.round(y / 3);
       const linha = porLinha.get(chave) ?? { y, itens: [] };
-      linha.itens.push({ x, texto });
+      linha.itens.push({ x, largura: item.width ?? 0, texto });
       porLinha.set(chave, linha);
     }
 
     const linhas: LinhaPos[] = [...porLinha.values()]
       .sort((a, b) => b.y - a.y)
-      .map((l) => ({
-        y: l.y,
-        texto: l.itens
-          .sort((a, b) => a.x - b.x)
-          .map((i) => i.texto)
-          .join(" ")
-          .replace(/\s+/g, " ")
-          .trim(),
-      }))
+      .map((l) => {
+        const celulas = l.itens.sort((a, b) => a.x - b.x);
+        return {
+          y: l.y,
+          celulas,
+          texto: celulas
+            .map((i) => i.texto)
+            .join(" ")
+            .replace(/\s+/g, " ")
+            .trim(),
+        };
+      })
       .filter((l) => l.texto.length > 0);
 
     paginas.push({ pagina: n, linhas });

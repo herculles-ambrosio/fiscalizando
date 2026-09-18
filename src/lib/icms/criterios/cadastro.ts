@@ -15,6 +15,8 @@ export type LocalCadastro = {
   oQueEnviar?: string;
   /** Prazo típico (a resolução do ano confirma a data). */
   prazo?: string;
+  /** Itens do critério que este endereço resolve (nomes como aparecem na tabela). */
+  itens?: string[];
 };
 
 export type FichaCriterio = {
@@ -164,16 +166,80 @@ export const FICHAS: Record<string, FichaCriterio> = {
   },
   patrimonio_cultural: {
     comoECalculado:
-      "Pontuação da documentação entregue (tombamentos, inventário, conselho, fundo, educação patrimonial), conforme DN CONEP 01/2021.",
-    deOndeVem: "IEPHA-MG.",
+      "Soma da pontuação dos quadros entregues no exercício: Política Cultural (I-A, até 4,00), Investimentos e Despesas / Fundo (I-B, até 3,00), Inventário (II-A, até 2,00), Tombamentos (II-B e III-A), Registros de bens imateriais (II-C e III-B) e Educação e Difusão (III-C, até 2,00), conforme a DN CONEP 01/2021 e a Portaria IEPHA 34/2024.",
+    deOndeVem: "IEPHA-MG — tabela de pontuação provisória e definitiva do exercício.",
     ondeCadastrar: [
       {
         orgao: "IEPHA-MG",
-        onde: "Programa ICMS Patrimônio Cultural — envio anual do dossiê",
+        onde: "Programa ICMS Patrimônio Cultural — envio anual do dossiê do município",
         url: "https://www.mg.gov.br/iepha/pagina/programa-icms-patrimonio-cultural",
         oQueEnviar:
-          "Quadros e documentos em PDF conforme a portaria do exercício (inventário, atas do conselho, execução do fundo, ações de educação patrimonial).",
+          "Dossiê completo em PDF, um arquivo por quadro, assinado pelo responsável e protocolado no prazo da portaria do exercício.",
         prazo: "Prazo anual fixado em portaria do IEPHA (para o exercício 2027: 31/01/2026).",
+        itens: ["Todos os quadros"],
+      },
+      {
+        orgao: "IEPHA-MG — Gerência de Articulação com Municípios",
+        onde: "Quadro I-A: lei da política municipal, setor de patrimônio e Conselho Municipal do Patrimônio Cultural",
+        url: "https://www.mg.gov.br/iepha/pagina/orientacoes-tecnicas-e-formularios",
+        oQueEnviar:
+          "Lei de criação do conselho e do setor, ato de nomeação dos conselheiros, atas e listas de presença das reuniões do ano-base e plano de ação.",
+        prazo: "Junto com o dossiê anual.",
+        itens: ["Política Municipal de Proteção do Patrimônio Cultural (Quadro I-A)"],
+      },
+      {
+        orgao: "IEPHA-MG",
+        onde: "Quadro I-B: Fundo Municipal de Preservação (FUMPAC) — investimentos e despesas",
+        url: "https://www.mg.gov.br/iepha/pagina/orientacoes-tecnicas-e-formularios",
+        oQueEnviar:
+          "Lei do fundo, extratos e empenhos do ano-base, relatório de aplicação dos recursos e prestação de contas.",
+        prazo: "Junto com o dossiê anual.",
+        itens: ["Investimentos e Despesas / Fundo Municipal (Quadro I-B)"],
+      },
+      {
+        orgao: "IEPHA-MG",
+        onde: "Quadro II-A: Inventário de Proteção do Acervo Cultural (IPAC municipal)",
+        url: "https://www.mg.gov.br/iepha/pagina/orientacoes-tecnicas-e-formularios",
+        oQueEnviar:
+          "Plano de inventário, fichas preenchidas no modelo do IEPHA, relatório de desenvolvimento e registro fotográfico.",
+        prazo: "Junto com o dossiê anual.",
+        itens: ["Inventário de Proteção (Quadro II-A)"],
+      },
+      {
+        orgao: "IEPHA-MG",
+        onde: "Quadros II-B e III-A: tombamentos municipais (núcleo histórico, conjunto urbano, bens imóveis e móveis)",
+        url: "https://www.mg.gov.br/iepha/pagina/tombamento",
+        oQueEnviar:
+          "Processo de tombamento instruído: dossiê de pesquisa, parecer técnico, ata do conselho, decreto/deliberação de tombamento e inscrição no livro do tombo.",
+        prazo:
+          "Processos podem ser protocolados durante o ano; a pontuação entra no exercício seguinte.",
+        itens: ["Pontuação Tombamentos (Quadros II-B e III-A)"],
+      },
+      {
+        orgao: "IPHAN",
+        onde: "Bens com proteção federal — consulta e instrução de tombamento federal",
+        url: "https://www.gov.br/iphan/pt-br/assuntos/patrimonio-cultural-material",
+        oQueEnviar:
+          "Pedido de tombamento com documentação do bem; a proteção federal ou estadual aumenta a pontuação dos tombamentos (Anexo II da Lei 18.030/2009).",
+        itens: ["Pontuação Tombamentos (Quadros II-B e III-A)"],
+      },
+      {
+        orgao: "IEPHA-MG",
+        onde: "Quadros II-C e III-B: registro de bens imateriais",
+        url: "https://www.mg.gov.br/iepha/pagina/registro-de-bens-imateriais",
+        oQueEnviar:
+          "Dossiê de registro, inventário do bem, termo de registro, ata do conselho e plano de salvaguarda com execução comprovada.",
+        prazo: "Processos protocolados no IEPHA ao longo do ano.",
+        itens: ["Pontuação Registros de Bens Imateriais (Quadros II-C e III-B)"],
+      },
+      {
+        orgao: "IEPHA-MG",
+        onde: "Quadro III-C: programa de Educação e Difusão do patrimônio",
+        url: "https://www.mg.gov.br/iepha/pagina/educacao-patrimonial",
+        oQueEnviar:
+          "Projeto executado no ano-base, cronograma, material produzido, listas de participantes e registro fotográfico.",
+        prazo: "Junto com o dossiê anual.",
+        itens: ["Educação e Difusão (Quadro III-C)"],
       },
     ],
   },

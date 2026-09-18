@@ -102,7 +102,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     identificacao: string | null,
     anoForcado?: number,
   ) {
-    const ano = anoForcado ?? anoBase;
+    let ano = anoForcado ?? anoBase;
+    let fonteUso: FonteRelatorio = fonte;
+    let divergencias: { municipio: string; esperado: number; obtido: number }[] = [];
     setEtapa("Casando as colunas com os itens do critério");
     // Cada órgão publica em um formato: o ICMS Turismo traz um quadro único com
     // circuito, nota, RLPC, IRC, IIT e índice; o ICMS Ecológico traz vários
@@ -120,6 +122,22 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const e = extrairIcmsEcologico(paginas);
       if (e.itens.length) r = e;
     }
+    // Patrimônio Cultural: o quadro do IEPHA tem 27 colunas e quase todas as
+    // células vazias, então a leitura é posicional e traz o exercício e se a
+    // pontuação é provisória ou definitiva no próprio cabeçalho.
+    if (pipeline.slug === "patrimonio_cultural") {
+      const { ehRelatorioIepha, extrairPatrimonioCultural } =
+        await import("@/lib/icms/criterios/patrimonio");
+      if (ehRelatorioIepha(paginas)) {
+        const p = extrairPatrimonioCultural(paginas);
+        if (p.ranking.length) {
+          r = p;
+          divergencias = p.divergencias;
+          if (!anoForcado && p.exercicio) ano = p.exercicio;
+          if (p.definitiva !== null) fonteUso = p.definitiva ? "definitivo" : "preliminar";
+        }
+      }
+    }
 
     if (!r.itens.length && !r.ranking.length) {
       throw new Error(
@@ -130,17 +148,28 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     setEtapa("Gravando");
     // No Meio Ambiente as publicações se complementam, então uma não apaga a
     // outra; nos demais critérios o relatório novo substitui o anterior.
-    if (!ecologico) await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte } });
+    if (!ecologico)
+      await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte: fonteUso } });
 
     for (let i = 0; i < r.ranking.length; i += 300) {
       await gravarRanking({
-        data: { criterio: pipeline.slug, anoBase: ano, fonte, linhas: r.ranking.slice(i, i + 300) },
+        data: {
+          criterio: pipeline.slug,
+          anoBase: ano,
+          fonte: fonteUso,
+          linhas: r.ranking.slice(i, i + 300),
+        },
       });
       setProgresso(70 + Math.round(((i + 300) / Math.max(r.ranking.length, 1)) * 10));
     }
     for (let i = 0; i < r.itens.length; i += 150) {
       await gravarItens({
-        data: { criterio: pipeline.slug, anoBase: ano, fonte, itens: r.itens.slice(i, i + 150) },
+        data: {
+          criterio: pipeline.slug,
+          anoBase: ano,
+          fonte: fonteUso,
+          itens: r.itens.slice(i, i + 150),
+        },
       });
       setProgresso(80 + Math.round(((i + 150) / Math.max(r.itens.length, 1)) * 20));
     }
@@ -150,7 +179,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       data: {
         criterio: pipeline.slug,
         anoBase: ano,
-        fonte,
+        fonte: fonteUso,
         origem,
         url: origem === "url" || origem === "site" ? identificacao : null,
         arquivoNome: origem === "url" || origem === "site" ? null : identificacao,
@@ -159,7 +188,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
         registrosItens: r.itens.length,
         municipios,
         naoMapeados: r.naoMapeados,
-        divergencias: [],
+        divergencias,
       },
     });
 

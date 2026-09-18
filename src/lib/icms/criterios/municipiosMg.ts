@@ -55,7 +55,6 @@ export const MUNICIPIOS_MG: MunicipioOficial[] = [
   ).values(),
 ].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-
 /**
  * Correspondência exata (sem tentar cortar sobras): usada quando o texto lido
  * pode conter, na mesma linha, o município e outra informação — caso do
@@ -71,8 +70,6 @@ export function municipioExato(nomeLido: string): MunicipioOficial | null {
   return oficial ? { chave: normalizarMunicipio(oficial), nome: oficial } : null;
 }
 
-
-
 /**
  * Devolve o município oficial correspondente ao nome lido, ou `null` quando o
  * texto não é um município (cabeçalho, sigla, sobra de tabela).
@@ -82,8 +79,12 @@ export function canonicalizarMunicipio(nomeLido: string): MunicipioOficial | nul
   if (!bruto) return null;
 
   const tentar = (texto: string): MunicipioOficial | null => {
+    const chave = apenasLetras(texto);
     const oficial =
-      INDICE.get(apenasLetras(texto)) || INDICE_SEM_CONECTIVOS.get(semConectivos(texto)) || null;
+      INDICE.get(chave) ||
+      INDICE_SEM_H.get(chave.replace(/H/g, "")) ||
+      INDICE_SEM_CONECTIVOS.get(semConectivos(texto)) ||
+      null;
     return oficial ? { chave: normalizarMunicipio(oficial), nome: oficial } : null;
   };
 
