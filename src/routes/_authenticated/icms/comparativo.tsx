@@ -258,8 +258,10 @@ function ComparativoIcms() {
         [
           "Posição",
           "Município",
+          "População (IBGE)",
           ...MESES,
           `Total (${nomeCriterio(criterio)})`,
+          "R$ por habitante",
           "Peso Anexo I (%)",
           "Valor de 1 ponto no critério (R$)",
           "Pontuação real (índice)",
