@@ -37,16 +37,17 @@ const ORDEM_PRINCIPAIS = [
   "turismo",
 ];
 
-function ordenarCriterios<T extends { slug: string; nome: string }>(lista: T[]): T[] {
+function ordenarCriterios<T extends { criterio: { slug: string; nome: string } }>(lista: T[]): T[] {
   return [...lista].sort((a, b) => {
-    const ia = ORDEM_PRINCIPAIS.indexOf(a.slug);
-    const ib = ORDEM_PRINCIPAIS.indexOf(b.slug);
+    const ia = ORDEM_PRINCIPAIS.indexOf(a.criterio.slug);
+    const ib = ORDEM_PRINCIPAIS.indexOf(b.criterio.slug);
     if (ia !== -1 && ib !== -1) return ia - ib;
     if (ia !== -1) return -1;
     if (ib !== -1) return 1;
-    return a.nome.localeCompare(b.nome, "pt-BR");
+    return a.criterio.nome.localeCompare(b.criterio.nome, "pt-BR");
   });
 }
+
 
 
 export const Route = createFileRoute("/_authenticated/icms/criterios")({
