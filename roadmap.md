@@ -6,4 +6,4 @@
 - [x] Validar cálculos, exportação e apresentação.
 - [x] Adicionar anos manuais de aplicação à Evolução do VAF.
 - [x] Persistir e restaurar os anos nas evoluções gravadas.
-- [ ] Validar cartões, tabelas e exportação com referências 2026/2027.
+- [x] Validar cartões, tabelas e exportação com referências 2026/2027.

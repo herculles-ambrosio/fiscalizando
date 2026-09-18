@@ -620,13 +620,13 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     if (municipio?.id) setMunicipioRelatorioId(municipio.id);
   }, [municipio?.id]);
 
-  // o exercício do relatório é sempre o do ARQUIVO ATUAL (remessa a comparar)
+  // O exercício dos documentos acompanha o ano de aplicação escolhido para o
+  // arquivo comparado. O ano interno do arquivo permanece apenas como fallback.
   const anoDosArquivos = atualArq?.apuracao.anoBase ?? baseArq?.apuracao.anoBase ?? null;
-  const anoDoAtual = atualArq?.apuracao.anoBase ?? null;
   useEffect(() => {
-    if (anoDoAtual) setExercicioRelatorio(String(anoDoAtual));
+    if (anoAplicacaoAtual) setExercicioRelatorio(String(anoAplicacaoAtual));
     else if (anoDosArquivos) setExercicioRelatorio(String(anoDosArquivos));
-  }, [anoDoAtual, anoDosArquivos, atualArq]);
+  }, [anoAplicacaoAtual, anoDosArquivos]);
 
   const municipioRelatorio =
     municipiosPermitidos.find((m) => m.id === municipioRelatorioId) ?? municipio ?? null;
@@ -748,7 +748,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Filtros do relatório</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Município e exercício usados nos documentos exportados (.docx, .pdf e CSV).
+            Município e ano de aplicação usados nos documentos exportados (.docx, .pdf e CSV).
           </p>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
@@ -772,7 +772,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Exercício</Label>
+            <Label className="text-xs">Ano de aplicação dos documentos</Label>
             <Select value={exercicioRelatorio} onValueChange={setExercicioRelatorio}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o exercício" />
