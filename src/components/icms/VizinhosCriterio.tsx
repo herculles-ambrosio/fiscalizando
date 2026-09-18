@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -217,9 +217,8 @@ export function VizinhosCriterio({
                 const expandido = aberto === l.municipio;
                 const falta = expandido ? faltaPara(l.municipio) : [];
                 return (
-                  <>
+                  <Fragment key={l.municipio}>
                     <tr
-                      key={l.municipio}
                       className={l.ehMeu ? "bg-emerald-50 font-medium dark:bg-emerald-950/20" : ""}
                     >
                       <td className="p-2">{l.posicaoRegional}</td>
@@ -264,7 +263,7 @@ export function VizinhosCriterio({
                       </td>
                     </tr>
                     {expandido && (
-                      <tr key={`${l.municipio}-detalhe`} className="bg-muted/30">
+                      <tr className="bg-muted/30">
                         <td colSpan={7} className="p-3 text-sm">
                           {lider && l.municipio === lider.municipio ? (
                             <p className="text-muted-foreground">
@@ -295,7 +294,7 @@ export function VizinhosCriterio({
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 );
               })}
             </tbody>
