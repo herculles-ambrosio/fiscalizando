@@ -1228,6 +1228,42 @@ export type Database = {
         }
         Relationships: []
       }
+      estatisticas_comparacoes: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          criado_por: string | null
+          evolucao_ids: string[]
+          id: string
+          linhas: Json
+          nome: string
+          observacao: string | null
+          resolucao_numero: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          evolucao_ids?: string[]
+          id?: string
+          linhas?: Json
+          nome: string
+          observacao?: string | null
+          resolucao_numero: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          evolucao_ids?: string[]
+          id?: string
+          linhas?: Json
+          nome?: string
+          observacao?: string | null
+          resolucao_numero?: string
+        }
+        Relationships: []
+      }
       evolucoes_salvas: {
         Row: {
           arquivo_atual_nome: string
