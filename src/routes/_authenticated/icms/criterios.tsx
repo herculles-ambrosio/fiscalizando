@@ -15,13 +15,19 @@ import { Button } from "@/components/ui/button";
 import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
-import { useCriteriosComDados } from "@/hooks/useCriterios";
 import { montarDiagnostico, ROTULO_SITUACAO } from "@/lib/icms/diagnostico";
 import { CRITERIOS, MESES } from "@/lib/icms/criterios";
-import { PIPELINES } from "@/lib/icms/criterios/pipelines";
 
 import { formatarCompacto, formatarMoeda } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+const CRITERIOS_DETALHADOS = new Set([
+  "educacao",
+  "patrimonio_cultural",
+  "meio_ambiente",
+  "esportes",
+  "turismo",
+]);
 
 export const Route = createFileRoute("/_authenticated/icms/criterios")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -58,34 +64,10 @@ function CriteriosIcms() {
   }, [exercicios, exercicio]);
 
   const { data: dados, isLoading } = useIcmsDados(exercicio);
-  const { data: comDados } = useCriteriosComDados();
   const diag = useMemo(
     () => (dados && exercicio ? montarDiagnostico(dados, exercicio) : null),
     [dados, exercicio],
   );
-
-  // Critérios com fonte oficial própria (Esportes, Turismo, Meio Ambiente,
-  // Educação e Patrimônio Cultural) aparecem em destaque mesmo antes da
-  // primeira importação; os demais entram assim que um relatório é importado.
-  const criteriosProntos = useMemo(() => {
-    const slugs = new Set<string>([
-      ...PIPELINES.map((p) => p.slug),
-      ...Object.keys(comDados ?? {}),
-    ]);
-    return CRITERIOS.filter((c) => slugs.has(c.slug)).map((c) => {
-      const info = comDados?.[c.slug];
-      const anos = info?.anos.slice(0, 3).join(", ");
-      return {
-        slug: c.slug,
-        nome: c.nome,
-        detalhe: anos
-          ? `Relatórios importados (ano-base ${anos}) — veja o que a prefeitura já pontua e o que falta.`
-          : "Veja o que a prefeitura já pontua e o que ainda falta explorar, a partir dos relatórios oficiais.",
-      };
-    });
-  }, [comDados]);
-
-
 
   const linha = useMemo(() => {
     if (!diag) return null;
@@ -116,33 +98,6 @@ function CriteriosIcms() {
         <SeletorExercicio exercicios={exercicios ?? []} valor={exercicio} aoTrocar={setExercicio} />
       </header>
 
-      {criteriosProntos.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">
-            Critérios com fonte oficial própria — abra para analisar item a item
-          </h2>
-
-          {criteriosProntos.map((c) => (
-            <Card key={`pronto-${c.slug}`} className="border-emerald-500/40 bg-emerald-500/5">
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-                <div>
-                  <p className="font-medium">Critério {c.nome} — detalhamento por item</p>
-                  <p className="text-sm text-muted-foreground">
-                    {c.detalhe}
-                  </p>
-                </div>
-                <Button asChild size="sm">
-                  <Link to="/icms/criterio/$slug" params={{ slug: c.slug }}>
-                    Abrir {c.nome}
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
-      )}
-
-
       {semDados && (
         <Card className="border-gold/40 bg-gold/5">
           <CardContent className="py-4 text-sm text-muted-foreground">
@@ -167,13 +122,25 @@ function CriteriosIcms() {
             ? diag.linhas.map((l) => ({ criterio: l.criterio, valorAno: l.valorAno as number | null }))
             : CRITERIOS.map((criterio) => ({ criterio, valorAno: null }))
           ).map(({ criterio, valorAno }) => (
-            <Card key={`card-${criterio.slug}`} className="flex flex-col justify-between">
+            <Card
+              key={`card-${criterio.slug}`}
+              className={cn(
+                "flex min-h-44 flex-col justify-between",
+                CRITERIOS_DETALHADOS.has(criterio.slug) &&
+                  "border-emerald-500/40 bg-emerald-500/5",
+              )}
+            >
               <CardContent className="space-y-1 pt-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium leading-tight">{criterio.nome}</p>
-                  {criterio.percentual != null && (
-                    <Badge variant="secondary">{criterio.percentual}%</Badge>
-                  )}
+                  <div className="flex flex-wrap justify-end gap-1">
+                    {CRITERIOS_DETALHADOS.has(criterio.slug) && (
+                      <Badge className="bg-emerald-600 text-primary-foreground">Dados detalhados</Badge>
+                    )}
+                    {criterio.percentual != null && (
+                      <Badge variant="secondary">{criterio.percentual}%</Badge>
+                    )}
+                  </div>
                 </div>
                 <p className="line-clamp-2 text-xs text-muted-foreground">{criterio.oQueMede}</p>
                 <p className="text-xs text-muted-foreground">
