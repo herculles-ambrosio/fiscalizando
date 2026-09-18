@@ -168,7 +168,20 @@ export const PIPELINES: Pipeline[] = [
     formato: "planilha",
     colunasTotal: ["iqe", "indice de participacao", "indice"],
     comoFunciona:
-      "Lê a planilha publicada pela FJP com os índices do critério Educação: os quatro componentes (Desempenho, Rendimento, Atendimento e Gestão Escolar), o Índice de Qualidade e o índice de participação, além dos dados constitutivos, dos recursos administrativos e da nota técnica do ano.",
+      "Lê a planilha publicada pela FJP com os índices do critério Educação: os quatro componentes (Desempenho, Rendimento, Atendimento e Gestão Escolar), o Índice de Qualidade e o índice de participação, além dos dados constitutivos, dos recursos administrativos e da nota técnica do ano. Também aceita o PDF da publicação.",
+    fontes: [
+      {
+        nome: "FJP — Portal Robin Hood",
+        url: "https://robin-hood.fjp.mg.gov.br/",
+        oQueTem: "Índices de todos os critérios e extrato por município.",
+      },
+      {
+        nome: "FJP — notícias e publicações do critério Educação",
+        url: "https://robin-hood.fjp.mg.gov.br/noticias",
+        oQueTem:
+          "Planilha dos índices provisórios e definitivos, dados constitutivos, recursos e nota técnica.",
+      },
+    ],
   },
   {
     slug: "patrimonio_cultural",
