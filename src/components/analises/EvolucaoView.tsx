@@ -602,6 +602,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const [anoApuracaoAtual, setAnoApuracaoAtual] = useState<number | null>(null);
   const [anoAplicacaoBase, setAnoAplicacaoBase] = useState<number | null>(null);
   const [anoAplicacaoAtual, setAnoAplicacaoAtual] = useState<number | null>(null);
+  const [resolucaoBase, setResolucaoBase] = useState<string | null>(null);
+  const { data: resolucoesSef = [] } = useResolucoesSef();
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
   const [perguntarPlanilha, setPerguntarPlanilha] = useState(false);
   const base = useMemo(
@@ -940,6 +942,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           anosDisponiveis={anosDisponiveis}
           onAnoApuracao={setAnoApuracaoBase}
           onAnoAplicacao={setAnoAplicacaoBase}
+          resolucoes={resolucoesSef}
+          resolucaoNumero={resolucaoBase}
+          onResolucao={setResolucaoBase}
         />
         <CaixaArquivo
           titulo="Arquivo atual (remessa a comparar)"
