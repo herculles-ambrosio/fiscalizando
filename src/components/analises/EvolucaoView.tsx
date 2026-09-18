@@ -1074,7 +1074,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                         setAnoApuracaoAtual(sugerirAnoApuracao(s.atual));
                         setAnoAplicacaoBase(sugerirAnoAplicacao(s.base));
                         setAnoAplicacaoAtual(sugerirAnoAplicacao(s.atual));
-                        setVafReferencia(s.vaf_referencia ?? "");
+                         setVafReferencia(s.vaf_referencia ?? "");
+                         setResolucaoBase(s.base.resolucaoNumero ?? null);
                         toast.success("Evolução carregada.");
                       }}
                     >
