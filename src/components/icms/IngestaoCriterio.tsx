@@ -122,6 +122,23 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const e = extrairIcmsEcologico(paginas);
       if (e.itens.length) r = e;
     }
+    // Patrimônio Cultural: o quadro do IEPHA tem 27 colunas e quase todas as
+    // células vazias, então a leitura é posicional e traz o exercício e se a
+    // pontuação é provisória ou definitiva no próprio cabeçalho.
+    if (pipeline.slug === "patrimonio_cultural") {
+      const { ehRelatorioIepha, extrairPatrimonioCultural } = await import(
+        "@/lib/icms/criterios/patrimonio"
+      );
+      if (ehRelatorioIepha(paginas)) {
+        const p = extrairPatrimonioCultural(paginas);
+        if (p.ranking.length) {
+          r = p;
+          divergencias = p.divergencias;
+          if (!anoForcado && p.exercicio) ano = p.exercicio;
+          if (p.definitiva !== null) fonteUso = p.definitiva ? "definitivo" : "provisorio";
+        }
+      }
+    }
 
     if (!r.itens.length && !r.ranking.length) {
       throw new Error(
