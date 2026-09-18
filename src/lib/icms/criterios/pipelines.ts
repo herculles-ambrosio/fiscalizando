@@ -130,6 +130,24 @@ export const PIPELINES: Pipeline[] = [
     colunasTotal: ["pontuacao", "indice", "total", "iqr"],
     comoFunciona:
       "Varre a página oficial de publicações do ICMS Ecológico do ano (SEMAD) e traz as tabelas trimestrais das resoluções (saneamento, unidades de conservação e mata seca) e as tabelas de Fator de Qualidade (preliminar e final).",
+    fontes: [
+      {
+        nome: "SEMAD — ICMS Ecológico, publicações do ano",
+        url: "https://semad.mg.gov.br/icms-ecologico-publicacoes-2025",
+        oQueTem:
+          "Tabelas trimestrais (saneamento, unidades de conservação, mata seca) e Fator de Qualidade. Troque o ano no fim do endereço para outros exercícios.",
+      },
+      {
+        nome: "SEMAD — critérios e cadastro do ICMS Ecológico",
+        url: "https://semad.mg.gov.br/w/criterios-para-icms-ecologico",
+        oQueTem: "Regras de cadastro de aterro, ETE e unidades de conservação.",
+      },
+      {
+        nome: "SEMAD — consulta de valores de repasse",
+        url: "https://semad.mg.gov.br/icms-ecologico-consulta-de-valores-de-repasse",
+        oQueTem: "Extrato do repasse por município.",
+      },
+    ],
   },
   {
     slug: "educacao",
