@@ -10,6 +10,9 @@
  * pelo usuário (tabela copiada do navegador).
  */
 
+import { normalizarCodigoSef } from "./municipioArquivo";
+import { nomeMunicipioSef } from "./municipiosSef";
+
 export type LinhaResolucao = {
   codigoMun: string;
   municipioNome: string;
