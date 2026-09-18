@@ -130,6 +130,8 @@ function ImportarResolucao() {
       return;
     }
     queryClient.invalidateQueries({ queryKey: ["indices-resolucao"] });
+    queryClient.invalidateQueries({ queryKey: ["resolucoes-carregadas"] });
+    queryClient.invalidateQueries({ queryKey: ["indice-aplicado"] });
     toast.success(`${registros.length} municípios gravados.`);
   }
 
