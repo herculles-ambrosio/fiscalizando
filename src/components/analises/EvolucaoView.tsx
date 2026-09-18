@@ -1285,6 +1285,43 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               </CardContent>
             </Card>
 
+            {resolucaoBase && (
+              <Card className="border-primary/40">
+                <CardContent className="space-y-1 p-4">
+                  <RotuloKpi
+                    titulo={`Média dos índices - base (Resolução ${resolucaoBase})`}
+                    ajuda={
+                      <>
+                        <p>
+                          Média publicada pela SEF-MG na Resolução {resolucaoBase}, já calculada
+                          sobre os dois anos de apuração.
+                        </p>
+                        <p>É a referência oficial para saber se o índice subiu ou caiu.</p>
+                      </>
+                    }
+                  />
+                  <p className="break-words font-display text-lg font-semibold">
+                    {indiceResolucaoBase?.media_indices != null
+                      ? `${formatarIndice(indiceResolucaoBase.media_indices)}%`
+                      : "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {indiceResolucaoBase
+                      ? `Índices ${indiceResolucaoBase.ano_a}: ${
+                          indiceResolucaoBase.indice_a != null
+                            ? `${formatarIndice(indiceResolucaoBase.indice_a)}%`
+                            : "—"
+                        } · ${indiceResolucaoBase.ano_b}: ${
+                          indiceResolucaoBase.indice_b != null
+                            ? `${formatarIndice(indiceResolucaoBase.indice_b)}%`
+                            : "—"
+                        }`
+                      : "Município não localizado nessa resolução."}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
@@ -1303,6 +1340,12 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                         É esse valor que a SEF-MG aplica no repasse do exercício seguinte ao da
                         última apuração.
                       </p>
+                      {resolucaoBase && (
+                        <p>
+                          A diferença mostrada compara esta média com a média publicada na Resolução{" "}
+                          {resolucaoBase}.
+                        </p>
+                      )}
                     </>
                   }
                 />
@@ -1311,11 +1354,31 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     ? `${formatarIndice((base.apuracao.indice + atual.apuracao.indice) / 2)}%`
                     : "—"}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {base.apuracao.indice > 0 && atual.apuracao.indice > 0
-                    ? "(índice base + índice comparado) ÷ 2"
-                    : "Faltam os índices dos dois arquivos para calcular a média."}
-                </p>
+                {base.apuracao.indice > 0 &&
+                atual.apuracao.indice > 0 &&
+                indiceResolucaoBase?.media_indices ? (
+                  (() => {
+                    const mediaAtual = (base.apuracao.indice + atual.apuracao.indice) / 2;
+                    const mediaBase = indiceResolucaoBase.media_indices!;
+                    const diferenca = mediaAtual - mediaBase;
+                    const pct = (diferenca / mediaBase) * 100;
+                    return (
+                      <p className="space-x-2 text-xs">
+                        <span className={diferenca >= 0 ? "text-emerald-600" : "text-destructive"}>
+                          {diferenca >= 0 ? "Subiu" : "Caiu"} {formatarIndice(Math.abs(diferenca))}{" "}
+                          ponto(s)
+                        </span>
+                        <Variacao pct={pct} />
+                      </p>
+                    );
+                  })()
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {base.apuracao.indice > 0 && atual.apuracao.indice > 0
+                      ? "(índice base + índice comparado) ÷ 2"
+                      : "Faltam os índices dos dois arquivos para calcular a média."}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
