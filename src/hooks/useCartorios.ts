@@ -148,6 +148,9 @@ export type LinhaFiscalizacao = {
   diferencaBase: number | null;
   diferencaIss: number | null;
   temDeclaracao: boolean;
+  competenciaAno: number;
+  competenciaMes: number;
+  meses: number;
 };
 
 export function useCartorioConfig() {
@@ -213,42 +216,76 @@ export function useCompetenciasCartorio() {
 }
 
 /** Cruzamento emolumentos × declarado, já com o ISS devido pela alíquota. */
-export function useFiscalizacaoCartorio(competencia: Competencia | null) {
+export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | null) {
   const { municipioId } = useMunicipioAtivo();
   const { data: config } = useCartorioConfig();
   const aliquota = config?.aliquota_iss ?? 5;
 
   return useQuery({
-    queryKey: ["cartorio-fiscalizacao", municipioId, competencia?.ano, competencia?.mes, aliquota],
+    queryKey: [
+      "cartorio-fiscalizacao",
+      municipioId,
+      competencia === "todos" ? "todos" : competencia?.ano,
+      competencia === "todos" ? "todos" : competencia?.mes,
+      aliquota,
+    ],
     enabled: !!municipioId && !!competencia,
     queryFn: async (): Promise<LinhaFiscalizacao[]> => {
-      const [emol, decl] = await Promise.all([
-        supabase
-          .from("cartorio_emolumentos")
-          .select("*")
-          .eq("municipio_id", municipioId!)
-          .eq("competencia_ano", competencia!.ano)
-          .eq("competencia_mes", competencia!.mes)
-          .limit(2000),
-        supabase
-          .from("cartorio_declaracoes")
-          .select("*")
-          .eq("municipio_id", municipioId!)
-          .eq("competencia_ano", competencia!.ano)
-          .eq("competencia_mes", competencia!.mes)
-          .limit(2000),
+      const buscarEmolumentos = async () => {
+        const saida: Array<Record<string, unknown>> = [];
+        for (let inicio = 0; ; inicio += 1000) {
+          let consulta = supabase
+            .from("cartorio_emolumentos")
+            .select("*")
+            .eq("municipio_id", municipioId!);
+          if (competencia !== "todos") {
+            consulta = consulta
+              .eq("competencia_ano", competencia!.ano)
+              .eq("competencia_mes", competencia!.mes);
+          }
+          const { data, error } = await consulta.range(inicio, inicio + 999);
+          if (error) throw error;
+          saida.push(...((data ?? []) as Array<Record<string, unknown>>));
+          if (!data || data.length < 1000) break;
+        }
+        return saida;
+      };
+      const buscarDeclaracoes = async () => {
+        const saida: Array<Record<string, unknown>> = [];
+        for (let inicio = 0; ; inicio += 1000) {
+          let consulta = supabase
+            .from("cartorio_declaracoes")
+            .select("*")
+            .eq("municipio_id", municipioId!);
+          if (competencia !== "todos") {
+            consulta = consulta
+              .eq("competencia_ano", competencia!.ano)
+              .eq("competencia_mes", competencia!.mes);
+          }
+          const { data, error } = await consulta.range(inicio, inicio + 999);
+          if (error) throw error;
+          saida.push(...((data ?? []) as Array<Record<string, unknown>>));
+          if (!data || data.length < 1000) break;
+        }
+        return saida;
+      };
+      const [emolumentosSalvos, declaracoesSalvas] = await Promise.all([
+        buscarEmolumentos(),
+        buscarDeclaracoes(),
       ]);
-      if (emol.error) throw emol.error;
-      if (decl.error) throw decl.error;
 
-      const declaradas = new Map<string, (typeof decl.data)[number]>();
-      for (const d of decl.data ?? []) {
-        declaradas.set(chave(String(d.cns)), d);
-        if (d.serventia_nome) declaradas.set(chave(d.serventia_nome), d);
+      const declaradas = new Map<string, Record<string, unknown>>();
+      for (const d of declaracoesSalvas) {
+        const prefixo = `${d.competencia_ano}-${d.competencia_mes}|`;
+        declaradas.set(prefixo + chave(String(d.cns)), d);
+        if (d.serventia_nome) declaradas.set(prefixo + chave(String(d.serventia_nome)), d);
       }
 
-      const linhas: LinhaFiscalizacao[] = (emol.data ?? []).map((e) => {
-        const d = declaradas.get(chave(String(e.cns))) ?? declaradas.get(chave(e.serventia_nome ?? ""));
+      const linhas: LinhaFiscalizacao[] = emolumentosSalvos.map((e) => {
+        const prefixo = `${e.competencia_ano}-${e.competencia_mes}|`;
+        const d =
+          declaradas.get(prefixo + chave(String(e.cns))) ??
+          declaradas.get(prefixo + chave(String(e.serventia_nome ?? "")));
         const emolumentos = Number(e.emolumentos ?? 0);
         const issDevido = (emolumentos * aliquota) / 100;
         const baseDeclarada = d ? Number(d.base_declarada ?? 0) : null;
@@ -273,6 +310,9 @@ export function useFiscalizacaoCartorio(competencia: Competencia | null) {
               ? null
               : issDevido - (issDeclarado || (baseDeclarada ?? 0) * (aliquota / 100)),
           temDeclaracao: !!d,
+          competenciaAno: Number(e.competencia_ano),
+          competenciaMes: Number(e.competencia_mes),
+          meses: 1,
         };
       });
 

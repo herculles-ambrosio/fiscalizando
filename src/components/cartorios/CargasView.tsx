@@ -1,7 +1,7 @@
 /** Histórico de todas as cargas mensais do módulo Fiscaliza Cartório. */
 
 import { useMemo, useState } from "react";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,11 @@ const ROTULO_TIPO = {
   declaracoes: "Declarações da prefeitura",
 } as const;
 
-export default function CargasView() {
+export default function CargasView({
+  aoAbrirCarga,
+}: {
+  aoAbrirCarga?: (competencia: { ano: number; mes: number }) => void;
+}) {
   const { data: cargas, isLoading } = useCargasCartorio();
   const excluir = useExcluirCargaCartorio();
   const [tipo, setTipo] = useState("todos");
@@ -145,7 +149,7 @@ export default function CargasView() {
                 <TableHead>Arquivo</TableHead>
                 <TableHead className="text-right">Linhas</TableHead>
                 <TableHead>Enviado em</TableHead>
-                <TableHead className="w-12" />
+                <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -167,7 +171,18 @@ export default function CargasView() {
                   <TableCell className="text-sm text-muted-foreground">
                     {dataHora(c.criado_em)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Ver ${MESES_NOME[c.competencia_mes - 1]} de ${c.competencia_ano} na Fiscalização`}
+                      title="Ver na Fiscalização"
+                      onClick={() =>
+                        aoAbrirCarga?.({ ano: c.competencia_ano, mes: c.competencia_mes })
+                      }
+                    >
+                      <Eye className="size-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
