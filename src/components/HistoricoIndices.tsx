@@ -50,6 +50,7 @@ import {
   type IndiceSalvo,
   type StatusDetalhamento,
 } from "@/hooks/useIndicesHistorico";
+import { IndiceAplicadoBase } from "@/components/vaf/IndiceAplicado";
 import { toast } from "sonner";
 
 type Comparacao = {
@@ -302,6 +303,17 @@ export function HistoricoIndices({
         </div>
       </CardHeader>
       <CardContent>
+        {comparacoes[0] && (
+          <IndiceAplicadoBase
+            className="mb-4"
+            municipioId={municipioId}
+            exercicioAplicacao={comparacoes[0].exercicio + 2}
+            indiceApurado={Number(
+              (comparacoes[0].definitivo ?? comparacoes[0].provisorio)?.indice ?? 0,
+            )}
+            rotuloApurado={`índice de ${comparacoes[0].exercicio}`}
+          />
+        )}
         {isLoading && <p className="text-sm text-muted-foreground">Carregando histórico…</p>}
         {!isLoading && registros.length === 0 && (
           <p className="text-sm text-muted-foreground">
