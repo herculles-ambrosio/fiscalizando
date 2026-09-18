@@ -76,23 +76,34 @@ function useCobertura() {
     queryFn: async () => {
       const mapa: Record<string, { ano: number; fonte: string; municipios: number }> = {};
       for (const p of PIPELINES) {
-        const tabela =
-          p.slug === "esportes" ? "esportes_ranking_municipio" : "criterio_ranking_municipio";
-        let consulta = supabase
-          .from(tabela)
+        const esportes = p.slug === "esportes";
+        const tabela = esportes ? "esportes_ranking_municipio" : "criterio_ranking_municipio";
+        const base = supabase.from(tabela) as unknown as {
+          select: (
+            colunas: string,
+            opcoes?: { count: "exact"; head: boolean },
+          ) => PromiseLike<{ data: unknown[] | null; count: number | null }> & {
+            eq: (coluna: string, valor: string | number) => ReturnType<typeof base.select>;
+            order: (
+              coluna: string,
+              opcoes: { ascending: boolean },
+            ) => ReturnType<typeof base.select>;
+            limit: (n: number) => ReturnType<typeof base.select>;
+          };
+        };
+        let consulta = base
           .select("ano_base, fonte_relatorio")
           .order("ano_base", { ascending: false })
           .limit(1);
-        if (p.slug !== "esportes") consulta = consulta.eq("criterio", p.slug);
+        if (!esportes) consulta = consulta.eq("criterio", p.slug);
         const { data } = await consulta;
         const topo = data?.[0] as { ano_base: number; fonte_relatorio: string } | undefined;
         if (!topo) continue;
-        let contagem = supabase
-          .from(tabela)
+        let contagem = base
           .select("municipio", { count: "exact", head: true })
           .eq("ano_base", topo.ano_base)
           .eq("fonte_relatorio", topo.fonte_relatorio);
-        if (p.slug !== "esportes") contagem = contagem.eq("criterio", p.slug);
+        if (!esportes) contagem = contagem.eq("criterio", p.slug);
         const { count } = await contagem;
         mapa[p.slug] = {
           ano: topo.ano_base,
