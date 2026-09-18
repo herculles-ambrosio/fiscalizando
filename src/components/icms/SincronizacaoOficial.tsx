@@ -193,7 +193,18 @@ export function SincronizacaoOficial() {
       const { extrairEducacao } = await import("@/lib/icms/criterios/educacao");
       const r = extrairEducacao(dados);
       if (!r.ranking.length) throw new Error("A planilha não traz o quadro de índices esperado.");
-      await gravarPadrao(pipeline, anoBase, fonte, r.ranking, r.itens, r.naoMapeados, [], origem, identificacao, 0);
+      await gravarPadrao(
+        pipeline,
+        anoBase,
+        fonte,
+        r.ranking,
+        r.itens,
+        r.naoMapeados,
+        [],
+        origem,
+        identificacao,
+        0,
+      );
       return;
     } else {
       const p = paginasDaPlanilha(dados);
@@ -255,8 +266,10 @@ export function SincronizacaoOficial() {
       mudar(slug, { progresso: 80 + Math.round(((i + 150) / Math.max(itens.length, 1)) * 18) });
     }
 
-    const municipios = new Set([...ranking.map((r) => r.municipio), ...itens.map((i) => i.municipio)])
-      .size;
+    const municipios = new Set([
+      ...ranking.map((r) => r.municipio),
+      ...itens.map((i) => i.municipio),
+    ]).size;
     try {
       await registrar({
         data: {
@@ -444,7 +457,12 @@ export function SincronizacaoOficial() {
 
   async function usarArquivo(pipeline: Pipeline, arquivo: File) {
     try {
-      await carregar(pipeline, new Uint8Array(await arquivo.arrayBuffer()), "arquivo", arquivo.name);
+      await carregar(
+        pipeline,
+        new Uint8Array(await arquivo.arrayBuffer()),
+        "arquivo",
+        arquivo.name,
+      );
     } catch (e) {
       mudar(pipeline.slug, {
         situacao: "falha",
@@ -547,7 +565,11 @@ export function SincronizacaoOficial() {
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={() => sincronizar(p)} disabled={ocupado || tudoRodando}>
+                  <Button
+                    size="sm"
+                    onClick={() => sincronizar(p)}
+                    disabled={ocupado || tudoRodando}
+                  >
                     {ocupado ? (
                       <Loader2 className="mr-2 size-4 animate-spin" />
                     ) : (
