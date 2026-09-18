@@ -83,7 +83,9 @@ function rotuloArquivo(a: ArquivoEvolucao, anoAplicacao?: number | null): string
 
 function sugerirAnoAplicacao(a: ArquivoEvolucao | null): number | null {
   if (!a) return null;
-  return a.anoAplicacao ?? ((anoDoArquivo(a.nome) ?? a.apuracao.anoBase) || null)?.valueOf() + 1;
+  if (a.anoAplicacao) return a.anoAplicacao;
+  const anoMovimento = anoDoArquivo(a.nome) ?? a.apuracao.anoBase;
+  return anoMovimento ? anoMovimento + 1 : null;
 }
 
 function formatarValor(valor: number, formato: LinhaEvolucao["formato"]): string {
@@ -185,7 +187,7 @@ function CaixaArquivo({
             <div className="space-y-1.5 pt-2">
               <Label className="text-xs">Ano de aplicação</Label>
               <Select
-                value={anoAplicacao ? String(anoAplicacao) : undefined}
+                value={anoAplicacao ? String(anoAplicacao) : ""}
                 onValueChange={(valor) => onAnoAplicacao(Number(valor))}
               >
                 <SelectTrigger>
@@ -882,7 +884,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               onClick={() => {
                 if (!base || !atual || !municipio) return;
                 const nome =
-                  nomeGravar.trim() || `${rotuloArquivo(base)} x ${rotuloArquivo(atual)}`;
+                  nomeGravar.trim() || `${referenciaBase} x ${referenciaAtual}`;
                 salvarEvolucao.mutate(
                   {
                     municipioId: municipio.id,
@@ -980,8 +982,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     <>
                       <p>
                         Contribuintes com <strong>declaração no arquivo base</strong> (
-                        {rotuloArquivo(base)}) e <strong>sem declaração</strong> no arquivo
-                        comparado/estimado ({rotuloArquivo(atual)}).
+                        {rotuloBase}) e <strong>sem declaração</strong> no arquivo
+                        comparado/estimado ({rotuloAtual}).
                       </p>
                       <p>
                         <strong>VAF que saiu</strong> = soma do VAF que esses contribuintes tinham
@@ -1006,8 +1008,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     <>
                       <p>
                         Contribuintes presentes apenas no arquivo comparado/estimado (
-                        {rotuloArquivo(atual)}), sem declaração no arquivo base (
-                        {rotuloArquivo(base)}).
+                        {rotuloAtual}), sem declaração no arquivo base (
+                        {rotuloBase}).
                       </p>
                       <p>
                         <strong>VAF que entrou</strong> = soma do VAF declarado por eles no arquivo

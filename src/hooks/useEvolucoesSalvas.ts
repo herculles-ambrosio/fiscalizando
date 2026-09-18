@@ -20,6 +20,7 @@ export function useEvolucoesSalvas(municipioId: string | null) {
     queryKey: ["evolucoes-salvas", municipioId],
     enabled: !!municipioId,
     queryFn: async (): Promise<EvolucaoSalva[]> => {
+      if (!municipioId) return [];
       const { data, error } = await supabase
         .from("evolucoes_salvas")
         .select("*")
