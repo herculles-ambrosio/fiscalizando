@@ -1974,6 +1974,36 @@ export type Database = {
         }
         Relationships: []
       }
+      municipios_populacao: {
+        Row: {
+          ano: number
+          atualizado_em: string
+          codigo_ibge: string
+          fonte: string
+          nome: string
+          populacao: number
+          uf: string
+        }
+        Insert: {
+          ano: number
+          atualizado_em?: string
+          codigo_ibge: string
+          fonte?: string
+          nome: string
+          populacao: number
+          uf?: string
+        }
+        Update: {
+          ano?: number
+          atualizado_em?: string
+          codigo_ibge?: string
+          fonte?: string
+          nome?: string
+          populacao?: number
+          uf?: string
+        }
+        Relationships: []
+      }
       oficios_emitidos: {
         Row: {
           arquivo_nome: string | null
