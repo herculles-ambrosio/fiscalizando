@@ -273,8 +273,16 @@ function DetalheGenerico({ slug }: { slug: string }) {
                     : "—"}
                 </p>
               </div>
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  População{populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
+                </p>
+                <p className="text-xl font-semibold">
+                  {formatarPopulacao(populacao.de(municipio?.nome))}
+                </p>
+              </div>
               {!linhaMunicipio && (
-                <p className="text-xs text-muted-foreground sm:col-span-3">
+                <p className="text-xs text-muted-foreground sm:col-span-4">
                   {municipio?.nome ?? "Este município"} não aparece no relatório importado deste
                   ano-base, ou seja, hoje não pontua neste critério. Veja em “Como melhorar” o que
                   precisa ser feito para entrar na lista.
