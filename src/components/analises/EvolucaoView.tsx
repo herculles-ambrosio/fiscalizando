@@ -604,6 +604,10 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const [anoAplicacaoAtual, setAnoAplicacaoAtual] = useState<number | null>(null);
   const [resolucaoBase, setResolucaoBase] = useState<string | null>(null);
   const { data: resolucoesSef = [] } = useResolucoesSef();
+  const { data: indiceResolucaoBase } = useIndiceDaResolucao(
+    resolucaoBase,
+    useMunicipioAtivo().municipio?.id ?? null,
+  );
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
   const [perguntarPlanilha, setPerguntarPlanilha] = useState(false);
   const base = useMemo(
