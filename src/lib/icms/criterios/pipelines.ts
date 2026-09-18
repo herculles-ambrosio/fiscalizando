@@ -31,6 +31,8 @@ export type Pipeline = {
   comoFunciona: string;
   /** alerta exibido na tela de ingestão (ex.: site que bloqueia download automático) */
   aviso?: string;
+  /** endereços oficiais onde o município baixa a tabela de pontuação */
+  fontes?: { nome: string; url: string; oQueTem?: string }[];
 };
 
 export const PIPELINES: Pipeline[] = [
@@ -48,6 +50,18 @@ export const PIPELINES: Pipeline[] = [
     colunasTotal: ["final", "pontuacao final", "total"],
     comoFunciona:
       "Lê o ranking geral e a memória de cálculo por município e atividade (eventos, participantes, modalidades e pontuação).",
+    fontes: [
+      {
+        nome: "Observatório do Esporte — ICMS Esportivo",
+        url: "https://observatoriodoesporte.mg.gov.br/icms-esportivo/",
+        oQueTem: "Ranking geral e memória de cálculo por município (PDF), preliminar e definitiva.",
+      },
+      {
+        nome: "SEDESE — Esportes",
+        url: "https://www.mg.gov.br/sedese/pagina/esportes",
+        oQueTem: "Resoluções, prazos e comunicados do critério.",
+      },
+    ],
   },
   {
     slug: "turismo",
@@ -67,6 +81,18 @@ export const PIPELINES: Pipeline[] = [
     colunasTotal: ["indice", "indice de participacao", "iit", "pontuacao", "total"],
     comoFunciona:
       "Lê a publicação oficial dos índices do ICMS Turismo (Secult-MG): uma linha por município habilitado com circuito turístico, nota da habilitação, RLPC, IRC, IIT e o índice de participação no critério.",
+    fontes: [
+      {
+        nome: "Secult-MG — ICMS Turismo",
+        url: "https://www.secult.mg.gov.br/turismo/icms-turismo",
+        oQueTem: "Listas de habilitados, índices por município e resoluções do critério.",
+      },
+      {
+        nome: "Sistema ICMS Turismo",
+        url: "http://www.icmsturismo.mg.gov.br",
+        oQueTem: "Onde o município se habilita, responde notificações e acompanha a pontuação.",
+      },
+    ],
   },
 
   {
@@ -104,6 +130,24 @@ export const PIPELINES: Pipeline[] = [
     colunasTotal: ["pontuacao", "indice", "total", "iqr"],
     comoFunciona:
       "Varre a página oficial de publicações do ICMS Ecológico do ano (SEMAD) e traz as tabelas trimestrais das resoluções (saneamento, unidades de conservação e mata seca) e as tabelas de Fator de Qualidade (preliminar e final).",
+    fontes: [
+      {
+        nome: "SEMAD — ICMS Ecológico, publicações do ano",
+        url: "https://semad.mg.gov.br/icms-ecologico-publicacoes-2025",
+        oQueTem:
+          "Tabelas trimestrais (saneamento, unidades de conservação, mata seca) e Fator de Qualidade. Troque o ano no fim do endereço para outros exercícios.",
+      },
+      {
+        nome: "SEMAD — critérios e cadastro do ICMS Ecológico",
+        url: "https://semad.mg.gov.br/w/criterios-para-icms-ecologico",
+        oQueTem: "Regras de cadastro de aterro, ETE e unidades de conservação.",
+      },
+      {
+        nome: "SEMAD — consulta de valores de repasse",
+        url: "https://semad.mg.gov.br/icms-ecologico-consulta-de-valores-de-repasse",
+        oQueTem: "Extrato do repasse por município.",
+      },
+    ],
   },
   {
     slug: "educacao",
@@ -124,7 +168,20 @@ export const PIPELINES: Pipeline[] = [
     formato: "planilha",
     colunasTotal: ["iqe", "indice de participacao", "indice"],
     comoFunciona:
-      "Lê a planilha publicada pela FJP com os índices do critério Educação: os quatro componentes (Desempenho, Rendimento, Atendimento e Gestão Escolar), o Índice de Qualidade e o índice de participação, além dos dados constitutivos, dos recursos administrativos e da nota técnica do ano.",
+      "Lê a planilha publicada pela FJP com os índices do critério Educação: os quatro componentes (Desempenho, Rendimento, Atendimento e Gestão Escolar), o Índice de Qualidade e o índice de participação, além dos dados constitutivos, dos recursos administrativos e da nota técnica do ano. Também aceita o PDF da publicação.",
+    fontes: [
+      {
+        nome: "FJP — Portal Robin Hood",
+        url: "https://robin-hood.fjp.mg.gov.br/",
+        oQueTem: "Índices de todos os critérios e extrato por município.",
+      },
+      {
+        nome: "FJP — notícias e publicações do critério Educação",
+        url: "https://robin-hood.fjp.mg.gov.br/noticias",
+        oQueTem:
+          "Planilha dos índices provisórios e definitivos, dados constitutivos, recursos e nota técnica.",
+      },
+    ],
   },
   {
     slug: "patrimonio_cultural",
@@ -142,6 +199,18 @@ export const PIPELINES: Pipeline[] = [
       "Lê a tabela de pontuação do ICMS Patrimônio Cultural publicada pelo IEPHA-MG (preliminar e definitiva): uma linha por município com a nota de cada quadro da DN CONEP 01/2021 — política municipal, fundo, inventário, educação patrimonial, bens tombados (NH, CP, BI, BM) e registro de bens imateriais — e a pontuação total.",
     aviso:
       "O portal do Governo de Minas bloqueia o download automático da tabela do IEPHA. Baixe a tabela de pontuação no site do IEPHA e envie o arquivo aqui (PDF ou planilha), ou cole o conteúdo — a leitura e a gravação do ranking funcionam igual.",
+    fontes: [
+      {
+        nome: "IEPHA-MG — Programa ICMS Patrimônio Cultural",
+        url: "https://www.mg.gov.br/iepha/pagina/programa-icms-patrimonio-cultural",
+        oQueTem: "Tabelas de pontuação provisória e definitiva, portarias e orientações técnicas.",
+      },
+      {
+        nome: "IEPHA-MG — site institucional",
+        url: "https://www.iepha.mg.gov.br/index.php/programas-e-acoes/icms-patrimonio-cultural",
+        oQueTem: "Espelho das mesmas publicações, com o histórico de exercícios.",
+      },
+    ],
   },
 ];
 
