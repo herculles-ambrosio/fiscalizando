@@ -180,7 +180,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       data: {
         criterio: pipeline.slug,
         anoBase: ano,
-        fonte,
+        fonte: fonteUso,
         origem,
         url: origem === "url" || origem === "site" ? identificacao : null,
         arquivoNome: origem === "url" || origem === "site" ? null : identificacao,
