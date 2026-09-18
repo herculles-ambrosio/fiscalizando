@@ -33,3 +33,4 @@ O PDF enviado ("Pontuação Definitiva – Exercício 2027", 33 páginas) é exa
 - Mapeamento coluna → `criterio_itens_referencia` (códigos `pc_*` já cadastrados); faixas de tombamento gravadas como item com a quantidade e a pontuação correspondente.
 - Gravação nas tabelas existentes `criterio_ranking_municipio` e `criterio_item_municipio` (ano-base 2027, fonte definitivo) — nada de esquema novo.
 - Testes do leitor com algumas linhas reais do PDF (Abre Campo, Buenópolis, Braúnas, Brumadinho) cobrindo linha cheia, linha zerada e faixas múltiplas.
+- `src/lib/icms/criterios/cadastro.ts`: ficha de `patrimonio_cultural` ampliada com um `LocalCadastro` por item (`pc_*`), contendo órgão, onde cadastrar, URL, o que enviar e prazo; o painel `OndeInscrever` passa a exibir o link ao lado de cada item pendente no detalhamento.
