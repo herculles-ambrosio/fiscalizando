@@ -176,7 +176,6 @@ export default function EditarPrefeitura({
         toast.success("Prefeitura atualizada.");
       }
       if (!falhaVinculo) onOpenChange(false);
-      onOpenChange(false);
     } catch (erro) {
       toast.error("Não foi possível salvar.", {
         description: erro instanceof Error ? erro.message : undefined,
