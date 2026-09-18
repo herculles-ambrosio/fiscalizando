@@ -31,6 +31,8 @@ export type Pipeline = {
   comoFunciona: string;
   /** alerta exibido na tela de ingestão (ex.: site que bloqueia download automático) */
   aviso?: string;
+  /** endereços oficiais onde o município baixa a tabela de pontuação */
+  fontes?: { nome: string; url: string; oQueTem?: string }[];
 };
 
 export const PIPELINES: Pipeline[] = [
