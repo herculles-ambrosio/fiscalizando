@@ -549,6 +549,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
               )}
             </CardContent>
           </Card>
+          <OndeInscrever slug={criterio.slug} />
         </TabsContent>
 
         <TabsContent value="ranking" className="pt-4">
