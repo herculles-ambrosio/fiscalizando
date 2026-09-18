@@ -146,6 +146,11 @@ export function useOficiosMunicipio(municipioId: string | null, exercicio: numbe
   });
 }
 
+/** Erro de permissão no banco (tabela sem GRANT para o papel atual). */
+function ehErroPermissao(error: { code?: string; message?: string }): boolean {
+  return error.code === "42501" || (error.message ?? "").includes("permission denied");
+}
+
 /** Índices publicados nas resoluções da SEF-MG (usados por prefeituras não clientes). */
 export function useIndicesResolucao() {
   return useQuery({
@@ -157,7 +162,11 @@ export function useIndicesResolucao() {
         .select(
           "municipio_id, resolucao, ano_a, vaf_a, indice_a, ano_b, vaf_b, indice_b, media_indices",
         );
-      if (error) throw error;
+      if (error) {
+        // sem permissão na tabela, o panorama segue só com as apurações do sistema
+        if (ehErroPermissao(error)) return [];
+        throw error;
+      }
       return (data ?? []) as unknown as ResolucaoPanorama[];
     },
   });
