@@ -1810,6 +1810,7 @@ export type Database = {
           municipio_id: string | null
           municipio_nome: string
           resolucao: string
+          resolucao_id: string | null
           vaf_a: number | null
           vaf_b: number | null
         }
@@ -1829,6 +1830,7 @@ export type Database = {
           municipio_id?: string | null
           municipio_nome: string
           resolucao: string
+          resolucao_id?: string | null
           vaf_a?: number | null
           vaf_b?: number | null
         }
@@ -1848,6 +1850,7 @@ export type Database = {
           municipio_id?: string | null
           municipio_nome?: string
           resolucao?: string
+          resolucao_id?: string | null
           vaf_a?: number | null
           vaf_b?: number | null
         }
@@ -1857,6 +1860,13 @@ export type Database = {
             columns: ["municipio_id"]
             isOneToOne: false
             referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "indices_resolucao_resolucao_id_fkey"
+            columns: ["resolucao_id"]
+            isOneToOne: false
+            referencedRelation: "resolucoes_sef"
             referencedColumns: ["id"]
           },
         ]
@@ -2178,6 +2188,54 @@ export type Database = {
           status?: string
           tentativas?: number
           ultimo_erro?: string | null
+        }
+        Relationships: []
+      }
+      resolucoes_sef: {
+        Row: {
+          ano_a: number | null
+          ano_aplicacao: number
+          ano_apuracao: number
+          ano_b: number | null
+          atualizado_em: string
+          criado_em: string
+          criado_por: string | null
+          data_publicacao: string | null
+          id: string
+          municipios: number
+          numero: string
+          observacao: string | null
+          url: string | null
+        }
+        Insert: {
+          ano_a?: number | null
+          ano_aplicacao: number
+          ano_apuracao: number
+          ano_b?: number | null
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          data_publicacao?: string | null
+          id?: string
+          municipios?: number
+          numero: string
+          observacao?: string | null
+          url?: string | null
+        }
+        Update: {
+          ano_a?: number | null
+          ano_aplicacao?: number
+          ano_apuracao?: number
+          ano_b?: number | null
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          data_publicacao?: string | null
+          id?: string
+          municipios?: number
+          numero?: string
+          observacao?: string | null
+          url?: string | null
         }
         Relationships: []
       }
