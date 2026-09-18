@@ -12,10 +12,25 @@
  * em Aimorés) jamais abrem um bloco novo.
  */
 
+export type CelulaPos = {
+  /** coordenada horizontal do início do texto */
+  x: number;
+  /** largura do texto na página */
+  largura: number;
+  texto: string;
+};
+
 export type LinhaPos = {
   texto: string;
   /** coordenada vertical na página (maior = mais alto) */
   y: number;
+  /**
+   * Células da linha com a posição horizontal. Só é preenchido pelo leitor de
+   * PDF; relatórios colados não têm coordenadas. Necessário para tabelas com
+   * muitas colunas vazias (ex.: pontuação do IEPHA), em que a posição é a
+   * única forma de saber a qual coluna o número pertence.
+   */
+  celulas?: CelulaPos[];
 };
 
 export type PaginaTexto = {
