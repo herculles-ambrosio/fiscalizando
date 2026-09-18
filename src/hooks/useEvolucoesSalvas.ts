@@ -23,7 +23,7 @@ export function useEvolucoesSalvas(municipioId: string | null) {
       const { data, error } = await supabase
         .from("evolucoes_salvas")
         .select("*")
-        .eq("municipio_id", municipioId!)
+        .eq("municipio_id", municipioId)
         .order("criado_em", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as EvolucaoSalva[];

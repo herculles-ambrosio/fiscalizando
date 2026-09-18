@@ -73,11 +73,17 @@ import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
 import OutrasReceitas from "@/components/analises/OutrasReceitas";
 import ImpactoContribuintes from "@/components/analises/ImpactoContribuintes";
 
-function rotuloArquivo(a: ArquivoEvolucao): string {
+function rotuloArquivo(a: ArquivoEvolucao, anoAplicacao?: number | null): string {
   const remessa = remessaDoArquivo(a.nome);
   const ano = anoDoArquivo(a.nome);
   const rotulo = remessa ? `${rotuloRemessa(remessa)}${ano ? ` · entrega ${ano}` : ""}` : (ano ?? "");
-  return rotulo ? String(rotulo) : a.nome;
+  const arquivo = rotulo ? String(rotulo) : a.nome;
+  return anoAplicacao ? `${arquivo} · aplicação ${anoAplicacao}` : arquivo;
+}
+
+function sugerirAnoAplicacao(a: ArquivoEvolucao | null): number | null {
+  if (!a) return null;
+  return a.anoAplicacao ?? ((anoDoArquivo(a.nome) ?? a.apuracao.anoBase) || null)?.valueOf() + 1;
 }
 
 function formatarValor(valor: number, formato: LinhaEvolucao["formato"]): string {
@@ -125,12 +131,18 @@ function CaixaArquivo({
   arquivo,
   carregando,
   onSelecionar,
+  anoAplicacao,
+  anosDisponiveis,
+  onAnoAplicacao,
 }: {
   titulo: string;
   descricao: string;
   arquivo: ArquivoEvolucao | null;
   carregando: boolean;
   onSelecionar: (f: File) => void;
+  anoAplicacao: number | null;
+  anosDisponiveis: number[];
+  onAnoAplicacao: (ano: number) => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
@@ -169,6 +181,25 @@ function CaixaArquivo({
                   : "Projeção (mensal)"}
               </Badge>
               <Badge variant="outline">{arquivo.declarantes.length} declarantes</Badge>
+            </div>
+            <div className="space-y-1.5 pt-2">
+              <Label className="text-xs">Ano de aplicação</Label>
+              <Select
+                value={anoAplicacao ? String(anoAplicacao) : undefined}
+                onValueChange={(valor) => onAnoAplicacao(Number(valor))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {anosDisponiveis.map((ano) => (
+                    <SelectItem key={ano} value={String(ano)}>
+                      {ano}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Referência exibida nos cartões e relatórios.</p>
             </div>
           </div>
         )}
@@ -456,6 +487,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   const { data: municipios } = useMunicipios();
   const [baseArq, setBase] = useState<ArquivoEvolucao | null>(null);
   const [atualArq, setAtual] = useState<ArquivoEvolucao | null>(null);
+  const [anoAplicacaoBase, setAnoAplicacaoBase] = useState<number | null>(null);
+  const [anoAplicacaoAtual, setAnoAplicacaoAtual] = useState<number | null>(null);
   const [planilha, setPlanilha] = useState<ResumoCreditoPortal | null>(null);
   const [perguntarPlanilha, setPerguntarPlanilha] = useState(false);
   const base = useMemo(
@@ -535,8 +568,13 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
         texto,
         referencia > 0 ? { vafEstadualReferencia: referencia } : {},
       );
-      if (alvo === "base") setBase(analise);
-      else setAtual(analise);
+      if (alvo === "base") {
+        setBase(analise);
+        setAnoAplicacaoBase(sugerirAnoAplicacao(analise));
+      } else {
+        setAtual(analise);
+        setAnoAplicacaoAtual(sugerirAnoAplicacao(analise));
+      }
       // Índice definitivo/provisório já traz o VAF estadual: o parâmetro de
       // projeção segue sempre o ARQUIVO ATUAL (exercício em análise).
       const estadualArquivo =
@@ -566,6 +604,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     // limpa a comparação anterior: os arquivos eram de outra prefeitura
     setBase(null);
     setAtual(null);
+    setAnoAplicacaoBase(null);
+    setAnoAplicacaoAtual(null);
     await carregar(file, alvo, true);
   }
 
@@ -596,8 +636,25 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     for (let a = atualAno + 1; a >= atualAno - 6; a--) anos.add(a);
     if (baseArq?.apuracao.anoBase) anos.add(baseArq.apuracao.anoBase);
     if (atualArq?.apuracao.anoBase) anos.add(atualArq.apuracao.anoBase);
+    if (anoAplicacaoBase) anos.add(anoAplicacaoBase);
+    if (anoAplicacaoAtual) anos.add(anoAplicacaoAtual);
     return [...anos].sort((a, b) => b - a);
-  }, [baseArq, atualArq]);
+  }, [baseArq, atualArq, anoAplicacaoBase, anoAplicacaoAtual]);
+
+  const rotuloBase = base
+    ? rotuloArquivo(base, anoAplicacaoBase)
+    : anoAplicacaoBase
+      ? `Base ${anoAplicacaoBase}`
+      : "Base";
+  const rotuloAtual = atual
+    ? rotuloArquivo(atual, anoAplicacaoAtual)
+    : anoAplicacaoAtual
+      ? `Comparado ${anoAplicacaoAtual}`
+      : "Comparado";
+  const referenciaBase = anoAplicacaoBase ? `Base ${anoAplicacaoBase}` : "Base";
+  const referenciaAtual = anoAplicacaoAtual
+    ? `Comparado/estimado ${anoAplicacaoAtual}`
+    : "Comparado/estimado";
 
   const indicadores = useMemo(
     () => (base && atual ? linhasEvolucao(base.apuracao, atual.apuracao) : []),
@@ -652,14 +709,17 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
   function baixarComparativoCsv() {
     if (!base || !atual || !declarantes) return;
     const diag = diagnosticarEvolucao(base, atual);
-    const analise = textoDiagnostico(diag, rotuloArquivo(base), rotuloArquivo(atual));
+    const analise = textoDiagnostico(diag, rotuloBase, rotuloAtual);
     const plano = textoPlanoRecuperacao(
       montarPlanoRecuperacao(diag, declarantes, {
         exercicio: exercicioSelecionado,
         situacoesCadastrais: situacoesCadastrais ?? null,
       }),
     );
-    const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise, plano);
+    const csv = csvEvolucao(base.nome, atual.nome, indicadores, declarantes, analise, plano, {
+      base: referenciaBase,
+      atual: referenciaAtual,
+    });
     baixarCsv(`${prefixoArquivo}-comparativo.csv`, csv);
   }
 
@@ -756,6 +816,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           arquivo={base}
           carregando={carregando === "base"}
           onSelecionar={(f) => carregar(f, "base")}
+          anoAplicacao={anoAplicacaoBase}
+          anosDisponiveis={anosDisponiveis}
+          onAnoAplicacao={setAnoAplicacaoBase}
         />
         <CaixaArquivo
           titulo="Arquivo atual (remessa a comparar)"
@@ -763,6 +826,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           arquivo={atual}
           carregando={carregando === "atual"}
           onSelecionar={(f) => carregar(f, "atual")}
+          anoAplicacao={anoAplicacaoAtual}
+          anosDisponiveis={anosDisponiveis}
+          onAnoAplicacao={setAnoAplicacaoAtual}
         />
         <Card>
           <CardHeader className="pb-3">
@@ -818,7 +884,13 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 const nome =
                   nomeGravar.trim() || `${rotuloArquivo(base)} x ${rotuloArquivo(atual)}`;
                 salvarEvolucao.mutate(
-                  { municipioId: municipio.id, nome, vafReferencia, base, atual },
+                  {
+                    municipioId: municipio.id,
+                    nome,
+                    vafReferencia,
+                    base: { ...base, ...(anoAplicacaoBase ? { anoAplicacao: anoAplicacaoBase } : {}) },
+                    atual: { ...atual, ...(anoAplicacaoAtual ? { anoAplicacao: anoAplicacaoAtual } : {}) },
+                  },
                   {
                     onSuccess: () => {
                       setNomeGravar("");
@@ -862,6 +934,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       onClick={() => {
                         setBase(s.base);
                         setAtual(s.atual);
+                        setAnoAplicacaoBase(sugerirAnoAplicacao(s.base));
+                        setAnoAplicacaoAtual(sugerirAnoAplicacao(s.atual));
                         setVafReferencia(s.vaf_referencia ?? "");
                         toast.success("Evolução carregada.");
                       }}
@@ -953,12 +1027,12 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
-                  titulo="Valor líquido - base"
+                  titulo={`Valor líquido - base${anoAplicacaoBase ? ` ${anoAplicacaoBase}` : ""}`}
                   ajuda={
                     <>
                       <p>
                         <strong>Valor líquido</strong> é o saldo apurado no arquivo base (
-                        {rotuloArquivo(base)}).
+                         {rotuloBase}).
                       </p>
                       <p>
                         Para arquivos com índice fechado (registro 16/17), o valor vem diretamente
@@ -976,19 +1050,19 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   {formatarMoeda(base.apuracao.valorLiquido)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Arquivo: {rotuloArquivo(base)}
+                   Arquivo: {rotuloBase}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
-                  titulo="Valor líquido - comparado/estimado"
+                  titulo={`Valor líquido - comparado/estimado${anoAplicacaoAtual ? ` ${anoAplicacaoAtual}` : ""}`}
                   ajuda={
                     <>
                       <p>
                         <strong>Valor líquido</strong> do arquivo comparado/estimado (
-                        {rotuloArquivo(atual)}).
+                         {rotuloAtual}).
                       </p>
                       <p>
                         Índice fechado (registro 16/17): valor da SEF-MG. Retorno mensal: projeção
@@ -1006,7 +1080,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   {formatarMoeda(atual.apuracao.valorLiquido)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Arquivo: {rotuloArquivo(atual)}
+                   Arquivo: {rotuloAtual}
                 </p>
                 <p className="text-xs">
                   <span className="mr-2">
@@ -1026,12 +1100,12 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
-                  titulo="Índice de participação - base"
+                  titulo={`Índice de participação - base${anoAplicacaoBase ? ` ${anoAplicacaoBase}` : ""}`}
                   ajuda={
                     <>
                       <p>
                         Participação do município no VAF estadual apurada no arquivo base (
-                        {rotuloArquivo(base)}).
+                         {rotuloBase}).
                       </p>
                       <p>
                         <strong>Índice</strong> = valor líquido do município ÷ VAF estadual × 100.
@@ -1044,7 +1118,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   {formatarIndice(base.apuracao.indice)}%
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Arquivo: {rotuloArquivo(base)}
+                   Arquivo: {rotuloBase}
                 </p>
               </CardContent>
             </Card>
@@ -1052,12 +1126,12 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
-                  titulo="Índice de participação - comparado/estimado"
+                  titulo={`Índice de participação - comparado/estimado${anoAplicacaoAtual ? ` ${anoAplicacaoAtual}` : ""}`}
                   ajuda={
                     <>
                       <p>
                         Participação do município no VAF estadual apurada no arquivo
-                        comparado/estimado ({rotuloArquivo(atual)}).
+                         comparado/estimado ({rotuloAtual}).
                       </p>
                       <p>
                         <strong>Índice</strong> = valor líquido do município ÷ VAF estadual × 100.
@@ -1065,7 +1139,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       </p>
                       <p>
                         <strong>Variação %</strong> comparada ao índice do arquivo base (
-                        {rotuloArquivo(base)}).
+                         {rotuloBase}).
                       </p>
                     </>
                   }
@@ -1083,15 +1157,15 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
                   titulo={`Média dos índices${
-                    anoDoArquivo(base.nome) && anoDoArquivo(atual.nome)
-                      ? ` ${anoDoArquivo(base.nome)}/${anoDoArquivo(atual.nome)}`
+                    anoAplicacaoBase && anoAplicacaoAtual
+                      ? ` ${anoAplicacaoBase}/${anoAplicacaoAtual}`
                       : ""
                   }`}
                   ajuda={
                     <>
                       <p>
-                        Média simples entre o índice do arquivo base ({rotuloArquivo(base)}) e o do
-                        arquivo comparado/estimado ({rotuloArquivo(atual)}).
+                         Média simples entre o índice do arquivo base ({rotuloBase}) e o do
+                         arquivo comparado/estimado ({rotuloAtual}).
                       </p>
                       <p>
                         É esse valor que a SEF-MG aplica no repasse do exercício seguinte ao da
@@ -1155,8 +1229,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           <DiagnosticoVariacao
             base={base}
             atual={atual}
-            rotuloBase={rotuloArquivo(base)}
-            rotuloAtual={rotuloArquivo(atual)}
+            rotuloBase={rotuloBase}
+            rotuloAtual={rotuloAtual}
             municipio={municipioRelatorio?.nome ?? null}
             municipioId={municipioRelatorio?.id ?? null}
             exercicio={exercicioSelecionado}
@@ -1191,8 +1265,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               <OutrasReceitas
                 base={base.outrasEntradas}
                 atual={atual.outrasEntradas}
-                rotuloBase="Base"
-                rotuloAtual="Atual"
+                rotuloBase={referenciaBase}
+                rotuloAtual={referenciaAtual}
                 nomeArquivoCsv={`${prefixoArquivo}-outras-receitas.csv`}
               />
             </TabsContent>
@@ -1205,8 +1279,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Indicador</TableHead>
-                        <TableHead className="text-right">{rotuloArquivo(base)}</TableHead>
-                        <TableHead className="text-right">{rotuloArquivo(atual)}</TableHead>
+                         <TableHead className="text-right">{rotuloBase}</TableHead>
+                         <TableHead className="text-right">{rotuloAtual}</TableHead>
                         <TableHead className="text-right">Diferença</TableHead>
                         <TableHead className="w-32 text-right">Variação</TableHead>
                       </TableRow>
@@ -1243,7 +1317,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   <Card key={i}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm">
-                        {i === 0 ? "Base" : "Atual"} · {rotuloArquivo(arq)}
+                         {i === 0 ? referenciaBase : referenciaAtual} · {rotuloArquivo(arq)}
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
                         {arq.temIndiceFechado
@@ -1289,8 +1363,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 <CardContent className="p-0">
                   <TabelaMovimentos
                     linhas={declarantes.sairam}
-                    colunaBase="VAF anterior"
-                    colunaAtual="VAF atual"
+                    colunaBase={`VAF base${anoAplicacaoBase ? ` ${anoAplicacaoBase}` : ""}`}
+                    colunaAtual={`VAF comparado${anoAplicacaoAtual ? ` ${anoAplicacaoAtual}` : ""}`}
                     vazio="Todos os contribuintes da remessa base declararam também na atual."
                     nomeArquivo={`${prefixoArquivo}-deixaram-de-declarar.csv`}
                   />
@@ -1303,8 +1377,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 <CardContent className="p-0">
                   <TabelaMovimentos
                     linhas={declarantes.entraram}
-                    colunaBase="VAF anterior"
-                    colunaAtual="VAF atual"
+                    colunaBase={`VAF base${anoAplicacaoBase ? ` ${anoAplicacaoBase}` : ""}`}
+                    colunaAtual={`VAF comparado${anoAplicacaoAtual ? ` ${anoAplicacaoAtual}` : ""}`}
                     vazio="Nenhum declarante novo nesta remessa."
                     nomeArquivo={`${prefixoArquivo}-novos-declarantes.csv`}
                   />
@@ -1317,8 +1391,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 <CardContent className="p-0">
                   <TabelaMovimentos
                     linhas={declarantes.todos}
-                    colunaBase="VAF anterior"
-                    colunaAtual="VAF atual"
+                    colunaBase={`VAF base${anoAplicacaoBase ? ` ${anoAplicacaoBase}` : ""}`}
+                    colunaAtual={`VAF comparado${anoAplicacaoAtual ? ` ${anoAplicacaoAtual}` : ""}`}
                     vazio="Sem contribuintes para comparar."
                     nomeArquivo={`${prefixoArquivo}-variacao-contribuintes.csv`}
                     ocultarOrigem

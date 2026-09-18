@@ -4,3 +4,6 @@
 - [x] Adicionar “Todos os meses” na Fiscalização, com visões consolidada e mês a mês.
 - [x] Adicionar ação para reabrir uma carga salva na Fiscalização.
 - [x] Validar cálculos, exportação e apresentação.
+- [ ] Adicionar anos manuais de aplicação à Evolução do VAF.
+- [ ] Persistir e restaurar os anos nas evoluções gravadas.
+- [ ] Validar cartões, tabelas e exportação com referências 2026/2027.
