@@ -67,6 +67,7 @@ import {
 } from "@/lib/icms/comparativo.functions";
 import { importarComparativoFjp } from "@/lib/icms/importar";
 import { formatarMoeda } from "@/lib/format";
+import { formatarPopulacao, usePopulacao } from "@/hooks/usePopulacao";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 
@@ -248,6 +249,7 @@ function ComparativoIcms() {
   );
 
   const meu = normalizarRotulo(municipio?.nome ?? "");
+  const populacao = usePopulacao();
 
   function exportar() {
     baixarCsv(
