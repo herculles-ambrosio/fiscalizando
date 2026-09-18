@@ -61,12 +61,10 @@ import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { CRITERIO_POR_SLUG, nomeCriterio, normalizarRotulo } from "@/lib/icms/criterios";
 import { PontuacaoCriterios } from "@/components/icms/PontuacaoCriterios";
 import { montarDiagnostico } from "@/lib/icms/diagnostico";
-import {
-  compararMunicipiosFjp,
-  listarMunicipiosFjpFn,
-} from "@/lib/icms/comparativo.functions";
+import { compararMunicipiosFjp, listarMunicipiosFjpFn } from "@/lib/icms/comparativo.functions";
 import { importarComparativoFjp } from "@/lib/icms/importar";
 import { formatarMoeda } from "@/lib/format";
+import { formatarPopulacao, usePopulacao } from "@/hooks/usePopulacao";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 
@@ -138,7 +136,6 @@ function ComparativoIcms() {
   const { data: salvos } = useComparativosSalvos();
   const salvar = useSalvarComparativo();
   const apagarSalvo = useApagarComparativoSalvo();
-
 
   useEffect(() => {
     if (exercicios?.length && (!exercicio || !exercicios.includes(exercicio))) {
@@ -221,7 +218,6 @@ function ComparativoIcms() {
     return termo ? lista.filter((x) => normalizarRotulo(x.nome).includes(termo)) : lista;
   }, [linhas, busca, criterio, salvoAberto, ocultos]);
 
-
   const dadosGrafico = useMemo(
     () =>
       MESES.map((rotulo, i) => {
@@ -248,6 +244,7 @@ function ComparativoIcms() {
   );
 
   const meu = normalizarRotulo(municipio?.nome ?? "");
+  const populacao = usePopulacao();
 
   function exportar() {
     baixarCsv(
@@ -256,8 +253,10 @@ function ComparativoIcms() {
         [
           "Posição",
           "Município",
+          "População (IBGE)",
           ...MESES,
           `Total (${nomeCriterio(criterio)})`,
+          "R$ por habitante",
           "Peso Anexo I (%)",
           "Valor de 1 ponto no critério (R$)",
           "Pontuação real (índice)",
@@ -266,11 +265,14 @@ function ComparativoIcms() {
         ],
         ranking.map((r) => {
           const proprio = normalizarRotulo(r.nome) === meu;
+          const hab = populacao.de(r.nome);
           return [
             r.posicao,
             r.nome,
+            hab != null ? String(hab) : "",
             ...r.meses.map((v) => v.toFixed(2)),
             r.total.toFixed(2),
+            hab ? (r.total / hab).toFixed(2) : "",
             pesoAnexo != null ? (pesoAnexo * 100).toFixed(2) : "",
             valorPontoCriterio != null ? valorPontoCriterio.toFixed(2) : "",
             valorPontoCriterio ? (r.total / valorPontoCriterio).toFixed(8) : "",
@@ -315,7 +317,6 @@ function ComparativoIcms() {
     );
   }
 
-
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -333,7 +334,9 @@ function ComparativoIcms() {
         <TabsList>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           <TabsTrigger value="buscar">Buscar no portal</TabsTrigger>
-          <TabsTrigger value="salvos">Salvos {salvos?.length ? `(${salvos.length})` : ""}</TabsTrigger>
+          <TabsTrigger value="salvos">
+            Salvos {salvos?.length ? `(${salvos.length})` : ""}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ranking" className="mt-4">
@@ -484,7 +487,11 @@ function ComparativoIcms() {
                         />
                         <RTooltip
                           contentStyle={{ fontSize: 12 }}
-                          formatter={(v: number, _n: string, item: { payload?: { total?: number } }) => [
+                          formatter={(
+                            v: number,
+                            _n: string,
+                            item: { payload?: { total?: number } },
+                          ) => [
                             `${v.toLocaleString("pt-BR", { maximumFractionDigits: 8 })} pontos (${formatarMoeda(
                               item?.payload?.total ?? 0,
                             )})`,
@@ -517,7 +524,10 @@ function ComparativoIcms() {
 
                 <div className="h-72 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={dadosGrafico} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
+                    <LineChart
+                      data={dadosGrafico}
+                      margin={{ top: 8, right: 16, bottom: 0, left: 8 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
                       <YAxis
@@ -550,12 +560,19 @@ function ComparativoIcms() {
                       <TableRow>
                         <TableHead className="w-12">#</TableHead>
                         <TableHead className="min-w-40">Município</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">
+                          População
+                          {populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
+                        </TableHead>
                         {MESES.map((m) => (
                           <TableHead key={m} className="text-right whitespace-nowrap">
                             {m}
                           </TableHead>
                         ))}
                         <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                        <TableHead className="text-right whitespace-nowrap">
+                          R$ / habitante
+                        </TableHead>
                         <TableHead className="text-right whitespace-nowrap">Peso Anexo I</TableHead>
                         <TableHead className="text-right whitespace-nowrap">
                           Pontuação real
@@ -585,13 +602,24 @@ function ComparativoIcms() {
                               {r.nome}
                             </span>
                           </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatarPopulacao(populacao.de(r.nome))}
+                          </TableCell>
                           {r.meses.map((v, idx) => (
                             <TableCell key={idx} className="text-right tabular-nums">
-                              {v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {v.toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
                             </TableCell>
                           ))}
                           <TableCell className="text-right font-semibold tabular-nums">
                             {formatarMoeda(r.total)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {populacao.de(r.nome)
+                              ? formatarMoeda(r.total / populacao.de(r.nome)!)
+                              : "—"}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {pesoAnexo != null
@@ -639,13 +667,11 @@ function ComparativoIcms() {
                               <X className="h-4 w-4" />
                             </Button>
                           </TableCell>
-
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
-
               </CardContent>
             </Card>
           )}
@@ -656,7 +682,6 @@ function ComparativoIcms() {
             </div>
           )}
         </TabsContent>
-
 
         <TabsContent value="buscar" className="mt-4">
           <BuscarNoPortal
@@ -903,9 +928,7 @@ function BuscarNoPortal({
           <CardTitle className="text-base">Escolha pelo mapa</CardTitle>
         </CardHeader>
         <CardContent>
-          <ClientOnly
-            fallback={<div className="h-[420px] rounded-md border bg-muted/30" />}
-          >
+          <ClientOnly fallback={<div className="h-[420px] rounded-md border bg-muted/30" />}>
             <MapaMunicipios
               disponiveis={nomes}
               selecionados={selecionados}

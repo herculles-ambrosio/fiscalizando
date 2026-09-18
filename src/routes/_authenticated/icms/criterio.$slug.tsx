@@ -33,6 +33,8 @@ import {
   type FonteRelatorio,
 } from "@/hooks/useCriterios";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { OndeInscrever } from "@/components/icms/OndeInscrever";
+import { formatarPopulacao, usePopulacao } from "@/hooks/usePopulacao";
 import { normalizarMunicipio } from "@/lib/icms/esportes/parser";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
@@ -70,12 +72,14 @@ function DetalheGenerico({ slug }: { slug: string }) {
   const { data: perfil } = usePerfil();
   const consultoria = perfil?.papel === "superadmin" || perfil?.papel === "consultor";
   const chaveMunicipio = municipio ? normalizarMunicipio(municipio.nome) : null;
+  const populacao = usePopulacao();
 
   const { data: referencia } = useItensReferenciaCompleta(slug);
   const { data: anos } = useCriterioAnos(slug);
   const [combo, setCombo] = useState<string>("");
-  const [filtroPontuacao, setFiltroPontuacao] = useState<"todos" | "pontuados" | "nao_pontuados">("todos");
-
+  const [filtroPontuacao, setFiltroPontuacao] = useState<"todos" | "pontuados" | "nao_pontuados">(
+    "todos",
+  );
 
   useEffect(() => {
     if (anos?.length && !combo) setCombo(`${anos[0]!.ano}|${anos[0]!.fonte}`);
@@ -100,7 +104,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
   );
 
   const pontuados = useMemo(() => {
-    const mapa = new Map<string, { nome: string; pontuacao: number | null; observacao: string | null }>();
+    const mapa = new Map<
+      string,
+      { nome: string; pontuacao: number | null; observacao: string | null }
+    >();
     for (const i of itens ?? []) {
       if (!i.item_codigo) continue;
       const atual = mapa.get(i.item_codigo);
@@ -133,7 +140,13 @@ function DetalheGenerico({ slug }: { slug: string }) {
   const projecaoDe = useMemo(
     () => (r: { codigo: string; peso: number | null }) => {
       const observado = potencial?.get(r.codigo);
-      if (observado) return { tipico: observado.tipico, maximo: observado.maximo, observado: true, municipios: observado.municipios };
+      if (observado)
+        return {
+          tipico: observado.tipico,
+          maximo: observado.maximo,
+          observado: true,
+          municipios: observado.municipios,
+        };
       const peso = r.peso ?? 0;
       if (peso > 0) return { tipico: peso, maximo: peso, observado: false, municipios: 0 };
       return null;
@@ -165,14 +178,13 @@ function DetalheGenerico({ slug }: { slug: string }) {
    */
   const unidade = ehMeioAmbiente ? "% do critério" : "pontos";
 
-
-
-
   if (!criterio) {
     return (
       <div className="p-6">
         <Card>
-          <CardContent className="p-6 text-sm text-muted-foreground">Critério não encontrado.</CardContent>
+          <CardContent className="p-6 text-sm text-muted-foreground">
+            Critério não encontrado.
+          </CardContent>
         </Card>
       </div>
     );
@@ -238,12 +250,18 @@ function DetalheGenerico({ slug }: { slug: string }) {
           {ehEducacao && <TabsTrigger value="prazo">Prazo de recurso</TabsTrigger>}
           {ehEducacao && <TabsTrigger value="constitutivos">Dados constitutivos</TabsTrigger>}
           {ehEducacao && <TabsTrigger value="repasse">Repasse × índice</TabsTrigger>}
-          {pipeline && consultoria && <TabsTrigger value="importar">Importar relatório</TabsTrigger>}
+          {pipeline && consultoria && (
+            <TabsTrigger value="importar">Importar relatório</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="pontuacao" className="space-y-4 pt-4">
           <Card>
-            <CardContent className="grid gap-4 p-4 sm:grid-cols-3">
+            <CardContent className="grid gap-4 p-4 sm:grid-cols-4">
+              <div className="sm:col-span-4">
+                <p className="text-xs text-muted-foreground">Prefeitura em análise</p>
+                <p className="text-lg font-semibold">{municipio?.nome ?? "—"}</p>
+              </div>
               <div>
                 <p className="text-xs text-muted-foreground">Posição</p>
                 <p className="text-xl font-semibold">
@@ -266,8 +284,16 @@ function DetalheGenerico({ slug }: { slug: string }) {
                     : "—"}
                 </p>
               </div>
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  População{populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
+                </p>
+                <p className="text-xl font-semibold">
+                  {formatarPopulacao(populacao.de(municipio?.nome))}
+                </p>
+              </div>
               {!linhaMunicipio && (
-                <p className="text-xs text-muted-foreground sm:col-span-3">
+                <p className="text-xs text-muted-foreground sm:col-span-4">
                   {municipio?.nome ?? "Este município"} não aparece no relatório importado deste
                   ano-base, ou seja, hoje não pontua neste critério. Veja em “Como melhorar” o que
                   precisa ser feito para entrar na lista.
@@ -290,15 +316,21 @@ function DetalheGenerico({ slug }: { slug: string }) {
                 <div>
                   <p className="text-xs text-muted-foreground">Projeção de pontuação</p>
                   <p className="text-xl font-semibold text-emerald-700 dark:text-emerald-400">
-                    +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}
+                    +
+                    {potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}{" "}
+                    {unidade}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     É o que {municipio?.nome ?? "o município"} pode somar cumprindo os{" "}
                     {faltantes.length} itens hoje zerados
                     {potencialFaltante.maximo > potencialFaltante.tipico && (
                       <>
-                        {" "}(teto observado no relatório:{" "}
-                        {potencialFaltante.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })})
+                        {" "}
+                        (teto observado no relatório:{" "}
+                        {potencialFaltante.maximo.toLocaleString("pt-BR", {
+                          maximumFractionDigits: 2,
+                        })}
+                        )
                       </>
                     )}
                     .
@@ -310,10 +342,6 @@ function DetalheGenerico({ slug }: { slug: string }) {
               </CardContent>
             </Card>
           )}
-
-
-
-
 
           {!!itens?.length && (
             <Card>
@@ -347,7 +375,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                 {[...(itens ?? [])]
                   .sort((a, b) => (b.pontuacao ?? 0) - (a.pontuacao ?? 0))
                   .map((i) => (
-                    <div key={i.id} className="flex items-start gap-3 rounded-md border p-3 text-sm">
+                    <div
+                      key={i.id}
+                      className="flex items-start gap-3 rounded-md border p-3 text-sm"
+                    >
                       <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium">{i.item_nome}</p>
@@ -366,12 +397,12 @@ function DetalheGenerico({ slug }: { slug: string }) {
             </Card>
           )}
 
-
           {!referencia?.length && (
             <Card>
               <CardContent className="p-6 text-sm text-muted-foreground">
                 Os itens pontuáveis deste critério ainda não estão cadastrados. O detalhamento fica
-                disponível assim que a consultoria importar o relatório oficial do órgão responsável.
+                disponível assim que a consultoria importar o relatório oficial do órgão
+                responsável.
               </CardContent>
             </Card>
           )}
@@ -383,7 +414,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                   <CardTitle className="text-base">
                     Itens do critério em {municipio?.nome ?? "—"}
                   </CardTitle>
-                  <Select value={filtroPontuacao} onValueChange={(v) => setFiltroPontuacao(v as typeof filtroPontuacao)}>
+                  <Select
+                    value={filtroPontuacao}
+                    onValueChange={(v) => setFiltroPontuacao(v as typeof filtroPontuacao)}
+                  >
                     <SelectTrigger className="h-8 w-44 text-xs">
                       <SelectValue placeholder="Mostrar" />
                     </SelectTrigger>
@@ -401,7 +435,14 @@ function DetalheGenerico({ slug }: { slug: string }) {
                     baixarCsv(
                       `${slug}-${municipio?.nome ?? "municipio"}.csv`,
                       montarCsv(
-                        ["Item", "Situação", "Pontuação", "Pode alcançar", "Teto no relatório", "Requisito"],
+                        [
+                          "Item",
+                          "Situação",
+                          "Pontuação",
+                          "Pode alcançar",
+                          "Teto no relatório",
+                          "Requisito",
+                        ],
                         referenciaFiltrada.map((r) => {
                           const p = pontuados.get(r.codigo);
                           const proj = projecaoDe(r);
@@ -429,7 +470,11 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       Cumprindo os {faltantes.length} itens que hoje estão zerados,{" "}
                       {municipio?.nome ?? "o município"} passaria a somar cerca de{" "}
                       <span className="text-emerald-700 dark:text-emerald-400">
-                        +{potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}
+                        +
+                        {potencialFaltante.tipico.toLocaleString("pt-BR", {
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        {unidade}
                       </span>{" "}
                       neste critério.
                     </p>
@@ -437,7 +482,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       Expectativa calculada pela pontuação típica de quem já cumpre cada item no
                       mesmo relatório oficial. No melhor cenário, o teto alcançado por outros
                       municípios chega a{" "}
-                      {potencialFaltante.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}.
+                      {potencialFaltante.maximo.toLocaleString("pt-BR", {
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      {unidade}.
                     </p>
                   </div>
                 )}
@@ -446,7 +494,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                   const pontua = !!p?.pontuacao;
                   const proj = projecaoDe(r);
                   return (
-                    <div key={r.codigo} className="flex items-start gap-3 rounded-md border p-3 text-sm">
+                    <div
+                      key={r.codigo}
+                      className="flex items-start gap-3 rounded-md border p-3 text-sm"
+                    >
                       {pontua ? (
                         <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                       ) : (
@@ -461,7 +512,8 @@ function DetalheGenerico({ slug }: { slug: string }) {
                         {!pontua && proj?.observado && (
                           <p className="text-xs text-muted-foreground">
                             {proj.municipios} municípios já pontuam este item; o maior alcançou{" "}
-                            {proj.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}.
+                            {proj.maximo.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}{" "}
+                            {unidade}.
                           </p>
                         )}
                       </div>
@@ -482,8 +534,6 @@ function DetalheGenerico({ slug }: { slug: string }) {
               </CardContent>
             </Card>
           )}
-
-
         </TabsContent>
 
         <TabsContent value="melhorar" className="space-y-4 pt-4">
@@ -497,8 +547,13 @@ function DetalheGenerico({ slug }: { slug: string }) {
                   <p className="font-medium">
                     Itens sem pontuação no último relatório
                     {potencialFaltante.tipico > 0 && (
-                      <> — expectativa de +
-                        {potencialFaltante.tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} {unidade}
+                      <>
+                        {" "}
+                        — expectativa de +
+                        {potencialFaltante.tipico.toLocaleString("pt-BR", {
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        {unidade}
                       </>
                     )}
                     :
@@ -511,10 +566,10 @@ function DetalheGenerico({ slug }: { slug: string }) {
                           <span className="font-medium text-emerald-700 dark:text-emerald-400">
                             {" "}
                             (projeção +
-                            {projecaoDe(f)!
-                              .tipico.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}{" "}
+                            {projecaoDe(f)!.tipico.toLocaleString("pt-BR", {
+                              maximumFractionDigits: 2,
+                            })}{" "}
                             {unidade})
-
                           </span>
                         )}
                       </li>
@@ -534,6 +589,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
               )}
             </CardContent>
           </Card>
+          <OndeInscrever slug={criterio.slug} />
         </TabsContent>
 
         <TabsContent value="ranking" className="pt-4">
@@ -546,11 +602,36 @@ function DetalheGenerico({ slug }: { slug: string }) {
               )}
               {!!ranking?.length && (
                 <div className="max-h-[28rem] overflow-auto">
+                  {linhaMunicipio && (
+                    <div className="flex items-center justify-between gap-3 border-b bg-muted/30 p-3 text-sm">
+                      <span>
+                        {municipio?.nome} está na posição{" "}
+                        <strong>
+                          {(ranking ?? []).findIndex((l) => l.municipio === chaveMunicipio) + 1}
+                        </strong>{" "}
+                        de {ranking.length} municípios.
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          document
+                            .getElementById("linha-meu-municipio")
+                            ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                        }
+                      >
+                        Ir para o meu município
+                      </Button>
+                    </div>
+                  )}
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-muted/60">
                       <tr>
                         <th className="p-2 text-left">#</th>
                         <th className="p-2 text-left">Município</th>
+                        <th className="p-2 text-right">
+                          População{populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
+                        </th>
                         <th className="p-2 text-right">Pontuação</th>
                         <th className="p-2 text-right">Índice</th>
                       </tr>
@@ -559,10 +640,18 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       {ranking.map((l, i) => (
                         <tr
                           key={l.municipio}
-                          className={l.municipio === chaveMunicipio ? "bg-emerald-50 dark:bg-emerald-950/20" : ""}
+                          id={l.municipio === chaveMunicipio ? "linha-meu-municipio" : undefined}
+                          className={
+                            l.municipio === chaveMunicipio
+                              ? "bg-emerald-50 font-medium dark:bg-emerald-950/20"
+                              : ""
+                          }
                         >
                           <td className="p-2">{i + 1}</td>
                           <td className="p-2">{l.municipio_nome}</td>
+                          <td className="p-2 text-right tabular-nums">
+                            {formatarPopulacao(populacao.de(l.municipio_nome))}
+                          </td>
                           <td className="p-2 text-right">{l.nota_final.toLocaleString("pt-BR")}</td>
                           <td className="p-2 text-right">
                             {l.indice_percentual
