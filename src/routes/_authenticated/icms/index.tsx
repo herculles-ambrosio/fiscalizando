@@ -43,7 +43,7 @@ export const Route = createFileRoute("/_authenticated/icms/")({
 });
 
 function PainelIcms() {
-  const { municipio } = useMunicipioAtivo();
+  const { municipio, municipioId } = useMunicipioAtivo();
   const { data: exercicios } = useIcmsExercicios();
   const [exercicio, setExercicio] = useState<number | null>(null);
 
