@@ -160,7 +160,7 @@ export function useIndicesResolucao() {
       const { data, error } = await supabase
         .from("indices_resolucao")
         .select(
-          "municipio_id, resolucao, ano_a, vaf_a, indice_a, ano_b, vaf_b, indice_b, media_indices",
+          "municipio_id, resolucao, exercicio_aplicacao, ano_a, vaf_a, indice_a, ano_b, vaf_b, indice_b, media_indices",
         );
       if (error) {
         // sem permissão na tabela, o panorama segue só com as apurações do sistema

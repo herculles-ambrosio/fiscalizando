@@ -90,6 +90,8 @@ export type LinhaPanorama = {
 export type ResolucaoPanorama = {
   municipio_id: string | null;
   resolucao: string;
+  /** Exercício em que a média dos índices é aplicada no repasse. */
+  exercicio_aplicacao?: number | null;
   ano_a: number;
   vaf_a?: number | null;
   indice_a: number | null;
