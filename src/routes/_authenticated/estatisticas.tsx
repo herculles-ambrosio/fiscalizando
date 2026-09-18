@@ -499,14 +499,47 @@ function PaginaEstatisticas() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <Cabecalho rotulo="Município" coluna="nome" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} />
-                  <Cabecalho rotulo={`Índice ${anoBase}`} coluna="indice_base" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
+                  <Cabecalho
+                    rotulo="Município"
+                    coluna="nome"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                  />
+                  <Cabecalho
+                    rotulo={`Índice ${anoBase}`}
+                    coluna="indice_base"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                    direita
+                  />
                   <TableHead className="text-right">Valor {anoBase}</TableHead>
-                  <Cabecalho rotulo={`Índice ${anoAlvo}`} coluna="indice_atual" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
+                  <Cabecalho
+                    rotulo={`Índice ${anoAlvo}`}
+                    coluna="indice_atual"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                    direita
+                  />
                   <TableHead className="text-right">Valor {anoAlvo}</TableHead>
                   <TableHead className="text-right">Índice médio aplicado {anoAplicacao}</TableHead>
-                  <Cabecalho rotulo="Variação" coluna="variacao" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} direita />
-                  <Cabecalho rotulo="Situação" coluna="situacao" ordem={ordem} direcao={direcao} onOrdenar={ordenarPor} />
+                  <Cabecalho
+                    rotulo="Variação"
+                    coluna="variacao"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                    direita
+                  />
+                  <Cabecalho
+                    rotulo="Situação"
+                    coluna="situacao"
+                    ordem={ordem}
+                    direcao={direcao}
+                    onOrdenar={ordenarPor}
+                  />
                   <TableHead>Providências</TableHead>
                 </TableRow>
               </TableHeader>

@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { NotaRemessa } from "@/components/NotaRemessa";
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, Download, FileUp, FolderOpen, HelpCircle, Loader2, Minus, Save, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
+  Download,
+  FileUp,
+  FolderOpen,
+  HelpCircle,
+  Loader2,
+  Minus,
+  Save,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +57,12 @@ import {
 import { formatarCnpj, formatarMoeda, formatarValorGrid } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { decodificarArquivo } from "@/lib/vaf/parser";
-import { anoDoArquivo, codigoMunicipioDoArquivo, remessaDoArquivo, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
+import {
+  anoDoArquivo,
+  codigoMunicipioDoArquivo,
+  remessaDoArquivo,
+  rotuloRemessa,
+} from "@/lib/vaf/tipoRetorno";
 import { detectarMunicipioRetorno, normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
 import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { formatarIndice } from "@/lib/vaf/indice";
@@ -139,7 +156,6 @@ function RotuloKpi({ titulo, ajuda }: { titulo: string; ajuda: React.ReactNode }
   );
 }
 
-
 function CaixaArquivo({
   titulo,
   descricao,
@@ -165,7 +181,6 @@ function CaixaArquivo({
 }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
-
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm">{titulo}</CardTitle>
@@ -183,8 +198,17 @@ function CaixaArquivo({
             e.target.value = "";
           }}
         />
-        <Button variant="outline" className="w-full" disabled={carregando} onClick={() => ref.current?.click()}>
-          {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+        <Button
+          variant="outline"
+          className="w-full"
+          disabled={carregando}
+          onClick={() => ref.current?.click()}
+        >
+          {carregando ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <FileUp className="h-4 w-4" />
+          )}
           {arquivo ? "Trocar arquivo" : "Selecionar arquivo de retorno"}
         </Button>
         {arquivo && (
@@ -213,7 +237,9 @@ function CaixaArquivo({
                   </SelectTrigger>
                   <SelectContent>
                     {anosDisponiveis.map((ano) => (
-                      <SelectItem key={ano} value={String(ano)}>{ano}</SelectItem>
+                      <SelectItem key={ano} value={String(ano)}>
+                        {ano}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -229,7 +255,9 @@ function CaixaArquivo({
                   </SelectTrigger>
                   <SelectContent>
                     {anosDisponiveis.map((ano) => (
-                      <SelectItem key={ano} value={String(ano)}>{ano}</SelectItem>
+                      <SelectItem key={ano} value={String(ano)}>
+                        {ano}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -357,7 +385,8 @@ function TabelaMovimentos({
         </Button>
         {soIncompletos && (
           <span className="w-full text-xs text-muted-foreground">
-            Exibindo apenas contribuintes cujo nome/CNPJ não foi localizado nos registros do arquivo.
+            Exibindo apenas contribuintes cujo nome/CNPJ não foi localizado nos registros do
+            arquivo.
           </span>
         )}
       </div>
@@ -376,7 +405,10 @@ function TabelaMovimentos({
         </TableHeader>
         <TableBody>
           {naTela.map((d) => (
-            <TableRow key={d.inscricao_estadual} className={d.cadastroIncompleto ? "bg-amber-500/5" : undefined}>
+            <TableRow
+              key={d.inscricao_estadual}
+              className={d.cadastroIncompleto ? "bg-amber-500/5" : undefined}
+            >
               <TableCell className="font-mono">{d.inscricao_estadual}</TableCell>
               <TableCell className="font-mono">{formatarCnpj(d.cnpj)}</TableCell>
               <TableCell className="max-w-[20rem] truncate">{d.nome ?? "—"}</TableCell>
@@ -385,14 +417,18 @@ function TabelaMovimentos({
                   {d.cadastroIncompleto ? (
                     <MarcaCadastro d={d} />
                   ) : (
-                    <span title={`Nome: ${rotuloOrigem(d.origemNome)} · CNPJ: ${rotuloOrigem(d.origemCnpj)}`}>
+                    <span
+                      title={`Nome: ${rotuloOrigem(d.origemNome)} · CNPJ: ${rotuloOrigem(d.origemCnpj)}`}
+                    >
                       {d.origemNome ?? "—"}/{d.origemCnpj ?? "—"}
                     </span>
                   )}
                 </TableCell>
               )}
               <TableCell className="text-right font-mono">{formatarValorGrid(d.vafBase)}</TableCell>
-              <TableCell className="text-right font-mono">{formatarValorGrid(d.vafAtual)}</TableCell>
+              <TableCell className="text-right font-mono">
+                {formatarValorGrid(d.vafAtual)}
+              </TableCell>
               <TableCell
                 className={`text-right font-mono ${d.diferenca < 0 ? "text-destructive" : d.diferenca > 0 ? "text-emerald-600" : ""}`}
               >
@@ -441,7 +477,9 @@ function TabelaMovimentos({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setPagina((p) => Math.min(totalPaginas, Math.min(p, totalPaginas) + 1))}
+              onClick={() =>
+                setPagina((p) => Math.min(totalPaginas, Math.min(p, totalPaginas) + 1))
+              }
               disabled={paginaAtual === totalPaginas}
             >
               Próxima
@@ -460,7 +498,6 @@ function TabelaMovimentos({
     </div>
   );
 }
-
 
 type ArquivoPendente = {
   file: File;
@@ -490,13 +527,18 @@ function BannerBloqueio({
           <AlertTitle className="text-sm">Arquivo de outra prefeitura — carga bloqueada</AlertTitle>
           <AlertDescription className="text-xs">
             O arquivo <span className="font-mono font-medium">{bloqueio.file.name}</span> pertence à
-            prefeitura <strong>{nomeDestino}</strong> (código {bloqueio.codigo}), mas a prefeitura ativa
-            é <strong>{municipioAtivo?.nome ?? "—"}</strong>. Para evitar comparar dados de municípios
-            diferentes, a carga só é liberada quando o arquivo for da prefeitura ativa.
+            prefeitura <strong>{nomeDestino}</strong> (código {bloqueio.codigo}), mas a prefeitura
+            ativa é <strong>{municipioAtivo?.nome ?? "—"}</strong>. Para evitar comparar dados de
+            municípios diferentes, a carga só é liberada quando o arquivo for da prefeitura ativa.
           </AlertDescription>
         </div>
         {podeResolver ? (
-          <Button size="sm" variant="outline" className="mt-2 shrink-0 sm:mt-0" onClick={onResolver}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-2 shrink-0 sm:mt-0"
+            onClick={onResolver}
+          >
             Trocar para {nomeDestino} e analisar
           </Button>
         ) : (
@@ -582,14 +624,16 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
       const codigoAtivo = normalizarCodigoSef(municipio?.codigo_sef);
       if (!forcar && codigoArquivo && codigoAtivo && codigoArquivo !== codigoAtivo) {
         const destino =
-          municipiosPermitidos.find(
-            (m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo,
-          ) ?? null;
+          municipiosPermitidos.find((m) => normalizarCodigoSef(m.codigo_sef) === codigoArquivo) ??
+          null;
         const estado = {
           file,
           alvo,
           codigo: codigoArquivo,
-          nome: detectarMunicipioRetorno(texto).nome ?? mapaMunicipiosPorCodigo.get(codigoArquivo) ?? null,
+          nome:
+            detectarMunicipioRetorno(texto).nome ??
+            mapaMunicipiosPorCodigo.get(codigoArquivo) ??
+            null,
           destinoId: destino?.id ?? null,
           destinoNome: destino?.nome ?? null,
         };
@@ -618,9 +662,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
       const estadualArquivo =
         analise.apuracao.origemVafEstadual === "arquivo" ? analise.apuracao.vafEstadual : 0;
       if (alvo === "atual" && estadualArquivo > 0) {
-        setVafReferencia(
-          estadualArquivo.toLocaleString("pt-BR", { maximumFractionDigits: 0 }),
-        );
+        setVafReferencia(estadualArquivo.toLocaleString("pt-BR", { maximumFractionDigits: 0 }));
       }
 
       // Limpa bloqueio quando um arquivo da prefeitura ativa é carregado com sucesso.
@@ -648,7 +690,6 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     setAnoAplicacaoAtual(null);
     await carregar(file, alvo, true);
   }
-
 
   // ---- Filtros do relatório (município e exercício usados nas exportações) ----
   const [municipioRelatorioId, setMunicipioRelatorioId] = useState<string>("");
@@ -772,12 +813,12 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Evolução do VAF</h1>
-        <p className="text-sm text-muted-foreground">
-          Compare duas remessas (mensal, índice provisório ou definitivo) e analise a evolução do
-          líquido, dos componentes VAF A/B/C, das declarações e dos contribuintes declarantes.{" "}
-          <NotaRemessa className="ml-1" />
-        </p>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Evolução do VAF</h1>
+          <p className="text-sm text-muted-foreground">
+            Compare duas remessas (mensal, índice provisório ou definitivo) e analise a evolução do
+            líquido, dos componentes VAF A/B/C, das declarações e dos contribuintes declarantes.{" "}
+            <NotaRemessa className="ml-1" />
+          </p>
         </div>
         <Button variant="outline" className="no-print" onClick={onNovaAnalise}>
           Nova análise
@@ -829,7 +870,6 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
         </CardContent>
       </Card>
 
-
       {bloqueio && (
         <BannerBloqueio
           bloqueio={bloqueio}
@@ -844,7 +884,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
           planilha={planilha}
           onPlanilha={setPlanilha}
           anoBaseArquivo={atualArq?.apuracao.anoBase ?? baseArq?.apuracao.anoBase ?? null}
-          creditoInternoArquivo={atualArq?.apuracao.creditoInterno ?? baseArq?.apuracao.creditoInterno}
+          creditoInternoArquivo={
+            atualArq?.apuracao.creditoInterno ?? baseArq?.apuracao.creditoInterno
+          }
           perguntar={perguntarPlanilha}
           onPerguntarChange={setPerguntarPlanilha}
           contexto={arquivoSemCredito ? `“${arquivoSemCredito}”` : undefined}
@@ -927,8 +969,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               disabled={!base || !atual || !municipio || salvarEvolucao.isPending}
               onClick={() => {
                 if (!base || !atual || !municipio) return;
-                const nome =
-                  nomeGravar.trim() || `${referenciaBase} x ${referenciaAtual}`;
+                const nome = nomeGravar.trim() || `${referenciaBase} x ${referenciaAtual}`;
                 salvarEvolucao.mutate(
                   {
                     municipioId: municipio.id,
@@ -1019,8 +1060,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
         <Alert>
           <AlertTitle>Selecione os dois arquivos</AlertTitle>
           <AlertDescription>
-            Carregue o arquivo da remessa anterior e o da remessa atual para ver o
-            comparativo completo.
+            Carregue o arquivo da remessa anterior e o da remessa atual para ver o comparativo
+            completo.
           </AlertDescription>
         </Alert>
       )}
@@ -1035,9 +1076,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   ajuda={
                     <>
                       <p>
-                        Contribuintes com <strong>declaração no arquivo base</strong> (
-                        {rotuloBase}) e <strong>sem declaração</strong> no arquivo
-                        comparado/estimado ({rotuloAtual}).
+                        Contribuintes com <strong>declaração no arquivo base</strong> ({rotuloBase})
+                        e <strong>sem declaração</strong> no arquivo comparado/estimado (
+                        {rotuloAtual}).
                       </p>
                       <p>
                         <strong>VAF que saiu</strong> = soma do VAF que esses contribuintes tinham
@@ -1061,9 +1102,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   ajuda={
                     <>
                       <p>
-                        Contribuintes presentes apenas no arquivo comparado/estimado (
-                        {rotuloAtual}), sem declaração no arquivo base (
-                        {rotuloBase}).
+                        Contribuintes presentes apenas no arquivo comparado/estimado ({rotuloAtual}
+                        ), sem declaração no arquivo base ({rotuloBase}).
                       </p>
                       <p>
                         <strong>VAF que entrou</strong> = soma do VAF declarado por eles no arquivo
@@ -1088,7 +1128,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     <>
                       <p>
                         <strong>Valor líquido</strong> é o saldo apurado no arquivo base (
-                         {rotuloBase}).
+                        {rotuloBase}).
                       </p>
                       <p>
                         Para arquivos com índice fechado (registro 16/17), o valor vem diretamente
@@ -1105,9 +1145,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 <p className="break-words font-display text-lg font-semibold">
                   {formatarMoeda(base.apuracao.valorLiquido)}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                   Arquivo: {rotuloBase}
-                </p>
+                <p className="text-xs text-muted-foreground">Arquivo: {rotuloBase}</p>
               </CardContent>
             </Card>
             <Card>
@@ -1117,8 +1155,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   ajuda={
                     <>
                       <p>
-                        <strong>Valor líquido</strong> do arquivo comparado/estimado (
-                         {rotuloAtual}).
+                        <strong>Valor líquido</strong> do arquivo comparado/estimado ({rotuloAtual}
+                        ).
                       </p>
                       <p>
                         Índice fechado (registro 16/17): valor da SEF-MG. Retorno mensal: projeção
@@ -1135,19 +1173,14 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 <p className="break-words font-display text-lg font-semibold">
                   {formatarMoeda(atual.apuracao.valorLiquido)}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                   Arquivo: {rotuloAtual}
-                </p>
+                <p className="text-xs text-muted-foreground">Arquivo: {rotuloAtual}</p>
                 <p className="text-xs">
                   <span className="mr-2">
-                    Diferença: {formatarMoeda(
-                      atual.apuracao.valorLiquido - base.apuracao.valorLiquido
-                    )}
+                    Diferença:{" "}
+                    {formatarMoeda(atual.apuracao.valorLiquido - base.apuracao.valorLiquido)}
                   </span>
                   <Variacao
-                    pct={
-                      indicadores.find((l) => l.chave === "valorLiquido")?.variacaoPct ?? null
-                    }
+                    pct={indicadores.find((l) => l.chave === "valorLiquido")?.variacaoPct ?? null}
                   />
                 </p>
               </CardContent>
@@ -1161,7 +1194,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     <>
                       <p>
                         Participação do município no VAF estadual apurada no arquivo base (
-                         {rotuloBase}).
+                        {rotuloBase}).
                       </p>
                       <p>
                         <strong>Índice</strong> = valor líquido do município ÷ VAF estadual × 100.
@@ -1173,9 +1206,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 <p className="break-words font-display text-lg font-semibold">
                   {formatarIndice(base.apuracao.indice)}%
                 </p>
-                <p className="text-xs text-muted-foreground">
-                   Arquivo: {rotuloBase}
-                </p>
+                <p className="text-xs text-muted-foreground">Arquivo: {rotuloBase}</p>
               </CardContent>
             </Card>
 
@@ -1187,7 +1218,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     <>
                       <p>
                         Participação do município no VAF estadual apurada no arquivo
-                         comparado/estimado ({rotuloAtual}).
+                        comparado/estimado ({rotuloAtual}).
                       </p>
                       <p>
                         <strong>Índice</strong> = valor líquido do município ÷ VAF estadual × 100.
@@ -1195,7 +1226,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       </p>
                       <p>
                         <strong>Variação %</strong> comparada ao índice do arquivo base (
-                         {rotuloBase}).
+                        {rotuloBase}).
                       </p>
                     </>
                   }
@@ -1204,7 +1235,9 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   {formatarIndice(atual.apuracao.indice)}%
                 </p>
                 <p className="text-xs">
-                  <Variacao pct={indicadores.find((l) => l.chave === "indice")?.variacaoPct ?? null} />
+                  <Variacao
+                    pct={indicadores.find((l) => l.chave === "indice")?.variacaoPct ?? null}
+                  />
                 </p>
               </CardContent>
             </Card>
@@ -1220,8 +1253,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   ajuda={
                     <>
                       <p>
-                         Média simples entre o índice do arquivo base ({rotuloBase}) e o do
-                         arquivo comparado/estimado ({rotuloAtual}).
+                        Média simples entre o índice do arquivo base ({rotuloBase}) e o do arquivo
+                        comparado/estimado ({rotuloAtual}).
                       </p>
                       <p>
                         É esse valor que a SEF-MG aplica no repasse do exercício seguinte ao da
@@ -1255,8 +1288,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                       </p>
                       <p>
                         Nos arquivos de índice (provisório ou definitivo) o valor vem do próprio
-                        arquivo da SEF-MG; em retornos mensais é usado o VAF estadual de
-                        referência informado no parâmetro de projeção.
+                        arquivo da SEF-MG; em retornos mensais é usado o VAF estadual de referência
+                        informado no parâmetro de projeção.
                       </p>
                     </>
                   }
@@ -1278,8 +1311,6 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 )}
               </CardContent>
             </Card>
-
-
           </div>
 
           {/* Índice publicado pelo Estado e aplicado no exercício (só referência) */}
@@ -1314,14 +1345,13 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
             indiceProvisorio={atual.apuracao.indice ?? null}
           />
 
-
-
-
           <Tabs defaultValue="indicadores">
             <TabsList className="flex-wrap">
               <TabsTrigger value="indicadores">Indicadores</TabsTrigger>
               <TabsTrigger value="memoria">Memória de cálculo</TabsTrigger>
-              <TabsTrigger value="sairam">Deixaram de declarar ({declarantes.sairam.length})</TabsTrigger>
+              <TabsTrigger value="sairam">
+                Deixaram de declarar ({declarantes.sairam.length})
+              </TabsTrigger>
               <TabsTrigger value="entraram">Novos ({declarantes.entraram.length})</TabsTrigger>
               <TabsTrigger value="variacao">Variação por contribuinte</TabsTrigger>
               <TabsTrigger value="impacto">Impacto por contribuinte</TabsTrigger>
@@ -1339,7 +1369,6 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               />
             </TabsContent>
 
-
             <TabsContent value="indicadores">
               <Card>
                 <CardContent className="p-0">
@@ -1347,8 +1376,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Indicador</TableHead>
-                         <TableHead className="text-right">{rotuloBase}</TableHead>
-                         <TableHead className="text-right">{rotuloAtual}</TableHead>
+                        <TableHead className="text-right">{rotuloBase}</TableHead>
+                        <TableHead className="text-right">{rotuloAtual}</TableHead>
                         <TableHead className="text-right">Diferença</TableHead>
                         <TableHead className="w-32 text-right">Variação</TableHead>
                       </TableRow>
@@ -1385,11 +1414,12 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                   <Card key={i}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm">
-                         {i === 0 ? referenciaBase : referenciaAtual} · {rotuloArquivo(
-                           arq,
-                           i === 0 ? anoApuracaoBase : anoApuracaoAtual,
-                           i === 0 ? anoAplicacaoBase : anoAplicacaoAtual,
-                         )}
+                        {i === 0 ? referenciaBase : referenciaAtual} ·{" "}
+                        {rotuloArquivo(
+                          arq,
+                          i === 0 ? anoApuracaoBase : anoApuracaoAtual,
+                          i === 0 ? anoAplicacaoBase : anoAplicacaoAtual,
+                        )}
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
                         {arq.temIndiceFechado
@@ -1561,9 +1591,8 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                 {pendente?.destinoId ? (
                   podeTrocar ? (
                     <p>
-                      Deseja trocar a prefeitura ativa para{" "}
-                      <strong>{pendente.destinoNome}</strong> e carregar este arquivo? A comparação
-                      atual será limpa.
+                      Deseja trocar a prefeitura ativa para <strong>{pendente.destinoNome}</strong>{" "}
+                      e carregar este arquivo? A comparação atual será limpa.
                     </p>
                   ) : (
                     <p>
@@ -1591,6 +1620,5 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-
   );
 }

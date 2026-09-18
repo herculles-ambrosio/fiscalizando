@@ -27,7 +27,8 @@ export function IndiceAplicadoBase({
 
   if (!municipioId || !exercicioAplicacao || isLoading) return null;
 
-  const base = "rounded-xl border border-border bg-muted/30 p-4" + (className ? ` ${className}` : "");
+  const base =
+    "rounded-xl border border-border bg-muted/30 p-4" + (className ? ` ${className}` : "");
 
   if (!data) {
     return (
@@ -134,7 +135,9 @@ function Item({
   return (
     <div>
       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{rotulo}</p>
-      <p className={destaque ? "font-mono text-base font-semibold" : "font-mono text-sm"}>{valor}</p>
+      <p className={destaque ? "font-mono text-base font-semibold" : "font-mono text-sm"}>
+        {valor}
+      </p>
       {nota && <p className="font-mono text-[11px] text-muted-foreground">{nota}</p>}
     </div>
   );

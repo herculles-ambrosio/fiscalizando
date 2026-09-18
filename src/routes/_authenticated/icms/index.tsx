@@ -35,7 +35,8 @@ export const Route = createFileRoute("/_authenticated/icms/")({
       { property: "og:title", content: "Painel do ICMS — Lei Robin Hood" },
       {
         property: "og:description",
-        content: "Acompanhe os 18 critérios de distribuição do ICMS aos municípios de Minas Gerais.",
+        content:
+          "Acompanhe os 18 critérios de distribuição do ICMS aos municípios de Minas Gerais.",
       },
     ],
   }),
@@ -79,11 +80,7 @@ function PainelIcms() {
             (Lei Robin Hood).
           </p>
         </div>
-        <SeletorExercicio
-          exercicios={exercicios ?? []}
-          valor={exercicio}
-          aoTrocar={setExercicio}
-        />
+        <SeletorExercicio exercicios={exercicios ?? []} valor={exercicio} aoTrocar={setExercicio} />
       </header>
 
       {diag && (
@@ -107,9 +104,7 @@ function PainelIcms() {
             />
             <Kpi
               titulo="Valor por ponto de índice"
-              valor={
-                diag.valorPorPontoIndice ? formatarMoeda(diag.valorPorPontoIndice) : "—"
-              }
+              valor={diag.valorPorPontoIndice ? formatarMoeda(diag.valorPorPontoIndice) : "—"}
               nota="Quanto o município recebe no ano por 1% de índice"
             />
             <Kpi
@@ -138,8 +133,8 @@ function PainelIcms() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Estes critérios estão zerados e dependem de cadastro, inscrição ou prazo — ou seja,
-                  são recuperáveis:
+                  Estes critérios estão zerados e dependem de cadastro, inscrição ou prazo — ou
+                  seja, são recuperáveis:
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {diag.oportunidades.map((o) => (
@@ -239,7 +234,6 @@ function Kpi({
 function SituacaoIcone({ situacao }: { situacao: string }) {
   if (situacao === "queda") return <ArrowDownRight className="h-4 w-4 text-destructive" />;
   if (situacao === "alta") return <ArrowUpRight className="h-4 w-4 text-emerald-600" />;
-  if (situacao === "zerado_oportunidade")
-    return <AlertTriangle className="h-4 w-4 text-gold" />;
+  if (situacao === "zerado_oportunidade") return <AlertTriangle className="h-4 w-4 text-gold" />;
   return <Minus className="h-4 w-4 text-muted-foreground" />;
 }

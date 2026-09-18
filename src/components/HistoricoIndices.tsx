@@ -40,7 +40,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatarData, formatarMoeda } from "@/lib/format";
 import { formatarIndice } from "@/lib/vaf/indice";
-import { ordemExercicioRemessa, rotuloExercicioRemessa, rotuloRemessa } from "@/lib/vaf/tipoRetorno";
+import {
+  ordemExercicioRemessa,
+  rotuloExercicioRemessa,
+  rotuloRemessa,
+} from "@/lib/vaf/tipoRetorno";
 import {
   statusDetalhamento,
   useCargasComRetorno,
@@ -134,10 +138,7 @@ function DetalheIndice({
                     : "—"
                 }
               />
-              <Linha
-                rotulo="Origem do VAF estadual"
-                valor={registro.origem_vaf_estadual ?? "—"}
-              />
+              <Linha rotulo="Origem do VAF estadual" valor={registro.origem_vaf_estadual ?? "—"} />
               <Linha
                 rotulo="Fator de calibragem"
                 valor={Number(registro.fator_calibragem).toLocaleString("pt-BR", {
@@ -152,10 +153,7 @@ function DetalheIndice({
                     : "Arquivo de retorno"
                 }
               />
-              <Linha
-                rotulo="Apuração vinculada"
-                valor={registro.carga_id ? "Sim" : "—"}
-              />
+              <Linha rotulo="Apuração vinculada" valor={registro.carga_id ? "Sim" : "—"} />
             </div>
           </>
         )}
@@ -347,7 +345,9 @@ export function HistoricoIndices({
                     <TableRow
                       key={c.exercicio}
                       className="cursor-pointer"
-                      title={onCarregar ? "Carregar este índice na tela" : "Abrir detalhes do índice"}
+                      title={
+                        onCarregar ? "Carregar este índice na tela" : "Abrir detalhes do índice"
+                      }
                       onClick={() => abrir(c.definitivo ?? c.provisorio)}
                     >
                       <TableCell className="font-medium">{c.exercicio}</TableCell>
@@ -360,7 +360,9 @@ export function HistoricoIndices({
                       >
                         {c.provisorio ? (
                           <div className="flex items-center gap-2">
-                            <span className="font-mono">{formatarIndice(Number(c.provisorio.indice))}</span>
+                            <span className="font-mono">
+                              {formatarIndice(Number(c.provisorio.indice))}
+                            </span>
                             <Badge variant="secondary" className="text-[10px]">
                               {rotuloRemessa(c.provisorio.competencia_mes)}
 
@@ -460,13 +462,13 @@ export function HistoricoIndices({
                     <TableRow
                       key={r.id}
                       className="cursor-pointer"
-                      title={onCarregar ? "Carregar este índice na tela" : "Abrir detalhes do índice"}
+                      title={
+                        onCarregar ? "Carregar este índice na tela" : "Abrir detalhes do índice"
+                      }
                       onClick={() => abrir(r)}
                     >
                       <TableCell>{r.exercicio}</TableCell>
-                      <TableCell>
-                        {rotuloRemessa(r.competencia_mes)}
-                      </TableCell>
+                      <TableCell>{rotuloRemessa(r.competencia_mes)}</TableCell>
                       <TableCell>
                         <Badge variant={r.tipo_indice === "definitivo" ? "default" : "secondary"}>
                           {r.tipo_indice === "definitivo"
@@ -566,7 +568,6 @@ export function HistoricoIndices({
 
       <DetalheIndice registro={detalhe} onOpenChange={(o) => !o && setDetalhe(null)} />
 
-
       <AlertDialog open={!!aExcluir} onOpenChange={(o) => !o && setAExcluir(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -597,7 +598,6 @@ export function HistoricoIndices({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </Card>
   );
 }
