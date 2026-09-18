@@ -283,7 +283,8 @@ export function SincronizacaoOficial() {
     mudar("esportes", { situacao: "gravando", mensagem: "Atualizando o ranking", progresso: 70 });
     const { data: ref } = await supabase
       .from("esportes_atividades_referencia")
-      .select("codigo, nome, sinonimos, peso");
+      .select("codigo, nome_oficial, sinonimos, peso, requisito, ordem")
+      .order("ordem");
     const ranking = extrairRanking(paginas);
     const blocos = extrairBlocos(paginas.flatMap((p) => p.linhas.map((l) => l.texto)));
     const naoMapeadas = new Set<string>();
