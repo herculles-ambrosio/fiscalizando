@@ -175,6 +175,36 @@ export function useCriterioItens(
   });
 }
 
+/**
+ * Itens pontuados por um conjunto de municípios (o município em análise e os
+ * seus vizinhos), usado no painel de comparação regional.
+ */
+export function useItensCriterioMunicipios(
+  criterio: string | null,
+  ano: number | null,
+  fonte: FonteRelatorio | null,
+  municipios: string[],
+) {
+  const chaves = [...new Set(municipios)].sort();
+  return useQuery({
+    queryKey: ["criterio-itens-varios", criterio, ano, fonte, chaves],
+    enabled: !!criterio && !!ano && !!fonte && chaves.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<ItemCriterioRow[]> => {
+      const { data, error } = await supabase
+        .from("criterio_item_municipio")
+        .select("*")
+        .eq("criterio", criterio!)
+        .eq("ano_base", ano!)
+        .eq("fonte_relatorio", fonte!)
+        .in("municipio", chaves)
+        .limit(20000);
+      if (error) throw error;
+      return (data ?? []) as unknown as ItemCriterioRow[];
+    },
+  });
+}
+
 export function useImportacoes(criterio?: string | null) {
   return useQuery({
     queryKey: ["criterio-importacoes", criterio ?? "todas"],
