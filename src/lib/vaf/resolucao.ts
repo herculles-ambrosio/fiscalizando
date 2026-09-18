@@ -10,6 +10,9 @@
  * pelo usuário (tabela copiada do navegador).
  */
 
+import { normalizarCodigoSef } from "./municipioArquivo";
+import { nomeMunicipioSef } from "./municipiosSef";
+
 export type LinhaResolucao = {
   codigoMun: string;
   municipioNome: string;
@@ -114,14 +117,46 @@ export function parseAnexoResolucao(conteudo: string): AnexoResolucao {
   };
 }
 
-/** Casa as linhas do anexo com os municípios cadastrados, pelo nome. */
+/** Ignora as preposições ("Amparo da Serra" x "Amparo do Serra"). */
+function chaveSemConectivos(valor: string): string {
+  return chaveNome(valor.replace(/\b(de|do|da|dos|das|d)\b/gi, " "));
+}
+
+/**
+ * Casa as linhas do anexo com os municípios cadastrados. O código SEF publicado
+ * na resolução vale mais que o nome, porque o anexo traz grafias divergentes
+ * ("Amparo da Serra", "Barão de Monte Alto"). O nome oficial da tabela da SEF
+ * substitui o nome lido, para que a gravação fique padronizada.
+ */
 export function casarMunicipios(
   linhas: LinhaResolucao[],
-  municipios: { id: string; nome: string }[],
+  municipios: { id: string; nome: string; codigo_sef?: string | null }[],
 ): { linha: LinhaResolucao; municipioId: string | null }[] {
-  const porNome = new Map(municipios.map((m) => [chaveNome(m.nome), m.id]));
-  return linhas.map((linha) => ({
-    linha,
-    municipioId: porNome.get(chaveNome(linha.municipioNome)) ?? null,
-  }));
+  const porCodigo = new Map<string, string>();
+  const porNome = new Map<string, string>();
+  const semConectivos = new Map<string, string>();
+  for (const m of municipios) {
+    const codigo = normalizarCodigoSef(m.codigo_sef ?? null);
+    if (codigo) porCodigo.set(codigo, m.id);
+    porNome.set(chaveNome(m.nome), m.id);
+    const chave = chaveSemConectivos(m.nome);
+    if (semConectivos.has(chave)) semConectivos.set(chave, "");
+    else semConectivos.set(chave, m.id);
+  }
+
+  return linhas.map((bruta) => {
+    const codigo = normalizarCodigoSef(bruta.codigoMun);
+    const nomeOficial = nomeMunicipioSef(bruta.codigoMun);
+    const linha: LinhaResolucao = nomeOficial
+      ? { ...bruta, municipioNome: nomeOficial }
+      : { ...bruta };
+    const porNomeOficial = nomeOficial ? porNome.get(chaveNome(nomeOficial)) : undefined;
+    const municipioId =
+      (codigo ? porCodigo.get(codigo) : undefined) ??
+      porNomeOficial ??
+      porNome.get(chaveNome(bruta.municipioNome)) ??
+      semConectivos.get(chaveSemConectivos(bruta.municipioNome)) ??
+      null;
+    return { linha, municipioId: municipioId || null };
+  });
 }
