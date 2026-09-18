@@ -128,7 +128,7 @@ function Item({
 }: {
   rotulo: string;
   valor: string;
-  nota?: string;
+  nota?: string | undefined;
   destaque?: boolean;
 }) {
   return (
