@@ -18,6 +18,8 @@ import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
 import { useCriteriosComDados } from "@/hooks/useCriterios";
 import { montarDiagnostico, ROTULO_SITUACAO } from "@/lib/icms/diagnostico";
 import { CRITERIOS, MESES } from "@/lib/icms/criterios";
+import { PIPELINES } from "@/lib/icms/criterios/pipelines";
+
 import { formatarCompacto, formatarMoeda } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -62,10 +64,14 @@ function CriteriosIcms() {
     [dados, exercicio],
   );
 
-  // Esportes já vem dos relatórios da SEDESE; os demais aparecem em verde
-  // assim que o primeiro relatório oficial é importado.
+  // Critérios com fonte oficial própria (Esportes, Turismo, Meio Ambiente,
+  // Educação e Patrimônio Cultural) aparecem em destaque mesmo antes da
+  // primeira importação; os demais entram assim que um relatório é importado.
   const criteriosProntos = useMemo(() => {
-    const slugs = new Set<string>(["esportes", ...Object.keys(comDados ?? {})]);
+    const slugs = new Set<string>([
+      ...PIPELINES.map((p) => p.slug),
+      ...Object.keys(comDados ?? {}),
+    ]);
     return CRITERIOS.filter((c) => slugs.has(c.slug)).map((c) => {
       const info = comDados?.[c.slug];
       const anos = info?.anos.slice(0, 3).join(", ");
@@ -78,6 +84,7 @@ function CriteriosIcms() {
       };
     });
   }, [comDados]);
+
 
 
   const linha = useMemo(() => {
@@ -112,8 +119,9 @@ function CriteriosIcms() {
       {criteriosProntos.length > 0 && (
         <section className="space-y-2">
           <h2 className="text-sm font-medium text-muted-foreground">
-            Critérios com relatórios já importados — abra para analisar
+            Critérios com fonte oficial própria — abra para analisar item a item
           </h2>
+
           {criteriosProntos.map((c) => (
             <Card key={`pronto-${c.slug}`} className="border-emerald-500/40 bg-emerald-500/5">
               <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">

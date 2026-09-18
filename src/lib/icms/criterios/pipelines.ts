@@ -117,7 +117,28 @@ export const PIPELINES: Pipeline[] = [
     comoFunciona:
       "Lê a planilha publicada pela FJP com os índices do critério Educação: os quatro componentes (Desempenho, Rendimento, Atendimento e Gestão Escolar), o Índice de Qualidade e o índice de participação, além dos dados constitutivos, dos recursos administrativos e da nota técnica do ano.",
   },
+  {
+    slug: "patrimonio_cultural",
+    nome: "Patrimônio Cultural",
+    orgao: "IEPHA-MG (Programa ICMS Patrimônio Cultural)",
+    hosts: [
+      "www.mg.gov.br",
+      "mg.gov.br",
+      "www.iepha.mg.gov.br",
+      "iepha.mg.gov.br",
+    ],
+    paginasBusca: [
+      "https://www.mg.gov.br/iepha/pagina/programa-icms-patrimonio-cultural",
+      "https://www.iepha.mg.gov.br/index.php/programas-e-acoes/icms-patrimonio-cultural",
+    ],
+    palavrasChave: ["pontuacao", "pontuação", "icms", "patrimonio", "patrimônio"],
+    formato: "tabela_itens",
+    colunasTotal: ["pontuacao total", "total", "pontuacao", "ppc"],
+    comoFunciona:
+      "Lê a tabela de pontuação do ICMS Patrimônio Cultural publicada pelo IEPHA-MG (preliminar e definitiva): uma linha por município com a nota de cada quadro da DN CONEP 01/2021 — política municipal, fundo, inventário, educação patrimonial, bens tombados (NH, CP, BI, BM) e registro de bens imateriais — e a pontuação total.",
+  },
 ];
+
 
 
 export const PIPELINE_POR_SLUG = new Map(PIPELINES.map((p) => [p.slug, p]));
