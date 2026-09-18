@@ -12,7 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { IngestaoEsportes } from "@/components/icms/IngestaoEsportes";
@@ -125,7 +132,8 @@ export function CriterioEsportesDetalhe() {
             <Card>
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
                 Nenhum relatório do critério Esportes importado ainda.
-                {perfil?.ehConsultoria && " Use a aba “Ingestão de dados” para importar o PDF oficial."}
+                {perfil?.ehConsultoria &&
+                  " Use a aba “Ingestão de dados” para importar o PDF oficial."}
               </CardContent>
             </Card>
           ) : !linhaMunicipio ? (
@@ -168,9 +176,9 @@ export function CriterioEsportesDetalhe() {
 
               {divergencia && (
                 <p className="flex items-center gap-2 text-sm text-amber-600">
-                  <AlertTriangle className="h-4 w-4" />
-                  A soma das atividades ({numero(somaAtividades)}) difere da coluna de atividades do
-                  ranking ({numero(linhaMunicipio.nota_atividades)}). Confira o relatório.
+                  <AlertTriangle className="h-4 w-4" />A soma das atividades (
+                  {numero(somaAtividades)}) difere da coluna de atividades do ranking (
+                  {numero(linhaMunicipio.nota_atividades)}). Confira o relatório.
                 </p>
               )}
 
@@ -186,16 +194,24 @@ export function CriterioEsportesDetalhe() {
                       baixarCsv(
                         `esportes-${municipio?.nome ?? ""}-${ano}.csv`,
                         montarCsv(
-                        ["Atividade", "Peso", "Atletas", "Modalidades", "Pontuação", "Eventos", "Participantes"],
-                        (atividades ?? []).map((a) => [
-                          a.atividade_nome,
-                          a.peso_atividade ?? "",
-                          a.pontuacao_atletas ?? "",
-                          a.pontuacao_modalidades ?? "",
-                          a.pontuacao ?? "",
-                          a.qtd_eventos,
-                          a.total_participantes,
-                        ]),
+                          [
+                            "Atividade",
+                            "Peso",
+                            "Atletas",
+                            "Modalidades",
+                            "Pontuação",
+                            "Eventos",
+                            "Participantes",
+                          ],
+                          (atividades ?? []).map((a) => [
+                            a.atividade_nome,
+                            a.peso_atividade ?? "",
+                            a.pontuacao_atletas ?? "",
+                            a.pontuacao_modalidades ?? "",
+                            a.pontuacao ?? "",
+                            a.qtd_eventos,
+                            a.total_participantes,
+                          ]),
                         ),
                       )
                     }
@@ -222,26 +238,34 @@ export function CriterioEsportesDetalhe() {
                         <TableRow key={a.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Badge className="bg-emerald-600 hover:bg-emerald-600">pontuando</Badge>
+                              <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                                pontuando
+                              </Badge>
                               <span>{a.atividade_nome}</span>
                               {a.modalidades_texto && (
                                 <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-sm">
-                                    <p className="text-xs">{a.modalidades_texto}</p>
-                                  </TooltipContent>
-                                </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-sm">
+                                      <p className="text-xs">{a.modalidades_texto}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 </TooltipProvider>
                               )}
                             </div>
                           </TableCell>
                           <TableCell className="text-right">{numero(a.peso_atividade)}</TableCell>
-                          <TableCell className="text-right">{numero(a.pontuacao_atletas)}</TableCell>
-                          <TableCell className="text-right">{numero(a.pontuacao_modalidades)}</TableCell>
-                          <TableCell className="text-right font-medium">{numero(a.pontuacao)}</TableCell>
+                          <TableCell className="text-right">
+                            {numero(a.pontuacao_atletas)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {numero(a.pontuacao_modalidades)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {numero(a.pontuacao)}
+                          </TableCell>
                           <TableCell className="text-right">{a.qtd_eventos}</TableCell>
                           <TableCell className="text-right">{a.total_participantes}</TableCell>
                         </TableRow>
@@ -366,17 +390,26 @@ export function CriterioEsportesDetalhe() {
                 baixarCsv(
                   `ranking-esportes-${ano}.csv`,
                   montarCsv(
-                  ["Posição", "Município", "Atividades", "JIMI", "JEMG", "BA/BT", "Final", "Índice %"],
-                  rankingFiltrado.map((l) => [
-                    l.posicao ?? "",
-                    l.municipio_nome,
-                    l.nota_atividades,
-                    l.nota_jimi,
-                    l.nota_jemg,
-                    l.nota_babt,
-                    l.nota_final,
-                    l.indice_percentual,
-                  ]),
+                    [
+                      "Posição",
+                      "Município",
+                      "Atividades",
+                      "JIMI",
+                      "JEMG",
+                      "BA/BT",
+                      "Final",
+                      "Índice %",
+                    ],
+                    rankingFiltrado.map((l) => [
+                      l.posicao ?? "",
+                      l.municipio_nome,
+                      l.nota_atividades,
+                      l.nota_jimi,
+                      l.nota_jemg,
+                      l.nota_babt,
+                      l.nota_final,
+                      l.indice_percentual,
+                    ]),
                   ),
                 )
               }
@@ -424,7 +457,9 @@ export function CriterioEsportesDetalhe() {
                       <TableCell className="text-right">{numero(l.nota_jimi)}</TableCell>
                       <TableCell className="text-right">{numero(l.nota_jemg)}</TableCell>
                       <TableCell className="text-right">{numero(l.nota_babt)}</TableCell>
-                      <TableCell className="text-right font-medium">{numero(l.nota_final)}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {numero(l.nota_final)}
+                      </TableCell>
                       <TableCell className="text-right">{numero(l.indice_percentual)}%</TableCell>
                     </TableRow>
                   ))}

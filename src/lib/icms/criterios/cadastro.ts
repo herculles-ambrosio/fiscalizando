@@ -156,7 +156,8 @@ export const FICHAS: Record<string, FichaCriterio> = {
         orgao: "IEF — Diretoria de Áreas Protegidas",
         onde: "Cadastramento de UC municipal (Resoluções SEMAD 318/2005 e 1245/2010)",
         url: "https://meioambiente.mg.gov.br/icms-ecologico-criterios",
-        oQueEnviar: "Checklist do Manual de Procedimentos, ato de criação, plano de manejo e relatório de gestão.",
+        oQueEnviar:
+          "Checklist do Manual de Procedimentos, ato de criação, plano de manejo e relatório de gestão.",
         prazo: "Avaliação anual do Fator de Qualidade.",
       },
     ],
