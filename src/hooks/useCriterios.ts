@@ -73,7 +73,6 @@ export function useCriteriosComDados() {
 }
 
 export function useItensReferencia(criterio: string | null) {
-
   return useQuery({
     queryKey: ["criterio-referencia", criterio],
     enabled: !!criterio,
@@ -102,7 +101,10 @@ export function useItensReferenciaCompleta(criterio: string | null) {
         .eq("criterio", criterio!)
         .order("ordem");
       if (error) throw error;
-      return (data ?? []) as unknown as (ItemReferencia & { requisito: string | null; ordem: number })[];
+      return (data ?? []) as unknown as (ItemReferencia & {
+        requisito: string | null;
+        ordem: number;
+      })[];
     },
   });
 }
@@ -122,7 +124,10 @@ export function useCriterioAnos(criterio: string | null) {
       for (const l of data ?? []) {
         const chave = `${l.ano_base}-${l.fonte_relatorio}`;
         if (!combos.has(chave)) {
-          combos.set(chave, { ano: l.ano_base as number, fonte: l.fonte_relatorio as FonteRelatorio });
+          combos.set(chave, {
+            ano: l.ano_base as number,
+            fonte: l.fonte_relatorio as FonteRelatorio,
+          });
         }
       }
       return [...combos.values()];
@@ -175,6 +180,36 @@ export function useCriterioItens(
   });
 }
 
+/**
+ * Itens pontuados por um conjunto de municípios (o município em análise e os
+ * seus vizinhos), usado no painel de comparação regional.
+ */
+export function useItensCriterioMunicipios(
+  criterio: string | null,
+  ano: number | null,
+  fonte: FonteRelatorio | null,
+  municipios: string[],
+) {
+  const chaves = [...new Set(municipios)].sort();
+  return useQuery({
+    queryKey: ["criterio-itens-varios", criterio, ano, fonte, chaves],
+    enabled: !!criterio && !!ano && !!fonte && chaves.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<ItemCriterioRow[]> => {
+      const { data, error } = await supabase
+        .from("criterio_item_municipio")
+        .select("*")
+        .eq("criterio", criterio!)
+        .eq("ano_base", ano!)
+        .eq("fonte_relatorio", fonte!)
+        .in("municipio", chaves)
+        .limit(20000);
+      if (error) throw error;
+      return (data ?? []) as unknown as ItemCriterioRow[];
+    },
+  });
+}
+
 export function useImportacoes(criterio?: string | null) {
   return useQuery({
     queryKey: ["criterio-importacoes", criterio ?? "todas"],
@@ -206,7 +241,9 @@ export function useRankingTodosCriterios(municipios: string[]) {
     queryFn: async (): Promise<RankingCriterioRow[]> => {
       const { data, error } = await supabase
         .from("criterio_ranking_municipio")
-        .select("criterio, ano_base, fonte_relatorio, municipio, municipio_nome, posicao, nota_final, indice_percentual")
+        .select(
+          "criterio, ano_base, fonte_relatorio, municipio, municipio_nome, posicao, nota_final, indice_percentual",
+        )
         .in("municipio", chaves)
         .order("ano_base", { ascending: false })
         .limit(5000);

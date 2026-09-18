@@ -34,6 +34,7 @@ import {
 } from "@/hooks/useCriterios";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { OndeInscrever } from "@/components/icms/OndeInscrever";
+import { VizinhosCriterio } from "@/components/icms/VizinhosCriterio";
 import { formatarPopulacao, usePopulacao } from "@/hooks/usePopulacao";
 import { normalizarMunicipio } from "@/lib/icms/esportes/parser";
 import { baixarCsv, montarCsv } from "@/lib/csv";
@@ -245,6 +246,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
           <TabsTrigger value="pontuacao">O que pontua hoje</TabsTrigger>
           <TabsTrigger value="melhorar">Como melhorar</TabsTrigger>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
+          <TabsTrigger value="vizinhos">Vizinhos</TabsTrigger>
           {ehMeioAmbiente && <TabsTrigger value="ief">Cadastro no IEF</TabsTrigger>}
           {ehTurismo && <TabsTrigger value="habilitacao">Habilitação na Secult</TabsTrigger>}
           {ehEducacao && <TabsTrigger value="prazo">Prazo de recurso</TabsTrigger>}
@@ -666,6 +668,17 @@ function DetalheGenerico({ slug }: { slug: string }) {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="vizinhos" className="pt-4">
+          <VizinhosCriterio
+            slug={slug}
+            ano={ano}
+            fonte={fonte}
+            ranking={ranking}
+            chaveMunicipio={chaveMunicipio}
+            nomeMunicipio={municipio?.nome ?? null}
+            unidade={unidade}
+          />
         </TabsContent>
         {ehMeioAmbiente && (
           <TabsContent value="ief" className="pt-4">

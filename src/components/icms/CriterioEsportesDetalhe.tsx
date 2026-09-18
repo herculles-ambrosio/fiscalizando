@@ -32,8 +32,11 @@ import {
   useEsportesAnos,
   useEsportesAtividades,
   useEsportesRanking,
+  useEsportesAtividadesMunicipios,
   type FonteRelatorio,
 } from "@/hooks/useEsportes";
+import { VizinhosCriterio } from "@/components/icms/VizinhosCriterio";
+import { vizinhosDe } from "@/lib/icms/criterios/regioes";
 import { normalizarMunicipio } from "@/lib/icms/esportes/parser";
 import { CRITERIO_POR_SLUG } from "@/lib/icms/criterios";
 import { baixarCsv, montarCsv } from "@/lib/csv";
@@ -61,6 +64,8 @@ export function CriterioEsportesDetalhe() {
   const { data: ranking } = useEsportesRanking(ano, fonte);
   const nomeNormalizado = municipio ? normalizarMunicipio(municipio.nome) : null;
   const { data: atividades } = useEsportesAtividades(ano, fonte, nomeNormalizado);
+  const chavesVizinhas = useMemo(() => vizinhosDe(nomeNormalizado), [nomeNormalizado]);
+  const { data: atividadesVizinhos } = useEsportesAtividadesMunicipios(ano, fonte, chavesVizinhas);
 
   const linhaMunicipio = useMemo(
     () => (ranking ?? []).find((l) => l.municipio === nomeNormalizado) ?? null,
@@ -124,6 +129,7 @@ export function CriterioEsportesDetalhe() {
           <TabsTrigger value="municipio">Detalhamento do município</TabsTrigger>
           <TabsTrigger value="melhorar">Como melhorar</TabsTrigger>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
+          <TabsTrigger value="vizinhos">Vizinhos</TabsTrigger>
           {perfil?.ehConsultoria && <TabsTrigger value="ingestao">Ingestão de dados</TabsTrigger>}
         </TabsList>
 
@@ -373,6 +379,23 @@ export function CriterioEsportesDetalhe() {
             </CardContent>
           </Card>
           <OndeInscrever slug="esportes" />
+        </TabsContent>
+
+        <TabsContent value="vizinhos" className="pt-4">
+          <VizinhosCriterio
+            slug="esportes"
+            ano={ano}
+            fonte={fonte}
+            ranking={ranking}
+            chaveMunicipio={nomeNormalizado}
+            nomeMunicipio={municipio?.nome ?? null}
+            itensExternos={(atividadesVizinhos ?? []).map((a) => ({
+              municipio: a.municipio,
+              item_codigo: a.atividade_codigo,
+              item_nome: a.atividade_nome,
+              pontuacao: a.pontuacao,
+            }))}
+          />
         </TabsContent>
 
         <TabsContent value="ranking" className="space-y-3 pt-4">
