@@ -92,7 +92,9 @@ export function useIndicesDaResolucao(resolucaoNumero: string | null) {
     queryFn: async (): Promise<LinhaResolucaoMunicipio[]> => {
       const { data, error } = await supabase
         .from("indices_resolucao")
-        .select("municipio_id, codigo_mun, municipio_nome, ano_a, indice_a, ano_b, indice_b, media_indices")
+        .select(
+          "municipio_id, codigo_mun, municipio_nome, ano_a, indice_a, ano_b, indice_b, media_indices",
+        )
         .eq("resolucao", resolucaoNumero!);
       if (error) {
         if (ehErroPermissao(error)) return [];

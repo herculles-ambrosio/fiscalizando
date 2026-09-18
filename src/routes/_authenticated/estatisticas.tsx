@@ -380,7 +380,6 @@ function PaginaEstatisticas() {
 
       <ComparacaoResolucao />
 
-
       <Card>
         <CardContent className="flex flex-wrap items-end gap-3 p-4">
           <div className="space-y-1.5">

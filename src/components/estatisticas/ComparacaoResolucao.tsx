@@ -102,8 +102,7 @@ export function ComparacaoResolucao() {
           e.indiceBase != null && e.indiceAtual != null ? (e.indiceBase + e.indiceAtual) / 2 : null;
         const pontos =
           mediaResolucao != null && mediaAtual != null ? mediaAtual - mediaResolucao : null;
-        const variacao =
-          pontos != null && mediaResolucao ? (pontos / mediaResolucao) * 100 : null;
+        const variacao = pontos != null && mediaResolucao ? (pontos / mediaResolucao) * 100 : null;
         return {
           municipioId: e.municipio_id,
           municipio: nomePorMunicipio.get(e.municipio_id) ?? "—",
