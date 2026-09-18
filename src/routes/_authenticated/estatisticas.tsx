@@ -75,6 +75,7 @@ import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { rotuloStatus } from "@/hooks/useImpugnacoes";
 import { ROTULO_STATUS_ACAO, type StatusAcao } from "@/hooks/useAcoesRecuperacao";
 import { PlanoMunicipio, type AbaPlano } from "@/components/estatisticas/PlanoMunicipio";
+import { ComparacaoResolucao } from "@/components/estatisticas/ComparacaoResolucao";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
 type Ordem = "variacao" | "indice_base" | "indice_atual" | "nome" | "situacao";
@@ -349,25 +350,35 @@ function PaginaEstatisticas() {
     );
   }
 
+  const cabecalho = (
+    <div>
+      <h1 className="font-display text-2xl font-semibold tracking-tight">Estatísticas</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Escolha a resolução da SEF-MG e as evoluções salvas que deseja comparar, e grave o
+        resultado. Abaixo, o panorama das prefeituras com as providências em andamento.
+      </p>
+    </div>
+  );
+
   if (!lista.length) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-muted-foreground">
-          Nenhum índice apurado ainda. Apure o índice em “Análises do VAF” para montar o panorama.
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {cabecalho}
+        <ComparacaoResolucao />
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            Nenhum índice apurado ainda. Apure o índice em “Análises do VAF” para montar o panorama.
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">Estatísticas</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Panorama das prefeituras: índice e valor do ano-base contra o período comparado, quem
-          subiu, quem caiu e as providências em andamento.
-        </p>
-      </div>
+      {cabecalho}
+
+      <ComparacaoResolucao />
 
       <Card>
         <CardContent className="flex flex-wrap items-end gap-3 p-4">
