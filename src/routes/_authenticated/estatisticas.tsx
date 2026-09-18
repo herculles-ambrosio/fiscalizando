@@ -75,6 +75,7 @@ import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { rotuloStatus } from "@/hooks/useImpugnacoes";
 import { ROTULO_STATUS_ACAO, type StatusAcao } from "@/hooks/useAcoesRecuperacao";
 import { PlanoMunicipio, type AbaPlano } from "@/components/estatisticas/PlanoMunicipio";
+import { ComparacaoResolucao } from "@/components/estatisticas/ComparacaoResolucao";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 
 type Ordem = "variacao" | "indice_base" | "indice_atual" | "nome" | "situacao";
