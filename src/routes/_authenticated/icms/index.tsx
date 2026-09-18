@@ -18,6 +18,7 @@ import { SeletorExercicio } from "@/components/icms/SeletorExercicio";
 import { VazioIcms } from "@/components/icms/VazioIcms";
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { IndiceAplicadoBase } from "@/components/vaf/IndiceAplicado";
 import { montarDiagnostico, ROTULO_SITUACAO } from "@/lib/icms/diagnostico";
 import { MESES } from "@/lib/icms/criterios";
 import { formatarCompacto, formatarMoeda } from "@/lib/format";
@@ -118,6 +119,14 @@ function PainelIcms() {
               alerta={diag.oportunidades.length > 0}
             />
           </div>
+
+          {/* Índice publicado pelo Estado e aplicado no exercício (só referência) */}
+          <IndiceAplicadoBase
+            municipioId={municipioId}
+            exercicioAplicacao={exercicio}
+            indiceApurado={diag.indiceParticipacao ?? null}
+            rotuloApurado="índice do repasse deste exercício"
+          />
 
           {diag.oportunidades.length > 0 && (
             <Card className="border-gold/40 bg-gold/5">
