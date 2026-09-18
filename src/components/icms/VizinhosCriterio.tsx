@@ -39,8 +39,7 @@ type Props = {
   }[];
 };
 
-const num = (v: number, casas = 2) =>
-  v.toLocaleString("pt-BR", { maximumFractionDigits: casas });
+const num = (v: number, casas = 2) => v.toLocaleString("pt-BR", { maximumFractionDigits: casas });
 
 /**
  * Comparação com os municípios vizinhos (mesma região imediata do IBGE):
@@ -119,8 +118,14 @@ export function VizinhosCriterio({
     const meus = pontosPorItem.get(chaveMunicipio);
     const codigos = new Set<string>();
     for (const [, itensDoMun] of pontosPorItem) for (const c of itensDoMun.keys()) codigos.add(c);
-    const lista: { codigo: string; nome: string; meu: number; melhor: number; quem: string; quantos: number }[] =
-      [];
+    const lista: {
+      codigo: string;
+      nome: string;
+      meu: number;
+      melhor: number;
+      quem: string;
+      quantos: number;
+    }[] = [];
     for (const codigo of codigos) {
       const meu = meus?.get(codigo)?.pontuacao ?? 0;
       let melhor = 0;

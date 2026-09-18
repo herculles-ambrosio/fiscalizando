@@ -70,9 +70,7 @@ export function useEsportesAnos() {
         };
         chaves.set(`${item.ano}|${item.fonte}`, item);
       }
-      return [...chaves.values()].sort(
-        (a, b) => b.ano - a.ano || a.fonte.localeCompare(b.fonte),
-      );
+      return [...chaves.values()].sort((a, b) => b.ano - a.ano || a.fonte.localeCompare(b.fonte));
     },
   });
 }

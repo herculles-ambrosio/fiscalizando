@@ -96,7 +96,6 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     }
   }
 
-
   async function gravarResultado(
     paginas: import("@/lib/icms/esportes/parser").PaginaTexto[],
     origem: "site" | "url" | "arquivo" | "colado",
@@ -264,9 +263,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             linhas: r.dadosConstitutivos.slice(i, i + 2000),
           },
         });
-        setProgresso(
-          50 + Math.round(((i + 2000) / Math.max(r.dadosConstitutivos.length, 1)) * 35),
-        );
+        setProgresso(50 + Math.round(((i + 2000) / Math.max(r.dadosConstitutivos.length, 1)) * 35));
       }
 
       if (r.recursos.length) {
@@ -288,9 +285,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                 dataPublicacaoProvisorio: new Date().toISOString().slice(0, 10),
                 // A FJP dá cerca de 15 dias para recurso; a data pode ser
                 // corrigida na aba "Prazo de recurso".
-                dataLimiteRecurso: new Date(Date.now() + 15 * 86400000)
-                  .toISOString()
-                  .slice(0, 10),
+                dataLimiteRecurso: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
               }
             : { dataPublicacaoDefinitivo: new Date().toISOString().slice(0, 10) }),
         },
@@ -372,7 +367,6 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     }
   }
 
-
   async function importarUrl(endereco: string, origem: "site" | "url", anoForcado?: number) {
     if (!endereco.trim()) {
       toast.error("Informe o endereço do PDF.");
@@ -425,7 +419,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="preliminar">{planilha ? "Provisório" : "Preliminar"}</SelectItem>
+                  <SelectItem value="preliminar">
+                    {planilha ? "Provisório" : "Preliminar"}
+                  </SelectItem>
                   <SelectItem value="definitivo">Definitivo</SelectItem>
                 </SelectContent>
               </Select>
@@ -434,7 +430,11 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
 
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={buscarLinks} disabled={buscando || rodando}>
-              {buscando ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+              {buscando ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Search className="mr-2 size-4" />
+              )}
               Procurar relatórios no site
             </Button>
             <label className="inline-flex">
@@ -481,13 +481,15 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
               <Label>Colar o quadro de pontuação</Label>
               <p className="text-xs text-muted-foreground">
                 Se o relatório não abrir ou vier só em papel/Diário Oficial, copie o quadro (do PDF,
-                do Excel ou de uma tabela do site) e cole aqui. A primeira linha deve ser o cabeçalho
-                com os nomes das colunas e as demais uma linha por município.
+                do Excel ou de uma tabela do site) e cole aqui. A primeira linha deve ser o
+                cabeçalho com os nomes das colunas e as demais uma linha por município.
               </p>
               <Textarea
                 rows={8}
                 className="font-mono text-xs"
-                placeholder={"Município\tÓrgão municipal\tConselho\tFundo\tPontuação\nABRE CAMPO\tSim\tSim\tNão\t12,50"}
+                placeholder={
+                  "Município\tÓrgão municipal\tConselho\tFundo\tPontuação\nABRE CAMPO\tSim\tSim\tNão\t12,50"
+                }
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
               />
@@ -503,8 +505,6 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             </div>
           )}
 
-
-
           {links.length > 0 && (
             <div className="space-y-2 rounded-md border p-3">
               {links.map((l) => {
@@ -517,9 +517,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                       </Badge>
                       {l.texto}
                       {l.ano ? (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          ano-base {l.ano}
-                        </span>
+                        <span className="ml-2 text-xs text-muted-foreground">ano-base {l.ano}</span>
                       ) : null}
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
@@ -543,10 +541,8 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                   </div>
                 );
               })}
-
             </div>
           )}
-
 
           {links.length === 0 && diagnostico.length > 0 && (
             <div className="space-y-1 rounded-md border p-3 text-xs text-muted-foreground">
@@ -559,7 +555,6 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             </div>
           )}
 
-
           {rodando && (
             <div className="space-y-2">
               <Progress value={progresso} />
@@ -570,7 +565,8 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
           {resumo && (
             <div className="space-y-2 rounded-md border p-3 text-sm">
               <p>
-                {resumo.municipios} municípios, {resumo.ranking} linhas de pontuação e {resumo.itens} itens gravados.
+                {resumo.municipios} municípios, {resumo.ranking} linhas de pontuação e{" "}
+                {resumo.itens} itens gravados.
               </p>
               {resumo.cabecalho.length > 0 && (
                 <p className="text-xs text-muted-foreground">

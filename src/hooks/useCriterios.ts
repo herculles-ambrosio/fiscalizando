@@ -73,7 +73,6 @@ export function useCriteriosComDados() {
 }
 
 export function useItensReferencia(criterio: string | null) {
-
   return useQuery({
     queryKey: ["criterio-referencia", criterio],
     enabled: !!criterio,
@@ -102,7 +101,10 @@ export function useItensReferenciaCompleta(criterio: string | null) {
         .eq("criterio", criterio!)
         .order("ordem");
       if (error) throw error;
-      return (data ?? []) as unknown as (ItemReferencia & { requisito: string | null; ordem: number })[];
+      return (data ?? []) as unknown as (ItemReferencia & {
+        requisito: string | null;
+        ordem: number;
+      })[];
     },
   });
 }
@@ -122,7 +124,10 @@ export function useCriterioAnos(criterio: string | null) {
       for (const l of data ?? []) {
         const chave = `${l.ano_base}-${l.fonte_relatorio}`;
         if (!combos.has(chave)) {
-          combos.set(chave, { ano: l.ano_base as number, fonte: l.fonte_relatorio as FonteRelatorio });
+          combos.set(chave, {
+            ano: l.ano_base as number,
+            fonte: l.fonte_relatorio as FonteRelatorio,
+          });
         }
       }
       return [...combos.values()];
@@ -236,7 +241,9 @@ export function useRankingTodosCriterios(municipios: string[]) {
     queryFn: async (): Promise<RankingCriterioRow[]> => {
       const { data, error } = await supabase
         .from("criterio_ranking_municipio")
-        .select("criterio, ano_base, fonte_relatorio, municipio, municipio_nome, posicao, nota_final, indice_percentual")
+        .select(
+          "criterio, ano_base, fonte_relatorio, municipio, municipio_nome, posicao, nota_final, indice_percentual",
+        )
         .in("municipio", chaves)
         .order("ano_base", { ascending: false })
         .limit(5000);

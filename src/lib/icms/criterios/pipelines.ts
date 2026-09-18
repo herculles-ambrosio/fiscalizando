@@ -31,8 +31,6 @@ export type Pipeline = {
   comoFunciona: string;
   /** alerta exibido na tela de ingestão (ex.: site que bloqueia download automático) */
   aviso?: string;
-
-
 };
 
 export const PIPELINES: Pipeline[] = [
@@ -93,7 +91,15 @@ export const PIPELINES: Pipeline[] = [
       "https://semad.mg.gov.br/w/icms-ecologico-publicacoes-2025",
       "https://www.meioambiente.mg.gov.br/",
     ],
-    palavrasChave: ["icms", "ecologic", "pontuacao", "fq", "fator de qualidade", "saneamento", "conservacao"],
+    palavrasChave: [
+      "icms",
+      "ecologic",
+      "pontuacao",
+      "fq",
+      "fator de qualidade",
+      "saneamento",
+      "conservacao",
+    ],
     formato: "tabela_itens",
     colunasTotal: ["pontuacao", "indice", "total", "iqr"],
     comoFunciona:
@@ -124,12 +130,7 @@ export const PIPELINES: Pipeline[] = [
     slug: "patrimonio_cultural",
     nome: "Patrimônio Cultural",
     orgao: "IEPHA-MG (Programa ICMS Patrimônio Cultural)",
-    hosts: [
-      "www.mg.gov.br",
-      "mg.gov.br",
-      "www.iepha.mg.gov.br",
-      "iepha.mg.gov.br",
-    ],
+    hosts: ["www.mg.gov.br", "mg.gov.br", "www.iepha.mg.gov.br", "iepha.mg.gov.br"],
     paginasBusca: [
       "https://www.mg.gov.br/iepha/pagina/programa-icms-patrimonio-cultural",
       "https://www.iepha.mg.gov.br/index.php/programas-e-acoes/icms-patrimonio-cultural",
@@ -143,8 +144,6 @@ export const PIPELINES: Pipeline[] = [
       "O portal do Governo de Minas bloqueia o download automático da tabela do IEPHA. Baixe a tabela de pontuação no site do IEPHA e envie o arquivo aqui (PDF ou planilha), ou cole o conteúdo — a leitura e a gravação do ranking funcionam igual.",
   },
 ];
-
-
 
 export const PIPELINE_POR_SLUG = new Map(PIPELINES.map((p) => [p.slug, p]));
 
