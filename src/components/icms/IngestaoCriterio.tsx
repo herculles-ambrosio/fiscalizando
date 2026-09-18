@@ -207,24 +207,44 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     toast.success("Relatório importado.");
   }
 
+  /**
+   * O arquivo é reconhecido pelo conteúdo, não pela extensão: todo critério
+   * aceita tanto o PDF quanto a planilha oficial. A planilha da Educação tem
+   * leitura própria (abas de dados constitutivos, recursos e nota técnica);
+   * nos demais critérios a planilha é convertida em linhas e segue pelo mesmo
+   * caminho do PDF.
+   */
   async function processar(
     dados: Uint8Array,
     origem: "site" | "url" | "arquivo",
     identificacao: string | null,
     anoForcado?: number,
   ) {
-    if (planilha) {
+    const { ehPdf } = await import("@/lib/icms/criterios/planilhaTabela");
+    const pdf = ehPdf(dados);
+    if (planilha && !pdf) {
       await processarPlanilha(dados, origem, identificacao, anoForcado);
       return;
     }
     setRodando(true);
     setResumo(null);
     try {
-      const { extrairPaginas } = await import("@/lib/icms/esportes/pdf");
-      setEtapa("Lendo o PDF");
-      const paginas = await extrairPaginas(dados, (p, total) =>
-        setProgresso(Math.round((p / total) * 70)),
-      );
+      let paginas: import("@/lib/icms/esportes/parser").PaginaTexto[];
+      if (pdf) {
+        const { extrairPaginas } = await import("@/lib/icms/esportes/pdf");
+        setEtapa("Lendo o PDF");
+        paginas = await extrairPaginas(dados, (p, total) =>
+          setProgresso(Math.round((p / total) * 70)),
+        );
+      } else {
+        setEtapa("Lendo a planilha");
+        setProgresso(40);
+        const { paginasDaPlanilha } = await import("@/lib/icms/criterios/planilhaTabela");
+        const p = paginasDaPlanilha(dados);
+        if (!p.paginas.length) throw new Error("A planilha enviada está vazia.");
+        paginas = p.paginas;
+        setProgresso(70);
+      }
       await gravarResultado(paginas, origem, identificacao, anoForcado);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o relatório.");
