@@ -562,11 +562,36 @@ function DetalheGenerico({ slug }: { slug: string }) {
               )}
               {!!ranking?.length && (
                 <div className="max-h-[28rem] overflow-auto">
+                  {linhaMunicipio && (
+                    <div className="flex items-center justify-between gap-3 border-b bg-muted/30 p-3 text-sm">
+                      <span>
+                        {municipio?.nome} está na posição{" "}
+                        <strong>
+                          {(ranking ?? []).findIndex((l) => l.municipio === chaveMunicipio) + 1}
+                        </strong>{" "}
+                        de {ranking.length} municípios.
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          document
+                            .getElementById("linha-meu-municipio")
+                            ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                        }
+                      >
+                        Ir para o meu município
+                      </Button>
+                    </div>
+                  )}
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-muted/60">
                       <tr>
                         <th className="p-2 text-left">#</th>
                         <th className="p-2 text-left">Município</th>
+                        <th className="p-2 text-right">
+                          População{populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
+                        </th>
                         <th className="p-2 text-right">Pontuação</th>
                         <th className="p-2 text-right">Índice</th>
                       </tr>
@@ -575,10 +600,18 @@ function DetalheGenerico({ slug }: { slug: string }) {
                       {ranking.map((l, i) => (
                         <tr
                           key={l.municipio}
-                          className={l.municipio === chaveMunicipio ? "bg-emerald-50 dark:bg-emerald-950/20" : ""}
+                          id={l.municipio === chaveMunicipio ? "linha-meu-municipio" : undefined}
+                          className={
+                            l.municipio === chaveMunicipio
+                              ? "bg-emerald-50 font-medium dark:bg-emerald-950/20"
+                              : ""
+                          }
                         >
                           <td className="p-2">{i + 1}</td>
                           <td className="p-2">{l.municipio_nome}</td>
+                          <td className="p-2 text-right tabular-nums">
+                            {formatarPopulacao(populacao.de(l.municipio_nome))}
+                          </td>
                           <td className="p-2 text-right">{l.nota_final.toLocaleString("pt-BR")}</td>
                           <td className="p-2 text-right">
                             {l.indice_percentual
