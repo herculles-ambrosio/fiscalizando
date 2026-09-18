@@ -32,6 +32,7 @@ import {
 import { podeRevalidar } from "@/lib/vaf/revalidarIndice";
 import { nomeMunicipioSef } from "@/lib/vaf/municipiosSef";
 import { HistoricoIndices } from "@/components/HistoricoIndices";
+import { IndiceAplicadoBase } from "@/components/vaf/IndiceAplicado";
 import OutrasReceitas from "@/components/analises/OutrasReceitas";
 import { extrairOutrasEntradas } from "@/lib/vaf/outrasEntradas";
 import { formatarCnpj, formatarData, formatarMoeda } from "@/lib/format";

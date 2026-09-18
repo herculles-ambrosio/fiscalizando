@@ -72,6 +72,7 @@ import CreditoProprioPortal from "@/components/analises/CreditoProprioPortal";
 import { type ResumoCreditoPortal } from "@/lib/vaf/creditoPortal";
 import OutrasReceitas from "@/components/analises/OutrasReceitas";
 import ImpactoContribuintes from "@/components/analises/ImpactoContribuintes";
+import { IndiceAplicadoBase } from "@/components/vaf/IndiceAplicado";
 
 function rotuloArquivo(
   a: ArquivoEvolucao,
