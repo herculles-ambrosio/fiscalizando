@@ -1269,21 +1269,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               </CardContent>
             </Card>
 
-            <Card
-              className={
-                base.apuracao.indice > 0 &&
-                atual.apuracao.indice > 0 &&
-                indiceResolucaoBase?.media_indices != null
-                  ? (base.apuracao.indice + atual.apuracao.indice) / 2 >
-                    indiceResolucaoBase.media_indices
-                    ? "border-normal-foreground/40 bg-normal"
-                    : (base.apuracao.indice + atual.apuracao.indice) / 2 <
-                        indiceResolucaoBase.media_indices
-                      ? "border-destructive/40 bg-omisso"
-                      : undefined
-                  : undefined
-              }
-            >
+            <Card>
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
                   titulo={`Índice de participação - comparado/estimado${anoAplicacaoAtual ? ` ${anoAplicacaoAtual}` : ""}`}
@@ -1352,7 +1338,21 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
               </Card>
             )}
 
-            <Card>
+            <Card
+              className={
+                base.apuracao.indice > 0 &&
+                atual.apuracao.indice > 0 &&
+                indiceResolucaoBase?.media_indices != null
+                  ? (base.apuracao.indice + atual.apuracao.indice) / 2 >
+                    indiceResolucaoBase.media_indices
+                    ? "border-normal-foreground/40 bg-normal"
+                    : (base.apuracao.indice + atual.apuracao.indice) / 2 <
+                        indiceResolucaoBase.media_indices
+                      ? "border-destructive/40 bg-omisso"
+                      : undefined
+                  : undefined
+              }
+            >
               <CardContent className="space-y-1 p-4">
                 <RotuloKpi
                   titulo={`Média dos índices${
