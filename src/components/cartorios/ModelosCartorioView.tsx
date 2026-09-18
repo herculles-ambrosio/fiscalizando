@@ -55,6 +55,9 @@ const EXEMPLO: LinhaFiscalizacao = {
   diferencaBase: 24000,
   diferencaIss: 1200,
   temDeclaracao: true,
+  competenciaAno: new Date().getFullYear(),
+  competenciaMes: 1,
+  meses: 1,
 };
 
 export default function ModelosCartorioView({ competencia }: { competencia: Competencia | null }) {

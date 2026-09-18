@@ -5,10 +5,13 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { useMunicipioAtivo } from "./useMunicipio";
 import { chave, type LinhaDeclaracao, type LinhaEmolumento } from "@/lib/cartorios/parser";
 
 export type Competencia = { ano: number; mes: number };
+type EmolumentoSalvo = Tables<"cartorio_emolumentos">;
+type DeclaracaoSalva = Tables<"cartorio_declaracoes">;
 
 /**
  * Antes de gravar: confere que há prefeitura ativa e sessão válida. Sem isso o
@@ -231,40 +234,41 @@ export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | nul
     ],
     enabled: !!municipioId && !!competencia,
     queryFn: async (): Promise<LinhaFiscalizacao[]> => {
+      if (!municipioId || !competencia) return [];
       const buscarEmolumentos = async () => {
-        const saida: Array<Record<string, unknown>> = [];
+        const saida: EmolumentoSalvo[] = [];
         for (let inicio = 0; ; inicio += 1000) {
           let consulta = supabase
             .from("cartorio_emolumentos")
             .select("*")
-            .eq("municipio_id", municipioId!);
+            .eq("municipio_id", municipioId);
           if (competencia !== "todos") {
             consulta = consulta
-              .eq("competencia_ano", competencia!.ano)
-              .eq("competencia_mes", competencia!.mes);
+              .eq("competencia_ano", competencia.ano)
+              .eq("competencia_mes", competencia.mes);
           }
           const { data, error } = await consulta.range(inicio, inicio + 999);
           if (error) throw error;
-          saida.push(...((data ?? []) as Array<Record<string, unknown>>));
+          saida.push(...(data ?? []));
           if (!data || data.length < 1000) break;
         }
         return saida;
       };
       const buscarDeclaracoes = async () => {
-        const saida: Array<Record<string, unknown>> = [];
+        const saida: DeclaracaoSalva[] = [];
         for (let inicio = 0; ; inicio += 1000) {
           let consulta = supabase
             .from("cartorio_declaracoes")
             .select("*")
-            .eq("municipio_id", municipioId!);
+            .eq("municipio_id", municipioId);
           if (competencia !== "todos") {
             consulta = consulta
-              .eq("competencia_ano", competencia!.ano)
-              .eq("competencia_mes", competencia!.mes);
+              .eq("competencia_ano", competencia.ano)
+              .eq("competencia_mes", competencia.mes);
           }
           const { data, error } = await consulta.range(inicio, inicio + 999);
           if (error) throw error;
-          saida.push(...((data ?? []) as Array<Record<string, unknown>>));
+          saida.push(...(data ?? []));
           if (!data || data.length < 1000) break;
         }
         return saida;
@@ -274,7 +278,7 @@ export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | nul
         buscarDeclaracoes(),
       ]);
 
-      const declaradas = new Map<string, Record<string, unknown>>();
+      const declaradas = new Map<string, DeclaracaoSalva>();
       for (const d of declaracoesSalvas) {
         const prefixo = `${d.competencia_ano}-${d.competencia_mes}|`;
         declaradas.set(prefixo + chave(String(d.cns)), d);
