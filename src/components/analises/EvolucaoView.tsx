@@ -269,6 +269,31 @@ function CaixaArquivo({
                 </Select>
               </div>
             </div>
+            {onResolucao && (
+              <div className="space-y-1.5 pt-2">
+                <Label className="text-xs">Resolução de referência</Label>
+                <Select
+                  value={resolucaoNumero ?? "nenhuma"}
+                  onValueChange={(v) => onResolucao(v === "nenhuma" ? null : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sem resolução" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhuma">Sem resolução</SelectItem>
+                    {(resolucoes ?? []).map((r) => (
+                      <SelectItem key={r.id} value={r.numero}>
+                        Resolução {r.numero} · apuração {r.ano_apuracao} · aplicação{" "}
+                        {r.ano_aplicacao}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  A média publicada nessa resolução vira a média base da comparação.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
