@@ -43,6 +43,13 @@
       "when": 1789768008660,
       "tag": "0005_create_estatisticas_comparacoes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789768917390,
+      "tag": "0006_add_resolucao_comparada_estatisticas",
+      "breakpoints": true
     }
   ]
 }

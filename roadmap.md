@@ -11,3 +11,5 @@
 - [x] Persistir e restaurar os dois anos nas evoluções gravadas.
 - [x] Cadastro de Resoluções SEF (ano de apuração e de aplicação) com importação do anexo.
 - [x] Escolha da resolução no arquivo base da Evolução do VAF, com média publicada e comparação.
+- [x] Unificar Estatísticas em uma comparação entre duas resoluções para todas as prefeituras.
+- [x] Destacar em verde/vermelho os cards comparados da Evolução do VAF.

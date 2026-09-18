@@ -1185,7 +1185,15 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     </>
                   }
                 />
-                <p className="break-words font-display text-lg font-semibold">
+                <p
+                  className={`break-words font-display text-lg font-semibold ${
+                    atual.apuracao.valorLiquido > base.apuracao.valorLiquido
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : atual.apuracao.valorLiquido < base.apuracao.valorLiquido
+                        ? "text-destructive"
+                        : ""
+                  }`}
+                >
                   {formatarMoeda(base.apuracao.valorLiquido)}
                 </p>
                 <p className="text-xs text-muted-foreground">Arquivo: {rotuloBase}</p>
@@ -1274,7 +1282,7 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     </>
                   }
                 />
-                <p className="break-words font-display text-lg font-semibold text-primary">
+                <p className="break-words font-display text-lg font-semibold">
                   {formatarIndice(atual.apuracao.indice)}%
                 </p>
                 <p className="text-xs">
@@ -1349,17 +1357,32 @@ function PaginaEvolucao({ onNovaAnalise }: { onNovaAnalise: () => void }) {
                     </>
                   }
                 />
-                <p className="break-words font-display text-lg font-semibold text-primary">
+                <p
+                  className={`break-words font-display text-lg font-semibold ${
+                    base.apuracao.indice > 0 &&
+                    atual.apuracao.indice > 0 &&
+                    indiceResolucaoBase?.media_indices != null
+                      ? (base.apuracao.indice + atual.apuracao.indice) / 2 >
+                        indiceResolucaoBase.media_indices
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : (base.apuracao.indice + atual.apuracao.indice) / 2 <
+                            indiceResolucaoBase.media_indices
+                          ? "text-destructive"
+                          : "text-primary"
+                      : "text-primary"
+                  }`}
+                >
                   {base.apuracao.indice > 0 && atual.apuracao.indice > 0
                     ? `${formatarIndice((base.apuracao.indice + atual.apuracao.indice) / 2)}%`
                     : "—"}
                 </p>
                 {base.apuracao.indice > 0 &&
                 atual.apuracao.indice > 0 &&
-                indiceResolucaoBase?.media_indices ? (
+                indiceResolucaoBase?.media_indices != null &&
+                indiceResolucaoBase.media_indices !== 0 ? (
                   (() => {
                     const mediaAtual = (base.apuracao.indice + atual.apuracao.indice) / 2;
-                    const mediaBase = indiceResolucaoBase.media_indices!;
+                    const mediaBase = indiceResolucaoBase.media_indices;
                     const diferenca = mediaAtual - mediaBase;
                     const pct = (diferenca / mediaBase) * 100;
                     return (
