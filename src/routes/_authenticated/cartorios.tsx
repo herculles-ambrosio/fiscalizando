@@ -103,13 +103,16 @@ const anoAtual = new Date().getFullYear();
 function FiscalizaCartorio() {
   const { data: competencias } = useCompetenciasCartorio();
   const [chaveComp, setChaveComp] = useState("");
+  const [aba, setAba] = useState("fiscalizacao");
+  const [visaoTodos, setVisaoTodos] = useState<"consolidado" | "mensal">("consolidado");
 
   useEffect(() => {
     if (competencias?.length && !chaveComp)
       setChaveComp(`${competencias[0]!.ano}-${competencias[0]!.mes}`);
   }, [competencias, chaveComp]);
 
-  const competencia: Competencia | null = useMemo(() => {
+  const competencia: Competencia | "todos" | null = useMemo(() => {
+    if (chaveComp === "todos") return "todos";
     const [a, m] = chaveComp.split("-");
     return a && m ? { ano: Number(a), mes: Number(m) } : null;
   }, [chaveComp]);
@@ -129,12 +132,62 @@ function FiscalizaCartorio() {
     [todasLinhas],
   );
 
+  const linhasConsolidadas = useMemo(() => {
+    if (competencia !== "todos" || visaoTodos === "mensal") return todasLinhas ?? [];
+    const acumuladas = new Map<
+      string,
+      LinhaFiscalizacao & { competencias: Set<string>; declaracoesComValor: number }
+    >();
+    for (const linha of todasLinhas ?? []) {
+      const id = `${linha.cns}|${linha.tipoServico}`;
+      const atual = acumuladas.get(id);
+      if (!atual) {
+        acumuladas.set(id, {
+          ...linha,
+          competenciaAno: 0,
+          competenciaMes: 0,
+          competencias: new Set([`${linha.competenciaAno}-${linha.competenciaMes}`]),
+          declaracoesComValor: linha.temDeclaracao ? 1 : 0,
+        });
+        continue;
+      }
+      atual.emolumentos += linha.emolumentos;
+      atual.recompe += linha.recompe;
+      atual.tfj += linha.tfj;
+      atual.despesa += linha.despesa;
+      atual.issDevido += linha.issDevido;
+      atual.baseDeclarada =
+        atual.baseDeclarada == null && linha.baseDeclarada == null
+          ? null
+          : (atual.baseDeclarada ?? 0) + (linha.baseDeclarada ?? 0);
+      atual.issDeclarado =
+        atual.issDeclarado == null && linha.issDeclarado == null
+          ? null
+          : (atual.issDeclarado ?? 0) + (linha.issDeclarado ?? 0);
+      atual.issPago =
+        atual.issPago == null && linha.issPago == null
+          ? null
+          : (atual.issPago ?? 0) + (linha.issPago ?? 0);
+      atual.competencias.add(`${linha.competenciaAno}-${linha.competenciaMes}`);
+      if (linha.temDeclaracao) atual.declaracoesComValor += 1;
+      atual.temDeclaracao = atual.temDeclaracao && linha.temDeclaracao;
+      atual.meses = atual.competencias.size;
+      atual.diferencaBase =
+        atual.baseDeclarada == null ? null : atual.emolumentos - atual.baseDeclarada;
+      atual.diferencaIss =
+        atual.issDeclarado == null ? null : atual.issDevido - atual.issDeclarado;
+    }
+    return [...acumuladas.values()]
+      .map(({ competencias: _competencias, declaracoesComValor: _declaracoes, ...linha }) => linha)
+      .sort((a, b) => (b.diferencaIss ?? b.issDevido) - (a.diferencaIss ?? a.issDevido));
+  }, [competencia, todasLinhas, visaoTodos]);
+
   const linhas = useMemo(
     () =>
       incluirVagos
-        ? todasLinhas
-        : (todasLinhas ?? []).filter((l) => !(l.status ?? "").toLowerCase().includes("vag")),
-    [todasLinhas, incluirVagos],
+        ? linhasConsolidadas
+        : linhasConsolidadas.filter((l) => !(l.status ?? "").toLowerCase().includes("vag")),
+    [linhasConsolidadas, incluirVagos],
   );
 
   const totais = useMemo(() => {
@@ -167,6 +220,7 @@ function FiscalizaCartorio() {
               <SelectValue placeholder="Competência" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="todos">Todos os meses</SelectItem>
               {competencias.map((c) => (
                 <SelectItem key={`${c.ano}-${c.mes}`} value={`${c.ano}-${c.mes}`}>
                   {MESES_NOME[c.mes - 1]} de {c.ano}
@@ -177,7 +231,11 @@ function FiscalizaCartorio() {
         )}
       </div>
 
-      <Tabs defaultValue={competencias?.length ? "fiscalizacao" : "importar"}>
+      <Tabs
+        value={aba}
+        onValueChange={setAba}
+        defaultValue={competencias?.length ? "fiscalizacao" : "importar"}
+      >
         <TabsList className="flex-wrap">
           <TabsTrigger value="fiscalizacao">Fiscalização</TabsTrigger>
           <TabsTrigger value="resumo">Resumo por município</TabsTrigger>
@@ -201,7 +259,7 @@ function FiscalizaCartorio() {
             <>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {[
-                  ["Cartórios no mês", String(totais.cartorios)],
+                    [competencia === "todos" ? "Cartórios no período" : "Cartórios no mês", String(totais.cartorios)],
                   ["Emolumentos (TJMG)", formatarMoeda(totais.emolumentos)],
                   [`ISS devido (${aliquota}%)`, formatarMoeda(totais.devido)],
                   ["ISS declarado", formatarMoeda(totais.declarado)],
@@ -227,10 +285,34 @@ function FiscalizaCartorio() {
               <Card>
                 <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-base">
-                    {MESES_NOME[competencia.mes - 1]} de {competencia.ano}
+                    {competencia === "todos"
+                      ? "Todos os meses carregados"
+                      : `${MESES_NOME[competencia.mes - 1]} de ${competencia.ano}`}
                     {isFetching && <span className="ml-2 text-xs text-muted-foreground">…</span>}
                   </CardTitle>
                   <div className="flex flex-wrap items-center gap-2">
+                  {competencia === "todos" && (
+                    <div className="flex h-9 items-center rounded-lg bg-muted p-1">
+                      <Button
+                        type="button"
+                        variant={visaoTodos === "consolidado" ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-7"
+                        onClick={() => setVisaoTodos("consolidado")}
+                      >
+                        Consolidado
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={visaoTodos === "mensal" ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-7"
+                        onClick={() => setVisaoTodos("mensal")}
+                      >
+                        Mês a mês
+                      </Button>
+                    </div>
+                  )}
                   <Select
                     value={incluirVagos ? "com" : "sem"}
                     onValueChange={(v) => definirIncluirVagos(v === "com")}
@@ -251,9 +333,14 @@ function FiscalizaCartorio() {
                     size="sm"
                     onClick={() =>
                       baixarCsv(
-                        `fiscaliza-cartorio-${competencia.ano}-${competencia.mes}.csv`,
+                        competencia === "todos"
+                          ? `fiscaliza-cartorio-todos-os-meses-${visaoTodos}.csv`
+                          : `fiscaliza-cartorio-${competencia.ano}-${competencia.mes}.csv`,
                         montarCsv(
                           [
+                            ...(competencia === "todos"
+                              ? [visaoTodos === "consolidado" ? "Meses" : "Competência"]
+                              : []),
                             "CNS",
                             "Serventia",
                             "Comarca",
@@ -268,6 +355,13 @@ function FiscalizaCartorio() {
                             "Diferença de ISS",
                           ],
                           (linhas ?? []).map((l) => [
+                            ...(competencia === "todos"
+                              ? [
+                                  visaoTodos === "consolidado"
+                                    ? l.meses
+                                    : `${String(l.competenciaMes).padStart(2, "0")}/${l.competenciaAno}`,
+                                ]
+                              : []),
                             l.cns,
                             l.nome,
                             l.comarca ?? "",
@@ -296,6 +390,11 @@ function FiscalizaCartorio() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Serventia</TableHead>
+                        {competencia === "todos" && (
+                          <TableHead>
+                            {visaoTodos === "consolidado" ? "Meses" : "Competência"}
+                          </TableHead>
+                        )}
                         <TableHead>Tipo de serviço</TableHead>
                         <TableHead className="text-right">Emolumentos</TableHead>
                         <TableHead className="text-right">ISS devido</TableHead>
@@ -305,17 +404,25 @@ function FiscalizaCartorio() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {(linhas ?? []).map((l) => (
-                        <LinhaCartorio
-                          key={`${l.cns}|${l.tipoServico}`}
-                          linha={l}
-                          competencia={competencia}
-                          aliquota={aliquota}
-                        />
-                      ))}
+                      {(linhas ?? []).map((l) => {
+                        const competenciaLinha =
+                          competencia === "todos"
+                            ? { ano: l.competenciaAno, mes: l.competenciaMes }
+                            : competencia;
+                        return (
+                          <LinhaCartorio
+                            key={`${l.cns}|${l.tipoServico}|${l.competenciaAno}-${l.competenciaMes}`}
+                            linha={l}
+                            competencia={competenciaLinha}
+                            aliquota={aliquota}
+                            mostrarCompetencia={competencia === "todos"}
+                            consolidada={competencia === "todos" && visaoTodos === "consolidado"}
+                          />
+                        );
+                      })}
                       {!linhas?.length && (
                         <TableRow>
-                          <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                          <TableCell colSpan={competencia === "todos" ? 8 : 7} className="py-8 text-center text-sm text-muted-foreground">
                             Nenhum cartório neste mês.
                           </TableCell>
                         </TableRow>
@@ -333,19 +440,27 @@ function FiscalizaCartorio() {
         </TabsContent>
 
         <TabsContent value="importar" className="pt-4">
-          <CargaDados competenciaAtual={competencia} />
+          <CargaDados
+            competenciaAtual={competencia === "todos" ? null : competencia}
+            aoCarregar={(c) => setChaveComp(`${c.ano}-${c.mes}`)}
+          />
         </TabsContent>
 
         <TabsContent value="cargas" className="pt-4">
-          <CargasView />
+          <CargasView
+            aoAbrirCarga={(c) => {
+              setChaveComp(`${c.ano}-${c.mes}`);
+              setAba("fiscalizacao");
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="documentos" className="pt-4">
-          <DocumentosView competencia={competencia} />
+          <DocumentosView competencia={competencia === "todos" ? null : competencia} />
         </TabsContent>
 
         <TabsContent value="modelos" className="pt-4">
-          <ModelosCartorioView competencia={competencia} />
+          <ModelosCartorioView competencia={competencia === "todos" ? null : competencia} />
         </TabsContent>
 
         <TabsContent value="config" className="pt-4">
@@ -361,10 +476,14 @@ function LinhaCartorio({
   linha,
   competencia,
   aliquota,
+  mostrarCompetencia = false,
+  consolidada = false,
 }: {
   linha: LinhaFiscalizacao;
   competencia: Competencia;
   aliquota: number;
+  mostrarCompetencia?: boolean;
+  consolidada?: boolean;
 }) {
   const salvar = useSalvarDeclaracao();
   const exibir = (v: number | null | undefined) => (v == null ? "" : formatarValorGrid(v));
@@ -434,28 +553,43 @@ function LinhaCartorio({
           {linha.status ? ` — ${linha.status}` : ""}
         </div>
       </TableCell>
+      {mostrarCompetencia && (
+        <TableCell className="whitespace-nowrap text-sm">
+          {consolidada
+            ? `${linha.meses} ${linha.meses === 1 ? "mês" : "meses"}`
+            : `${String(linha.competenciaMes).padStart(2, "0")}/${linha.competenciaAno}`}
+        </TableCell>
+      )}
       <TableCell className="text-sm">{linha.tipoServico || "—"}</TableCell>
       <TableCell className="text-right">{formatarMoeda(linha.emolumentos)}</TableCell>
       <TableCell className="text-right font-medium">{formatarMoeda(linha.issDevido)}</TableCell>
       <TableCell className="text-right">
-        <Input
-          value={base}
-          onChange={(e) => setBase(e.target.value)}
-          onBlur={gravar}
-          placeholder="0,00"
-          className="h-8 text-right"
-          inputMode="decimal"
-        />
+        {consolidada ? (
+          formatarMoeda(linha.baseDeclarada ?? 0)
+        ) : (
+          <Input
+            value={base}
+            onChange={(e) => setBase(e.target.value)}
+            onBlur={gravar}
+            placeholder="0,00"
+            className="h-8 text-right"
+            inputMode="decimal"
+          />
+        )}
       </TableCell>
       <TableCell className="text-right">
-        <Input
-          value={pago}
-          onChange={(e) => setPago(e.target.value)}
-          onBlur={gravar}
-          placeholder="0,00"
-          className="h-8 text-right"
-          inputMode="decimal"
-        />
+        {consolidada ? (
+          formatarMoeda(linha.issPago ?? 0)
+        ) : (
+          <Input
+            value={pago}
+            onChange={(e) => setPago(e.target.value)}
+            onBlur={gravar}
+            placeholder="0,00"
+            className="h-8 text-right"
+            inputMode="decimal"
+          />
+        )}
       </TableCell>
       <TableCell className="text-right">
         {!linha.temDeclaracao ? (
@@ -476,7 +610,13 @@ function LinhaCartorio({
   );
 }
 
-function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null }) {
+function CargaDados({
+  competenciaAtual,
+  aoCarregar,
+}: {
+  competenciaAtual: Competencia | null;
+  aoCarregar: (competencia: Competencia) => void;
+}) {
   const importarEmol = useImportarEmolumentos();
   const importarDecl = useImportarDeclaracoes();
   const excluir = useExcluirCompetenciaCartorio();
@@ -534,6 +674,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
     });
     setMes(String(comp.mes));
     setAno(String(comp.ano));
+    aoCarregar(comp);
     toast.success(
       `${r.gravadas} cartório(s) carregados em ${MESES_NOME[comp.mes - 1]}/${comp.ano}.`,
     );
@@ -564,6 +705,7 @@ function CargaDados({ competenciaAtual }: { competenciaAtual: Competencia | null
           competencia,
           arquivoNome: arquivo.name,
         });
+        aoCarregar(competencia);
         toast.success(`${total} declaração(ões) carregadas.`);
       };
       if (!municipioConfere(r.linhas)) return;
