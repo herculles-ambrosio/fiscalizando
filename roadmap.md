@@ -9,3 +9,5 @@
 - [x] Validar cartões, tabelas e exportação com referências 2026/2027.
 - [x] Permitir escolher Ano de Apuração e Ano de Aplicação em cada arquivo da Evolução do VAF.
 - [x] Persistir e restaurar os dois anos nas evoluções gravadas.
+- [x] Cadastro de Resoluções SEF (ano de apuração e de aplicação) com importação do anexo.
+- [x] Escolha da resolução no arquivo base da Evolução do VAF, com média publicada e comparação.
