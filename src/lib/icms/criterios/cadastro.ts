@@ -15,6 +15,8 @@ export type LocalCadastro = {
   oQueEnviar?: string;
   /** Prazo típico (a resolução do ano confirma a data). */
   prazo?: string;
+  /** Itens do critério que este endereço resolve (nomes como aparecem na tabela). */
+  itens?: string[];
 };
 
 export type FichaCriterio = {
