@@ -1004,6 +1004,14 @@ function PaginaIndice({ onNovaAnalise }: { onNovaAnalise: () => void }) {
 
           </div>
 
+          {/* Índice publicado pelo Estado e aplicado no exercício (só referência) */}
+          <IndiceAplicadoBase
+            municipioId={municipioId}
+            exercicioAplicacao={exercicio ? exercicio + 2 : null}
+            indiceApurado={apuracao.indice}
+            rotuloApurado="índice apurado nesta tela"
+          />
+
           {/* Blocos VAF A / B / C */}
           <div className="grid gap-4 lg:grid-cols-3">
             <Card>
