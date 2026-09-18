@@ -13,10 +13,10 @@ import {
   PieChart,
   LogOut,
   MapPin,
+  RefreshCw,
   Scale,
   Settings,
   Stamp,
-
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -29,7 +29,6 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
 import { BrandFooter } from "@/components/BrandFooter";
 import { Timbrado } from "@/components/Timbrado";
-
 
 import {
   Select,
@@ -56,7 +55,9 @@ const NAV_ANALISE = [
 
 const NAV_ADMIN = [{ to: "/configuracoes", rotulo: "Configurações", icone: Settings }];
 
-const NAV_CONSULTORIA = [{ to: "/consultoria/prefeituras", rotulo: "Prefeituras", icone: Building2 }];
+const NAV_CONSULTORIA = [
+  { to: "/consultoria/prefeituras", rotulo: "Prefeituras", icone: Building2 },
+];
 const NAV_SUPERADMIN = [
   { to: "/consultoria/usuarios", rotulo: "Usuários", icone: Users },
   { to: "/consultoria/codigos-sef", rotulo: "Códigos SEF", icone: MapPin },
@@ -78,11 +79,10 @@ const NAV_ICMS_ANALISE = [
   { to: "/icms/prazos", rotulo: "Prazos de recurso", icone: CalendarClock },
   { to: "/icms/repasse-educacao", rotulo: "Repasse da Educação", icone: Scale },
   { to: "/icms/plano", rotulo: "Plano de melhoria", icone: ListChecks },
+  { to: "/icms/sincronizacao", rotulo: "Tabelas oficiais", icone: RefreshCw },
   { to: "/icms/importacoes", rotulo: "Relatórios importados", icone: FileUp },
   { to: "/icms/glossario", rotulo: "Glossário", icone: BookOpen },
 ];
-
-
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: perfil } = usePerfil();
@@ -133,26 +133,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
             itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
           },
         ]
-    : produto === "icms"
-      ? [
-          { rotulo: "Operação", itens: NAV_ICMS_OPERACAO },
-          { rotulo: "Análise", itens: NAV_ICMS_ANALISE },
-          {
-            rotulo: "Administração",
-            itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
-          },
-        ]
-      : [
-          {
-            rotulo: "Operação",
-            itens: [...(perfil?.ehConsultoria ? NAV_CONSULTORIA : []), ...NAV_OPERACAO],
-          },
-          { rotulo: "Análise", itens: NAV_ANALISE },
-          {
-            rotulo: "Administração",
-            itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
-          },
-        ];
+      : produto === "icms"
+        ? [
+            { rotulo: "Operação", itens: NAV_ICMS_OPERACAO },
+            { rotulo: "Análise", itens: NAV_ICMS_ANALISE },
+            {
+              rotulo: "Administração",
+              itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
+            },
+          ]
+        : [
+            {
+              rotulo: "Operação",
+              itens: [...(perfil?.ehConsultoria ? NAV_CONSULTORIA : []), ...NAV_OPERACAO],
+            },
+            { rotulo: "Análise", itens: NAV_ANALISE },
+            {
+              rotulo: "Administração",
+              itens: [...NAV_ADMIN, ...(perfil?.ehSuperadmin ? NAV_SUPERADMIN : [])],
+            },
+          ];
   const nav = grupos.flatMap((g) => g.itens);
 
   async function sair() {
@@ -216,7 +216,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
             Cartório
           </Link>
         </div>
-
 
         {podeTrocar && (
           <div className="mt-6 rounded-xl border border-sidebar-border bg-white/5 p-2.5 shadow-soft">
@@ -293,7 +292,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <Logo compacto />
           <nav className="flex flex-wrap justify-end gap-3">
             {nav.map((item) => (
-              <Link key={item.to} to={item.to} onClick={limparTela} className="text-xs text-muted-foreground">
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={limparTela}
+                className="text-xs text-muted-foreground"
+              >
                 {item.rotulo}
               </Link>
             ))}
@@ -326,9 +330,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </Timbrado>
         </main>
-
-
-
       </div>
     </div>
   );
