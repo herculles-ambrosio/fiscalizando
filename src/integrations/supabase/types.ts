@@ -1238,6 +1238,7 @@ export type Database = {
           linhas: Json
           nome: string
           observacao: string | null
+          resolucao_comparada_numero: string | null
           resolucao_numero: string
         }
         Insert: {
@@ -1249,6 +1250,7 @@ export type Database = {
           linhas?: Json
           nome: string
           observacao?: string | null
+          resolucao_comparada_numero?: string | null
           resolucao_numero: string
         }
         Update: {
@@ -1260,6 +1262,7 @@ export type Database = {
           linhas?: Json
           nome?: string
           observacao?: string | null
+          resolucao_comparada_numero?: string | null
           resolucao_numero?: string
         }
         Relationships: []

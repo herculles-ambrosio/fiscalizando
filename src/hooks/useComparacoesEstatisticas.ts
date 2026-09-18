@@ -90,12 +90,13 @@ export function useIndicesDaResolucao(resolucaoNumero: string | null) {
     enabled: !!resolucaoNumero,
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<LinhaResolucaoMunicipio[]> => {
+      if (!resolucaoNumero) return [];
       const { data, error } = await supabase
         .from("indices_resolucao")
         .select(
           "municipio_id, codigo_mun, municipio_nome, ano_a, indice_a, ano_b, indice_b, media_indices",
         )
-        .eq("resolucao", resolucaoNumero!);
+        .eq("resolucao", resolucaoNumero);
       if (error) {
         if (ehErroPermissao(error)) return [];
         throw error;
@@ -105,18 +106,15 @@ export function useIndicesDaResolucao(resolucaoNumero: string | null) {
   });
 }
 
-/** Números congelados no momento em que a comparação foi gravada. */
+/** Números oficiais congelados no momento em que a comparação foi gravada. */
 export type LinhaComparacaoGravada = {
   municipioId: string;
   municipio: string;
-  evolucaoId: string;
-  evolucaoNome: string;
-  mediaResolucao: number | null;
-  indiceBase: number | null;
-  indiceAtual: number | null;
-  mediaAtual: number | null;
+  mediaBase: number | null;
+  mediaComparada: number | null;
   pontos: number | null;
   variacao: number | null;
+  situacao: "subiu" | "caiu" | "estavel" | "sem_apuracao";
 };
 
 export type ComparacaoSalva = {
@@ -124,6 +122,7 @@ export type ComparacaoSalva = {
   nome: string;
   observacao: string | null;
   resolucao_numero: string;
+  resolucao_comparada_numero: string | null;
   evolucao_ids: string[];
   linhas: LinhaComparacaoGravada[];
   criado_em: string;
@@ -136,13 +135,44 @@ export function useComparacoesSalvas() {
     queryFn: async (): Promise<ComparacaoSalva[]> => {
       const { data, error } = await supabase
         .from("estatisticas_comparacoes")
-        .select("id, nome, observacao, resolucao_numero, evolucao_ids, linhas, criado_em")
+        .select(
+          "id, nome, observacao, resolucao_numero, resolucao_comparada_numero, evolucao_ids, linhas, criado_em",
+        )
         .order("criado_em", { ascending: false });
       if (error) {
         if (ehErroPermissao(error)) return [];
         throw error;
       }
-      return (data ?? []) as unknown as ComparacaoSalva[];
+      return (data ?? []).map((registro) => {
+        const comparacao = registro as unknown as ComparacaoSalva;
+        const linhas = Array.isArray(comparacao.linhas)
+          ? comparacao.linhas.map((linha) => {
+              const antiga = linha as unknown as Record<string, unknown>;
+              const mediaBase = numeroOuNulo(antiga["mediaBase"] ?? antiga["mediaResolucao"]);
+              const mediaComparada = numeroOuNulo(antiga["mediaComparada"] ?? antiga["mediaAtual"]);
+              const pontos =
+                mediaBase != null && mediaComparada != null ? mediaComparada - mediaBase : null;
+              const variacao = mediaBase && pontos != null ? (pontos / mediaBase) * 100 : null;
+              return {
+                municipioId: String(antiga["municipioId"] ?? ""),
+                municipio: String(antiga["municipio"] ?? "—"),
+                mediaBase,
+                mediaComparada,
+                pontos,
+                variacao,
+                situacao:
+                  variacao == null
+                    ? "sem_apuracao"
+                    : variacao > 0.5
+                      ? "subiu"
+                      : variacao < -0.5
+                        ? "caiu"
+                        : "estavel",
+              } satisfies LinhaComparacaoGravada;
+            })
+          : [];
+        return { ...comparacao, linhas };
+      });
     },
   });
 }
@@ -150,8 +180,8 @@ export function useComparacoesSalvas() {
 export type DadosComparacao = {
   nome: string;
   observacao?: string;
-  resolucaoNumero: string;
-  evolucaoIds: string[];
+  resolucaoBaseNumero: string;
+  resolucaoComparadaNumero: string;
   linhas: LinhaComparacaoGravada[];
 };
 
@@ -163,8 +193,9 @@ export function useSalvarComparacao() {
       const { error } = await supabase.from("estatisticas_comparacoes").insert({
         nome: d.nome,
         observacao: d.observacao?.trim() ? d.observacao.trim() : null,
-        resolucao_numero: d.resolucaoNumero,
-        evolucao_ids: d.evolucaoIds,
+        resolucao_numero: d.resolucaoBaseNumero,
+        resolucao_comparada_numero: d.resolucaoComparadaNumero,
+        evolucao_ids: [],
         linhas: d.linhas as unknown as never,
         criado_por: userData.user?.id ?? null,
       });
