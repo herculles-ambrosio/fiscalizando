@@ -55,6 +55,7 @@ import {
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { formatarPercentual } from "@/lib/format";
 import { formatarIndice } from "@/lib/vaf/indice";
+import { normalizarCodigoSef } from "@/lib/vaf/municipioArquivo";
 
 type Ordem = "nome" | "base" | "comparada" | "variacao" | "situacao";
 type Direcao = "asc" | "desc";
