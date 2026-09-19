@@ -98,15 +98,29 @@ export function ComparacaoResolucao() {
   const resolucaoComparada = resolucoes.find((r) => r.numero === comparadaNumero);
 
   const linhasAtuais = useMemo<LinhaComparacaoGravada[]>(() => {
-    const basePorMunicipio = new Map(
-      baseDados.filter((l) => l.municipio_id).map((l) => [l.municipio_id, l.media_indices]),
-    );
-    const comparadaPorMunicipio = new Map(
-      comparadaDados.filter((l) => l.municipio_id).map((l) => [l.municipio_id, l.media_indices]),
-    );
+    // Casa pelo vínculo direto e, como reserva, pelo código oficial do município:
+    // prefeituras cadastradas depois da carga da resolução ainda não têm vínculo.
+    const indexar = (linhas: typeof baseDados) => {
+      const porId = new Map<string, number | null>();
+      const porCodigo = new Map<string, number | null>();
+      for (const l of linhas) {
+        if (l.municipio_id) porId.set(l.municipio_id, l.media_indices);
+        const codigo = normalizarCodigoSef(l.codigo_mun);
+        if (codigo) porCodigo.set(codigo, l.media_indices);
+      }
+      return { porId, porCodigo };
+    };
+    const base = indexar(baseDados);
+    const comparada = indexar(comparadaDados);
+    const buscar = (idx: ReturnType<typeof indexar>, id: string, codigoSef: string | null) => {
+      const porId = idx.porId.get(id);
+      if (porId != null) return porId;
+      const codigo = normalizarCodigoSef(codigoSef);
+      return codigo ? idx.porCodigo.get(codigo) : undefined;
+    };
     return (municipios ?? []).map((municipio) => {
-      const mediaBaseRaw = basePorMunicipio.get(municipio.id);
-      const mediaComparadaRaw = comparadaPorMunicipio.get(municipio.id);
+      const mediaBaseRaw = buscar(base, municipio.id, municipio.codigo_sef);
+      const mediaComparadaRaw = buscar(comparada, municipio.id, municipio.codigo_sef);
       const mediaBase = mediaBaseRaw == null ? null : Number(mediaBaseRaw);
       const mediaComparada = mediaComparadaRaw == null ? null : Number(mediaComparadaRaw);
       const pontos = mediaBase != null && mediaComparada != null ? mediaComparada - mediaBase : null;
