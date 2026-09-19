@@ -50,6 +50,13 @@
       "when": 1789768917390,
       "tag": "0006_add_resolucao_comparada_estatisticas",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789820603930,
+      "tag": "0007_vincula_municipio_indices_resolucao",
+      "breakpoints": true
     }
   ]
 }
