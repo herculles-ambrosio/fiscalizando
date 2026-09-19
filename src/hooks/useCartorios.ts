@@ -247,7 +247,9 @@ export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | nul
               .eq("competencia_ano", competencia.ano)
               .eq("competencia_mes", competencia.mes);
           }
-          const { data, error } = await consulta.range(inicio, inicio + 999);
+          const { data, error } = await consulta
+            .order("id", { ascending: true })
+            .range(inicio, inicio + 999);
           if (error) throw error;
           saida.push(...(data ?? []));
           if (!data || data.length < 1000) break;
@@ -266,7 +268,9 @@ export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | nul
               .eq("competencia_ano", competencia.ano)
               .eq("competencia_mes", competencia.mes);
           }
-          const { data, error } = await consulta.range(inicio, inicio + 999);
+          const { data, error } = await consulta
+            .order("id", { ascending: true })
+            .range(inicio, inicio + 999);
           if (error) throw error;
           saida.push(...(data ?? []));
           if (!data || data.length < 1000) break;
