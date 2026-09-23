@@ -181,13 +181,14 @@ export default function PrevisaoRepasse() {
       setArrInicializada(true);
       return;
     }
-    // Na resolução, ano_a é o ano mais antigo e ano_b o mais recente.
-    if (indicesSalvos && resolucaoAtual && (resolucaoAtual.vaf_a || resolucaoAtual.vaf_b)) {
-      setArrAnterior(formatar(resolucaoAtual.vaf_a));
-      setArrAtual(formatar(resolucaoAtual.vaf_b));
+    // Sem apuração própria, usa as duas arrecadações mais recentes gravadas
+    // em qualquer apuração do sistema (o valor do Estado é o mesmo para todos).
+    if (indicesSalvos && arrGlobais) {
+      setArrAnterior(formatar(arrGlobais.anterior));
+      setArrAtual(formatar(arrGlobais.atual));
       setArrInicializada(true);
     }
-  }, [indicesSalvos, resolucaoAtual, arrInicializada]);
+  }, [indicesSalvos, arrGlobais, arrInicializada]);
 
   const arrecadacaoAnterior = paraNumero(arrAnterior);
   const arrecadacaoAtual = paraNumero(arrAtual);
