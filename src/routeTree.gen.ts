@@ -29,6 +29,7 @@ import { Route as AuthenticatedIndiceRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedModelosRouteImport } from './routes/_authenticated/modelos'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
 import { Route as AuthenticatedOficiosRouteImport } from './routes/_authenticated/oficios'
+import { Route as AuthenticatedPrevisaoRepasseRouteImport } from './routes/_authenticated/previsao-repasse'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
 import { Route as AuthenticatedConsultoriaCodigosSefRouteImport } from './routes/_authenticated/consultoria/codigos-sef'
@@ -155,6 +156,12 @@ const AuthenticatedOficiosRoute = AuthenticatedOficiosRouteImport.update({
   path: '/oficios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPrevisaoRepasseRoute =
+  AuthenticatedPrevisaoRepasseRouteImport.update({
+    id: '/previsao-repasse',
+    path: '/previsao-repasse',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTrocarSenhaRoute =
   AuthenticatedTrocarSenhaRouteImport.update({
     id: '/trocar-senha',
@@ -291,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/oficios': typeof AuthenticatedOficiosRoute
+  '/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
@@ -331,6 +339,7 @@ export interface FileRoutesByTo {
   '/modelos': typeof AuthenticatedModelosRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/oficios': typeof AuthenticatedOficiosRoute
+  '/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
@@ -374,6 +383,7 @@ export interface FileRoutesById {
   '/_authenticated/modelos': typeof AuthenticatedModelosRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/_authenticated/oficios': typeof AuthenticatedOficiosRoute
+  '/_authenticated/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/_authenticated/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
@@ -417,6 +427,7 @@ export interface FileRouteTypes {
     | '/modelos'
     | '/nova-apuracao'
     | '/oficios'
+    | '/previsao-repasse'
     | '/trocar-senha'
     | '/cargas/$cargaId'
     | '/consultoria/codigos-sef'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/modelos'
     | '/nova-apuracao'
     | '/oficios'
+    | '/previsao-repasse'
     | '/trocar-senha'
     | '/cargas/$cargaId'
     | '/consultoria/codigos-sef'
@@ -499,6 +511,7 @@ export interface FileRouteTypes {
     | '/_authenticated/modelos'
     | '/_authenticated/nova-apuracao'
     | '/_authenticated/oficios'
+    | '/_authenticated/previsao-repasse'
     | '/_authenticated/trocar-senha'
     | '/_authenticated/cargas/$cargaId'
     | '/_authenticated/consultoria/codigos-sef'
@@ -667,6 +680,13 @@ declare module '@tanstack/react-router' {
       path: '/oficios'
       fullPath: '/oficios'
       preLoaderRoute: typeof AuthenticatedOficiosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/previsao-repasse': {
+      id: '/_authenticated/previsao-repasse'
+      path: '/previsao-repasse'
+      fullPath: '/previsao-repasse'
+      preLoaderRoute: typeof AuthenticatedPrevisaoRepasseRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/trocar-senha': {
@@ -894,6 +914,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedModelosRoute: typeof AuthenticatedModelosRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
   AuthenticatedOficiosRoute: typeof AuthenticatedOficiosRoute
+  AuthenticatedPrevisaoRepasseRoute: typeof AuthenticatedPrevisaoRepasseRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
   AuthenticatedCargasCargaIdRoute: typeof AuthenticatedCargasCargaIdRoute
 }
@@ -918,6 +939,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedModelosRoute: AuthenticatedModelosRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
   AuthenticatedOficiosRoute: AuthenticatedOficiosRoute,
+  AuthenticatedPrevisaoRepasseRoute: AuthenticatedPrevisaoRepasseRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
   AuthenticatedCargasCargaIdRoute: AuthenticatedCargasCargaIdRoute,
 }
