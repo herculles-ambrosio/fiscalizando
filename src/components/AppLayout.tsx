@@ -5,6 +5,7 @@ import {
   BookOpen,
   CalendarClock,
   ClipboardList,
+  Coins,
   FileUp,
   Gavel,
   History,
