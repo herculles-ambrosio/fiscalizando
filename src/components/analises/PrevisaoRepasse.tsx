@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, TrendingDown, TrendingUp } from "lucide-react";
+import { Download, FileText, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import {
   Bar,
@@ -186,21 +186,154 @@ export default function PrevisaoRepasse() {
     [`Previsto ${exercicioPrevisto}`]: m.previsto ?? 0,
   }));
 
-  function exportar() {
-    const csv = montarCsv(
-      ["Mês", `Recebido ${exercicio ?? ""}`, `Previsto ${exercicioPrevisto}`, "Diferença"],
-      previsao.meses.map((m) => [
-        NOME_MES[m.mes - 1],
-        m.recebido ?? "",
-        m.previsto ?? "",
-        m.previsto != null && m.recebido != null ? m.previsto - m.recebido : "",
-      ]),
+  const nomeBase = `previsao-vaf-${municipio?.nome ?? "municipio"}-${exercicioPrevisto}`;
+  const ultimoMes = previsao.atual.mesesComValor.at(-1);
+  const ultimoMesNome = ultimoMes ? (NOME_MES[ultimoMes - 1] as string) : "—";
+
+  /** Memória de cálculo em pares rótulo/valor, usada no CSV e no PDF. */
+  const memoria = useMemo(() => {
+    const linhas: [string, string][] = [
+      ["Município", municipio?.nome ?? "—"],
+      ["Exercício recebido", String(exercicio ?? "—")],
+      ["Exercício previsto", String(exercicioPrevisto)],
+      ["Emitido em", new Date().toLocaleString("pt-BR")],
+      ["Índice aplicado hoje", indiceTexto(indiceAtual)],
+      [
+        "Índice projetado",
+        `${indiceTexto(indiceProjetado)} (${
+          origemIndice === "media"
+            ? "média das duas últimas apurações"
+            : origemIndice === "ultima"
+              ? "somente a última apuração"
+              : "digitado"
+        })`,
+      ],
+      ["Variação do índice", formatarPercentual(previsao.variacaoIndicePct)],
+    ];
+    if (base === "arrecadacao_estado") {
+      linhas.push(
+        ["Arrecadação do Estado — apuração anterior", formatarMoeda(arrecadacaoAnterior)],
+        ["Arrecadação do Estado — apuração atual", formatarMoeda(arrecadacaoAtual)],
+        [
+          "Crescimento da arrecadação aplicado",
+          formatarPercentual(previsao.crescimentoArrecadacaoPct),
+        ],
+      );
+    }
+    if (base === "crescimento") {
+      linhas.push([
+        "Crescimento informado",
+        formatarPercentual(paraNumero(crescimento) ?? 0),
+      ]);
+    }
+    linhas.push(
+      [
+        previsao.origem === "estado"
+          ? "Bolada do Estado no ano (75% do VAF)"
+          : "Bolada estimada pelo recebido (valor ÷ índice)",
+        formatarMoeda(
+          previsao.origem === "estado" ? previsao.boladaAnual : previsao.valorPorPontoAnual,
+        ),
+      ],
+      [
+        `Recebido até ${ultimoMesNome} de ${exercicio ?? "—"}`,
+        formatarMoeda(previsao.atual.recebido),
+      ],
+      [`Ano fechado estimado ${exercicio ?? ""}`, formatarMoeda(previsao.atual.projecaoAnual)],
+      [`Previsão anual ${exercicioPrevisto}`, formatarMoeda(previsao.previsaoAnual)],
+      [
+        "Diferença sobre o ano fechado",
+        `${formatarMoeda(previsao.diferenca)} (${formatarPercentual(previsao.variacaoPct)})`,
+      ],
     );
-    baixarCsv(`previsao-vaf-${municipio?.nome ?? "municipio"}-${exercicioPrevisto}.csv`, csv);
+    return linhas;
+  }, [
+    municipio,
+    exercicio,
+    exercicioPrevisto,
+    indiceAtual,
+    indiceProjetado,
+    origemIndice,
+    base,
+    crescimento,
+    arrecadacaoAnterior,
+    arrecadacaoAtual,
+    previsao,
+    ultimoMesNome,
+  ]);
+
+  const linhasMes = previsao.meses.map((m) => ({
+    mes: NOME_MES[m.mes - 1] as string,
+    recebido: m.recebido,
+    previsto: m.previsto,
+    diferenca: m.previsto != null && m.recebido != null ? m.previsto - m.recebido : null,
+  }));
+
+  const totalPrevisto = linhasMes.reduce((a, m) => a + (m.previsto ?? 0), 0);
+  const totalRecebido = linhasMes.reduce((a, m) => a + (m.recebido ?? 0), 0);
+
+  function exportar() {
+    const csv = [
+      montarCsv(["Memória de cálculo da previsão", ""], memoria),
+      "",
+      montarCsv(
+        ["Mês", `Recebido ${exercicio ?? ""}`, `Previsto ${exercicioPrevisto}`, "Diferença"],
+        [
+          ...linhasMes.map((m) => [m.mes, m.recebido ?? "", m.previsto ?? "", m.diferenca ?? ""]),
+          ["Total do ano", totalRecebido, totalPrevisto, totalPrevisto - totalRecebido],
+        ],
+      ),
+    ].join("\n");
+    baixarCsv(`${nomeBase}.csv`, csv);
+  }
+
+  async function exportarPdf() {
+    const { gerarPdf } = await import("@/lib/vaf/relatorioPdf");
+    await gerarPdf(`${nomeBase}.pdf`, [
+      { tipo: "titulo", texto: `Previsão de repasse do VAF — ${exercicioPrevisto}` },
+      { tipo: "secao", texto: "Memória de cálculo" },
+      {
+        tipo: "tabela",
+        cabecalho: ["Item", "Valor"],
+        larguras: [4, 2.6],
+        direita: [false, true],
+        linhas: memoria.map(([r, v]) => [r, v]),
+      },
+      { tipo: "secao", texto: "Mês a mês" },
+      {
+        tipo: "tabela",
+        cabecalho: [
+          "Mês",
+          `Recebido ${exercicio ?? ""}`,
+          `Previsto ${exercicioPrevisto}`,
+          "Diferença",
+        ],
+        larguras: [2, 2, 2, 2],
+        direita: [false, true, true, true],
+        linhas: [
+          ...linhasMes.map((m) => [
+            m.mes,
+            formatarMoeda(m.recebido),
+            formatarMoeda(m.previsto),
+            formatarMoeda(m.diferenca),
+          ]),
+          [
+            "Total do ano",
+            formatarMoeda(totalRecebido),
+            formatarMoeda(totalPrevisto),
+            formatarMoeda(totalPrevisto - totalRecebido),
+          ],
+        ],
+      },
+      {
+        tipo: "texto",
+        texto:
+          "O repasse de cada mês é o índice do município aplicado sobre a bolada do VAF do Estado (75% da transferência líquida). A apuração do VAF não é alterada.",
+      },
+    ]);
   }
 
   const semDados = !isLoading && previsao.atual.mesesComValor.length === 0;
-  const ultimoMes = previsao.atual.mesesComValor.at(-1);
 
   return (
     <div className="space-y-6">
@@ -497,9 +630,14 @@ export default function PrevisaoRepasse() {
       <Card>
         <CardHeader className="flex-row items-center justify-between pb-2">
           <CardTitle className="text-base">Mês a mês</CardTitle>
-          <Button variant="outline" size="sm" onClick={exportar}>
-            <Download className="mr-2 h-4 w-4" /> CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={exportar}>
+              <Download className="mr-2 h-4 w-4" /> CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => void exportarPdf()}>
+              <FileText className="mr-2 h-4 w-4" /> PDF
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="h-72">
