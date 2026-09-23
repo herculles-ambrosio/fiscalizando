@@ -26,7 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
 import { useIndicesSalvos } from "@/hooks/useIndicesHistorico";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
-import { useRepassesEstado } from "@/hooks/useRepassesEstado";
+import { useIndiceAplicado } from "@/hooks/useIndiceAplicado";
+import { useExerciciosEstado, useRepassesEstado } from "@/hooks/useRepassesEstado";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import {
@@ -61,23 +62,34 @@ function paraNumero(texto: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-type OrigemIndice = "media" | "ultima" | "digitado";
+type OrigemIndice = "media" | "ultima" | "digitado" | "resolucao";
 
 export default function PrevisaoRepasse() {
   const { municipio, municipioId } = useMunicipioAtivo();
   const { data: exercicios } = useIcmsExercicios();
+  const { data: exerciciosEstado } = useExerciciosEstado();
   const [exercicio, setExercicio] = useState<number | null>(null);
   useEffect(() => {
     if (exercicio != null) return;
     if (exercicios?.length) setExercicio(exercicios[0] as number);
+    else if (exerciciosEstado?.length) setExercicio(exerciciosEstado[0] as number);
     else if (exercicios) setExercicio(new Date().getFullYear());
-  }, [exercicios, exercicio]);
+  }, [exercicios, exerciciosEstado, exercicio]);
 
   const { data: dados, isLoading } = useIcmsDados(exercicio);
   const { data: indicesSalvos } = useIndicesSalvos(municipioId);
   const { data: bolada } = useRepassesEstado(exercicio);
+  // Índices oficiais publicados em resolução da SEF: servem de fonte para as
+  // prefeituras que não têm apuração própria carregada.
+  const { data: resolucaoAtual } = useIndiceAplicado(municipioId, exercicio);
+  const { data: resolucaoProxima } = useIndiceAplicado(
+    municipioId,
+    exercicio != null ? exercicio + 1 : null,
+  );
 
-  const serie: MesRepasse[] = useMemo(() => {
+  const boladaMesesFjp = useMemo(() => (bolada ?? []).map((m) => m.vaf75), [bolada]);
+
+  const seriePropria: MesRepasse[] = useMemo(() => {
     const s = dados?.series.get("vaf");
     return Array.from({ length: 12 }, (_, i) => ({
       mes: i + 1,
@@ -86,10 +98,30 @@ export default function PrevisaoRepasse() {
     }));
   }, [dados]);
 
+  const temSeriePropria = seriePropria.some((m) => m.valor != null && m.valor > 0);
+  const indiceResolucaoAtual = resolucaoAtual?.media_indices ?? null;
+  const indiceResolucaoProxima = resolucaoProxima?.media_indices ?? null;
+
+  /** Série estimada pela resolução aplicada x bolada mensal da FJP. */
+  const serieResolucao: MesRepasse[] = useMemo(() => {
+    if (indiceResolucaoAtual == null || indiceResolucaoAtual <= 0) return [];
+    return Array.from({ length: 12 }, (_, i) => {
+      const bol = boladaMesesFjp[i] ?? null;
+      return {
+        mes: i + 1,
+        indice: indiceResolucaoAtual,
+        valor: bol != null && bol > 0 ? (bol * indiceResolucaoAtual) / 100 : null,
+      };
+    });
+  }, [indiceResolucaoAtual, boladaMesesFjp]);
+
+  const usandoResolucao = !temSeriePropria && serieResolucao.length > 0;
+  const serie = usandoResolucao ? serieResolucao : seriePropria;
+
   const indiceAtual = useMemo(() => {
     const comIndice = serie.filter((m) => m.indice != null && m.indice > 0);
-    return comIndice.at(-1)?.indice ?? null;
-  }, [serie]);
+    return comIndice.at(-1)?.indice ?? indiceResolucaoAtual;
+  }, [serie, indiceResolucaoAtual]);
 
   const apurados = useMemo(
     () => (indicesSalvos ?? []).map((i) => i.indice).filter((v): v is number => v != null && v > 0),
@@ -102,14 +134,27 @@ export default function PrevisaoRepasse() {
     return dois.reduce((a, b) => a + b, 0) / dois.length;
   }, [apurados]);
 
+  /** Índice publicado para o exercício previsto (ou o do exercício atual). */
+  const indiceResolucaoProjetado = indiceResolucaoProxima ?? indiceResolucaoAtual;
+
   const [origemIndice, setOrigemIndice] = useState<OrigemIndice>("media");
+  const [origemAjustada, setOrigemAjustada] = useState(false);
+  // Sem apuração própria, a origem padrão passa a ser a resolução da SEF.
+  useEffect(() => {
+    if (origemAjustada || !indicesSalvos) return;
+    if (!apurados.length && indiceResolucaoProjetado != null) setOrigemIndice("resolucao");
+    setOrigemAjustada(true);
+  }, [indicesSalvos, apurados.length, indiceResolucaoProjetado, origemAjustada]);
+
   const [indiceDigitado, setIndiceDigitado] = useState("");
   const indiceProjetado =
     origemIndice === "media"
       ? mediaApurada
       : origemIndice === "ultima"
         ? ultimaApuracao
-        : paraNumero(indiceDigitado);
+        : origemIndice === "resolucao"
+          ? indiceResolucaoProjetado
+          : paraNumero(indiceDigitado);
 
   const [base, setBase] = useState<BaseReceita>("ano_anterior");
   const [crescimento, setCrescimento] = useState("0");
