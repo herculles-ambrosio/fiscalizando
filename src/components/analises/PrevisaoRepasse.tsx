@@ -68,7 +68,9 @@ export default function PrevisaoRepasse() {
   const { data: exercicios } = useIcmsExercicios();
   const [exercicio, setExercicio] = useState<number | null>(null);
   useEffect(() => {
-    if (exercicios?.length && exercicio == null) setExercicio(exercicios[0] as number);
+    if (exercicio != null) return;
+    if (exercicios?.length) setExercicio(exercicios[0] as number);
+    else if (exercicios) setExercicio(new Date().getFullYear());
   }, [exercicios, exercicio]);
 
   const { data: dados, isLoading } = useIcmsDados(exercicio);
