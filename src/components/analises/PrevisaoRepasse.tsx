@@ -167,17 +167,27 @@ export default function PrevisaoRepasse() {
   const [arrInicializada, setArrInicializada] = useState(false);
 
   // Preenche as arrecadações do Estado com o que está gravado nas duas
-  // apurações usadas na projeção (o usuário pode editar).
+  // apurações usadas na projeção (o usuário pode editar). Sem apuração
+  // própria, cai nos valores da arrecadação gravados na resolução da SEF.
   useEffect(() => {
-    if (arrInicializada || !indicesSalvos?.length) return;
+    if (arrInicializada) return;
     const formatar = (v: number | null | undefined) =>
       v != null && v > 0
         ? v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : "";
-    setArrAtual(formatar(indicesSalvos[0]?.vaf_estadual));
-    setArrAnterior(formatar(indicesSalvos[1]?.vaf_estadual));
-    setArrInicializada(true);
-  }, [indicesSalvos, arrInicializada]);
+    if (indicesSalvos?.length) {
+      setArrAtual(formatar(indicesSalvos[0]?.vaf_estadual));
+      setArrAnterior(formatar(indicesSalvos[1]?.vaf_estadual));
+      setArrInicializada(true);
+      return;
+    }
+    // Na resolução, ano_a é o ano mais antigo e ano_b o mais recente.
+    if (indicesSalvos && resolucaoAtual && (resolucaoAtual.vaf_a || resolucaoAtual.vaf_b)) {
+      setArrAnterior(formatar(resolucaoAtual.vaf_a));
+      setArrAtual(formatar(resolucaoAtual.vaf_b));
+      setArrInicializada(true);
+    }
+  }, [indicesSalvos, resolucaoAtual, arrInicializada]);
 
   const arrecadacaoAnterior = paraNumero(arrAnterior);
   const arrecadacaoAtual = paraNumero(arrAtual);
