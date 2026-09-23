@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, TrendingDown, TrendingUp } from "lucide-react";
+import { Download, FileText, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import {
   Bar,
