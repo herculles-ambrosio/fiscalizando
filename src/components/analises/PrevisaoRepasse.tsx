@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-// bloco da base "arrecadacao_estado" é renderizado no card de premissas
+/* memória de cálculo: linhas extras da arrecadação entram na tabela abaixo */
 import { Download, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import {
