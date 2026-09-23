@@ -318,6 +318,10 @@ export default function PrevisaoRepasse() {
     arrecadacaoAnterior,
     arrecadacaoAtual,
     previsao,
+    usandoResolucao,
+    resolucaoAtual,
+    resolucaoProxima,
+    boladaMeses,
     ultimoMesNome,
   ]);
 
@@ -411,7 +415,7 @@ export default function PrevisaoRepasse() {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {(exercicios ?? []).map((a) => (
+                {anosDisponiveis.map((a) => (
                   <SelectItem key={a} value={String(a)}>
                     {a}
                   </SelectItem>
@@ -432,6 +436,12 @@ export default function PrevisaoRepasse() {
               <SelectContent>
                 <SelectItem value="media">Média das duas últimas apurações</SelectItem>
                 <SelectItem value="ultima">Somente a última apuração</SelectItem>
+                {indiceResolucaoProjetado != null && (
+                  <SelectItem value="resolucao">
+                    Média da Resolução{" "}
+                    {resolucaoProxima?.resolucao ?? resolucaoAtual?.resolucao ?? "SEF"}
+                  </SelectItem>
+                )}
                 <SelectItem value="digitado">Digitar o índice</SelectItem>
               </SelectContent>
             </Select>
