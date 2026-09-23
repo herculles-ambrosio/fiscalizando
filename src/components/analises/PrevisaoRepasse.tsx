@@ -334,7 +334,6 @@ export default function PrevisaoRepasse() {
   }
 
   const semDados = !isLoading && previsao.atual.mesesComValor.length === 0;
-  const ultimoMes = previsao.atual.mesesComValor.at(-1);
 
   return (
     <div className="space-y-6">
