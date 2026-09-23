@@ -475,8 +475,21 @@ export function useSalvarDeclaracao() {
       issDeclarado: number;
       issPago: number;
       observacao: string | null;
+      remover?: boolean;
     }) => {
       const usuarioId = await exigirContexto(municipioId);
+      if (dados.remover) {
+        const { error } = await supabase
+          .from("cartorio_declaracoes")
+          .delete()
+          .eq("municipio_id", municipioId!)
+          .eq("competencia_ano", dados.competencia.ano)
+          .eq("competencia_mes", dados.competencia.mes)
+          .eq("cns", dados.cns)
+          .eq("tipo_servico", dados.tipoServico);
+        if (error) throw error;
+        return;
+      }
       const { error } = await supabase.from("cartorio_declaracoes").upsert(
         {
           municipio_id: municipioId!,
