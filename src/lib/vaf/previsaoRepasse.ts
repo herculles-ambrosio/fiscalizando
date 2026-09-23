@@ -140,7 +140,14 @@ export function calcularPrevisao(entrada: EntradaPrevisao): Previsao {
   const bolada = entrada.boladaEstado ?? [];
   const temBolada = bolada.some((v) => v != null && v > 0);
   const origem: "estado" | "municipio" = temBolada ? "estado" : "municipio";
-  const fator = entrada.base === "crescimento" ? 1 + (entrada.crescimentoPct ?? 0) / 100 : 1;
+  const fatorArr = fatorArrecadacao(entrada.arrecadacaoAnterior, entrada.arrecadacaoAtual);
+  const crescimentoArrecadacaoPct = fatorArr != null ? (fatorArr - 1) * 100 : null;
+  const fator =
+    entrada.base === "crescimento"
+      ? 1 + (entrada.crescimentoPct ?? 0) / 100
+      : entrada.base === "arrecadacao_estado"
+        ? (fatorArr ?? 1)
+        : 1;
 
   let boladaAnual: number | null = null;
   let valorPorPontoAnual: number | null = null;
