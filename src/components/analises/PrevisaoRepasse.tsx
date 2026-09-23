@@ -126,8 +126,8 @@ export default function PrevisaoRepasse() {
       v != null && v > 0
         ? v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : "";
-    setArrAtual(formatar(indicesSalvos[0]?.vafEstadual));
-    setArrAnterior(formatar(indicesSalvos[1]?.vafEstadual));
+    setArrAtual(formatar(indicesSalvos[0]?.vaf_estadual));
+    setArrAnterior(formatar(indicesSalvos[1]?.vaf_estadual));
     setArrInicializada(true);
   }, [indicesSalvos, arrInicializada]);
 
