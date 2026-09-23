@@ -881,6 +881,64 @@ export default function PrevisaoRepasse() {
           </p>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-4 w-4 text-primary" /> Tire uma dúvida sobre esta previsão
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Escreva a dúvida com suas palavras. A explicação é gerada a partir dos números que estão
+            nesta tela (índices, participações e valores mês a mês).
+          </p>
+          <Textarea
+            value={duvida}
+            onChange={(e) => setDuvida(e.target.value)}
+            rows={3}
+            placeholder="Ex.: por que o previsto de janeiro ficou nesse valor?"
+          />
+          <div className="flex flex-wrap gap-2">
+            {sugestoes.map((s) => (
+              <Button key={s} variant="outline" size="sm" onClick={() => setDuvida(s)}>
+                {s}
+              </Button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={() => void enviarDuvida()} disabled={consultando || duvida.trim().length < 3}>
+              {consultando ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Consultando…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" /> Explicar
+                </>
+              )}
+            </Button>
+            {respostaIa && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setRespostaIa(null);
+                  setDuvida("");
+                }}
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+          {erroIa && <p className="text-sm text-destructive">{erroIa}</p>}
+          {respostaIa && (
+            <div className="whitespace-pre-wrap rounded-md border bg-muted/40 p-4 text-sm leading-relaxed">
+              {respostaIa}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
