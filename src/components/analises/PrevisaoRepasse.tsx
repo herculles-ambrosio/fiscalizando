@@ -183,7 +183,7 @@ export default function PrevisaoRepasse() {
       ? (arrecadacaoAtual / arrecadacaoAnterior - 1) * 100
       : null;
 
-  const boladaMeses = useMemo(() => (bolada ?? []).map((m) => m.vaf75), [bolada]);
+  const boladaMeses = boladaMesesFjp;
   const temBolada = boladaMeses.some((v) => v != null && v > 0);
 
   const previsao = useMemo(
@@ -250,11 +250,25 @@ export default function PrevisaoRepasse() {
             ? "média das duas últimas apurações"
             : origemIndice === "ultima"
               ? "somente a última apuração"
-              : "digitado"
+              : origemIndice === "resolucao"
+                ? `média da Resolução ${resolucaoProxima?.resolucao ?? resolucaoAtual?.resolucao ?? "SEF"}`
+                : "digitado"
         })`,
       ],
       ["Variação do índice", formatarPercentual(previsao.variacaoIndicePct)],
     ];
+    if (usandoResolucao) {
+      linhas.push(
+        [
+          "Origem dos valores mensais",
+          `Resolução ${resolucaoAtual?.resolucao ?? "—"} x transferências da FJP de ${exercicio ?? "—"}`,
+        ],
+        [
+          "Meses da FJP disponíveis",
+          String(boladaMeses.filter((v) => v != null && v > 0).length),
+        ],
+      );
+    }
     if (base === "arrecadacao_estado") {
       linhas.push(
         ["Arrecadação do Estado — apuração anterior", formatarMoeda(arrecadacaoAnterior)],
