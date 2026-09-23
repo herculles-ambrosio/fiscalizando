@@ -104,6 +104,10 @@ export type EntradaPrevisao = {
   base: BaseReceita;
   /** percentual de crescimento da arrecadação (opção "crescimento") */
   crescimentoPct?: number;
+  /** arrecadação do Estado no ano da apuração anterior (opção "arrecadacao_estado") */
+  arrecadacaoAnterior?: number | null;
+  /** arrecadação do Estado no ano da apuração atual (opção "arrecadacao_estado") */
+  arrecadacaoAtual?: number | null;
   /** total anual do critério VAF do município informado à mão (sem bolada cadastrada) */
   receitaManual?: number | null;
   /** bolada estadual do VAF mês a mês (75% da transferência líquida) */
