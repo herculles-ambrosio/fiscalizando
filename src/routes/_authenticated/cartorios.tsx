@@ -511,9 +511,17 @@ function LinhaCartorio({
   function gravar() {
     const baseNum = numero(base);
     const pagoNum = numero(pago);
-    setBase(base.trim() === "" ? "" : formatarValorGrid(baseNum));
-    setPago(pago.trim() === "" ? "" : formatarValorGrid(pagoNum));
-    if (baseNum === (linha.baseDeclarada ?? 0) && pagoNum === (linha.issPago ?? 0)) return;
+    const vazio = baseNum === 0 && pagoNum === 0;
+    setBase(vazio || base.trim() === "" ? "" : formatarValorGrid(baseNum));
+    setPago(vazio || pago.trim() === "" ? "" : formatarValorGrid(pagoNum));
+    if (vazio) {
+      if (!linha.temDeclaracao) return;
+    } else if (
+      linha.temDeclaracao &&
+      baseNum === (linha.baseDeclarada ?? 0) &&
+      pagoNum === (linha.issPago ?? 0)
+    )
+      return;
 
     salvar.mutate(
       {
@@ -525,9 +533,10 @@ function LinhaCartorio({
         issDeclarado: (baseNum * aliquota) / 100,
         issPago: pagoNum,
         observacao: null,
+        remover: vazio,
       },
       {
-        onSuccess: () => toast.success("Declaração salva."),
+        onSuccess: () => toast.success(vazio ? "Declaração removida." : "Declaração salva."),
         onError: (e) => toast.error(e instanceof Error ? e.message : "Não foi possível salvar."),
       },
     );

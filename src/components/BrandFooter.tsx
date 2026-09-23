@@ -1,5 +1,6 @@
 import logoAsset from "@/assets/Htechminas_transparente-2.png.asset.json";
 import { cn } from "@/lib/utils";
+import { DATA_VERSAO, VERSAO } from "@/lib/versao";
 
 interface BrandFooterProps {
   variante?: "escuro" | "claro";
@@ -25,6 +26,8 @@ export function BrandFooter({ variante = "claro", tamanho = "sm", className }: B
         <p className="font-medium text-foreground/80">H-Tech Minas</p>
         <p>Consultoria Tributária · Desenvolvimento de Sistemas</p>
         <p>© {new Date().getFullYear()}</p>
+        <p className="mt-0.5 font-mono">Versão {VERSAO}</p>
+        <p>Atualizada em {DATA_VERSAO}</p>
       </div>
     </div>
   );
