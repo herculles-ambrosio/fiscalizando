@@ -630,9 +630,14 @@ export default function PrevisaoRepasse() {
       <Card>
         <CardHeader className="flex-row items-center justify-between pb-2">
           <CardTitle className="text-base">Mês a mês</CardTitle>
-          <Button variant="outline" size="sm" onClick={exportar}>
-            <Download className="mr-2 h-4 w-4" /> CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={exportar}>
+              <Download className="mr-2 h-4 w-4" /> CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => void exportarPdf()}>
+              <FileText className="mr-2 h-4 w-4" /> PDF
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="h-72">
