@@ -44,11 +44,17 @@ export default function TransferenciasEstado() {
   const [texto, setTexto] = useState("");
   const [meses, setMeses] = useState<MesEstado[] | null>(null);
 
-  useEffect(() => {
+  // Zera a leitura colada apenas quando o usuário troca o exercício na mão;
+  // em ler() o exercício muda junto com os meses, então não pode apagar aqui.
+  function trocarExercicio(ano: number) {
+    setExercicio(ano);
     setMeses(null);
-  }, [exercicio]);
+  }
 
   const linhas = meses ?? salvos ?? [];
+  // Muda quando a fonte das linhas troca (leitura colada / banco / vazio),
+  // forçando a remontagem dos inputs para exibirem os valores carregados.
+  const fonteLinhas = meses ? "leitura" : salvos ? "banco" : "vazio";
 
   const total = useMemo(
     () => linhas.reduce((a, m) => a + (m.vaf75 ?? 0), 0),
@@ -106,7 +112,7 @@ export default function TransferenciasEstado() {
               <Label>Exercício</Label>
               <Input
                 value={exercicio}
-                onChange={(e) => setExercicio(Number(e.target.value) || anoAtual)}
+                onChange={(e) => trocarExercicio(Number(e.target.value) || anoAtual)}
               />
               {!!exercicios?.length && (
                 <p className="text-xs text-muted-foreground">
@@ -151,7 +157,7 @@ export default function TransferenciasEstado() {
                 <th className="py-2">25% Lei Robin Hood</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody key={`${exercicio}-${fonteLinhas}`}>
               {(linhas.length
                 ? linhas
                 : Array.from({ length: 12 }, (_, i) => ({
