@@ -90,7 +90,7 @@ export function useEsportesAnos() {
       contagens.forEach((res, i) => {
         if ((res.count ?? 0) > 0) {
           const c = candidatos[i];
-          chaves.set(`${c.ano}|${c.fonte}`, c);
+          if (c) chaves.set(`${c.ano}|${c.fonte}`, c);
         }
       });
       return [...chaves.values()].sort((a, b) => b.ano - a.ano || a.fonte.localeCompare(b.fonte));
