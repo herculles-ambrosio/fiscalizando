@@ -812,8 +812,8 @@ export default function PrevisaoRepasse() {
                 <tr className="border-b text-left text-xs uppercase text-muted-foreground">
                   <th className="py-2">Mês</th>
                   <th className="py-2 text-right">Recebido/estimado {exercicio ?? ""}</th>
-                  <th className="py-2 text-right text-destructive">Previsto {exercicioPrevisto}</th>
-                  <th className="bg-gold-soft py-2 text-right text-gold-foreground">Diferença</th>
+                  <th className="py-2 text-right">Previsto {exercicioPrevisto}</th>
+                  <th className="py-2 text-right font-bold">Diferença</th>
                 </tr>
               </thead>
               <tbody>
@@ -824,6 +824,12 @@ export default function PrevisaoRepasse() {
                     m.previsto != null && recebidoComparacao != null
                       ? m.previsto - recebidoComparacao
                       : null;
+                  const corResultado =
+                    dif != null && dif > 0
+                      ? "text-normal-foreground"
+                      : dif != null && dif < 0
+                        ? "text-destructive"
+                        : "";
                   const participacao = previsao.participacaoMeses[m.mes - 1] ?? null;
                   const boladaMes = boladaMeses[m.mes - 1] ?? null;
                   const explicacao =
@@ -850,7 +856,7 @@ export default function PrevisaoRepasse() {
                           {formatarMoeda(recebidoComparacao)}
                         </span>
                       </td>
-                      <td className="py-1.5 text-right font-medium text-destructive">
+                      <td className={`py-1.5 text-right font-medium ${corResultado}`}>
                         {explicacao ? (
                           <span className="group relative inline-block cursor-help border-b border-dashed border-muted-foreground/50">
                             {formatarMoeda(m.previsto)}
@@ -866,7 +872,7 @@ export default function PrevisaoRepasse() {
                           formatarMoeda(m.previsto)
                         )}
                       </td>
-                      <td className="bg-gold-soft py-1.5 text-right font-medium text-gold-foreground">
+                      <td className={`py-1.5 text-right font-bold ${corResultado}`}>
                         {formatarMoeda(dif)}
                       </td>
                     </tr>
@@ -884,12 +890,18 @@ export default function PrevisaoRepasse() {
                     (m) => valorRecebidoOuEstimado(m.recebido) != null,
                   );
                   const totDif = temRecebido ? totPrevisto - totRecebido : null;
+                  const corTotal =
+                    totDif != null && totDif > 0
+                      ? "text-normal-foreground"
+                      : totDif != null && totDif < 0
+                        ? "text-destructive"
+                        : "";
                   return (
                     <tr className="border-t-2 font-semibold">
                       <td className="py-2">Total anual</td>
                       <td className="py-2 text-right">{formatarMoeda(temRecebido ? totRecebido : null)}</td>
-                      <td className="py-2 text-right text-destructive">{formatarMoeda(totPrevisto)}</td>
-                      <td className="bg-gold-soft py-2 text-right text-gold-foreground">
+                      <td className={`py-2 text-right ${corTotal}`}>{formatarMoeda(totPrevisto)}</td>
+                      <td className={`py-2 text-right font-bold ${corTotal}`}>
                         {formatarMoeda(totDif)}
                       </td>
                     </tr>
