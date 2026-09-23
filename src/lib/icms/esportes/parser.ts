@@ -129,8 +129,9 @@ function numeroBr(valor: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+// A posição pode vir como "1", "1°", "1º" ou "1." (relatório preliminar 2025 usa "1°").
 const RE_RANKING =
-  /^(\d{1,4})\s+([^\d]*?)\s*([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s*%$/;
+  /^(\d{1,4})\s*[°ºª.]?\s+([^\d]*?)\s*([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s*%$/;
 
 const RE_SO_NUMERO = /^[\d.,%\s]+$/;
 
