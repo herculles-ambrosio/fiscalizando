@@ -58,18 +58,41 @@ export function useEsportesAnos() {
   return useQuery({
     queryKey: ["esportes-anos"],
     queryFn: async (): Promise<{ ano: number; fonte: FonteRelatorio }[]> => {
-      const { data, error } = await supabase
+      // O relatório preliminar pode não trazer ranking, só as atividades:
+      // considera os anos presentes em qualquer uma das duas tabelas.
+      const r = await supabase
         .from("esportes_ranking_municipio")
-        .select("ano_base, fonte_relatorio");
-      if (error) throw error;
+        .select("ano_base, fonte_relatorio")
+        .limit(5000);
+      if (r.error) throw r.error;
       const chaves = new Map<string, { ano: number; fonte: FonteRelatorio }>();
-      for (const linha of data ?? []) {
+      for (const linha of r.data ?? []) {
         const item = {
           ano: linha.ano_base as number,
           fonte: linha.fonte_relatorio as FonteRelatorio,
         };
         chaves.set(`${item.ano}|${item.fonte}`, item);
       }
+      const atual = new Date().getFullYear();
+      const candidatos: { ano: number; fonte: FonteRelatorio }[] = [];
+      for (let ano = atual - 8; ano <= atual; ano++)
+        for (const fonte of ["preliminar", "definitivo"] as FonteRelatorio[])
+          if (!chaves.has(`${ano}|${fonte}`)) candidatos.push({ ano, fonte });
+      const contagens = await Promise.all(
+        candidatos.map((c) =>
+          supabase
+            .from("esportes_atividade_municipio")
+            .select("id", { count: "exact", head: true })
+            .eq("ano_base", c.ano)
+            .eq("fonte_relatorio", c.fonte),
+        ),
+      );
+      contagens.forEach((res, i) => {
+        if ((res.count ?? 0) > 0) {
+          const c = candidatos[i];
+          if (c) chaves.set(`${c.ano}|${c.fonte}`, c);
+        }
+      });
       return [...chaves.values()].sort((a, b) => b.ano - a.ano || a.fonte.localeCompare(b.fonte));
     },
   });
