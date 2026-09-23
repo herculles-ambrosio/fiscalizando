@@ -114,6 +114,29 @@ export default function PrevisaoRepasse() {
   const [base, setBase] = useState<BaseReceita>("ano_anterior");
   const [crescimento, setCrescimento] = useState("0");
   const [receitaManual, setReceitaManual] = useState("");
+  const [arrAnterior, setArrAnterior] = useState("");
+  const [arrAtual, setArrAtual] = useState("");
+  const [arrInicializada, setArrInicializada] = useState(false);
+
+  // Preenche as arrecadações do Estado com o que está gravado nas duas
+  // apurações usadas na projeção (o usuário pode editar).
+  useEffect(() => {
+    if (arrInicializada || !indicesSalvos?.length) return;
+    const formatar = (v: number | null | undefined) =>
+      v != null && v > 0
+        ? v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : "";
+    setArrAtual(formatar(indicesSalvos[0]?.vafEstadual));
+    setArrAnterior(formatar(indicesSalvos[1]?.vafEstadual));
+    setArrInicializada(true);
+  }, [indicesSalvos, arrInicializada]);
+
+  const arrecadacaoAnterior = paraNumero(arrAnterior);
+  const arrecadacaoAtual = paraNumero(arrAtual);
+  const crescimentoArrecadacao =
+    arrecadacaoAnterior != null && arrecadacaoAtual != null && arrecadacaoAnterior > 0
+      ? (arrecadacaoAtual / arrecadacaoAnterior - 1) * 100
+      : null;
 
   const boladaMeses = useMemo(() => (bolada ?? []).map((m) => m.vaf75), [bolada]);
   const temBolada = boladaMeses.some((v) => v != null && v > 0);
