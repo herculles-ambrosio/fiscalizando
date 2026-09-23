@@ -935,6 +935,42 @@ export type Database = {
         }
         Relationships: []
       }
+      criterio_relatorios_encontrados: {
+        Row: {
+          ano: number | null
+          criterio: string
+          id: string
+          primeiro_em: string
+          texto: string
+          tipo: string | null
+          ultimo_em: string
+          url: string
+          vezes: number
+        }
+        Insert: {
+          ano?: number | null
+          criterio: string
+          id?: string
+          primeiro_em?: string
+          texto?: string
+          tipo?: string | null
+          ultimo_em?: string
+          url: string
+          vezes?: number
+        }
+        Update: {
+          ano?: number | null
+          criterio?: string
+          id?: string
+          primeiro_em?: string
+          texto?: string
+          tipo?: string | null
+          ultimo_em?: string
+          url?: string
+          vezes?: number
+        }
+        Relationships: []
+      }
       educacao_calendario: {
         Row: {
           atualizado_em: string

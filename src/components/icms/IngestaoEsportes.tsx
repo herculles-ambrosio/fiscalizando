@@ -24,6 +24,11 @@ import {
   limparEsportes,
 } from "@/lib/icms/esportes.functions";
 import { registrarImportacao } from "@/lib/icms/criterios.functions";
+import {
+  HistoricoRelatoriosEncontrados,
+  LinksDiretos,
+  registrarRelatoriosEncontrados,
+} from "@/components/icms/RelatoriosEncontrados";
 
 import { extrairBlocos, extrairRanking, mapearAtividade } from "@/lib/icms/esportes/parser";
 import { useAtividadesReferencia, type FonteRelatorio } from "@/hooks/useEsportes";
@@ -61,6 +66,8 @@ export function IngestaoEsportes() {
       const r = await descobrir({ data: undefined as never });
       setLinks(r.relatorios);
       if (!r.relatorios.length) toast.info("Nenhum relatório localizado no site. Cole a URL do PDF.");
+      await registrarRelatoriosEncontrados("esportes", r.relatorios).catch(() => undefined);
+      void cliente.invalidateQueries({ queryKey: ["relatorios-encontrados", "esportes"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao consultar o site.");
     } finally {
@@ -261,14 +268,26 @@ export function IngestaoEsportes() {
                     </Badge>
                     {l.texto}
                   </span>
-                  <Button size="sm" variant="ghost" disabled={rodando} onClick={() => importarUrl(l.url)}>
-                    <Upload className="h-4 w-4" />
-                    Usar
-                  </Button>
+                  <span className="flex shrink-0 items-center gap-1">
+                    <LinksDiretos url={l.url} />
+                    <Button size="sm" variant="ghost" disabled={rodando} onClick={() => importarUrl(l.url)}>
+                      <Upload className="h-4 w-4" />
+                      Usar
+                    </Button>
+                  </span>
                 </div>
               ))}
             </div>
           )}
+
+          <HistoricoRelatoriosEncontrados
+            criterio="esportes"
+            desabilitado={rodando}
+            onUsar={(l) => {
+              if (l.ano) setAnoBase(l.ano);
+              void importarUrl(l.url);
+            }}
+          />
 
           {rodando && (
             <div className="space-y-2">

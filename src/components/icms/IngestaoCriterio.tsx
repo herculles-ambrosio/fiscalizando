@@ -12,6 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Badge } from "@/components/ui/badge";
 import {
+  HistoricoRelatoriosEncontrados,
+  LinksDiretos,
+  registrarRelatoriosEncontrados,
+} from "@/components/icms/RelatoriosEncontrados";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -88,6 +93,8 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const r = await descobrir({ data: { criterio: pipeline.slug, anoBase } });
       setLinks(r.relatorios);
       setDiagnostico(r.diagnostico ?? []);
+      await registrarRelatoriosEncontrados(pipeline.slug, r.relatorios).catch(() => undefined);
+      void cliente.invalidateQueries({ queryKey: ["relatorios-encontrados", pipeline.slug] });
       if (!r.relatorios.length) toast.info("Nenhum relatório localizado. Cole o endereço do PDF.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao consultar o site.");
@@ -597,6 +604,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                       ) : null}
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
+                      <LinksDiretos url={l.url} />
                       {importado && (
                         <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600">
                           Importado
@@ -619,6 +627,15 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
               })}
             </div>
           )}
+
+          <HistoricoRelatoriosEncontrados
+            criterio={pipeline.slug}
+            desabilitado={rodando}
+            onUsar={(l) => {
+              if (l.ano) setAnoBase(l.ano);
+              void importarUrl(l.url, "site", l.ano ?? undefined);
+            }}
+          />
 
           {links.length === 0 && diagnostico.length > 0 && (
             <div className="space-y-1 rounded-md border p-3 text-xs text-muted-foreground">
