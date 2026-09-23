@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+// bloco da base "arrecadacao_estado" é renderizado no card de premissas
 import { Download, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import {
@@ -285,6 +286,27 @@ export default function PrevisaoRepasse() {
               <>
                 <Label>Crescimento da arrecadação (%)</Label>
                 <Input value={crescimento} onChange={(e) => setCrescimento(e.target.value)} />
+              </>
+            )}
+            {base === "arrecadacao_estado" && (
+              <>
+                <Label>Arrecadação do Estado — ano da apuração anterior (R$)</Label>
+                <Input
+                  value={arrAnterior}
+                  onChange={(e) => setArrAnterior(e.target.value)}
+                  placeholder="925.287.575.000,00"
+                />
+                <Label>Arrecadação do Estado — ano da apuração atual (R$)</Label>
+                <Input
+                  value={arrAtual}
+                  onChange={(e) => setArrAtual(e.target.value)}
+                  placeholder="1.004.153.256.799,00"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Crescimento calculado: {formatarPercentual(crescimentoArrecadacao)}
+                  {crescimentoArrecadacao == null &&
+                    " — informe as duas arrecadações para calcular"}
+                </p>
               </>
             )}
             {base === "manual" && (
