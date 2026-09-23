@@ -27,7 +27,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { explicarPrevisao } from "@/lib/vaf/duvidaPrevisao.functions";
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
-import { useIndicesSalvos } from "@/hooks/useIndicesHistorico";
+import {
+  useArrecadacoesEstadoGlobais,
+  useIndicesSalvos,
+} from "@/hooks/useIndicesHistorico";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useIndiceAplicado } from "@/hooks/useIndiceAplicado";
 import { useExerciciosEstado, useRepassesEstado } from "@/hooks/useRepassesEstado";
@@ -81,6 +84,7 @@ export default function PrevisaoRepasse() {
 
   const { data: dados, isLoading } = useIcmsDados(exercicio);
   const { data: indicesSalvos } = useIndicesSalvos(municipioId);
+  const { data: arrGlobais } = useArrecadacoesEstadoGlobais();
   const { data: bolada } = useRepassesEstado(exercicio);
   // Índices oficiais publicados em resolução da SEF: servem de fonte para as
   // prefeituras que não têm apuração própria carregada.
@@ -167,17 +171,28 @@ export default function PrevisaoRepasse() {
   const [arrInicializada, setArrInicializada] = useState(false);
 
   // Preenche as arrecadações do Estado com o que está gravado nas duas
-  // apurações usadas na projeção (o usuário pode editar).
+  // apurações usadas na projeção (o usuário pode editar). Sem apuração
+  // própria, cai nos valores da arrecadação gravados na resolução da SEF.
   useEffect(() => {
-    if (arrInicializada || !indicesSalvos?.length) return;
+    if (arrInicializada) return;
     const formatar = (v: number | null | undefined) =>
       v != null && v > 0
         ? v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : "";
-    setArrAtual(formatar(indicesSalvos[0]?.vaf_estadual));
-    setArrAnterior(formatar(indicesSalvos[1]?.vaf_estadual));
-    setArrInicializada(true);
-  }, [indicesSalvos, arrInicializada]);
+    if (indicesSalvos?.length) {
+      setArrAtual(formatar(indicesSalvos[0]?.vaf_estadual));
+      setArrAnterior(formatar(indicesSalvos[1]?.vaf_estadual));
+      setArrInicializada(true);
+      return;
+    }
+    // Sem apuração própria, usa as duas arrecadações mais recentes gravadas
+    // em qualquer apuração do sistema (o valor do Estado é o mesmo para todos).
+    if (indicesSalvos && arrGlobais) {
+      setArrAnterior(formatar(arrGlobais.anterior));
+      setArrAtual(formatar(arrGlobais.atual));
+      setArrInicializada(true);
+    }
+  }, [indicesSalvos, arrGlobais, arrInicializada]);
 
   const arrecadacaoAnterior = paraNumero(arrAnterior);
   const arrecadacaoAtual = paraNumero(arrAtual);

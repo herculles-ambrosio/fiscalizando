@@ -127,6 +127,39 @@ export function useIndicesSalvos(municipioId: string | null) {
   });
 }
 
+/**
+ * Duas arrecadações estaduais mais recentes gravadas em qualquer apuração do
+ * sistema. O valor do VAF estadual é o mesmo para todos os municípios, então
+ * serve de fonte padrão para prefeituras sem apuração própria.
+ */
+export function useArrecadacoesEstadoGlobais() {
+  return useQuery({
+    queryKey: ["arrecadacoes-estado-globais"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<{ anterior: number | null; atual: number | null }> => {
+      const { data, error } = await supabase
+        .from("indices_apurados")
+        .select("exercicio, competencia_ano, vaf_estadual")
+        .gt("vaf_estadual", 0)
+        .order("exercicio", { ascending: false })
+        .order("competencia_ano", { ascending: false, nullsFirst: false })
+        .limit(200);
+      if (error) throw error;
+      const vistos = new Set<number>();
+      const valores: number[] = [];
+      for (const r of (data ?? []) as { vaf_estadual: number }[]) {
+        const v = Math.round(Number(r.vaf_estadual));
+        if (!vistos.has(v)) {
+          vistos.add(v);
+          valores.push(v);
+        }
+        if (valores.length >= 2) break;
+      }
+      return { atual: valores[0] ?? null, anterior: valores[1] ?? null };
+    },
+  });
+}
+
 export type DadosSalvarIndice = {
   municipioId: string;
   apuracao: ApuracaoIndice;
