@@ -64,6 +64,13 @@
       "when": 1790164986753,
       "tag": "0008_create_repasses_estado",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790182481946,
+      "tag": "0009_criterio_relatorios_encontrados",
+      "breakpoints": true
     }
   ]
 }
