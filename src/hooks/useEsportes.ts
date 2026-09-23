@@ -58,12 +58,16 @@ export function useEsportesAnos() {
   return useQuery({
     queryKey: ["esportes-anos"],
     queryFn: async (): Promise<{ ano: number; fonte: FonteRelatorio }[]> => {
-      const { data, error } = await supabase
-        .from("esportes_ranking_municipio")
-        .select("ano_base, fonte_relatorio");
-      if (error) throw error;
+      // O relatório preliminar pode não trazer ranking, só as atividades:
+      // considera os anos presentes em qualquer uma das duas tabelas.
+      const [r, a] = await Promise.all([
+        supabase.from("esportes_ranking_municipio").select("ano_base, fonte_relatorio").limit(5000),
+        supabase.from("esportes_atividade_municipio").select("ano_base, fonte_relatorio").limit(50000),
+      ]);
+      if (r.error) throw r.error;
+      if (a.error) throw a.error;
       const chaves = new Map<string, { ano: number; fonte: FonteRelatorio }>();
-      for (const linha of data ?? []) {
+      for (const linha of [...(r.data ?? []), ...(a.data ?? [])]) {
         const item = {
           ano: linha.ano_base as number,
           fonte: linha.fonte_relatorio as FonteRelatorio,
