@@ -17,6 +17,15 @@ const serie: MesRepasse[] = [
   { mes: 12, indice: null, valor: null },
 ];
 
+/** Linha "75% repassado pelo VAF" de 2026 (tabela de transferências da FJP). */
+const bolada = [
+  1083066222, 890501000, 1211314563, 1073162504, 1085396809, 1208358587, 1115738668, 1068420215,
+  null,
+  null,
+  null,
+  null,
+];
+
 describe("previsão de repasse do VAF", () => {
   it("resume o exercício em curso", () => {
     const r = resumirExercicio(serie);
@@ -39,6 +48,7 @@ describe("previsão de repasse do VAF", () => {
       indiceAtual: 0.006691978,
       base: "ano_anterior",
     });
+    expect(p.origem).toBe("municipio");
     expect(p.previsaoAnual).not.toBeNull();
     expect(p.diferenca).toBeGreaterThan(0);
     expect(p.meses).toHaveLength(12);
@@ -70,5 +80,33 @@ describe("previsão de repasse do VAF", () => {
       crescimentoPct: 10,
     });
     expect(cresc.previsaoAnual!).toBeCloseTo(base.previsaoAnual! * 1.1, 6);
+  });
+
+  it("reproduz o repasse pela bolada do Estado", () => {
+    const p = calcularPrevisao({
+      serie,
+      indiceProjetado: 0.006691978,
+      indiceAtual: 0.006691978,
+      base: "ano_anterior",
+      boladaEstado: bolada,
+    });
+    expect(p.origem).toBe("estado");
+    // média mensal da bolada x 12 x índice/100
+    const media = 8735958568 / 8;
+    expect(p.boladaAnual).toBeCloseTo(media * 12, 0);
+    expect(p.previsaoAnual!).toBeCloseTo((media * 12 * 0.006691978) / 100, 2);
+    expect(p.variacaoIndicePct).toBeCloseTo(0, 9);
+  });
+
+  it("aplica a queda do índice na previsão", () => {
+    const p = calcularPrevisao({
+      serie,
+      indiceProjetado: 0.005783,
+      indiceAtual: 0.006691978,
+      base: "ano_anterior",
+      boladaEstado: bolada,
+    });
+    expect(p.variacaoIndicePct!).toBeCloseTo(-13.58, 1);
+    expect(p.previsaoAnual!).toBeLessThan(p.atual.projecaoAnual!);
   });
 });
