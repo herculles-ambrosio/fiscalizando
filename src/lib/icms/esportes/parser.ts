@@ -72,6 +72,36 @@ export type AtividadeReferencia = {
   peso: number;
 };
 
+export type IdentificacaoRelatorioEsportes = {
+  anoBase: number | null;
+  fonte: "preliminar" | "definitivo" | null;
+};
+
+/** Identifica no cabeçalho do próprio PDF o ano-base e a versão publicada. */
+export function identificarRelatorioEsportes(
+  paginas: PaginaTexto[],
+): IdentificacaoRelatorioEsportes {
+  const cabecalho = paginas
+    .slice(0, 12)
+    .flatMap((pagina) => pagina.linhas.map((linha) => linha.texto))
+    .join(" ")
+    .replace(/\s+/g, " ");
+  const normalizado = normalizarTexto(cabecalho);
+  const anoExplicito = cabecalho.match(/ano\s*[-–—:]?\s*base\D{0,20}(20\d{2})/i);
+  const anoReferencia = cabecalho.match(/ano\s+(?:de\s+)?refer[eê]ncia\D{0,20}(20\d{2})/i);
+  const ano = Number(anoExplicito?.[1] ?? anoReferencia?.[1] ?? 0);
+  const fonte = /PRELIMINAR|PROVISORI/.test(normalizado)
+    ? "preliminar"
+    : /DEFINITIV|FINAL/.test(normalizado)
+      ? "definitivo"
+      : null;
+
+  return {
+    anoBase: ano >= 2000 && ano <= 2100 ? ano : null,
+    fonte,
+  };
+}
+
 /** Remove acentos, pontuação supérflua e caixa, para comparar nomes. */
 export function normalizarTexto(valor: string): string {
   return valor

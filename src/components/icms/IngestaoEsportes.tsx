@@ -30,7 +30,12 @@ import {
   registrarRelatoriosEncontrados,
 } from "@/components/icms/RelatoriosEncontrados";
 
-import { extrairBlocos, extrairRanking, mapearAtividade } from "@/lib/icms/esportes/parser";
+import {
+  extrairBlocos,
+  extrairRanking,
+  identificarRelatorioEsportes,
+  mapearAtividade,
+} from "@/lib/icms/esportes/parser";
 import { useAtividadesReferencia, type FonteRelatorio } from "@/hooks/useEsportes";
 
 type Resumo = {
@@ -53,7 +58,9 @@ export function IngestaoEsportes() {
   const [anoBase, setAnoBase] = useState<number>(new Date().getFullYear() - 2);
   const [fonte, setFonte] = useState<FonteRelatorio>("definitivo");
   const [url, setUrl] = useState("");
-  const [links, setLinks] = useState<{ url: string; texto: string; tipo: string }[]>([]);
+  const [links, setLinks] = useState<
+    { url: string; texto: string; tipo: string; ano: number | null }[]
+  >([]);
   const [buscando, setBuscando] = useState(false);
   const [etapa, setEtapa] = useState("");
   const [progresso, setProgresso] = useState(0);
@@ -75,7 +82,11 @@ export function IngestaoEsportes() {
     }
   }
 
-  async function processar(dados: Uint8Array, origem?: { url?: string; arquivoNome?: string }) {
+  async function processar(
+    dados: Uint8Array,
+    origem?: { url?: string; arquivoNome?: string },
+    referenciaSelecionada?: { ano?: number | null; tipo?: string | null },
+  ) {
     setRodando(true);
     setResumo(null);
 
@@ -85,6 +96,17 @@ export function IngestaoEsportes() {
       const paginas = await extrairPaginas(dados, (p, total) =>
         setProgresso(Math.round((p / total) * 70)),
       );
+
+      const identificacao = identificarRelatorioEsportes(paginas);
+      const anoImportado = identificacao.anoBase ?? referenciaSelecionada?.ano ?? anoBase;
+      const tipoSelecionado = referenciaSelecionada?.tipo;
+      const fonteImportada =
+        identificacao.fonte ??
+        (tipoSelecionado === "preliminar" || tipoSelecionado === "definitivo"
+          ? tipoSelecionado
+          : fonte);
+      setAnoBase(anoImportado);
+      setFonte(fonteImportada);
 
       setEtapa("Organizando os dados");
       const ranking = extrairRanking(paginas);
@@ -117,13 +139,17 @@ export function IngestaoEsportes() {
       }
 
       setEtapa("Gravando");
-      await limpar({ data: { anoBase, fonte } });
+      await limpar({ data: { anoBase: anoImportado, fonte: fonteImportada } });
       for (let i = 0; i < ranking.length; i += 300) {
-        await gravarRanking({ data: { anoBase, fonte, linhas: ranking.slice(i, i + 300) } });
+        await gravarRanking({
+          data: { anoBase: anoImportado, fonte: fonteImportada, linhas: ranking.slice(i, i + 300) },
+        });
         setProgresso(70 + Math.round(((i + 300) / Math.max(ranking.length, 1)) * 10));
       }
       for (let i = 0; i < itens.length; i += 150) {
-        await gravarAtividades({ data: { anoBase, fonte, itens: itens.slice(i, i + 150) } });
+        await gravarAtividades({
+          data: { anoBase: anoImportado, fonte: fonteImportada, itens: itens.slice(i, i + 150) },
+        });
         setProgresso(80 + Math.round(((i + 150) / Math.max(itens.length, 1)) * 20));
       }
 
@@ -138,8 +164,8 @@ export function IngestaoEsportes() {
         await registrar({
           data: {
             criterio: "esportes",
-            anoBase,
-            fonte,
+            anoBase: anoImportado,
+            fonte: fonteImportada,
             origem: origem?.url ? "url" : "arquivo",
             url: origem?.url ?? null,
             arquivoNome: origem?.arquivoNome ?? null,
@@ -168,7 +194,10 @@ export function IngestaoEsportes() {
     }
   }
 
-  async function importarUrl(alvo: string) {
+  async function importarUrl(
+    alvo: string,
+    referenciaSelecionada?: { ano?: number | null; tipo?: string | null },
+  ) {
     if (!alvo) {
       toast.error("Informe o endereço do PDF.");
       return;
@@ -181,7 +210,7 @@ export function IngestaoEsportes() {
       const binario = atob(r.base64);
       const bytes = new Uint8Array(binario.length);
       for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
-      await processar(bytes, { url: alvo });
+      await processar(bytes, { url: alvo }, referenciaSelecionada);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao baixar o relatório.");
       setRodando(false);
@@ -267,10 +296,22 @@ export function IngestaoEsportes() {
                       {l.tipo}
                     </Badge>
                     {l.texto}
+                    {l.ano ? (
+                      <span className="ml-2 text-xs text-muted-foreground">ano-base {l.ano}</span>
+                    ) : null}
                   </span>
                   <span className="flex shrink-0 items-center gap-1">
                     <LinksDiretos url={l.url} />
-                    <Button size="sm" variant="ghost" disabled={rodando} onClick={() => importarUrl(l.url)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={rodando}
+                      onClick={() => {
+                        if (l.ano) setAnoBase(l.ano);
+                        if (l.tipo === "preliminar" || l.tipo === "definitivo") setFonte(l.tipo);
+                        void importarUrl(l.url, { ano: l.ano, tipo: l.tipo });
+                      }}
+                    >
                       <Upload className="h-4 w-4" />
                       Usar
                     </Button>
@@ -285,7 +326,8 @@ export function IngestaoEsportes() {
             desabilitado={rodando}
             onUsar={(l) => {
               if (l.ano) setAnoBase(l.ano);
-              void importarUrl(l.url);
+              if (l.tipo === "preliminar" || l.tipo === "definitivo") setFonte(l.tipo);
+              void importarUrl(l.url, { ano: l.ano, tipo: l.tipo });
             }}
           />
 

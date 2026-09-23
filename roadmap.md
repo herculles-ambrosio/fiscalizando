@@ -15,3 +15,5 @@
 - [x] Destacar em verde/vermelho os cards comparados da Evolução do VAF.
 - [x] Previsão de repasse com base "Crescimento pela arrecadação do Estado" (auto pelas apurações, editável).
 - [x] Completar meses sem crédito pela média na Previsão e destacar Previsto em vermelho e Diferença em amarelo.
+- [x] Padronizar as abas dos critérios como “Importar relatório”.
+- [x] Usar automaticamente o ano-base e o tipo identificados no relatório importado.

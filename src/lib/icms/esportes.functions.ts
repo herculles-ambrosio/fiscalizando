@@ -54,7 +54,20 @@ export const descobrirRelatoriosEsportes = createServerFn({ method: "POST" })
       let m: RegExpExecArray | null;
       while ((m = re.exec(html))) {
         const href = m[1] ?? "";
-        const texto = (m[2] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        const texto = (m[2] ?? "")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/&#x([0-9a-f]+);/gi, (_, codigo: string) => String.fromCodePoint(parseInt(codigo, 16)))
+          .replace(/&#(\d+);/g, (_, codigo: string) => String.fromCodePoint(Number(codigo)))
+          .replace(/&ndash;|&mdash;/gi, "—")
+          .replace(/&aacute;/gi, "á")
+          .replace(/&eacute;/gi, "é")
+          .replace(/&iacute;/gi, "í")
+          .replace(/&oacute;/gi, "ó")
+          .replace(/&uacute;/gi, "ú")
+          .replace(/&ccedil;/gi, "ç")
+          .replace(/&amp;/gi, "&")
+          .replace(/\s+/g, " ")
+          .trim();
         let url: string;
         try {
           url = new URL(href, pagina).toString();
@@ -62,7 +75,13 @@ export const descobrirRelatoriosEsportes = createServerFn({ method: "POST" })
         } catch {
           continue;
         }
-        const alvo = `${url} ${texto}`.toLowerCase();
+        let urlLegivel = url;
+        try {
+          urlLegivel = decodeURIComponent(url);
+        } catch {
+          // Mantém a URL original quando houver escape inválido.
+        }
+        const alvo = `${texto} ${urlLegivel}`.toLowerCase();
         if (!alvo.includes("esporte") && !alvo.includes("relatorio")) continue;
         const tipo = /definitiv/.test(alvo)
           ? "definitivo"
@@ -70,7 +89,10 @@ export const descobrirRelatoriosEsportes = createServerFn({ method: "POST" })
             ? "preliminar"
             : "outro";
         if (tipo === "outro") continue;
-        const anoMatch = alvo.match(/(?:ano[-_ ]?base[-_ ]?)?(20\d{2})/);
+        const anoBase = alvo.match(/ano[-_ ]?base\D{0,20}(20\d{2})/);
+        const anoReferencia = alvo.match(/ano[-_ ]?(?:de[-_ ]?)?refer[eê]ncia\D{0,20}(20\d{2})/);
+        const anoNoArquivo = urlLegivel.match(/(?:^|[^0-9])(20\d{2})(?:[^0-9]|$)/);
+        const anoMatch = anoBase ?? anoReferencia ?? anoNoArquivo;
         achados.set(url, {
           url,
           texto: texto || url.split("/").pop() || url,
