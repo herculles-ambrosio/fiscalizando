@@ -37,6 +37,7 @@ import {
   mapearAtividade,
 } from "@/lib/icms/esportes/parser";
 import { useAtividadesReferencia, type FonteRelatorio } from "@/hooks/useEsportes";
+import { useImportacoes } from "@/hooks/useCriterios";
 
 type Resumo = {
   municipios: number;
@@ -48,6 +49,8 @@ type Resumo = {
 export function IngestaoEsportes() {
   const cliente = useQueryClient();
   const { data: referencia } = useAtividadesReferencia();
+  const { data: importacoes } = useImportacoes("esportes");
+  const jaImportados = new Set((importacoes ?? []).map((i) => i.url).filter(Boolean) as string[]);
   const descobrir = useServerFn(descobrirRelatoriosEsportes);
   const baixar = useServerFn(baixarRelatorioEsportes);
   const limpar = useServerFn(limparEsportes);
@@ -289,35 +292,43 @@ export function IngestaoEsportes() {
           {links.length > 0 && (
             <div className="space-y-2 rounded-lg border p-3">
               <p className="text-sm font-medium">Relatórios encontrados</p>
-              {links.map((l) => (
-                <div key={l.url} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate">
-                    <Badge variant="outline" className="mr-2 capitalize">
-                      {l.tipo}
-                    </Badge>
-                    {l.texto}
-                    {l.ano ? (
-                      <span className="ml-2 text-xs text-muted-foreground">ano-base {l.ano}</span>
-                    ) : null}
-                  </span>
-                  <span className="flex shrink-0 items-center gap-1">
-                    <LinksDiretos url={l.url} />
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={rodando}
-                      onClick={() => {
-                        if (l.ano) setAnoBase(l.ano);
-                        if (l.tipo === "preliminar" || l.tipo === "definitivo") setFonte(l.tipo);
-                        void importarUrl(l.url, { ano: l.ano, tipo: l.tipo });
-                      }}
-                    >
-                      <Upload className="h-4 w-4" />
-                      Usar
-                    </Button>
-                  </span>
-                </div>
-              ))}
+              {links.map((l) => {
+                const importado = jaImportados.has(l.url);
+                return (
+                  <div key={l.url} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="truncate">
+                      <Badge variant="outline" className="mr-2 capitalize">
+                        {l.tipo}
+                      </Badge>
+                      {l.texto}
+                      {l.ano ? (
+                        <span className="ml-2 text-xs text-muted-foreground">ano-base {l.ano}</span>
+                      ) : null}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1">
+                      <LinksDiretos url={l.url} />
+                      {importado && (
+                        <Badge className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600">
+                          Importado
+                        </Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={rodando}
+                        onClick={() => {
+                          if (l.ano) setAnoBase(l.ano);
+                          if (l.tipo === "preliminar" || l.tipo === "definitivo") setFonte(l.tipo);
+                          void importarUrl(l.url, { ano: l.ano, tipo: l.tipo });
+                        }}
+                      >
+                        <Upload className="h-4 w-4" />
+                        {importado ? "Importar de novo" : "Usar"}
+                      </Button>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
 
