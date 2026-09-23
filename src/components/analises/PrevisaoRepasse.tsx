@@ -397,6 +397,13 @@ export default function PrevisaoRepasse() {
   }
 
   const semDados = !isLoading && previsao.atual.mesesComValor.length === 0;
+  const anosDisponiveis = useMemo(
+    () =>
+      Array.from(new Set([...(exercicios ?? []), ...(exerciciosEstado ?? [])])).sort(
+        (a, b) => b - a,
+      ),
+    [exercicios, exerciciosEstado],
+  );
 
   return (
     <div className="space-y-6">
@@ -538,11 +545,25 @@ export default function PrevisaoRepasse() {
         </CardContent>
       </Card>
 
+      {usandoResolucao && (
+        <Card className="border-primary/40">
+          <CardContent className="py-4 text-sm text-muted-foreground">
+            Esta prefeitura não tem apuração própria carregada, então os números vêm das fontes
+            oficiais: índice médio da{" "}
+            <strong>Resolução {resolucaoAtual?.resolucao ?? "—"}</strong> aplicada em{" "}
+            {exercicio ?? "—"} e transferências da FJP ({" "}
+            {boladaMeses.filter((v) => v != null && v > 0).length} meses cadastrados). Os valores
+            mensais são estimativa oficial (índice × repasse do Estado), não o crédito efetivo.
+          </CardContent>
+        </Card>
+      )}
+
       {semDados && (
         <Card>
           <CardContent className="py-6 text-sm text-muted-foreground">
-            Ainda não há valores do critério VAF importados para {exercicio ?? "este exercício"}.
-            Importe o extrato do Portal da FJP ou escolha “Digitar a receita” para simular.
+            Ainda não há valores do critério VAF importados para {exercicio ?? "este exercício"} e
+            também não há índice em resolução para esta prefeitura. Importe o extrato do Portal da
+            FJP, cadastre a resolução ou escolha “Digitar a receita” para simular.
           </CardContent>
         </Card>
       )}
