@@ -2230,6 +2230,45 @@ export type Database = {
         }
         Relationships: []
       }
+      repasses_estado: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          criado_por: string | null
+          exercicio: number
+          fonte: string
+          id: string
+          mes: number
+          robin_hood_25: number | null
+          transferencia_liquida: number | null
+          vaf_75: number | null
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          exercicio: number
+          fonte?: string
+          id?: string
+          mes: number
+          robin_hood_25?: number | null
+          transferencia_liquida?: number | null
+          vaf_75?: number | null
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          criado_por?: string | null
+          exercicio?: number
+          fonte?: string
+          id?: string
+          mes?: number
+          robin_hood_25?: number | null
+          transferencia_liquida?: number | null
+          vaf_75?: number | null
+        }
+        Relationships: []
+      }
       resolucoes_sef: {
         Row: {
           ano_a: number | null

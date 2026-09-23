@@ -57,6 +57,13 @@
       "when": 1789820603930,
       "tag": "0007_vincula_municipio_indices_resolucao",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790164986753,
+      "tag": "0008_create_repasses_estado",
+      "breakpoints": true
     }
   ]
 }
