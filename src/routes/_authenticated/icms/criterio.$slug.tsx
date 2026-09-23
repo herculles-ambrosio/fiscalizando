@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { HistoricoImportacoes } from "@/components/icms/HistoricoImportacoes";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, CircleDashed, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -718,6 +719,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
         {pipeline && consultoria && (
           <TabsContent value="importar" className="pt-4">
             <IngestaoCriterio pipeline={pipeline} />
+            <HistoricoImportacoes criterio={pipeline.slug} />
           </TabsContent>
         )}
       </Tabs>
