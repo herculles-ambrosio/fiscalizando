@@ -682,6 +682,26 @@ export default function PrevisaoRepasse() {
                   );
                 })}
               </tbody>
+              <tfoot>
+                {(() => {
+                  const totRecebido = previsao.meses.reduce((s, m) => s + (m.recebido ?? 0), 0);
+                  const totPrevisto = previsao.meses.reduce((s, m) => s + (m.previsto ?? 0), 0);
+                  const temRecebido = previsao.meses.some((m) => m.recebido != null);
+                  const totDif = temRecebido ? totPrevisto - totRecebido : null;
+                  return (
+                    <tr className="border-t-2 font-semibold">
+                      <td className="py-2">Total anual</td>
+                      <td className="py-2 text-right">{formatarMoeda(temRecebido ? totRecebido : null)}</td>
+                      <td className="py-2 text-right">{formatarMoeda(totPrevisto)}</td>
+                      <td
+                        className={`py-2 text-right ${totDif != null && totDif > 0 ? "text-normal-foreground" : totDif != null && totDif < 0 ? "text-destructive" : ""}`}
+                      >
+                        {formatarMoeda(totDif)}
+                      </td>
+                    </tr>
+                  );
+                })()}
+              </tfoot>
             </table>
           </div>
 
