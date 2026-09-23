@@ -327,7 +327,7 @@ export function IngestaoEsportes() {
             onUsar={(l) => {
               if (l.ano) setAnoBase(l.ano);
               if (l.tipo === "preliminar" || l.tipo === "definitivo") setFonte(l.tipo);
-              void importarUrl(l.url, { ano: l.ano, tipo: l.tipo });
+              void importarUrl(l.url, { ano: l.ano ?? null, tipo: l.tipo });
             }}
           />
 
