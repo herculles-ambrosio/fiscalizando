@@ -89,7 +89,10 @@ export function HistoricoRelatoriosEncontrados({
 
   async function remover(id: string) {
     const { error } = await supabase.from("criterio_relatorios_encontrados").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await cliente.invalidateQueries({ queryKey: ["relatorios-encontrados", criterio] });
   }
 
