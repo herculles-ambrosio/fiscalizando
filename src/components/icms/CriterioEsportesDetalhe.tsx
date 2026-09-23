@@ -130,7 +130,7 @@ export function CriterioEsportesDetalhe() {
           <TabsTrigger value="melhorar">Como melhorar</TabsTrigger>
           <TabsTrigger value="ranking">Ranking</TabsTrigger>
           <TabsTrigger value="vizinhos">Vizinhos</TabsTrigger>
-          {perfil?.ehConsultoria && <TabsTrigger value="ingestao">Ingestão de dados</TabsTrigger>}
+          {perfil?.ehConsultoria && <TabsTrigger value="ingestao">Importar relatório</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="municipio" className="space-y-4 pt-4">
@@ -139,7 +139,7 @@ export function CriterioEsportesDetalhe() {
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
                 Nenhum relatório do critério Esportes importado ainda.
                 {perfil?.ehConsultoria &&
-                  " Use a aba “Ingestão de dados” para importar o PDF oficial."}
+                  " Use a aba “Importar relatório” para importar o PDF oficial."}
               </CardContent>
             </Card>
           ) : !linhaMunicipio ? (

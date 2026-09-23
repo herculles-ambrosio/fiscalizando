@@ -108,9 +108,10 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     origem: "site" | "url" | "arquivo" | "colado",
     identificacao: string | null,
     anoForcado?: number,
+    fonteForcada?: FonteRelatorio,
   ) {
     let ano = anoForcado ?? anoBase;
-    let fonteUso: FonteRelatorio = fonte;
+    let fonteUso: FonteRelatorio = fonteForcada ?? fonte;
     let divergencias: { municipio: string; esperado: number; obtido: number }[] = [];
     setEtapa("Casando as colunas com os itens do critério");
     // Cada órgão publica em um formato: o ICMS Turismo traz um quadro único com
@@ -226,11 +227,12 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     origem: "site" | "url" | "arquivo",
     identificacao: string | null,
     anoForcado?: number,
+    fonteForcada?: FonteRelatorio,
   ) {
     const { ehPdf } = await import("@/lib/icms/criterios/planilhaTabela");
     const pdf = ehPdf(dados);
     if (planilha && !pdf) {
-      await processarPlanilha(dados, origem, identificacao, anoForcado);
+      await processarPlanilha(dados, origem, identificacao, anoForcado, fonteForcada);
       return;
     }
     setRodando(true);
@@ -252,7 +254,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
         paginas = p.paginas;
         setProgresso(70);
       }
-      await gravarResultado(paginas, origem, identificacao, anoForcado);
+      await gravarResultado(paginas, origem, identificacao, anoForcado, fonteForcada);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o relatório.");
     } finally {
@@ -272,9 +274,11 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     origem: "site" | "url" | "arquivo",
     identificacao: string | null,
     anoForcado?: number,
+    fonteForcada?: FonteRelatorio,
   ) {
     const ano = anoForcado ?? anoBase;
-    const versao = fonte === "definitivo" ? "definitivo" : "provisorio";
+    const fonteUso = fonteForcada ?? fonte;
+    const versao = fonteUso === "definitivo" ? "definitivo" : "provisorio";
     setRodando(true);
     setResumo(null);
     try {
@@ -290,7 +294,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
 
       setEtapa("Gravando os índices");
       setProgresso(35);
-      await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte } });
+      await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte: fonteUso } });
       await limparEdu({ data: { exercicio: ano, fonteVersao: versao } });
 
       for (let i = 0; i < r.ranking.length; i += 300) {
@@ -298,7 +302,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
           data: {
             criterio: pipeline.slug,
             anoBase: ano,
-            fonte,
+            fonte: fonteUso,
             linhas: r.ranking.slice(i, i + 300),
           },
         });
@@ -306,7 +310,12 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       setProgresso(50);
       for (let i = 0; i < r.itens.length; i += 150) {
         await gravarItens({
-          data: { criterio: pipeline.slug, anoBase: ano, fonte, itens: r.itens.slice(i, i + 150) },
+          data: {
+            criterio: pipeline.slug,
+            anoBase: ano,
+            fonte: fonteUso,
+            itens: r.itens.slice(i, i + 150),
+          },
         });
       }
 
@@ -353,7 +362,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
         data: {
           criterio: pipeline.slug,
           anoBase: ano,
-          fonte,
+          fonte: fonteUso,
           origem,
           url: origem === "url" || origem === "site" ? identificacao : null,
           arquivoNome: origem === "arquivo" ? identificacao : null,
@@ -423,7 +432,12 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     }
   }
 
-  async function importarUrl(endereco: string, origem: "site" | "url", anoForcado?: number) {
+  async function importarUrl(
+    endereco: string,
+    origem: "site" | "url",
+    anoForcado?: number,
+    fonteForcada?: FonteRelatorio,
+  ) {
     if (!endereco.trim()) {
       toast.error("Informe o endereço do PDF.");
       return;
@@ -435,7 +449,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const bin = atob(r.base64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      await processar(bytes, origem, endereco.trim(), anoForcado);
+      await processar(bytes, origem, endereco.trim(), anoForcado, fonteForcada);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao baixar o relatório.");
       setRodando(false);
@@ -616,7 +630,10 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                         disabled={rodando}
                         onClick={() => {
                           if (l.ano) setAnoBase(l.ano);
-                          void importarUrl(l.url, "site", l.ano ?? undefined);
+                          const fonteRelatorio =
+                            l.tipo === "preliminar" || l.tipo === "definitivo" ? l.tipo : undefined;
+                          if (fonteRelatorio) setFonte(fonteRelatorio);
+                          void importarUrl(l.url, "site", l.ano ?? undefined, fonteRelatorio);
                         }}
                       >
                         {importado ? "Importar de novo" : "Importar"}
@@ -633,7 +650,10 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
             desabilitado={rodando}
             onUsar={(l) => {
               if (l.ano) setAnoBase(l.ano);
-              void importarUrl(l.url, "site", l.ano ?? undefined);
+              const fonteRelatorio =
+                l.tipo === "preliminar" || l.tipo === "definitivo" ? l.tipo : undefined;
+              if (fonteRelatorio) setFonte(fonteRelatorio);
+              void importarUrl(l.url, "site", l.ano ?? undefined, fonteRelatorio);
             }}
           />
 
