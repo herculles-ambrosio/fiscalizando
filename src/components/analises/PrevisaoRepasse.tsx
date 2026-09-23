@@ -27,7 +27,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { explicarPrevisao } from "@/lib/vaf/duvidaPrevisao.functions";
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
-import { useIndicesSalvos } from "@/hooks/useIndicesHistorico";
+import {
+  useArrecadacoesEstadoGlobais,
+  useIndicesSalvos,
+} from "@/hooks/useIndicesHistorico";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useIndiceAplicado } from "@/hooks/useIndiceAplicado";
 import { useExerciciosEstado, useRepassesEstado } from "@/hooks/useRepassesEstado";
@@ -81,6 +84,7 @@ export default function PrevisaoRepasse() {
 
   const { data: dados, isLoading } = useIcmsDados(exercicio);
   const { data: indicesSalvos } = useIndicesSalvos(municipioId);
+  const { data: arrGlobais } = useArrecadacoesEstadoGlobais();
   const { data: bolada } = useRepassesEstado(exercicio);
   // Índices oficiais publicados em resolução da SEF: servem de fonte para as
   // prefeituras que não têm apuração própria carregada.
