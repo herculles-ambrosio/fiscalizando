@@ -26,7 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
 import { useIndicesSalvos } from "@/hooks/useIndicesHistorico";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
-import { useRepassesEstado } from "@/hooks/useRepassesEstado";
+import { useIndiceAplicado } from "@/hooks/useIndiceAplicado";
+import { useExerciciosEstado, useRepassesEstado } from "@/hooks/useRepassesEstado";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import {
@@ -61,23 +62,34 @@ function paraNumero(texto: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-type OrigemIndice = "media" | "ultima" | "digitado";
+type OrigemIndice = "media" | "ultima" | "digitado" | "resolucao";
 
 export default function PrevisaoRepasse() {
   const { municipio, municipioId } = useMunicipioAtivo();
   const { data: exercicios } = useIcmsExercicios();
+  const { data: exerciciosEstado } = useExerciciosEstado();
   const [exercicio, setExercicio] = useState<number | null>(null);
   useEffect(() => {
     if (exercicio != null) return;
     if (exercicios?.length) setExercicio(exercicios[0] as number);
+    else if (exerciciosEstado?.length) setExercicio(exerciciosEstado[0] as number);
     else if (exercicios) setExercicio(new Date().getFullYear());
-  }, [exercicios, exercicio]);
+  }, [exercicios, exerciciosEstado, exercicio]);
 
   const { data: dados, isLoading } = useIcmsDados(exercicio);
   const { data: indicesSalvos } = useIndicesSalvos(municipioId);
   const { data: bolada } = useRepassesEstado(exercicio);
+  // Índices oficiais publicados em resolução da SEF: servem de fonte para as
+  // prefeituras que não têm apuração própria carregada.
+  const { data: resolucaoAtual } = useIndiceAplicado(municipioId, exercicio);
+  const { data: resolucaoProxima } = useIndiceAplicado(
+    municipioId,
+    exercicio != null ? exercicio + 1 : null,
+  );
 
-  const serie: MesRepasse[] = useMemo(() => {
+  const boladaMesesFjp = useMemo(() => (bolada ?? []).map((m) => m.vaf75), [bolada]);
+
+  const seriePropria: MesRepasse[] = useMemo(() => {
     const s = dados?.series.get("vaf");
     return Array.from({ length: 12 }, (_, i) => ({
       mes: i + 1,
@@ -86,10 +98,30 @@ export default function PrevisaoRepasse() {
     }));
   }, [dados]);
 
+  const temSeriePropria = seriePropria.some((m) => m.valor != null && m.valor > 0);
+  const indiceResolucaoAtual = resolucaoAtual?.media_indices ?? null;
+  const indiceResolucaoProxima = resolucaoProxima?.media_indices ?? null;
+
+  /** Série estimada pela resolução aplicada x bolada mensal da FJP. */
+  const serieResolucao: MesRepasse[] = useMemo(() => {
+    if (indiceResolucaoAtual == null || indiceResolucaoAtual <= 0) return [];
+    return Array.from({ length: 12 }, (_, i) => {
+      const bol = boladaMesesFjp[i] ?? null;
+      return {
+        mes: i + 1,
+        indice: indiceResolucaoAtual,
+        valor: bol != null && bol > 0 ? (bol * indiceResolucaoAtual) / 100 : null,
+      };
+    });
+  }, [indiceResolucaoAtual, boladaMesesFjp]);
+
+  const usandoResolucao = !temSeriePropria && serieResolucao.length > 0;
+  const serie = usandoResolucao ? serieResolucao : seriePropria;
+
   const indiceAtual = useMemo(() => {
     const comIndice = serie.filter((m) => m.indice != null && m.indice > 0);
-    return comIndice.at(-1)?.indice ?? null;
-  }, [serie]);
+    return comIndice.at(-1)?.indice ?? indiceResolucaoAtual;
+  }, [serie, indiceResolucaoAtual]);
 
   const apurados = useMemo(
     () => (indicesSalvos ?? []).map((i) => i.indice).filter((v): v is number => v != null && v > 0),
@@ -102,14 +134,27 @@ export default function PrevisaoRepasse() {
     return dois.reduce((a, b) => a + b, 0) / dois.length;
   }, [apurados]);
 
+  /** Índice publicado para o exercício previsto (ou o do exercício atual). */
+  const indiceResolucaoProjetado = indiceResolucaoProxima ?? indiceResolucaoAtual;
+
   const [origemIndice, setOrigemIndice] = useState<OrigemIndice>("media");
+  const [origemAjustada, setOrigemAjustada] = useState(false);
+  // Sem apuração própria, a origem padrão passa a ser a resolução da SEF.
+  useEffect(() => {
+    if (origemAjustada || !indicesSalvos) return;
+    if (!apurados.length && indiceResolucaoProjetado != null) setOrigemIndice("resolucao");
+    setOrigemAjustada(true);
+  }, [indicesSalvos, apurados.length, indiceResolucaoProjetado, origemAjustada]);
+
   const [indiceDigitado, setIndiceDigitado] = useState("");
   const indiceProjetado =
     origemIndice === "media"
       ? mediaApurada
       : origemIndice === "ultima"
         ? ultimaApuracao
-        : paraNumero(indiceDigitado);
+        : origemIndice === "resolucao"
+          ? indiceResolucaoProjetado
+          : paraNumero(indiceDigitado);
 
   const [base, setBase] = useState<BaseReceita>("ano_anterior");
   const [crescimento, setCrescimento] = useState("0");
@@ -138,7 +183,7 @@ export default function PrevisaoRepasse() {
       ? (arrecadacaoAtual / arrecadacaoAnterior - 1) * 100
       : null;
 
-  const boladaMeses = useMemo(() => (bolada ?? []).map((m) => m.vaf75), [bolada]);
+  const boladaMeses = boladaMesesFjp;
   const temBolada = boladaMeses.some((v) => v != null && v > 0);
 
   const previsao = useMemo(
@@ -205,11 +250,25 @@ export default function PrevisaoRepasse() {
             ? "média das duas últimas apurações"
             : origemIndice === "ultima"
               ? "somente a última apuração"
-              : "digitado"
+              : origemIndice === "resolucao"
+                ? `média da Resolução ${resolucaoProxima?.resolucao ?? resolucaoAtual?.resolucao ?? "SEF"}`
+                : "digitado"
         })`,
       ],
       ["Variação do índice", formatarPercentual(previsao.variacaoIndicePct)],
     ];
+    if (usandoResolucao) {
+      linhas.push(
+        [
+          "Origem dos valores mensais",
+          `Resolução ${resolucaoAtual?.resolucao ?? "—"} x transferências da FJP de ${exercicio ?? "—"}`,
+        ],
+        [
+          "Meses da FJP disponíveis",
+          String(boladaMeses.filter((v) => v != null && v > 0).length),
+        ],
+      );
+    }
     if (base === "arrecadacao_estado") {
       linhas.push(
         ["Arrecadação do Estado — apuração anterior", formatarMoeda(arrecadacaoAnterior)],
@@ -259,6 +318,10 @@ export default function PrevisaoRepasse() {
     arrecadacaoAnterior,
     arrecadacaoAtual,
     previsao,
+    usandoResolucao,
+    resolucaoAtual,
+    resolucaoProxima,
+    boladaMeses,
     ultimoMesNome,
   ]);
 
@@ -334,6 +397,13 @@ export default function PrevisaoRepasse() {
   }
 
   const semDados = !isLoading && previsao.atual.mesesComValor.length === 0;
+  const anosDisponiveis = useMemo(
+    () =>
+      Array.from(new Set([...(exercicios ?? []), ...(exerciciosEstado ?? [])])).sort(
+        (a, b) => b - a,
+      ),
+    [exercicios, exerciciosEstado],
+  );
 
   return (
     <div className="space-y-6">
@@ -352,7 +422,7 @@ export default function PrevisaoRepasse() {
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {(exercicios ?? []).map((a) => (
+                {anosDisponiveis.map((a) => (
                   <SelectItem key={a} value={String(a)}>
                     {a}
                   </SelectItem>
@@ -373,6 +443,12 @@ export default function PrevisaoRepasse() {
               <SelectContent>
                 <SelectItem value="media">Média das duas últimas apurações</SelectItem>
                 <SelectItem value="ultima">Somente a última apuração</SelectItem>
+                {indiceResolucaoProjetado != null && (
+                  <SelectItem value="resolucao">
+                    Média da Resolução{" "}
+                    {resolucaoProxima?.resolucao ?? resolucaoAtual?.resolucao ?? "SEF"}
+                  </SelectItem>
+                )}
                 <SelectItem value="digitado">Digitar o índice</SelectItem>
               </SelectContent>
             </Select>
@@ -469,11 +545,25 @@ export default function PrevisaoRepasse() {
         </CardContent>
       </Card>
 
+      {usandoResolucao && (
+        <Card className="border-primary/40">
+          <CardContent className="py-4 text-sm text-muted-foreground">
+            Esta prefeitura não tem apuração própria carregada, então os números vêm das fontes
+            oficiais: índice médio da{" "}
+            <strong>Resolução {resolucaoAtual?.resolucao ?? "—"}</strong> aplicada em{" "}
+            {exercicio ?? "—"} e transferências da FJP ({" "}
+            {boladaMeses.filter((v) => v != null && v > 0).length} meses cadastrados). Os valores
+            mensais são estimativa oficial (índice × repasse do Estado), não o crédito efetivo.
+          </CardContent>
+        </Card>
+      )}
+
       {semDados && (
         <Card>
           <CardContent className="py-6 text-sm text-muted-foreground">
-            Ainda não há valores do critério VAF importados para {exercicio ?? "este exercício"}.
-            Importe o extrato do Portal da FJP ou escolha “Digitar a receita” para simular.
+            Ainda não há valores do critério VAF importados para {exercicio ?? "este exercício"} e
+            também não há índice em resolução para esta prefeitura. Importe o extrato do Portal da
+            FJP, cadastre a resolução ou escolha “Digitar a receita” para simular.
           </CardContent>
         </Card>
       )}
