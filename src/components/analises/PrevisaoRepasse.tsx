@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-/* memória de cálculo: linhas extras da arrecadação entram na tabela abaixo */
 import { Download, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import {
@@ -439,11 +438,40 @@ export default function PrevisaoRepasse() {
                   {indiceTexto(indiceProjetado)} ({formatarPercentual(previsao.variacaoIndicePct)})
                 </td>
               </tr>
+              {base === "arrecadacao_estado" && (
+                <>
+                  <tr className="border-b">
+                    <td className="py-1.5 text-muted-foreground">
+                      Arrecadação do Estado — ano da apuração anterior
+                    </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {formatarMoeda(arrecadacaoAnterior)}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 text-muted-foreground">
+                      Arrecadação do Estado — ano da apuração atual
+                    </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {formatarMoeda(arrecadacaoAtual)}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 text-muted-foreground">
+                      Crescimento da arrecadação aplicado
+                    </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {formatarPercentual(previsao.crescimentoArrecadacaoPct)}
+                    </td>
+                  </tr>
+                </>
+              )}
               <tr className="border-b">
                 <td className="py-1.5 text-muted-foreground">
                   {previsao.origem === "estado"
                     ? "Bolada do Estado no ano (75% do VAF)"
                     : "Bolada estimada pelo recebido (valor ÷ índice)"}
+                  {base === "arrecadacao_estado" ? ", já com o crescimento" : ""}
                 </td>
                 <td className="py-1.5 text-right font-medium">
                   {formatarMoeda(
