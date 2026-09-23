@@ -758,11 +758,37 @@ export default function PrevisaoRepasse() {
                 {previsao.meses.map((m) => {
                   const dif =
                     m.previsto != null && m.recebido != null ? m.previsto - m.recebido : null;
+                  const participacao = previsao.participacaoMeses[m.mes - 1] ?? null;
+                  const boladaMes = boladaMeses[m.mes - 1] ?? null;
+                  const explicacao =
+                    m.previsto != null && previsao.previsaoAnual != null && participacao != null
+                      ? [
+                          `Previsão anual ${formatarMoeda(previsao.previsaoAnual)} × participação do mês ${(participacao * 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% = ${formatarMoeda(m.previsto)}.`,
+                          boladaMes != null && boladaMes > 0
+                            ? `A participação vem da bolada do Estado em ${NOME_MES[m.mes - 1]}: ${formatarMoeda(boladaMes)} (75% da transferência líquida da FJP).`
+                            : `Sem bolada da FJP cadastrada para ${NOME_MES[m.mes - 1]}: a participação foi estimada pela média dos meses conhecidos.`,
+                        ]
+                      : null;
                   return (
                     <tr key={m.mes} className="border-b last:border-0">
                       <td className="py-1.5">{NOME_MES[m.mes - 1]}</td>
                       <td className="py-1.5 text-right">{formatarMoeda(m.recebido)}</td>
-                      <td className="py-1.5 text-right font-medium">{formatarMoeda(m.previsto)}</td>
+                      <td className="py-1.5 text-right font-medium">
+                        {explicacao ? (
+                          <span className="group relative inline-block cursor-help border-b border-dashed border-muted-foreground/50">
+                            {formatarMoeda(m.previsto)}
+                            <span className="pointer-events-none absolute right-0 top-full z-20 mt-1 hidden w-72 rounded-md border bg-popover p-3 text-left text-xs font-normal leading-relaxed text-popover-foreground shadow-md group-hover:block">
+                              {explicacao.map((linha) => (
+                                <span key={linha} className="block first:mb-1">
+                                  {linha}
+                                </span>
+                              ))}
+                            </span>
+                          </span>
+                        ) : (
+                          formatarMoeda(m.previsto)
+                        )}
+                      </td>
                       <td
                         className={`py-1.5 text-right ${dif != null && dif > 0 ? "text-normal-foreground" : dif != null && dif < 0 ? "text-destructive" : ""}`}
                       >

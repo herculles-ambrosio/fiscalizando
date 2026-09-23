@@ -125,6 +125,8 @@ export type Previsao = {
   /** R$ por 1 ponto de índice usado na previsão (12 meses) */
   valorPorPontoAnual: number | null;
   previsaoAnual: number | null;
+  /** participação de cada mês na distribuição anual (soma 1), na ordem jan–dez */
+  participacaoMeses: number[];
   /** previsão mês a mês do próximo exercício */
   meses: { mes: number; previsto: number | null; recebido: number | null }[];
   diferenca: number | null;
@@ -205,6 +207,7 @@ export function calcularPrevisao(entrada: EntradaPrevisao): Previsao {
     boladaAnual,
     valorPorPontoAnual,
     previsaoAnual,
+    participacaoMeses: participacao,
     meses,
     diferenca,
     variacaoPct,
