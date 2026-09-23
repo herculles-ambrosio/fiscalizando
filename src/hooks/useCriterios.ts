@@ -114,23 +114,29 @@ export function useCriterioAnos(criterio: string | null) {
     queryKey: ["criterio-anos", criterio],
     enabled: !!criterio,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("criterio_ranking_municipio")
-        .select("ano_base, fonte_relatorio")
-        .eq("criterio", criterio!)
-        .order("ano_base", { ascending: false });
-      if (error) throw error;
+      const [rk, imp] = await Promise.all([
+        supabase
+          .from("criterio_ranking_municipio")
+          .select("ano_base, fonte_relatorio")
+          .eq("criterio", criterio!)
+          .order("ano_base", { ascending: false })
+          .limit(20000),
+        supabase
+          .from("criterio_importacoes")
+          .select("ano_base, fonte_relatorio")
+          .eq("criterio", criterio!)
+          .limit(1000),
+      ]);
+      if (rk.error) throw rk.error;
       const combos = new Map<string, { ano: number; fonte: FonteRelatorio }>();
-      for (const l of data ?? []) {
-        const chave = `${l.ano_base}-${l.fonte_relatorio}`;
-        if (!combos.has(chave)) {
-          combos.set(chave, {
-            ano: l.ano_base as number,
-            fonte: l.fonte_relatorio as FonteRelatorio,
-          });
-        }
+      for (const l of [...(rk.data ?? []), ...(imp.data ?? [])]) {
+        const fonte = (l.fonte_relatorio === "definitivo" ? "definitivo" : "preliminar") as FonteRelatorio;
+        const chave = `${l.ano_base}-${fonte}`;
+        if (!combos.has(chave)) combos.set(chave, { ano: l.ano_base as number, fonte });
       }
-      return [...combos.values()];
+      return [...combos.values()].sort(
+        (a, b) => b.ano - a.ano || (a.fonte === "definitivo" ? -1 : 1),
+      );
     },
   });
 }
