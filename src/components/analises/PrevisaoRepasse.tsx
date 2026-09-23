@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { explicarPrevisao } from "@/lib/vaf/duvidaPrevisao.functions";
 import { useIcmsDados, useIcmsExercicios } from "@/hooks/useIcms";
 import { useIndicesSalvos } from "@/hooks/useIndicesHistorico";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
