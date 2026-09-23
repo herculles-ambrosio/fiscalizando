@@ -338,6 +338,55 @@ export default function PrevisaoRepasse() {
   const totalPrevisto = linhasMes.reduce((a, m) => a + (m.previsto ?? 0), 0);
   const totalRecebido = linhasMes.reduce((a, m) => a + (m.recebido ?? 0), 0);
 
+  // ---- Dúvida sobre a memória de cálculo, explicada por IA ----
+  const perguntarIa = useServerFn(explicarPrevisao);
+  const [duvida, setDuvida] = useState("");
+  const [respostaIa, setRespostaIa] = useState<string | null>(null);
+  const [erroIa, setErroIa] = useState<string | null>(null);
+  const [consultando, setConsultando] = useState(false);
+
+  const contextoIa = useMemo(() => {
+    const memoriaTexto = memoria.map(([r, v]) => `- ${r}: ${v}`).join("\n");
+    const mesesTexto = previsao.meses
+      .map((m) => {
+        const part = previsao.participacaoMeses[m.mes - 1];
+        const bol = boladaMeses[m.mes - 1];
+        return `- ${NOME_MES[m.mes - 1]}: recebido ${formatarMoeda(m.recebido)}; previsto ${formatarMoeda(
+          m.previsto,
+        )}; participação do mês ${
+          part != null ? `${(part * 100).toFixed(2)}%` : "—"
+        }; bolada do Estado no mês ${formatarMoeda(bol ?? null)}`;
+      })
+      .join("\n");
+    return [
+      `Memória de cálculo:\n${memoriaTexto}`,
+      `Valores mês a mês:\n${mesesTexto}`,
+      `Totais: recebido ${formatarMoeda(totalRecebido)}; previsto ${formatarMoeda(totalPrevisto)}.`,
+    ].join("\n\n");
+  }, [memoria, previsao, boladaMeses, totalRecebido, totalPrevisto]);
+
+  async function enviarDuvida() {
+    const pergunta = duvida.trim();
+    if (pergunta.length < 3) return;
+    setConsultando(true);
+    setErroIa(null);
+    setRespostaIa(null);
+    try {
+      const r = await perguntarIa({ data: { pergunta, contexto: contextoIa } });
+      setRespostaIa(r.resposta);
+    } catch (e) {
+      setErroIa(e instanceof Error ? e.message : "Não foi possível consultar a IA agora.");
+    } finally {
+      setConsultando(false);
+    }
+  }
+
+  const sugestoes = [
+    `Por que a previsão de ${exercicioPrevisto} ficou nesse valor?`,
+    "Como foi calculado o valor previsto de janeiro?",
+    "O que significa a participação do mês?",
+  ];
+
   function exportar() {
     const csv = [
       montarCsv(["Memória de cálculo da previsão", ""], memoria),
