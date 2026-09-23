@@ -3,7 +3,7 @@
  * mensal do VAF (75% da transferência líquida) usada nas previsões de repasse.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
