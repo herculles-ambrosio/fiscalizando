@@ -110,8 +110,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     anoForcado?: number,
     fonteForcada?: FonteRelatorio,
   ) {
-    let ano = anoForcado ?? anoBase;
-    let fonteUso: FonteRelatorio = fonteForcada ?? fonte;
+    const pistaNome = identificarPeloNome(identificacao);
+    let ano = anoForcado ?? pistaNome.ano ?? anoBase;
+    let fonteUso: FonteRelatorio = fonteForcada ?? pistaNome.fonte ?? fonte;
     let divergencias: { municipio: string; esperado: number; obtido: number }[] = [];
     setEtapa("Casando as colunas com os itens do critério");
     // Cada órgão publica em um formato: o ICMS Turismo traz um quadro único com
@@ -276,8 +277,11 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     anoForcado?: number,
     fonteForcada?: FonteRelatorio,
   ) {
-    const ano = anoForcado ?? anoBase;
-    const fonteUso = fonteForcada ?? fonte;
+    const pistaNome = identificarPeloNome(identificacao);
+    const ano = anoForcado ?? pistaNome.ano ?? anoBase;
+    const fonteUso: FonteRelatorio = fonteForcada ?? pistaNome.fonte ?? fonte;
+    setAnoBase(ano);
+    setFonte(fonteUso);
     const versao = fonteUso === "definitivo" ? "definitivo" : "provisorio";
     setRodando(true);
     setResumo(null);
@@ -698,4 +702,26 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       </Card>
     </div>
   );
+}
+
+/** Ano e tipo do relatório pelo nome do arquivo ou endereço (ex.: "Provisório 2027"). */
+function identificarPeloNome(texto: string | null): {
+  ano: number | null;
+  fonte: FonteRelatorio | null;
+} {
+  if (!texto) return { ano: null, fonte: null };
+  let t = texto;
+  try {
+    t = decodeURIComponent(texto);
+  } catch {
+    /* mantém o texto original */
+  }
+  const nome = (t.split(/[\\/]/).pop() ?? t).toLowerCase();
+  const fonte: FonteRelatorio | null = /provis|prelimin|parcial/.test(nome)
+    ? "preliminar"
+    : /definitiv|final/.test(nome)
+      ? "definitivo"
+      : null;
+  const anos = [...nome.matchAll(/(?:^|[^0-9])(20[1-4][0-9])(?![0-9])/g)].map((m) => Number(m[1]));
+  return { ano: anos.length ? Math.max(...anos) : null, fonte };
 }
