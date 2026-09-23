@@ -84,7 +84,16 @@ export function totalAnual(valores: (number | null)[]): number | null {
   return media * 12;
 }
 
-export type BaseReceita = "ano_anterior" | "crescimento" | "manual";
+export type BaseReceita = "ano_anterior" | "crescimento" | "arrecadacao_estado" | "manual";
+
+/** Fator de crescimento da arrecadação do Estado entre os dois anos das apurações. */
+export function fatorArrecadacao(
+  anterior: number | null | undefined,
+  atual: number | null | undefined,
+): number | null {
+  if (anterior == null || atual == null || anterior <= 0 || atual <= 0) return null;
+  return atual / anterior;
+}
 
 export type EntradaPrevisao = {
   serie: MesRepasse[];
