@@ -5,6 +5,7 @@ import {
   BookOpen,
   CalendarClock,
   ClipboardList,
+  Coins,
   FileUp,
   Gavel,
   History,
@@ -47,6 +48,7 @@ const NAV_OPERACAO = [
 const NAV_ANALISE = [
   { to: "/contribuintes", rotulo: "Contribuintes", icone: Users },
   { to: "/analises", rotulo: "Análises do VAF", icone: TrendingUp },
+  { to: "/previsao-repasse", rotulo: "Previsão de repasse", icone: Coins },
   { to: "/estatisticas", rotulo: "Estatísticas", icone: PieChart },
   { to: "/oficios", rotulo: "Ofícios", icone: FileSignature },
   { to: "/impugnacao", rotulo: "Impugnação", icone: Gavel },
