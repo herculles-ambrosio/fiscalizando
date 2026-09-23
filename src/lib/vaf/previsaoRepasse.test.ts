@@ -109,4 +109,45 @@ describe("previsão de repasse do VAF", () => {
     expect(p.variacaoIndicePct!).toBeCloseTo(-13.58, 1);
     expect(p.previsaoAnual!).toBeLessThan(p.atual.projecaoAnual!);
   });
+
+  it("aplica o crescimento entre as arrecadações do Estado", () => {
+    const base = calcularPrevisao({
+      serie,
+      indiceProjetado: 0.006691978,
+      indiceAtual: 0.006691978,
+      base: "ano_anterior",
+      boladaEstado: bolada,
+    });
+    const p = calcularPrevisao({
+      serie,
+      indiceProjetado: 0.006691978,
+      indiceAtual: 0.006691978,
+      base: "arrecadacao_estado",
+      arrecadacaoAnterior: 925287575000,
+      arrecadacaoAtual: 1004153256799,
+      boladaEstado: bolada,
+    });
+    const fator = 1004153256799 / 925287575000;
+    expect(p.crescimentoArrecadacaoPct!).toBeCloseTo((fator - 1) * 100, 2);
+    expect(p.previsaoAnual!).toBeCloseTo(base.previsaoAnual! * fator, 2);
+  });
+
+  it("cai para repetir o ano quando faltam as arrecadações", () => {
+    const base = calcularPrevisao({
+      serie,
+      indiceProjetado: 0.007,
+      indiceAtual: 0.006691978,
+      base: "ano_anterior",
+    });
+    const p = calcularPrevisao({
+      serie,
+      indiceProjetado: 0.007,
+      indiceAtual: 0.006691978,
+      base: "arrecadacao_estado",
+      arrecadacaoAnterior: null,
+      arrecadacaoAtual: null,
+    });
+    expect(p.crescimentoArrecadacaoPct).toBeNull();
+    expect(p.previsaoAnual!).toBeCloseTo(base.previsaoAnual!, 6);
+  });
 });
