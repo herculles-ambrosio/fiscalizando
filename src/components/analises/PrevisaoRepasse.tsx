@@ -228,9 +228,12 @@ export default function PrevisaoRepasse() {
   const indiceSubiu = (previsao.variacaoIndicePct ?? 0) > 0;
   const indiceCaiu = (previsao.variacaoIndicePct ?? 0) < 0;
 
+  const mediaRecebidaMensal = previsao.atual.mediaMensal;
+  const valorRecebidoOuEstimado = (valor: number | null) => valor ?? mediaRecebidaMensal;
+
   const grafico = previsao.meses.map((m) => ({
     mes: NOME_MES[m.mes - 1]?.slice(0, 3),
-    [`Recebido ${exercicio ?? ""}`]: m.recebido ?? 0,
+    [`Recebido/estimado ${exercicio ?? ""}`]: valorRecebidoOuEstimado(m.recebido) ?? 0,
     [`Previsto ${exercicioPrevisto}`]: m.previsto ?? 0,
   }));
 
@@ -330,9 +333,13 @@ export default function PrevisaoRepasse() {
 
   const linhasMes = previsao.meses.map((m) => ({
     mes: NOME_MES[m.mes - 1] as string,
-    recebido: m.recebido,
+    recebido: valorRecebidoOuEstimado(m.recebido),
+    recebidoEstimado: m.recebido == null && mediaRecebidaMensal != null,
     previsto: m.previsto,
-    diferenca: m.previsto != null && m.recebido != null ? m.previsto - m.recebido : null,
+    diferenca:
+      m.previsto != null && valorRecebidoOuEstimado(m.recebido) != null
+        ? m.previsto - (valorRecebidoOuEstimado(m.recebido) as number)
+        : null,
   }));
 
   const totalPrevisto = linhasMes.reduce((a, m) => a + (m.previsto ?? 0), 0);
@@ -351,9 +358,9 @@ export default function PrevisaoRepasse() {
       .map((m) => {
         const part = previsao.participacaoMeses[m.mes - 1];
         const bol = boladaMeses[m.mes - 1];
-        return `- ${NOME_MES[m.mes - 1]}: recebido ${formatarMoeda(m.recebido)}; previsto ${formatarMoeda(
+        return `- ${NOME_MES[m.mes - 1]}: recebido/estimado ${formatarMoeda(valorRecebidoOuEstimado(m.recebido))}; previsto ${formatarMoeda(
           m.previsto,
-        )}; participação do mês ${
+        )}${m.recebido == null && mediaRecebidaMensal != null ? " (média provisória dos meses recebidos)" : " (valor realizado)"}; participação do mês ${
           part != null ? `${(part * 100).toFixed(2)}%` : "—"
         }; bolada do Estado no mês ${formatarMoeda(bol ?? null)}`;
       })
@@ -363,7 +370,7 @@ export default function PrevisaoRepasse() {
       `Valores mês a mês:\n${mesesTexto}`,
       `Totais: recebido ${formatarMoeda(totalRecebido)}; previsto ${formatarMoeda(totalPrevisto)}.`,
     ].join("\n\n");
-  }, [memoria, previsao, boladaMeses, totalRecebido, totalPrevisto]);
+  }, [memoria, previsao, boladaMeses, totalRecebido, totalPrevisto, mediaRecebidaMensal]);
 
   async function enviarDuvida() {
     const pergunta = duvida.trim();
@@ -392,7 +399,7 @@ export default function PrevisaoRepasse() {
       montarCsv(["Memória de cálculo da previsão", ""], memoria),
       "",
       montarCsv(
-        ["Mês", `Recebido ${exercicio ?? ""}`, `Previsto ${exercicioPrevisto}`, "Diferença"],
+        ["Mês", `Recebido/estimado ${exercicio ?? ""}`, `Previsto ${exercicioPrevisto}`, "Diferença"],
         [
           ...linhasMes.map((m) => [m.mes, m.recebido ?? "", m.previsto ?? "", m.diferenca ?? ""]),
           ["Total do ano", totalRecebido, totalPrevisto, totalPrevisto - totalRecebido],
@@ -419,7 +426,7 @@ export default function PrevisaoRepasse() {
         tipo: "tabela",
         cabecalho: [
           "Mês",
-          `Recebido ${exercicio ?? ""}`,
+          `Recebido/estimado ${exercicio ?? ""}`,
           `Previsto ${exercicioPrevisto}`,
           "Diferença",
         ],
@@ -790,7 +797,10 @@ export default function PrevisaoRepasse() {
                 <YAxis fontSize={12} width={80} />
                 <ChartTooltip formatter={(v: number) => formatarMoeda(v)} />
                 <Legend />
-                <Bar dataKey={`Recebido ${exercicio ?? ""}`} fill="hsl(var(--muted-foreground))" />
+                <Bar
+                  dataKey={`Recebido/estimado ${exercicio ?? ""}`}
+                  fill="hsl(var(--muted-foreground))"
+                />
                 <Bar dataKey={`Previsto ${exercicioPrevisto}`} fill="hsl(var(--primary))" />
               </BarChart>
             </ResponsiveContainer>
@@ -801,15 +811,19 @@ export default function PrevisaoRepasse() {
               <thead>
                 <tr className="border-b text-left text-xs uppercase text-muted-foreground">
                   <th className="py-2">Mês</th>
-                  <th className="py-2 text-right">Recebido {exercicio ?? ""}</th>
-                  <th className="py-2 text-right">Previsto {exercicioPrevisto}</th>
-                  <th className="py-2 text-right">Diferença</th>
+                  <th className="py-2 text-right">Recebido/estimado {exercicio ?? ""}</th>
+                  <th className="py-2 text-right text-destructive">Previsto {exercicioPrevisto}</th>
+                  <th className="bg-gold-soft py-2 text-right text-gold-foreground">Diferença</th>
                 </tr>
               </thead>
               <tbody>
                 {previsao.meses.map((m) => {
+                  const recebidoComparacao = valorRecebidoOuEstimado(m.recebido);
+                  const recebidoEstimado = m.recebido == null && recebidoComparacao != null;
                   const dif =
-                    m.previsto != null && m.recebido != null ? m.previsto - m.recebido : null;
+                    m.previsto != null && recebidoComparacao != null
+                      ? m.previsto - recebidoComparacao
+                      : null;
                   const participacao = previsao.participacaoMeses[m.mes - 1] ?? null;
                   const boladaMes = boladaMeses[m.mes - 1] ?? null;
                   const explicacao =
@@ -824,8 +838,19 @@ export default function PrevisaoRepasse() {
                   return (
                     <tr key={m.mes} className="border-b last:border-0">
                       <td className="py-1.5">{NOME_MES[m.mes - 1]}</td>
-                      <td className="py-1.5 text-right">{formatarMoeda(m.recebido)}</td>
-                      <td className="py-1.5 text-right font-medium">
+                      <td className="py-1.5 text-right">
+                        <span
+                          className={recebidoEstimado ? "border-b border-dashed border-muted-foreground/50" : ""}
+                          title={
+                            recebidoEstimado
+                              ? `Estimativa temporária pela média dos meses já recebidos: ${formatarMoeda(mediaRecebidaMensal)}. Será substituída quando o valor real chegar.`
+                              : "Valor real recebido"
+                          }
+                        >
+                          {formatarMoeda(recebidoComparacao)}
+                        </span>
+                      </td>
+                      <td className="py-1.5 text-right font-medium text-destructive">
                         {explicacao ? (
                           <span className="group relative inline-block cursor-help border-b border-dashed border-muted-foreground/50">
                             {formatarMoeda(m.previsto)}
@@ -841,9 +866,7 @@ export default function PrevisaoRepasse() {
                           formatarMoeda(m.previsto)
                         )}
                       </td>
-                      <td
-                        className={`py-1.5 text-right ${dif != null && dif > 0 ? "text-normal-foreground" : dif != null && dif < 0 ? "text-destructive" : ""}`}
-                      >
+                      <td className="bg-gold-soft py-1.5 text-right font-medium text-gold-foreground">
                         {formatarMoeda(dif)}
                       </td>
                     </tr>
@@ -852,18 +875,21 @@ export default function PrevisaoRepasse() {
               </tbody>
               <tfoot>
                 {(() => {
-                  const totRecebido = previsao.meses.reduce((s, m) => s + (m.recebido ?? 0), 0);
+                  const totRecebido = previsao.meses.reduce(
+                    (s, m) => s + (valorRecebidoOuEstimado(m.recebido) ?? 0),
+                    0,
+                  );
                   const totPrevisto = previsao.meses.reduce((s, m) => s + (m.previsto ?? 0), 0);
-                  const temRecebido = previsao.meses.some((m) => m.recebido != null);
+                  const temRecebido = previsao.meses.some(
+                    (m) => valorRecebidoOuEstimado(m.recebido) != null,
+                  );
                   const totDif = temRecebido ? totPrevisto - totRecebido : null;
                   return (
                     <tr className="border-t-2 font-semibold">
                       <td className="py-2">Total anual</td>
                       <td className="py-2 text-right">{formatarMoeda(temRecebido ? totRecebido : null)}</td>
-                      <td className="py-2 text-right">{formatarMoeda(totPrevisto)}</td>
-                      <td
-                        className={`py-2 text-right ${totDif != null && totDif > 0 ? "text-normal-foreground" : totDif != null && totDif < 0 ? "text-destructive" : ""}`}
-                      >
+                      <td className="py-2 text-right text-destructive">{formatarMoeda(totPrevisto)}</td>
+                      <td className="bg-gold-soft py-2 text-right text-gold-foreground">
                         {formatarMoeda(totDif)}
                       </td>
                     </tr>
@@ -874,10 +900,10 @@ export default function PrevisaoRepasse() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            O repasse de cada mês é o índice do município aplicado sobre a bolada do VAF do Estado
-            (75% da transferência líquida). A previsão do ano usa o índice projetado sobre a bolada
-            anual e distribui pelos meses na mesma proporção observada. A apuração do VAF não é
-            alterada.
+            Nos meses ainda sem crédito, a coluna recebido usa provisoriamente a média dos meses já
+            informados; cada valor é substituído automaticamente quando o valor real chegar. O
+            repasse previsto usa o índice projetado sobre a bolada anual e a distribui na proporção
+            mensal observada. A apuração do VAF não é alterada.
           </p>
         </CardContent>
       </Card>
