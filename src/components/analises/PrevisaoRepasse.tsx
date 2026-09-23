@@ -149,11 +149,23 @@ export default function PrevisaoRepasse() {
         indiceAtual,
         base,
         crescimentoPct: paraNumero(crescimento) ?? 0,
+        arrecadacaoAnterior,
+        arrecadacaoAtual,
         receitaManual: paraNumero(receitaManual),
         boladaEstado: boladaMeses,
         boladaManual: paraNumero(receitaManual),
       }),
-    [serie, indiceProjetado, indiceAtual, base, crescimento, receitaManual, boladaMeses],
+    [
+      serie,
+      indiceProjetado,
+      indiceAtual,
+      base,
+      crescimento,
+      arrecadacaoAnterior,
+      arrecadacaoAtual,
+      receitaManual,
+      boladaMeses,
+    ],
   );
 
   const exercicioPrevisto = (exercicio ?? new Date().getFullYear()) + 1;
@@ -254,7 +266,10 @@ export default function PrevisaoRepasse() {
                 <SelectItem value="ano_anterior">
                   {temBolada ? "Repetir o Estado" : "Repetir o ano anterior"}
                 </SelectItem>
-                <SelectItem value="crescimento">Crescimento da arrecadação</SelectItem>
+                <SelectItem value="crescimento">Crescimento digitado (%)</SelectItem>
+                <SelectItem value="arrecadacao_estado">
+                  Crescimento pela arrecadação do Estado
+                </SelectItem>
                 <SelectItem value="manual">
                   {temBolada ? "Digitar a bolada" : "Digitar a receita"}
                 </SelectItem>
