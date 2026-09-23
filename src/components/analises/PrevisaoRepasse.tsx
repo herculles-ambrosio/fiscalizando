@@ -187,6 +187,8 @@ export default function PrevisaoRepasse() {
   }));
 
   const nomeBase = `previsao-vaf-${municipio?.nome ?? "municipio"}-${exercicioPrevisto}`;
+  const ultimoMes = previsao.atual.mesesComValor.at(-1);
+  const ultimoMesNome = ultimoMes ? (NOME_MES[ultimoMes - 1] as string) : "—";
 
   /** Memória de cálculo em pares rótulo/valor, usada no CSV e no PDF. */
   const memoria = useMemo(() => {
