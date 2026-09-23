@@ -131,6 +131,8 @@ export type Previsao = {
   variacaoPct: number | null;
   /** variação do índice projetado em relação ao aplicado hoje, em % */
   variacaoIndicePct: number | null;
+  /** crescimento da arrecadação do Estado aplicado, em % (opção "arrecadacao_estado") */
+  crescimentoArrecadacaoPct: number | null;
 };
 
 export function calcularPrevisao(entrada: EntradaPrevisao): Previsao {
