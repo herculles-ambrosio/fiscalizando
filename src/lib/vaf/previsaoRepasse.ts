@@ -84,7 +84,16 @@ export function totalAnual(valores: (number | null)[]): number | null {
   return media * 12;
 }
 
-export type BaseReceita = "ano_anterior" | "crescimento" | "manual";
+export type BaseReceita = "ano_anterior" | "crescimento" | "arrecadacao_estado" | "manual";
+
+/** Fator de crescimento da arrecadação do Estado entre os dois anos das apurações. */
+export function fatorArrecadacao(
+  anterior: number | null | undefined,
+  atual: number | null | undefined,
+): number | null {
+  if (anterior == null || atual == null || anterior <= 0 || atual <= 0) return null;
+  return atual / anterior;
+}
 
 export type EntradaPrevisao = {
   serie: MesRepasse[];
@@ -95,6 +104,10 @@ export type EntradaPrevisao = {
   base: BaseReceita;
   /** percentual de crescimento da arrecadação (opção "crescimento") */
   crescimentoPct?: number;
+  /** arrecadação do Estado no ano da apuração anterior (opção "arrecadacao_estado") */
+  arrecadacaoAnterior?: number | null;
+  /** arrecadação do Estado no ano da apuração atual (opção "arrecadacao_estado") */
+  arrecadacaoAtual?: number | null;
   /** total anual do critério VAF do município informado à mão (sem bolada cadastrada) */
   receitaManual?: number | null;
   /** bolada estadual do VAF mês a mês (75% da transferência líquida) */
@@ -118,6 +131,8 @@ export type Previsao = {
   variacaoPct: number | null;
   /** variação do índice projetado em relação ao aplicado hoje, em % */
   variacaoIndicePct: number | null;
+  /** crescimento da arrecadação do Estado aplicado, em % (opção "arrecadacao_estado") */
+  crescimentoArrecadacaoPct: number | null;
 };
 
 export function calcularPrevisao(entrada: EntradaPrevisao): Previsao {
@@ -125,7 +140,14 @@ export function calcularPrevisao(entrada: EntradaPrevisao): Previsao {
   const bolada = entrada.boladaEstado ?? [];
   const temBolada = bolada.some((v) => v != null && v > 0);
   const origem: "estado" | "municipio" = temBolada ? "estado" : "municipio";
-  const fator = entrada.base === "crescimento" ? 1 + (entrada.crescimentoPct ?? 0) / 100 : 1;
+  const fatorArr = fatorArrecadacao(entrada.arrecadacaoAnterior, entrada.arrecadacaoAtual);
+  const crescimentoArrecadacaoPct = fatorArr != null ? (fatorArr - 1) * 100 : null;
+  const fator =
+    entrada.base === "crescimento"
+      ? 1 + (entrada.crescimentoPct ?? 0) / 100
+      : entrada.base === "arrecadacao_estado"
+        ? (fatorArr ?? 1)
+        : 1;
 
   let boladaAnual: number | null = null;
   let valorPorPontoAnual: number | null = null;
@@ -187,5 +209,6 @@ export function calcularPrevisao(entrada: EntradaPrevisao): Previsao {
     diferenca,
     variacaoPct,
     variacaoIndicePct,
+    crescimentoArrecadacaoPct,
   };
 }

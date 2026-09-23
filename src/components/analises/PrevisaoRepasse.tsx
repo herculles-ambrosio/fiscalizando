@@ -114,6 +114,29 @@ export default function PrevisaoRepasse() {
   const [base, setBase] = useState<BaseReceita>("ano_anterior");
   const [crescimento, setCrescimento] = useState("0");
   const [receitaManual, setReceitaManual] = useState("");
+  const [arrAnterior, setArrAnterior] = useState("");
+  const [arrAtual, setArrAtual] = useState("");
+  const [arrInicializada, setArrInicializada] = useState(false);
+
+  // Preenche as arrecadações do Estado com o que está gravado nas duas
+  // apurações usadas na projeção (o usuário pode editar).
+  useEffect(() => {
+    if (arrInicializada || !indicesSalvos?.length) return;
+    const formatar = (v: number | null | undefined) =>
+      v != null && v > 0
+        ? v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : "";
+    setArrAtual(formatar(indicesSalvos[0]?.vaf_estadual));
+    setArrAnterior(formatar(indicesSalvos[1]?.vaf_estadual));
+    setArrInicializada(true);
+  }, [indicesSalvos, arrInicializada]);
+
+  const arrecadacaoAnterior = paraNumero(arrAnterior);
+  const arrecadacaoAtual = paraNumero(arrAtual);
+  const crescimentoArrecadacao =
+    arrecadacaoAnterior != null && arrecadacaoAtual != null && arrecadacaoAnterior > 0
+      ? (arrecadacaoAtual / arrecadacaoAnterior - 1) * 100
+      : null;
 
   const boladaMeses = useMemo(() => (bolada ?? []).map((m) => m.vaf75), [bolada]);
   const temBolada = boladaMeses.some((v) => v != null && v > 0);
@@ -126,11 +149,23 @@ export default function PrevisaoRepasse() {
         indiceAtual,
         base,
         crescimentoPct: paraNumero(crescimento) ?? 0,
+        arrecadacaoAnterior,
+        arrecadacaoAtual,
         receitaManual: paraNumero(receitaManual),
         boladaEstado: boladaMeses,
         boladaManual: paraNumero(receitaManual),
       }),
-    [serie, indiceProjetado, indiceAtual, base, crescimento, receitaManual, boladaMeses],
+    [
+      serie,
+      indiceProjetado,
+      indiceAtual,
+      base,
+      crescimento,
+      arrecadacaoAnterior,
+      arrecadacaoAtual,
+      receitaManual,
+      boladaMeses,
+    ],
   );
 
   const exercicioPrevisto = (exercicio ?? new Date().getFullYear()) + 1;
@@ -231,7 +266,10 @@ export default function PrevisaoRepasse() {
                 <SelectItem value="ano_anterior">
                   {temBolada ? "Repetir o Estado" : "Repetir o ano anterior"}
                 </SelectItem>
-                <SelectItem value="crescimento">Crescimento da arrecadação</SelectItem>
+                <SelectItem value="crescimento">Crescimento digitado (%)</SelectItem>
+                <SelectItem value="arrecadacao_estado">
+                  Crescimento pela arrecadação do Estado
+                </SelectItem>
                 <SelectItem value="manual">
                   {temBolada ? "Digitar a bolada" : "Digitar a receita"}
                 </SelectItem>
@@ -247,6 +285,27 @@ export default function PrevisaoRepasse() {
               <>
                 <Label>Crescimento da arrecadação (%)</Label>
                 <Input value={crescimento} onChange={(e) => setCrescimento(e.target.value)} />
+              </>
+            )}
+            {base === "arrecadacao_estado" && (
+              <>
+                <Label>Arrecadação do Estado — ano da apuração anterior (R$)</Label>
+                <Input
+                  value={arrAnterior}
+                  onChange={(e) => setArrAnterior(e.target.value)}
+                  placeholder="925.287.575.000,00"
+                />
+                <Label>Arrecadação do Estado — ano da apuração atual (R$)</Label>
+                <Input
+                  value={arrAtual}
+                  onChange={(e) => setArrAtual(e.target.value)}
+                  placeholder="1.004.153.256.799,00"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Crescimento calculado: {formatarPercentual(crescimentoArrecadacao)}
+                  {crescimentoArrecadacao == null &&
+                    " — informe as duas arrecadações para calcular"}
+                </p>
               </>
             )}
             {base === "manual" && (
@@ -379,11 +438,40 @@ export default function PrevisaoRepasse() {
                   {indiceTexto(indiceProjetado)} ({formatarPercentual(previsao.variacaoIndicePct)})
                 </td>
               </tr>
+              {base === "arrecadacao_estado" && (
+                <>
+                  <tr className="border-b">
+                    <td className="py-1.5 text-muted-foreground">
+                      Arrecadação do Estado — ano da apuração anterior
+                    </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {formatarMoeda(arrecadacaoAnterior)}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 text-muted-foreground">
+                      Arrecadação do Estado — ano da apuração atual
+                    </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {formatarMoeda(arrecadacaoAtual)}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 text-muted-foreground">
+                      Crescimento da arrecadação aplicado
+                    </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {formatarPercentual(previsao.crescimentoArrecadacaoPct)}
+                    </td>
+                  </tr>
+                </>
+              )}
               <tr className="border-b">
                 <td className="py-1.5 text-muted-foreground">
                   {previsao.origem === "estado"
                     ? "Bolada do Estado no ano (75% do VAF)"
                     : "Bolada estimada pelo recebido (valor ÷ índice)"}
+                  {base === "arrecadacao_estado" ? ", já com o crescimento" : ""}
                 </td>
                 <td className="py-1.5 text-right font-medium">
                   {formatarMoeda(
