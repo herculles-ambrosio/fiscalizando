@@ -209,5 +209,6 @@ export function calcularPrevisao(entrada: EntradaPrevisao): Previsao {
     diferenca,
     variacaoPct,
     variacaoIndicePct,
+    crescimentoArrecadacaoPct,
   };
 }
