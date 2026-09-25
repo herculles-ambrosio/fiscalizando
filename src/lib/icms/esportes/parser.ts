@@ -92,7 +92,9 @@ export function identificarRelatorioEsportes(
   const ano = Number(anoExplicito?.[1] ?? anoReferencia?.[1] ?? 0);
   const fonte = /PRELIMINAR|PROVISORI/.test(normalizado)
     ? "preliminar"
-    : /DEFINITIV|FINAL/.test(normalizado)
+    : // "FINAL" sozinho aparece no cabeçalho da tabela ("PONTUAÇÃO FINAL") e não
+      // identifica a versão; só "DEFINITIVO/A" ou "RESULTADO FINAL" contam.
+      /DEFINITIV|RESULTADO FINAL|RELATORIO FINAL/.test(normalizado)
       ? "definitivo"
       : null;
 
