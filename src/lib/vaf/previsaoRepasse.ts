@@ -215,3 +215,19 @@ export function calcularPrevisao(entrada: EntradaPrevisao): Previsao {
     crescimentoArrecadacaoPct,
   };
 }
+
+/**
+ * Acréscimo no índice projetado quando um valor adicionado é recuperado.
+ * O índice apurado é valor líquido ÷ arrecadação do Estado × 100, então somar
+ * R$ X eleva a apuração em X ÷ arrecadação × 100. Quando o índice projetado é
+ * a média de duas apurações, só uma delas recebe o valor: conta pela metade.
+ */
+export function acrescimoIndiceRecuperacao(
+  valorRecuperar: number | null,
+  arrecadacaoEstado: number | null,
+  mediaDeDuas: boolean,
+): number | null {
+  if (valorRecuperar == null || arrecadacaoEstado == null || arrecadacaoEstado <= 0) return null;
+  const acrescimo = (valorRecuperar / arrecadacaoEstado) * 100;
+  return mediaDeDuas ? acrescimo / 2 : acrescimo;
+}
