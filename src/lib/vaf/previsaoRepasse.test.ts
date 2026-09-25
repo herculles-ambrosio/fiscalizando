@@ -151,3 +151,12 @@ describe("previsão de repasse do VAF", () => {
     expect(p.previsaoAnual!).toBeCloseTo(base.previsaoAnual!, 6);
   });
 });
+
+import { acrescimoIndiceRecuperacao } from "./previsaoRepasse";
+describe("acrescimoIndiceRecuperacao", () => {
+  it("soma o valor recuperado ao índice e divide na média", () => {
+    expect(acrescimoIndiceRecuperacao(1_000_000, 1_000_000_000, false)).toBeCloseTo(0.1);
+    expect(acrescimoIndiceRecuperacao(1_000_000, 1_000_000_000, true)).toBeCloseTo(0.05);
+    expect(acrescimoIndiceRecuperacao(1, null, true)).toBeNull();
+  });
+});
