@@ -46,6 +46,7 @@ import { Route as AuthenticatedIcmsGlossarioRouteImport } from './routes/_authen
 import { Route as AuthenticatedIcmsImportacoesRouteImport } from './routes/_authenticated/icms/importacoes'
 import { Route as AuthenticatedIcmsPlanoRouteImport } from './routes/_authenticated/icms/plano'
 import { Route as AuthenticatedIcmsPrazosRouteImport } from './routes/_authenticated/icms/prazos'
+import { Route as AuthenticatedIcmsPrevisaoCriteriosRouteImport } from './routes/_authenticated/icms/previsao-criterios'
 import { Route as AuthenticatedIcmsRepasseEducacaoRouteImport } from './routes/_authenticated/icms/repasse-educacao'
 import { Route as AuthenticatedIcmsSincronizacaoRouteImport } from './routes/_authenticated/icms/sincronizacao'
 import { Route as AuthenticatedIcmsTransferenciasRouteImport } from './routes/_authenticated/icms/transferencias'
@@ -254,6 +255,12 @@ const AuthenticatedIcmsPrazosRoute = AuthenticatedIcmsPrazosRouteImport.update({
   path: '/prazos',
   getParentRoute: () => AuthenticatedIcmsRouteRoute,
 } as any)
+const AuthenticatedIcmsPrevisaoCriteriosRoute =
+  AuthenticatedIcmsPrevisaoCriteriosRouteImport.update({
+    id: '/previsao-criterios',
+    path: '/previsao-criterios',
+    getParentRoute: () => AuthenticatedIcmsRouteRoute,
+  } as any)
 const AuthenticatedIcmsRepasseEducacaoRoute =
   AuthenticatedIcmsRepasseEducacaoRouteImport.update({
     id: '/repasse-educacao',
@@ -321,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
+  '/icms/previsao-criterios': typeof AuthenticatedIcmsPrevisaoCriteriosRoute
   '/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
@@ -363,6 +371,7 @@ export interface FileRoutesByTo {
   '/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
+  '/icms/previsao-criterios': typeof AuthenticatedIcmsPrevisaoCriteriosRoute
   '/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
@@ -408,6 +417,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/importacoes': typeof AuthenticatedIcmsImportacoesRoute
   '/_authenticated/icms/plano': typeof AuthenticatedIcmsPlanoRoute
   '/_authenticated/icms/prazos': typeof AuthenticatedIcmsPrazosRoute
+  '/_authenticated/icms/previsao-criterios': typeof AuthenticatedIcmsPrevisaoCriteriosRoute
   '/_authenticated/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/_authenticated/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/_authenticated/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms/prazos'
+    | '/icms/previsao-criterios'
     | '/icms/repasse-educacao'
     | '/icms/sincronizacao'
     | '/icms/transferencias'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/icms/importacoes'
     | '/icms/plano'
     | '/icms/prazos'
+    | '/icms/previsao-criterios'
     | '/icms/repasse-educacao'
     | '/icms/sincronizacao'
     | '/icms/transferencias'
@@ -539,6 +551,7 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/importacoes'
     | '/_authenticated/icms/plano'
     | '/_authenticated/icms/prazos'
+    | '/_authenticated/icms/previsao-criterios'
     | '/_authenticated/icms/repasse-educacao'
     | '/_authenticated/icms/sincronizacao'
     | '/_authenticated/icms/transferencias'
@@ -814,6 +827,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIcmsPrazosRouteImport
       parentRoute: typeof AuthenticatedIcmsRouteRoute
     }
+    '/_authenticated/icms/previsao-criterios': {
+      id: '/_authenticated/icms/previsao-criterios'
+      path: '/previsao-criterios'
+      fullPath: '/icms/previsao-criterios'
+      preLoaderRoute: typeof AuthenticatedIcmsPrevisaoCriteriosRouteImport
+      parentRoute: typeof AuthenticatedIcmsRouteRoute
+    }
     '/_authenticated/icms/repasse-educacao': {
       id: '/_authenticated/icms/repasse-educacao'
       path: '/repasse-educacao'
@@ -886,6 +906,7 @@ interface AuthenticatedIcmsRouteRouteChildren {
   AuthenticatedIcmsImportacoesRoute: typeof AuthenticatedIcmsImportacoesRoute
   AuthenticatedIcmsPlanoRoute: typeof AuthenticatedIcmsPlanoRoute
   AuthenticatedIcmsPrazosRoute: typeof AuthenticatedIcmsPrazosRoute
+  AuthenticatedIcmsPrevisaoCriteriosRoute: typeof AuthenticatedIcmsPrevisaoCriteriosRoute
   AuthenticatedIcmsRepasseEducacaoRoute: typeof AuthenticatedIcmsRepasseEducacaoRoute
   AuthenticatedIcmsSincronizacaoRoute: typeof AuthenticatedIcmsSincronizacaoRoute
   AuthenticatedIcmsTransferenciasRoute: typeof AuthenticatedIcmsTransferenciasRoute
@@ -904,6 +925,8 @@ const AuthenticatedIcmsRouteRouteChildren: AuthenticatedIcmsRouteRouteChildren =
     AuthenticatedIcmsImportacoesRoute: AuthenticatedIcmsImportacoesRoute,
     AuthenticatedIcmsPlanoRoute: AuthenticatedIcmsPlanoRoute,
     AuthenticatedIcmsPrazosRoute: AuthenticatedIcmsPrazosRoute,
+    AuthenticatedIcmsPrevisaoCriteriosRoute:
+      AuthenticatedIcmsPrevisaoCriteriosRoute,
     AuthenticatedIcmsRepasseEducacaoRoute:
       AuthenticatedIcmsRepasseEducacaoRoute,
     AuthenticatedIcmsSincronizacaoRoute: AuthenticatedIcmsSincronizacaoRoute,
