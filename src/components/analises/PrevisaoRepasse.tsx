@@ -36,7 +36,13 @@ import { useIndiceAplicado } from "@/hooks/useIndiceAplicado";
 import { useExerciciosEstado, useRepassesEstado } from "@/hooks/useRepassesEstado";
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
+import { useEvolucoesSalvas } from "@/hooks/useEvolucoesSalvas";
+import { useSituacoesCadastrais } from "@/hooks/useSituacoesCadastrais";
+import { compararDeclarantes } from "@/lib/vaf/evolucao";
+import { diagnosticarEvolucao } from "@/lib/vaf/diagnostico";
+import { montarPlanoRecuperacao, potencialConsolidado } from "@/lib/vaf/recuperacao";
 import {
+  acrescimoIndiceRecuperacao,
   calcularPrevisao,
   type BaseReceita,
   type MesRepasse,
@@ -232,6 +238,48 @@ export default function PrevisaoRepasse() {
   );
 
   const exercicioPrevisto = (exercicio ?? new Date().getFullYear()) + 1;
+
+  // ---- Cenário com recuperação: potencial mapeado na Análise do VAF ----
+  const { data: evolucoes } = useEvolucoesSalvas(municipioId);
+  const { data: situacoesCad } = useSituacoesCadastrais(municipioId);
+  const evolucaoRecente = evolucoes?.[0] ?? null;
+  const potencialMapeado = useMemo(() => {
+    if (!evolucaoRecente) return null;
+    try {
+      const { base: b, atual: a } = evolucaoRecente;
+      const acoes = montarPlanoRecuperacao(
+        diagnosticarEvolucao(b, a),
+        compararDeclarantes(b.declarantes, a.declarantes),
+        { exercicio, situacoesCadastrais: situacoesCad ?? null },
+      );
+      return potencialConsolidado(acoes);
+    } catch {
+      return null;
+    }
+  }, [evolucaoRecente, exercicio, situacoesCad]);
+  const [valorRecuperarTexto, setValorRecuperarTexto] = useState<string | null>(null);
+  const valorRecuperar =
+    valorRecuperarTexto != null ? paraNumero(valorRecuperarTexto) : potencialMapeado;
+  const arrecadacaoIndice = arrecadacaoAtual ?? arrGlobais?.atual ?? null;
+  const acrescimoIndice = acrescimoIndiceRecuperacao(
+    valorRecuperar,
+    arrecadacaoIndice,
+    origemIndice === "media" || origemIndice === "resolucao",
+  );
+  const indiceComRecuperacao =
+    indiceProjetado != null && acrescimoIndice != null ? indiceProjetado + acrescimoIndice : null;
+  const fatorRecuperacao =
+    indiceComRecuperacao != null && indiceProjetado ? indiceComRecuperacao / indiceProjetado : null;
+  const previsaoComRecuperacao =
+    previsao.previsaoAnual != null && fatorRecuperacao != null
+      ? previsao.previsaoAnual * fatorRecuperacao
+      : null;
+  const ganhoRecuperacao =
+    previsaoComRecuperacao != null && previsao.previsaoAnual != null
+      ? previsaoComRecuperacao - previsao.previsaoAnual
+      : null;
+  const comRecuperacaoMes = (previsto: number | null) =>
+    previsto != null && fatorRecuperacao != null ? previsto * fatorRecuperacao : null;
   const subiu = previsao.diferenca != null && previsao.diferenca > 0;
   const caiu = previsao.diferenca != null && previsao.diferenca < 0;
   const corCartao = subiu
@@ -326,8 +374,27 @@ export default function PrevisaoRepasse() {
         `${formatarMoeda(previsao.diferenca)} (${formatarPercentual(previsao.variacaoPct)})`,
       ],
     );
+    if (previsaoComRecuperacao != null) {
+      linhas.push(
+        ["Cenário com recuperação — valor a recuperar", formatarMoeda(valorRecuperar)],
+        [
+          "Acréscimo no índice",
+          `${indiceTexto(acrescimoIndice)} (valor ÷ arrecadação do Estado × 100${
+            origemIndice === "media" || origemIndice === "resolucao" ? ", metade na média" : ""
+          })`,
+        ],
+        ["Índice com recuperação", indiceTexto(indiceComRecuperacao)],
+        [`Previsão anual ${exercicioPrevisto} com recuperação`, formatarMoeda(previsaoComRecuperacao)],
+        ["Ganho com a recuperação", formatarMoeda(ganhoRecuperacao)],
+      );
+    }
     return linhas;
   }, [
+    previsaoComRecuperacao,
+    valorRecuperar,
+    acrescimoIndice,
+    indiceComRecuperacao,
+    ganhoRecuperacao,
     municipio,
     exercicio,
     exercicioPrevisto,
@@ -351,6 +418,7 @@ export default function PrevisaoRepasse() {
     recebido: valorRecebidoOuEstimado(m.recebido),
     recebidoEstimado: m.recebido == null && mediaRecebidaMensal != null,
     previsto: m.previsto,
+    comRecuperacao: comRecuperacaoMes(m.previsto),
     diferenca:
       m.previsto != null && valorRecebidoOuEstimado(m.recebido) != null
         ? m.previsto - (valorRecebidoOuEstimado(m.recebido) as number)
@@ -359,6 +427,7 @@ export default function PrevisaoRepasse() {
 
   const totalPrevisto = linhasMes.reduce((a, m) => a + (m.previsto ?? 0), 0);
   const totalRecebido = linhasMes.reduce((a, m) => a + (m.recebido ?? 0), 0);
+  const totalComRecuperacao = linhasMes.reduce((a, m) => a + (m.comRecuperacao ?? 0), 0);
 
   // ---- Dúvida sobre a memória de cálculo, explicada por IA ----
   const perguntarIa = useServerFn(explicarPrevisao);
@@ -414,10 +483,10 @@ export default function PrevisaoRepasse() {
       montarCsv(["Memória de cálculo da previsão", ""], memoria),
       "",
       montarCsv(
-        ["Mês", `Recebido/estimado ${exercicio ?? ""}`, `Previsto ${exercicioPrevisto}`, "Diferença"],
+        ["Mês", `Recebido/estimado ${exercicio ?? ""}`, `Previsto ${exercicioPrevisto}`, "Diferença", "Com recuperação"],
         [
-          ...linhasMes.map((m) => [m.mes, m.recebido ?? "", m.previsto ?? "", m.diferenca ?? ""]),
-          ["Total do ano", totalRecebido, totalPrevisto, totalPrevisto - totalRecebido],
+          ...linhasMes.map((m) => [m.mes, m.recebido ?? "", m.previsto ?? "", m.diferenca ?? "", m.comRecuperacao ?? ""]),
+          ["Total do ano", totalRecebido, totalPrevisto, totalPrevisto - totalRecebido, fatorRecuperacao != null ? totalComRecuperacao : ""],
         ],
       ),
     ].join("\n");
@@ -444,21 +513,24 @@ export default function PrevisaoRepasse() {
           `Recebido/estimado ${exercicio ?? ""}`,
           `Previsto ${exercicioPrevisto}`,
           "Diferença",
+          "Com recuperação",
         ],
-        larguras: [2, 2, 2, 2],
-        direita: [false, true, true, true],
+        larguras: [2, 2, 2, 2, 2],
+        direita: [false, true, true, true, true],
         linhas: [
           ...linhasMes.map((m) => [
             m.mes,
             formatarMoeda(m.recebido),
             formatarMoeda(m.previsto),
             formatarMoeda(m.diferenca),
+            formatarMoeda(m.comRecuperacao),
           ]),
           [
             "Total do ano",
             formatarMoeda(totalRecebido),
             formatarMoeda(totalPrevisto),
             formatarMoeda(totalPrevisto - totalRecebido),
+            formatarMoeda(fatorRecuperacao != null ? totalComRecuperacao : null),
           ],
         ],
       },
@@ -716,6 +788,79 @@ export default function PrevisaoRepasse() {
         </Card>
       </div>
 
+      <Card className="border-normal-foreground/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Cenário com recuperação</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,320px)_1fr] md:items-end">
+            <div className="space-y-1.5">
+              <Label htmlFor="valor-recuperar">Valor a recuperar (R$)</Label>
+              <Input
+                id="valor-recuperar"
+                inputMode="decimal"
+                value={
+                  valorRecuperarTexto ??
+                  (potencialMapeado != null
+                    ? potencialMapeado.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : "")
+                }
+                onChange={(e) => setValorRecuperarTexto(e.target.value)}
+                placeholder="0,00"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {potencialMapeado != null ? (
+                <span>
+                  Potencial mapeado na Análise do VAF ({evolucaoRecente?.nome}):{" "}
+                  <strong>{formatarMoeda(potencialMapeado)}</strong>
+                </span>
+              ) : (
+                <span>Sem análise do VAF salva para este município: digite o valor a recuperar.</span>
+              )}
+              {valorRecuperarTexto != null && potencialMapeado != null && (
+                <Button variant="outline" size="sm" onClick={() => setValorRecuperarTexto(null)}>
+                  Voltar ao potencial mapeado
+                </Button>
+              )}
+            </div>
+          </div>
+          {previsaoComRecuperacao == null ? (
+            <p className="text-sm text-muted-foreground">
+              Para projetar, informe o valor a recuperar e a arrecadação do Estado nas premissas.
+            </p>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-md border p-4">
+                <p className="text-xs uppercase text-muted-foreground">Índice projetado</p>
+                <p className="mt-1 font-mono text-sm">
+                  {indiceTexto(indiceProjetado)} → <strong>{indiceTexto(indiceComRecuperacao)}</strong>
+                </p>
+                <p className="mt-1 text-xs text-normal-foreground">
+                  +{indiceTexto(acrescimoIndice)} (
+                  {formatarPercentual(fatorRecuperacao != null ? (fatorRecuperacao - 1) * 100 : null)})
+                </p>
+              </div>
+              <div className="rounded-md border border-normal-foreground/40 bg-normal p-4">
+                <p className="text-xs uppercase text-muted-foreground">Previsto {exercicioPrevisto}</p>
+                <p className="mt-1 text-sm">
+                  {formatarMoeda(previsao.previsaoAnual)} →{" "}
+                  <strong className="text-lg">{formatarMoeda(previsaoComRecuperacao)}</strong>
+                </p>
+                <p className="mt-1 text-xs font-semibold text-normal-foreground">
+                  Ganho de {formatarMoeda(ganhoRecuperacao)} no ano
+                </p>
+              </div>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            O valor recuperado entra no valor líquido da apuração: índice sobe em valor ÷ arrecadação
+            do Estado × 100. Quando o índice é a média de duas apurações, só uma recebe o valor, então
+            o acréscimo conta pela metade.
+          </p>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Como chegamos nesse valor</CardTitle>
@@ -829,6 +974,9 @@ export default function PrevisaoRepasse() {
                   <th className="py-2 text-right">Recebido/estimado {exercicio ?? ""}</th>
                   <th className="py-2 text-right">Previsto {exercicioPrevisto}</th>
                   <th className="py-2 text-right font-bold">Diferença</th>
+                  {fatorRecuperacao != null && (
+                    <th className="py-2 text-right">Com recuperação</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -890,6 +1038,11 @@ export default function PrevisaoRepasse() {
                       <td className={`py-1.5 text-right font-bold ${corResultado}`}>
                         {formatarMoeda(dif)}
                       </td>
+                      {fatorRecuperacao != null && (
+                        <td className="py-1.5 text-right text-normal-foreground">
+                          {formatarMoeda(comRecuperacaoMes(m.previsto))}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -919,6 +1072,11 @@ export default function PrevisaoRepasse() {
                       <td className={`py-2 text-right font-bold ${corTotal}`}>
                         {formatarMoeda(totDif)}
                       </td>
+                      {fatorRecuperacao != null && (
+                        <td className="py-2 text-right text-normal-foreground">
+                          {formatarMoeda(totPrevisto * fatorRecuperacao)}
+                        </td>
+                      )}
                     </tr>
                   );
                 })()}
