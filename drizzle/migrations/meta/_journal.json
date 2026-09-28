@@ -71,6 +71,13 @@
       "when": 1790182481946,
       "tag": "0009_criterio_relatorios_encontrados",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790608360074,
+      "tag": "0010_create_noticias",
+      "breakpoints": true
     }
   ]
 }
