@@ -372,8 +372,8 @@ export function MuralNoticias() {
 }
 
 export function UltimasNoticias() {
-  const { data } = useNoticias(20);
-  const lista = (data ?? []).filter((n) => !n.oculta).slice(0, 5);
+  const { data: ultimas } = useNoticias(20);
+  const lista = (ultimas ?? []).filter((n) => !n.oculta).slice(0, 5);
   if (!lista.length) return null;
   return (
     <Card>

@@ -59,10 +59,10 @@ function lerRss(xml: string, fonte: string): Item[] {
 function lerPagina(html: string, base: string, fonte: string): Item[] {
   const itens: Item[] = [];
   for (const m of html.matchAll(/<a\s[^>]*href="([^"#]+)"[^>]*>([\s\S]*?)<\/a>/gi)) {
-    const titulo = limpar(m[2]);
+    const titulo = limpar(m[2] ?? "");
     if (titulo.length < 35 || titulo.length > 250) continue;
     try {
-      itens.push({ titulo, url: new URL(m[1], base).toString(), fonte, publicada_em: null });
+      itens.push({ titulo, url: new URL(m[1] ?? "", base).toString(), fonte, publicada_em: null });
     } catch {
       /* ignora */
     }
