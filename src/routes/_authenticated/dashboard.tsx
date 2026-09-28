@@ -222,6 +222,7 @@ function Dashboard() {
           </Card>
         </>
       )}
+      <UltimasNoticias />
     </div>
   );
 }
