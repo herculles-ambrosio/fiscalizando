@@ -2089,6 +2089,78 @@ export type Database = {
         }
         Relationships: []
       }
+      noticias: {
+        Row: {
+          criado_em: string
+          criado_por: string | null
+          fixada: boolean
+          fonte: string | null
+          id: string
+          oculta: boolean
+          origem: string
+          publicada_em: string
+          resumo: string | null
+          temas: string[]
+          titulo: string
+          url: string
+        }
+        Insert: {
+          criado_em?: string
+          criado_por?: string | null
+          fixada?: boolean
+          fonte?: string | null
+          id?: string
+          oculta?: boolean
+          origem?: string
+          publicada_em?: string
+          resumo?: string | null
+          temas?: string[]
+          titulo: string
+          url: string
+        }
+        Update: {
+          criado_em?: string
+          criado_por?: string | null
+          fixada?: boolean
+          fonte?: string | null
+          id?: string
+          oculta?: boolean
+          origem?: string
+          publicada_em?: string
+          resumo?: string | null
+          temas?: string[]
+          titulo?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      noticias_fontes: {
+        Row: {
+          ativa: boolean
+          criado_em: string
+          id: string
+          nome: string
+          tipo: string
+          url: string
+        }
+        Insert: {
+          ativa?: boolean
+          criado_em?: string
+          id?: string
+          nome: string
+          tipo?: string
+          url: string
+        }
+        Update: {
+          ativa?: boolean
+          criado_em?: string
+          id?: string
+          nome?: string
+          tipo?: string
+          url?: string
+        }
+        Relationships: []
+      }
       oficios_emitidos: {
         Row: {
           arquivo_nome: string | null

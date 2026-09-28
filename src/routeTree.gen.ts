@@ -27,6 +27,7 @@ import { Route as AuthenticatedImpugnacaoRouteImport } from './routes/_authentic
 import { Route as AuthenticatedImpugnacoesRouteImport } from './routes/_authenticated/impugnacoes'
 import { Route as AuthenticatedIndiceRouteImport } from './routes/_authenticated/indice'
 import { Route as AuthenticatedModelosRouteImport } from './routes/_authenticated/modelos'
+import { Route as AuthenticatedNoticiasRouteImport } from './routes/_authenticated/noticias'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
 import { Route as AuthenticatedOficiosRouteImport } from './routes/_authenticated/oficios'
 import { Route as AuthenticatedPrevisaoRepasseRouteImport } from './routes/_authenticated/previsao-repasse'
@@ -51,6 +52,7 @@ import { Route as AuthenticatedIcmsRepasseEducacaoRouteImport } from './routes/_
 import { Route as AuthenticatedIcmsSincronizacaoRouteImport } from './routes/_authenticated/icms/sincronizacao'
 import { Route as AuthenticatedIcmsTransferenciasRouteImport } from './routes/_authenticated/icms/transferencias'
 import { Route as AuthenticatedIcmsCriterioSlugRouteImport } from './routes/_authenticated/icms/criterio.$slug'
+import { Route as ApiPublicHooksNoticiasColetaRouteImport } from './routes/api/public/hooks/noticias-coleta'
 import { Route as ApiPublicHooksReceitaFilaRouteImport } from './routes/api/public/hooks/receita-fila'
 
 const IndexRoute = IndexRouteImport.update({
@@ -145,6 +147,11 @@ const AuthenticatedIndiceRoute = AuthenticatedIndiceRouteImport.update({
 const AuthenticatedModelosRoute = AuthenticatedModelosRouteImport.update({
   id: '/modelos',
   path: '/modelos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNoticiasRoute = AuthenticatedNoticiasRouteImport.update({
+  id: '/noticias',
+  path: '/noticias',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNovaApuracaoRoute =
@@ -285,6 +292,12 @@ const AuthenticatedIcmsCriterioSlugRoute =
     path: '/criterio/$slug',
     getParentRoute: () => AuthenticatedIcmsRouteRoute,
   } as any)
+const ApiPublicHooksNoticiasColetaRoute =
+  ApiPublicHooksNoticiasColetaRouteImport.update({
+    id: '/api/public/hooks/noticias-coleta',
+    path: '/api/public/hooks/noticias-coleta',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksReceitaFilaRoute =
   ApiPublicHooksReceitaFilaRouteImport.update({
     id: '/api/public/hooks/receita-fila',
@@ -310,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/indice': typeof AuthenticatedIndiceRoute
   '/modelos': typeof AuthenticatedModelosRoute
+  '/noticias': typeof AuthenticatedNoticiasRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/oficios': typeof AuthenticatedOficiosRoute
   '/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
@@ -334,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
   '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
+  '/api/public/hooks/noticias-coleta': typeof ApiPublicHooksNoticiasColetaRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRoutesByTo {
@@ -353,6 +368,7 @@ export interface FileRoutesByTo {
   '/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/indice': typeof AuthenticatedIndiceRoute
   '/modelos': typeof AuthenticatedModelosRoute
+  '/noticias': typeof AuthenticatedNoticiasRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/oficios': typeof AuthenticatedOficiosRoute
   '/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
@@ -377,6 +393,7 @@ export interface FileRoutesByTo {
   '/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
   '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
+  '/api/public/hooks/noticias-coleta': typeof ApiPublicHooksNoticiasColetaRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRoutesById {
@@ -399,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/_authenticated/indice': typeof AuthenticatedIndiceRoute
   '/_authenticated/modelos': typeof AuthenticatedModelosRoute
+  '/_authenticated/noticias': typeof AuthenticatedNoticiasRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/_authenticated/oficios': typeof AuthenticatedOficiosRoute
   '/_authenticated/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
@@ -423,6 +441,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
   '/_authenticated/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
+  '/api/public/hooks/noticias-coleta': typeof ApiPublicHooksNoticiasColetaRoute
   '/api/public/hooks/receita-fila': typeof ApiPublicHooksReceitaFilaRoute
 }
 export interface FileRouteTypes {
@@ -445,6 +464,7 @@ export interface FileRouteTypes {
     | '/impugnacoes'
     | '/indice'
     | '/modelos'
+    | '/noticias'
     | '/nova-apuracao'
     | '/oficios'
     | '/previsao-repasse'
@@ -469,6 +489,7 @@ export interface FileRouteTypes {
     | '/icms/transferencias'
     | '/icms/'
     | '/icms/criterio/$slug'
+    | '/api/public/hooks/noticias-coleta'
     | '/api/public/hooks/receita-fila'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -488,6 +509,7 @@ export interface FileRouteTypes {
     | '/impugnacoes'
     | '/indice'
     | '/modelos'
+    | '/noticias'
     | '/nova-apuracao'
     | '/oficios'
     | '/previsao-repasse'
@@ -512,6 +534,7 @@ export interface FileRouteTypes {
     | '/icms/transferencias'
     | '/icms'
     | '/icms/criterio/$slug'
+    | '/api/public/hooks/noticias-coleta'
     | '/api/public/hooks/receita-fila'
   id:
     | '__root__'
@@ -533,6 +556,7 @@ export interface FileRouteTypes {
     | '/_authenticated/impugnacoes'
     | '/_authenticated/indice'
     | '/_authenticated/modelos'
+    | '/_authenticated/noticias'
     | '/_authenticated/nova-apuracao'
     | '/_authenticated/oficios'
     | '/_authenticated/previsao-repasse'
@@ -557,12 +581,14 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/transferencias'
     | '/_authenticated/icms/'
     | '/_authenticated/icms/criterio/$slug'
+    | '/api/public/hooks/noticias-coleta'
     | '/api/public/hooks/receita-fila'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ApiPublicHooksNoticiasColetaRoute: typeof ApiPublicHooksNoticiasColetaRoute
   ApiPublicHooksReceitaFilaRoute: typeof ApiPublicHooksReceitaFilaRoute
 }
 
@@ -692,6 +718,13 @@ declare module '@tanstack/react-router' {
       path: '/modelos'
       fullPath: '/modelos'
       preLoaderRoute: typeof AuthenticatedModelosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/noticias': {
+      id: '/_authenticated/noticias'
+      path: '/noticias'
+      fullPath: '/noticias'
+      preLoaderRoute: typeof AuthenticatedNoticiasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/nova-apuracao': {
@@ -862,6 +895,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIcmsCriterioSlugRouteImport
       parentRoute: typeof AuthenticatedIcmsRouteRoute
     }
+    '/api/public/hooks/noticias-coleta': {
+      id: '/api/public/hooks/noticias-coleta'
+      path: '/api/public/hooks/noticias-coleta'
+      fullPath: '/api/public/hooks/noticias-coleta'
+      preLoaderRoute: typeof ApiPublicHooksNoticiasColetaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/receita-fila': {
       id: '/api/public/hooks/receita-fila'
       path: '/api/public/hooks/receita-fila'
@@ -957,6 +997,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImpugnacoesRoute: typeof AuthenticatedImpugnacoesRoute
   AuthenticatedIndiceRoute: typeof AuthenticatedIndiceRoute
   AuthenticatedModelosRoute: typeof AuthenticatedModelosRoute
+  AuthenticatedNoticiasRoute: typeof AuthenticatedNoticiasRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
   AuthenticatedOficiosRoute: typeof AuthenticatedOficiosRoute
   AuthenticatedPrevisaoRepasseRoute: typeof AuthenticatedPrevisaoRepasseRoute
@@ -982,6 +1023,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImpugnacoesRoute: AuthenticatedImpugnacoesRoute,
   AuthenticatedIndiceRoute: AuthenticatedIndiceRoute,
   AuthenticatedModelosRoute: AuthenticatedModelosRoute,
+  AuthenticatedNoticiasRoute: AuthenticatedNoticiasRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
   AuthenticatedOficiosRoute: AuthenticatedOficiosRoute,
   AuthenticatedPrevisaoRepasseRoute: AuthenticatedPrevisaoRepasseRoute,
@@ -995,6 +1037,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ApiPublicHooksNoticiasColetaRoute: ApiPublicHooksNoticiasColetaRoute,
   ApiPublicHooksReceitaFilaRoute: ApiPublicHooksReceitaFilaRoute,
 }
 export const routeTree = rootRouteImport

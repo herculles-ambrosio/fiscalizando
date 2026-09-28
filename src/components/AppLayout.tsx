@@ -14,6 +14,7 @@ import {
   PieChart,
   LogOut,
   MapPin,
+  Newspaper,
   RefreshCw,
   Scale,
   Settings,
@@ -67,6 +68,8 @@ const NAV_SUPERADMIN = [
 ];
 
 // Módulo Fiscaliza Cartório — ISS das serventias extrajudiciais.
+const NAV_NOTICIAS = [{ to: "/noticias", rotulo: "Mural de notícias", icone: Newspaper }];
+
 const NAV_CARTORIO = [{ to: "/cartorios", rotulo: "Fiscaliza Cartório", icone: Stamp }];
 
 // Módulo ICMS (Lei Robin Hood) — os 18 critérios de distribuição.
@@ -122,14 +125,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }, [municipioId, pathname, navigate, queryClient]);
 
   // Produto ativo: Apura VAF (padrão) ou ICMS Robin Hood.
-  const produto: "vaf" | "icms" | "cartorio" = pathname.startsWith("/icms")
+  const produto: "vaf" | "icms" | "cartorio" | "noticias" = pathname.startsWith("/noticias")
+    ? "noticias"
+    : pathname.startsWith("/icms")
     ? "icms"
     : pathname.startsWith("/cartorios")
       ? "cartorio"
       : "vaf";
 
   const grupos =
-    produto === "cartorio"
+    produto === "noticias"
+      ? [{ rotulo: "Notícias", itens: NAV_NOTICIAS }]
+      : produto === "cartorio"
       ? [
           { rotulo: "Operação", itens: NAV_CARTORIO },
           {
@@ -182,7 +189,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </p>
         </div>
 
-        <div className="mt-6 flex gap-1 rounded-full bg-white/5 p-1">
+        <div className="mt-6 grid grid-cols-2 gap-1 rounded-2xl bg-white/5 p-1">
           <Link
             to="/dashboard"
             onClick={limparTela}
@@ -218,6 +225,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
           >
             Cartório
+          </Link>
+          <Link
+            to="/noticias"
+            onClick={limparTela}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
+              produto === "noticias"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+            )}
+          >
+            Notícias
           </Link>
         </div>
 
