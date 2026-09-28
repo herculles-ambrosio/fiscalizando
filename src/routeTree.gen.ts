@@ -27,6 +27,7 @@ import { Route as AuthenticatedImpugnacaoRouteImport } from './routes/_authentic
 import { Route as AuthenticatedImpugnacoesRouteImport } from './routes/_authenticated/impugnacoes'
 import { Route as AuthenticatedIndiceRouteImport } from './routes/_authenticated/indice'
 import { Route as AuthenticatedModelosRouteImport } from './routes/_authenticated/modelos'
+import { Route as AuthenticatedNoticiasRouteImport } from './routes/_authenticated/noticias'
 import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authenticated/nova-apuracao'
 import { Route as AuthenticatedOficiosRouteImport } from './routes/_authenticated/oficios'
 import { Route as AuthenticatedPrevisaoRepasseRouteImport } from './routes/_authenticated/previsao-repasse'
@@ -146,6 +147,11 @@ const AuthenticatedIndiceRoute = AuthenticatedIndiceRouteImport.update({
 const AuthenticatedModelosRoute = AuthenticatedModelosRouteImport.update({
   id: '/modelos',
   path: '/modelos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNoticiasRoute = AuthenticatedNoticiasRouteImport.update({
+  id: '/noticias',
+  path: '/noticias',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNovaApuracaoRoute =
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/indice': typeof AuthenticatedIndiceRoute
   '/modelos': typeof AuthenticatedModelosRoute
+  '/noticias': typeof AuthenticatedNoticiasRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/oficios': typeof AuthenticatedOficiosRoute
   '/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
@@ -361,6 +368,7 @@ export interface FileRoutesByTo {
   '/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/indice': typeof AuthenticatedIndiceRoute
   '/modelos': typeof AuthenticatedModelosRoute
+  '/noticias': typeof AuthenticatedNoticiasRoute
   '/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/oficios': typeof AuthenticatedOficiosRoute
   '/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/impugnacoes': typeof AuthenticatedImpugnacoesRoute
   '/_authenticated/indice': typeof AuthenticatedIndiceRoute
   '/_authenticated/modelos': typeof AuthenticatedModelosRoute
+  '/_authenticated/noticias': typeof AuthenticatedNoticiasRoute
   '/_authenticated/nova-apuracao': typeof AuthenticatedNovaApuracaoRoute
   '/_authenticated/oficios': typeof AuthenticatedOficiosRoute
   '/_authenticated/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
@@ -455,6 +464,7 @@ export interface FileRouteTypes {
     | '/impugnacoes'
     | '/indice'
     | '/modelos'
+    | '/noticias'
     | '/nova-apuracao'
     | '/oficios'
     | '/previsao-repasse'
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/impugnacoes'
     | '/indice'
     | '/modelos'
+    | '/noticias'
     | '/nova-apuracao'
     | '/oficios'
     | '/previsao-repasse'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/_authenticated/impugnacoes'
     | '/_authenticated/indice'
     | '/_authenticated/modelos'
+    | '/_authenticated/noticias'
     | '/_authenticated/nova-apuracao'
     | '/_authenticated/oficios'
     | '/_authenticated/previsao-repasse'
@@ -706,6 +718,13 @@ declare module '@tanstack/react-router' {
       path: '/modelos'
       fullPath: '/modelos'
       preLoaderRoute: typeof AuthenticatedModelosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/noticias': {
+      id: '/_authenticated/noticias'
+      path: '/noticias'
+      fullPath: '/noticias'
+      preLoaderRoute: typeof AuthenticatedNoticiasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/nova-apuracao': {
@@ -978,6 +997,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImpugnacoesRoute: typeof AuthenticatedImpugnacoesRoute
   AuthenticatedIndiceRoute: typeof AuthenticatedIndiceRoute
   AuthenticatedModelosRoute: typeof AuthenticatedModelosRoute
+  AuthenticatedNoticiasRoute: typeof AuthenticatedNoticiasRoute
   AuthenticatedNovaApuracaoRoute: typeof AuthenticatedNovaApuracaoRoute
   AuthenticatedOficiosRoute: typeof AuthenticatedOficiosRoute
   AuthenticatedPrevisaoRepasseRoute: typeof AuthenticatedPrevisaoRepasseRoute
@@ -1003,6 +1023,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImpugnacoesRoute: AuthenticatedImpugnacoesRoute,
   AuthenticatedIndiceRoute: AuthenticatedIndiceRoute,
   AuthenticatedModelosRoute: AuthenticatedModelosRoute,
+  AuthenticatedNoticiasRoute: AuthenticatedNoticiasRoute,
   AuthenticatedNovaApuracaoRoute: AuthenticatedNovaApuracaoRoute,
   AuthenticatedOficiosRoute: AuthenticatedOficiosRoute,
   AuthenticatedPrevisaoRepasseRoute: AuthenticatedPrevisaoRepasseRoute,
