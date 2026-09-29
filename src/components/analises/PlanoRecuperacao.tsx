@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -1317,12 +1318,27 @@ function DialogEmissao({
     }
     try {
       setProgresso({ fase: "documentos", feitos: 0, total: selecionadas.length });
+      // Endereço vem do cadastro apurado (arquivo de ativos); usa o mais recente preenchido.
+      const ies = selecionadas.map(({ c }) => c.inscricao_estadual);
+      const enderecos = new Map<string, string>();
+      for (let i = 0; i < ies.length; i += 200) {
+        const { data } = await supabase
+          .from("contribuintes_apurados")
+          .select("inscricao_estadual, endereco, criado_em")
+          .in("inscricao_estadual", ies.slice(i, i + 200))
+          .not("endereco", "is", null)
+          .order("criado_em", { ascending: false });
+        for (const r of data ?? []) {
+          if (r.endereco?.trim() && !enderecos.has(r.inscricao_estadual))
+            enderecos.set(r.inscricao_estadual, r.endereco.trim());
+        }
+      }
       const blob = await gerarZipOficios({
         contribuintes: selecionadas.map(({ c }) => ({
           nome: c.nome,
           cnpj: c.cnpj,
           inscricao_estadual: c.inscricao_estadual,
-          endereco: null,
+          endereco: enderecos.get(c.inscricao_estadual) ?? null,
         })),
         modelo,
         config,
