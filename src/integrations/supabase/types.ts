@@ -2503,6 +2503,24 @@ export type Database = {
           total: number
         }[]
       }
+      gravar_publicacao_ambiental: {
+        Args: {
+          p_ano: number
+          p_arquivo_nome: string
+          p_competencia: string
+          p_fonte: string
+          p_hash: string
+          p_identidade: string
+          p_importado_por: string
+          p_importado_por_nome: string
+          p_itens: Json
+          p_nao_mapeados: Json
+          p_origem: string
+          p_paginas: number
+          p_url: string
+        }
+        Returns: string
+      }
       norm_mun_tmp: { Args: { t: string }; Returns: string }
     }
     Enums: {

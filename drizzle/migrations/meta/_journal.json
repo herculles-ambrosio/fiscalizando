@@ -85,6 +85,13 @@
       "when": 1790725946164,
       "tag": "0011_track_environment_report_competence",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790726012756,
+      "tag": "0012_atomic_environment_import",
+      "breakpoints": true
     }
   ]
 }
