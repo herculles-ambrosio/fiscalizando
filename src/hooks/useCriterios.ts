@@ -46,6 +46,9 @@ export type ImportacaoRow = {
   divergencias: { municipio: string; esperado: number; obtido: number }[];
   importado_por_nome: string | null;
   criado_em: string;
+  competencia: string | null;
+  identidade_fonte: string | null;
+  hash_arquivo: string | null;
 };
 
 /** Critérios que já têm relatório importado (usado para destacar no catálogo). */
