@@ -155,7 +155,7 @@ export function extrairIcmsEcologico(paginas: PaginaTexto[]): ResultadoEcologico
 
   const ranking = new Map<string, { municipio: string; municipioNome: string; nota: number }>();
   for (const item of itens) {
-    if (item.itemCodigo !== "indice_criterio" && item.itemCodigo !== "indice_conservacao") continue;
+    if (item.itemCodigo !== "indice_criterio") continue;
     const atual = ranking.get(item.municipio) ?? {
       municipio: item.municipio,
       municipioNome: item.municipioNome,

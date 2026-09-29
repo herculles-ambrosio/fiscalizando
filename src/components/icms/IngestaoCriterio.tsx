@@ -288,7 +288,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
         paginas = p.paginas;
         setProgresso(70);
       }
-       const digest = await crypto.subtle.digest("SHA-256", dados);
+       const digest = await crypto.subtle.digest("SHA-256", new Uint8Array(dados));
        const hash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
        await gravarResultado(paginas, origem, identificacao, anoForcado, fonteForcada, hash);
     } catch (e) {

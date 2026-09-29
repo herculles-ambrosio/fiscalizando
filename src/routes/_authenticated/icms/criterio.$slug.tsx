@@ -113,11 +113,13 @@ function DetalheGenerico({ slug }: { slug: string }) {
     for (const i of itens ?? []) {
       if (!i.item_codigo) continue;
       const atual = mapa.get(i.item_codigo);
-      const soma = (atual?.pontuacao ?? 0) + (i.pontuacao ?? 0);
-      mapa.set(i.item_codigo, { nome: i.item_nome, pontuacao: soma, observacao: i.observacao });
+      const valor = ehMeioAmbiente
+        ? Math.max(atual?.pontuacao ?? 0, i.pontuacao ?? 0)
+        : (atual?.pontuacao ?? 0) + (i.pontuacao ?? 0);
+      mapa.set(i.item_codigo, { nome: i.item_nome, pontuacao: valor, observacao: i.observacao });
     }
     return mapa;
-  }, [itens]);
+  }, [itens, ehMeioAmbiente]);
 
   const faltantes = useMemo(
     () => (referencia ?? []).filter((r) => !(pontuados.get(r.codigo)?.pontuacao ?? 0)),

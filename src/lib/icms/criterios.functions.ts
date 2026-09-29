@@ -308,12 +308,12 @@ export const gravarPublicacaoAmbiental = createServerFn({ method: "POST" })
     const { data: resultado, error } = await supabaseAdmin.rpc("gravar_publicacao_ambiental", {
       p_ano: data.anoBase, p_fonte: data.fonte, p_identidade: data.identidade,
       p_competencia: data.competencia, p_hash: data.hash, p_origem: data.origem,
-      p_url: data.url, p_arquivo_nome: data.arquivoNome, p_paginas: data.paginas,
+      p_url: data.url ?? "", p_arquivo_nome: data.arquivoNome ?? "", p_paginas: data.paginas,
       p_itens: data.itens.map((i) => ({
         municipio: i.municipio, municipio_nome: i.municipioNome, item_nome: i.itemNome, item_codigo: i.itemCodigo,
         peso: i.peso, pontuacao: i.pontuacao, quantidade: i.quantidade, observacao: i.observacao,
       })), p_nao_mapeados: data.naoMapeados, p_importado_por: (context as unknown as Ctx).userId,
-      p_importado_por_nome: perfil.nome,
+      p_importado_por_nome: perfil.nome ?? "",
     });
     if (error) throw new Error(error.message);
     return { estado: resultado };
