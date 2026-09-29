@@ -310,6 +310,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
             nomeCriterio={criterio.nome}
             pesoLegalPct={criterio.percentual}
             indiceRelatorio={linhaMunicipio?.indice_percentual ?? null}
+            pontuacaoRelatorio={linhaMunicipio?.nota_final ?? null}
             anoBase={ano}
           />
 
