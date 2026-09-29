@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Os ofícios VAF aceitam ano de apuração e ano de aplicação separados, pois o intervalo não é necessariamente de um ano.

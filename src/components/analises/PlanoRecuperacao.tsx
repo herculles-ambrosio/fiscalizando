@@ -121,6 +121,9 @@ type Props = {
   diagnostico: DiagnosticoEvolucao;
   declarantes: ComparacaoDeclarantes;
   exercicio?: number | null;
+  /** Referências do arquivo atual usadas exclusivamente nos ofícios. */
+  anoApuracaoOficio?: number | null;
+  anoAplicacaoOficio?: number | null;
   /** Nome do município escolhido no seletor da tela (usado nos documentos exportados). */
   municipioNome?: string | null;
   /** Identificador estável da análise (arquivos comparados) para gravar o acompanhamento. */
@@ -138,6 +141,8 @@ export default function PlanoRecuperacao({
   diagnostico,
   declarantes,
   exercicio,
+  anoApuracaoOficio,
+  anoAplicacaoOficio,
   municipioNome,
   referencia,
   cargaId,
@@ -564,7 +569,8 @@ export default function PlanoRecuperacao({
 
       <DialogEmissao
         acao={acaoEmissao}
-        exercicio={exercicio ?? null}
+        exercicio={anoApuracaoOficio ?? exercicio ?? null}
+        anoAplicacao={anoAplicacaoOficio ?? null}
         receitaDe={receita.registroDe}
         onFechar={() => setAcaoEmissao(null)}
         onEmitido={(acao, exercicioNum, ies) => {
@@ -1239,12 +1245,14 @@ function DialogExportacaoRelatorio({
 function DialogEmissao({
   acao,
   exercicio,
+  anoAplicacao,
   receitaDe,
   onFechar,
   onEmitido,
 }: {
   acao: AcaoRecuperacao | null;
   exercicio: number | null;
+  anoAplicacao: number | null;
   receitaDe: (ie: string | null | undefined) => RegistroReceita | undefined;
   onFechar: () => void;
   onEmitido: (acao: AcaoRecuperacao, exercicio: number, ies: string[]) => void;
@@ -1319,6 +1327,7 @@ function DialogEmissao({
         modelo,
         config,
         exercicio: exercicioNum,
+        anoAplicacao,
         dataOficio,
         brasaoPath: config.brasao_path ?? null,
         onProgresso: setProgresso,
@@ -1381,14 +1390,22 @@ function DialogEmissao({
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="exercicio-recuperacao">Exercício</Label>
+                <Label htmlFor="exercicio-recuperacao">Ano de apuração</Label>
                 <Input
                   id="exercicio-recuperacao"
                   value={ano}
                   inputMode="numeric"
                   onChange={(e) => setAno(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="aplicacao-recuperacao">Ano de aplicação</Label>
+                <Input
+                  id="aplicacao-recuperacao"
+                  value={anoAplicacao ?? (Number(ano) || new Date().getFullYear()) + 1}
+                  readOnly
                 />
               </div>
               <div className="space-y-1">
