@@ -43,7 +43,13 @@ function tituloCabecalho(texto: string, tamanho: number) {
 export function construirOficio(params: ParametrosOficio): Document {
   const { modelo, contribuinte, config, exercicio, anoAplicacao, dataOficio, brasao } = params;
   const subst = (t: string) =>
-    aplicarPlaceholders(t, { contribuinte, config, exercicio, anoAplicacao, dataOficio });
+    aplicarPlaceholders(t, {
+      contribuinte,
+      config,
+      exercicio,
+      ...(anoAplicacao !== undefined ? { anoAplicacao } : {}),
+      dataOficio,
+    });
 
   const cabecalho: Paragraph[] = [];
 

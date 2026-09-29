@@ -62,7 +62,7 @@ export async function gerarZipOficios(params: {
       modelo,
       config,
       exercicio,
-      anoAplicacao,
+      ...(anoAplicacao !== undefined ? { anoAplicacao } : {}),
       dataOficio,
       brasao,
     });
