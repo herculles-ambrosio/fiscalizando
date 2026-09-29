@@ -282,6 +282,43 @@ export const gravarItensCriterio = createServerFn({ method: "POST" })
     return { gravados: itens.length };
   });
 
+/** Grava itens e histórico de uma publicação ambiental numa única operação. */
+export const gravarPublicacaoAmbiental = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => criterioSchema.extend({
+    anoBase: z.number().int().min(2000).max(2100),
+    fonte: fonteSchema,
+    identidade: z.string().min(3).max(2048),
+    competencia: z.string().min(3).max(100),
+    hash: z.string().regex(/^[a-f0-9]{64}$/),
+    origem: z.enum(["site", "url", "arquivo", "colado"]),
+    url: z.string().nullable(),
+    arquivoNome: z.string().nullable(),
+    paginas: z.number().int().min(0),
+    itens: z.array(z.object({
+      municipio: z.string(), municipioNome: z.string(), itemNome: z.string(), itemCodigo: z.string().nullable(),
+      peso: z.number().nullable(), pontuacao: z.number().nullable(), quantidade: z.number().nullable(), observacao: z.string().nullable(),
+    })).max(30000),
+    naoMapeados: z.array(z.string()).max(500),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const perfil = await exigirConsultoria(context as never);
+    if (data.criterio !== "meio_ambiente") throw new Error("Publicação inválida.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: resultado, error } = await supabaseAdmin.rpc("gravar_publicacao_ambiental", {
+      p_ano: data.anoBase, p_fonte: data.fonte, p_identidade: data.identidade,
+      p_competencia: data.competencia, p_hash: data.hash, p_origem: data.origem,
+      p_url: data.url, p_arquivo_nome: data.arquivoNome, p_paginas: data.paginas,
+      p_itens: data.itens.map((i) => ({
+        municipio: i.municipio, municipio_nome: i.municipioNome, item_nome: i.itemNome, item_codigo: i.itemCodigo,
+        peso: i.peso, pontuacao: i.pontuacao, quantidade: i.quantidade, observacao: i.observacao,
+      })), p_nao_mapeados: data.naoMapeados, p_importado_por: (context as unknown as Ctx).userId,
+      p_importado_por_nome: perfil.nome,
+    });
+    if (error) throw new Error(error.message);
+    return { estado: resultado };
+  });
+
 /** Registra a importação no histórico (painel de administração). */
 export const registrarImportacao = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
