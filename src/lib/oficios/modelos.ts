@@ -73,10 +73,11 @@ export function aplicarPlaceholders(
     contribuinte: ContribuinteOficio;
     config: ConfiguracaoMunicipio;
     exercicio: number;
+    anoAplicacao?: number | null;
     dataOficio: string;
   },
 ): string {
-  const { contribuinte, config, exercicio, dataOficio } = dados;
+  const { contribuinte, config, exercicio, anoAplicacao, dataOficio } = dados;
   const municipio = (config.cidade_data.split("/")[0] ?? "").trim();
   const mapa: Record<string, string> = {
     contribuinte: contribuinte.nome ?? "—",
@@ -84,7 +85,7 @@ export function aplicarPlaceholders(
     ie: contribuinte.inscricao_estadual,
     endereco: contribuinte.endereco ?? "—",
     exercicio: String(exercicio),
-    exercicio_repasse: String(exercicio + 1),
+    exercicio_repasse: String(anoAplicacao ?? exercicio + 1),
     prefeitura: config.nome_prefeitura,
     municipio,
     cidade_data: config.cidade_data,

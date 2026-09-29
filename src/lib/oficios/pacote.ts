@@ -33,11 +33,21 @@ export async function gerarZipOficios(params: {
   modelo: ModeloOficio;
   config: ConfiguracaoMunicipio;
   exercicio: number;
+  anoAplicacao?: number | null;
   dataOficio: string;
   brasaoPath: string | null;
   onProgresso?: (p: ProgressoOficios) => void;
 }): Promise<Blob> {
-  const { contribuintes, modelo, config, exercicio, dataOficio, brasaoPath, onProgresso } = params;
+  const {
+    contribuintes,
+    modelo,
+    config,
+    exercicio,
+    anoAplicacao,
+    dataOficio,
+    brasaoPath,
+    onProgresso,
+  } = params;
   const total = contribuintes.length;
   const brasao = await carregarBrasao(brasaoPath);
   const zip = new JSZip();
@@ -52,6 +62,7 @@ export async function gerarZipOficios(params: {
       modelo,
       config,
       exercicio,
+      anoAplicacao,
       dataOficio,
       brasao,
     });
