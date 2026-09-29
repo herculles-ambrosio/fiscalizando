@@ -85,8 +85,6 @@ export function construirOficio(params: ParametrosOficio): Document {
       : [
           tituloCabecalho(config.nome_prefeitura, 26),
           tituloCabecalho(config.estado, 22),
-          tituloCabecalho(config.secretaria, 22),
-          tituloCabecalho(config.setor, 20),
         ]),
     new Paragraph({
       spacing: { after: 240 },
