@@ -17,3 +17,4 @@
 - [x] Completar meses sem crédito pela média na Previsão e destacar Previsto em vermelho e Diferença em amarelo.
 - [x] Padronizar as abas dos critérios como “Importar relatório”.
 - [x] Usar automaticamente o ano-base e o tipo identificados no relatório importado.
+- [x] Corrigir a codificação dos acentos na coleta e reparar as notícias já afetadas.

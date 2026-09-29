@@ -20,6 +20,28 @@ const PALAVRAS =
 
 type Item = { titulo: string; url: string; fonte: string; publicada_em: string | null };
 
+function charsetDoContentType(contentType: string | null) {
+  return contentType?.match(/charset\s*=\s*["']?([^;\s"']+)/i)?.[1]?.trim() ?? null;
+}
+
+/**
+ * Decodifica a resposta usando o charset informado pela própria fonte.
+ * Alguns portais públicos ainda entregam Windows-1252/ISO-8859-1; usar
+ * response.text() nesses casos troca os acentos pelo caractere �.
+ */
+export async function lerRespostaTexto(resposta: Response) {
+  const bytes = await resposta.arrayBuffer();
+  const informado = charsetDoContentType(resposta.headers.get("content-type"));
+  const charset = informado && /^(utf-?8|iso-8859-1|latin1|windows-1252|cp1252)$/i.test(informado)
+    ? informado
+    : "utf-8";
+  try {
+    return new TextDecoder(charset).decode(bytes);
+  } catch {
+    return new TextDecoder("utf-8").decode(bytes);
+  }
+}
+
 function limpar(t: string) {
   return t
     .replace(/<!\[CDATA\[|\]\]>/g, "")
@@ -30,6 +52,8 @@ function limpar(t: string) {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_entidade, numero: string) => String.fromCodePoint(Number(numero)))
+    .replace(/&#x([\da-f]+);/gi, (_entidade, numero: string) => String.fromCodePoint(parseInt(numero, 16)))
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -148,7 +172,7 @@ export async function coletarNoticias() {
           headers: { "User-Agent": "ApuraVAF/1.0 (+https://apuravaf20.com)" },
         });
         if (!r.ok) throw new Error(String(r.status));
-        const corpo = await r.text();
+        const corpo = await lerRespostaTexto(r);
         const itens =
           f.tipo === "rss" ? lerRss(corpo, f.nome) : lerPagina(corpo, f.url, f.nome);
         brutos.push(...itens.slice(0, 40));
