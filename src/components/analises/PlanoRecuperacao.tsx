@@ -1319,18 +1319,30 @@ function DialogEmissao({
     try {
       setProgresso({ fase: "documentos", feitos: 0, total: selecionadas.length });
       // Endereço vem do cadastro apurado (arquivo de ativos); usa o mais recente preenchido.
+      const normalizarIe = (ie: string | null | undefined) =>
+        String(ie ?? "").replace(/\D/g, "").replace(/^0+/, "");
       const ies = selecionadas.map(({ c }) => c.inscricao_estadual);
+      const variantesIe = [
+        ...new Set(
+          ies.flatMap((ie) => {
+            const digitos = String(ie).replace(/\D/g, "");
+            const semZeros = normalizarIe(digitos);
+            return [digitos, semZeros, semZeros.padStart(13, "0")].filter(Boolean);
+          }),
+        ),
+      ];
       const enderecos = new Map<string, string>();
-      for (let i = 0; i < ies.length; i += 200) {
+      for (let i = 0; i < variantesIe.length; i += 200) {
         const { data } = await supabase
           .from("contribuintes_apurados")
           .select("inscricao_estadual, endereco, criado_em")
-          .in("inscricao_estadual", ies.slice(i, i + 200))
+          .in("inscricao_estadual", variantesIe.slice(i, i + 200))
           .not("endereco", "is", null)
           .order("criado_em", { ascending: false });
         for (const r of data ?? []) {
-          if (r.endereco?.trim() && !enderecos.has(r.inscricao_estadual))
-            enderecos.set(r.inscricao_estadual, r.endereco.trim());
+          const chave = normalizarIe(r.inscricao_estadual);
+          if (r.endereco?.trim() && !enderecos.has(chave))
+            enderecos.set(chave, r.endereco.trim());
         }
       }
       const blob = await gerarZipOficios({
@@ -1338,7 +1350,7 @@ function DialogEmissao({
           nome: c.nome,
           cnpj: c.cnpj,
           inscricao_estadual: c.inscricao_estadual,
-          endereco: enderecos.get(c.inscricao_estadual) ?? null,
+          endereco: enderecos.get(normalizarIe(c.inscricao_estadual)) ?? null,
         })),
         modelo,
         config,
