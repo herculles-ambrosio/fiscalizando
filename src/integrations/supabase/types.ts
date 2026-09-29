@@ -747,11 +747,14 @@ export type Database = {
         Row: {
           ano_base: number
           arquivo_nome: string | null
+          competencia: string | null
           criado_em: string
           criterio: string
           divergencias: Json
           fonte_relatorio: string
+          hash_arquivo: string | null
           id: string
+          identidade_fonte: string | null
           importado_por: string | null
           importado_por_nome: string | null
           municipios: number
@@ -765,11 +768,14 @@ export type Database = {
         Insert: {
           ano_base: number
           arquivo_nome?: string | null
+          competencia?: string | null
           criado_em?: string
           criterio: string
           divergencias?: Json
           fonte_relatorio: string
+          hash_arquivo?: string | null
           id?: string
+          identidade_fonte?: string | null
           importado_por?: string | null
           importado_por_nome?: string | null
           municipios?: number
@@ -783,11 +789,14 @@ export type Database = {
         Update: {
           ano_base?: number
           arquivo_nome?: string | null
+          competencia?: string | null
           criado_em?: string
           criterio?: string
           divergencias?: Json
           fonte_relatorio?: string
+          hash_arquivo?: string | null
           id?: string
+          identidade_fonte?: string | null
           importado_por?: string | null
           importado_por_nome?: string | null
           municipios?: number
@@ -808,6 +817,7 @@ export type Database = {
           detalhes: Json
           fonte_relatorio: string
           id: string
+          identidade_fonte: string | null
           item_codigo: string | null
           item_nome: string
           municipio: string
@@ -824,6 +834,7 @@ export type Database = {
           detalhes?: Json
           fonte_relatorio: string
           id?: string
+          identidade_fonte?: string | null
           item_codigo?: string | null
           item_nome: string
           municipio: string
@@ -840,6 +851,7 @@ export type Database = {
           detalhes?: Json
           fonte_relatorio?: string
           id?: string
+          identidade_fonte?: string | null
           item_codigo?: string | null
           item_nome?: string
           municipio?: string
