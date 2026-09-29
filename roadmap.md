@@ -20,3 +20,5 @@
 - [x] Corrigir a codificação dos acentos na coleta e reparar as notícias já afetadas.
 - [x] Corrigir o ofício de omissos para usar apuração e aplicação do arquivo atual.
 - [x] Corrigir o endereço do contribuinte nos ofícios emitidos pela Análise do VAF.
+- [x] Exibir oito casas na pontuação de Educação e retirar a extrapolação de anos e repasses dos quadros de Patrimônio Cultural e Turismo.
+- [x] Distinguir competências ambientais, impedir reimportação idêntica e eliminar cópias exatas de itens antigos.

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useImportacoes } from "@/hooks/useCriterios";
 import { apagarImportacao } from "@/lib/icms/criterios.functions";
+import { competenciaAmbiental } from "@/lib/icms/criterios/competencia";
 
 export function HistoricoImportacoes({ criterio }: { criterio: string }) {
   const { data, isLoading } = useImportacoes(criterio);
@@ -28,7 +29,7 @@ export function HistoricoImportacoes({ criterio }: { criterio: string }) {
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <History className="h-4 w-4" /> Histórico de planilhas importadas
+           <History className="h-4 w-4" /> Histórico de relatórios importados
           {data && <Badge variant="secondary">{data.length}</Badge>}
         </CardTitle>
       </CardHeader>
@@ -44,8 +45,9 @@ export function HistoricoImportacoes({ criterio }: { criterio: string }) {
                 <tr className="border-b">
                   <th className="py-2 pr-3">Data</th>
                   <th className="py-2 pr-3">Arquivo / origem</th>
-                  <th className="py-2 pr-3">Ano-base</th>
+                   <th className="py-2 pr-3">{criterio === "patrimonio_cultural" ? "Exercício" : "Ano-base"}</th>
                   <th className="py-2 pr-3">Relatório</th>
+                   {criterio === "meio_ambiente" && <th className="py-2 pr-3">Competência</th>}
                   <th className="py-2 pr-3 text-right">Municípios</th>
                   <th className="py-2 pr-3 text-right">Itens</th>
                   <th className="py-2 pr-3">Alertas</th>
@@ -72,10 +74,12 @@ export function HistoricoImportacoes({ criterio }: { criterio: string }) {
                     </td>
                     <td className="py-2 pr-3">{i.ano_base}</td>
                     <td className="py-2 pr-3">{i.fonte_relatorio}</td>
+                   {criterio === "meio_ambiente" && <td className="py-2 pr-3 whitespace-nowrap">{i.competencia ?? competenciaAmbiental(i.url ?? i.arquivo_nome)}</td>}
                     <td className="py-2 pr-3 text-right">{i.municipios}</td>
                     <td className="py-2 pr-3 text-right">{i.registros_itens}</td>
                     <td className="py-2 pr-3 text-xs">
-                      {(i.nao_mapeados?.length ?? 0) > 0 && (
+                       {criterio === "meio_ambiente" && !i.hash_arquivo && <Badge variant="outline">Carga anterior ao controle de duplicidade</Badge>}{" "}
+                       {(i.nao_mapeados?.length ?? 0) > 0 && (
                         <Badge variant="outline">{i.nao_mapeados.length} não reconhecidos</Badge>
                       )}{" "}
                       {(i.divergencias?.length ?? 0) > 0 && (

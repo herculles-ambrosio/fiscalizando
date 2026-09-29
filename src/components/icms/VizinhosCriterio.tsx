@@ -221,14 +221,14 @@ export function VizinhosCriterio({
             CSV
           </Button>
         </CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
+        <CardContent className="overflow-x-auto p-0">
+          <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-muted/60">
               <tr>
                 <th className="p-2 text-left">#</th>
                 <th className="p-2 text-left">Município</th>
                 <th className="p-2 text-right">População</th>
-                <th className="p-2 text-right">Pontuação</th>
+                <th className="min-w-32 whitespace-nowrap p-2 text-right">Pontuação</th>
                 <th className="p-2 text-right">Diferença</th>
                 <th className="p-2 text-right">Geral</th>
                 <th className="p-2" />
@@ -256,7 +256,9 @@ export function VizinhosCriterio({
                       <td className="p-2 text-right tabular-nums">
                         {formatarPopulacao(populacao.de(l.municipio_nome))}
                       </td>
-                      <td className="p-2 text-right tabular-nums">{num(l.nota_final)}</td>
+                       <td className="min-w-32 whitespace-nowrap p-2 text-right tabular-nums">
+                         {num(l.nota_final, slug === "educacao" ? 8 : 2)}
+                       </td>
                       <td
                         className={`p-2 text-right tabular-nums ${
                           diferenca > 0

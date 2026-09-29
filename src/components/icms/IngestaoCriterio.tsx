@@ -27,6 +27,7 @@ import {
   baixarRelatorioCriterio,
   descobrirRelatoriosCriterio,
   gravarItensCriterio,
+  gravarPublicacaoAmbiental,
   gravarRankingCriterio,
   limparCriterio,
   registrarImportacao,
@@ -40,6 +41,7 @@ import {
 import { extrairTabelaCriterio } from "@/lib/icms/criterios/tabela";
 import { useImportacoes, useItensReferencia, type FonteRelatorio } from "@/hooks/useCriterios";
 import type { Pipeline } from "@/lib/icms/criterios/pipelines";
+import { competenciaAmbiental, identidadeAmbiental } from "@/lib/icms/criterios/competencia";
 
 type Resumo = {
   municipios: number;
@@ -60,6 +62,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
   const limpar = useServerFn(limparCriterio);
   const gravarRanking = useServerFn(gravarRankingCriterio);
   const gravarItens = useServerFn(gravarItensCriterio);
+  const gravarAmbiente = useServerFn(gravarPublicacaoAmbiental);
   const registrar = useServerFn(registrarImportacao);
   const limparEdu = useServerFn(limparEducacao);
   const gravarDados = useServerFn(gravarDadosConstitutivos);
@@ -109,6 +112,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
     identificacao: string | null,
     anoForcado?: number,
     fonteForcada?: FonteRelatorio,
+    hash?: string,
   ) {
     const pistaNome = identificarPeloNome(identificacao);
     let ano = anoForcado ?? pistaNome.ano ?? anoBase;
@@ -154,11 +158,40 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       );
     }
 
+    if (ecologico) {
+      if (!hash) throw new Error("Não foi possível identificar a publicação ambiental.");
+      const competencia = competenciaAmbiental(identificacao);
+      const identidade = identidadeAmbiental(identificacao, hash);
+      const existentes = (importacoes ?? []).filter((i) => i.ano_base === ano && i.fonte_relatorio === fonteUso);
+      if (existentes.some((i) => i.hash_arquivo === hash)) {
+        toast.info("Este arquivo já foi importado para este exercício e tipo. Nenhum dado foi duplicado.");
+        return;
+      }
+      if (existentes.some((i) => i.identidade_fonte === identidade) &&
+        !confirm(`Já existe uma carga de ${competencia} para ${ano} (${fonteUso}). Substituir apenas esta publicação?`)) return;
+      setEtapa("Gravando a publicação ambiental");
+      const resultado = await gravarAmbiente({ data: {
+        criterio: pipeline.slug, anoBase: ano, fonte: fonteUso, competencia, identidade, hash,
+        origem, url: origem === "url" || origem === "site" ? identificacao : null,
+        arquivoNome: origem === "url" || origem === "site" ? null : identificacao,
+        paginas: paginas.length, itens: r.itens, naoMapeados: r.naoMapeados,
+      } });
+      if (resultado.estado === "duplicado") {
+        toast.info("Esta publicação já consta no histórico; nenhuma linha foi repetida.");
+        return;
+      }
+      setResumo({ municipios: new Set(r.itens.map((i) => i.municipio)).size,
+        ranking: r.ranking.length, itens: r.itens.length, naoMapeados: r.naoMapeados, cabecalho: r.cabecalho });
+      setProgresso(100);
+      for (const chave of ["criterio-anos", "criterio-ranking", "criterio-itens", "criterio-importacoes", "criterio-potencial"]) {
+        await cliente.invalidateQueries({ queryKey: [chave] });
+      }
+      toast.success(`${competencia} importado sem repetir os registros anteriores.`);
+      return;
+    }
+
     setEtapa("Gravando");
-    // No Meio Ambiente as publicações se complementam, então uma não apaga a
-    // outra; nos demais critérios o relatório novo substitui o anterior.
-    if (!ecologico)
-      await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte: fonteUso } });
+    await limpar({ data: { criterio: pipeline.slug, anoBase: ano, fonte: fonteUso } });
 
     for (let i = 0; i < r.ranking.length; i += 300) {
       await gravarRanking({
@@ -255,7 +288,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
         paginas = p.paginas;
         setProgresso(70);
       }
-      await gravarResultado(paginas, origem, identificacao, anoForcado, fonteForcada);
+       const digest = await crypto.subtle.digest("SHA-256", new Uint8Array(dados));
+       const hash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+       await gravarResultado(paginas, origem, identificacao, anoForcado, fonteForcada, hash);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o relatório.");
     } finally {
@@ -427,7 +462,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
       const { paginasDoTextoColado } = await import("@/lib/icms/criterios/colado");
       const { paginas, linhas } = paginasDoTextoColado(texto);
       setProgresso(60);
-      await gravarResultado(paginas, "colado", `texto colado (${linhas} linhas)`);
+       const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+       const hash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+       await gravarResultado(paginas, "colado", `texto colado (${linhas} linhas)`, undefined, undefined, hash);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao processar o conteúdo colado.");
     } finally {
@@ -479,7 +516,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label>{planilha ? "Exercício do repasse" : "Ano-base"}</Label>
+               <Label>{planilha || pipeline.slug === "patrimonio_cultural" ? "Exercício do relatório" : "Ano-base"}</Label>
               <Input
                 type="number"
                 value={anoBase}
@@ -501,6 +538,9 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
               </Select>
             </div>
           </div>
+          {pipeline.slug === "meio_ambiente" && (
+            <p className="text-xs text-muted-foreground">As publicações trimestrais e o Fator de Qualidade são exibidos separadamente no histórico. O ano e o tipo devem corresponder ao arquivo enviado.</p>
+          )}
 
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={buscarLinks} disabled={buscando || rodando}>
@@ -609,7 +649,7 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
           {links.length > 0 && (
             <div className="space-y-2 rounded-md border p-3">
               {links.map((l) => {
-                const importado = jaImportados.has(l.url);
+                 const importado = jaImportados.has(l.url);
                 return (
                   <div key={l.url} className="flex items-center justify-between gap-3 text-sm">
                     <span className="truncate">
@@ -617,7 +657,8 @@ export function IngestaoCriterio({ pipeline }: { pipeline: Pipeline }) {
                         {l.tipo}
                       </Badge>
                       {l.texto}
-                      {l.ano ? (
+                       {pipeline.slug === "meio_ambiente" && <span className="ml-2 text-xs text-muted-foreground">{competenciaAmbiental(l.url)}</span>}
+                       {l.ano ? (
                         <span className="ml-2 text-xs text-muted-foreground">ano-base {l.ano}</span>
                       ) : null}
                     </span>
