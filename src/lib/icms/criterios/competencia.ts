@@ -2,7 +2,7 @@
 export function competenciaAmbiental(identificacao: string | null): string {
   const nome = (identificacao ?? "").toLowerCase();
   if (/fator[-_ ]?de[-_ ]?qualidade|pontua[cç][aã]o[-_ ]?(?:preliminar|final)[-_ ]?fq|\bfq\b/.test(nome)) return "Fator de Qualidade";
-  const trimestre = nome.match(/(?:^|[^\d])([1-4])[º°]?[-_ ]?(?:trimestre|trim)(?=\W|$)|(?:trimestre|trim)[-_ ]?([1-4])(?=\W|$)/);
+  const trimestre = nome.match(/(?:^|[^\d])([1-4])[º°]?[-_ ]?(?:trimestre|trim)(?![a-z])|(?:trimestre|trim)[-_ ]?([1-4])(?!\d)/);
   if (trimestre) return `${trimestre[1] ?? trimestre[2]}º trimestre`;
   const sequencia = nome.match(/icms-ecologic[oa][-_]([2-5])(?!\d)/);
   if (sequencia) return `${Number(sequencia[1]) - 1}º trimestre`;
