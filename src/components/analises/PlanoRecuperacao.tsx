@@ -1404,7 +1404,7 @@ function DialogEmissao({
                 <Label htmlFor="aplicacao-recuperacao">Ano de aplicação</Label>
                 <Input
                   id="aplicacao-recuperacao"
-                  value={anoAplicacao ?? exercicioNumSeguro(ano) + 1}
+                  value={anoAplicacao ?? (Number(ano) || new Date().getFullYear()) + 1}
                   readOnly
                 />
               </div>

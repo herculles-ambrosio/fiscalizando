@@ -60,7 +60,7 @@ export const PLACEHOLDERS: { chave: string; descricao: string }[] = [
   { chave: "{{ie}}", descricao: "Inscrição estadual" },
   { chave: "{{endereco}}", descricao: "Endereço do contribuinte" },
   { chave: "{{exercicio}}", descricao: "Exercício da apuração" },
-  { chave: "{{exercicio_repasse}}", descricao: "Exercício seguinte (repasse)" },
+  { chave: "{{exercicio_repasse}}", descricao: "Ano de aplicação do índice (repasse)" },
   { chave: "{{prefeitura}}", descricao: "Nome da prefeitura" },
   { chave: "{{municipio}}", descricao: "Município (da cidade/UF)" },
   { chave: "{{cidade_data}}", descricao: "Cidade/UF do cabeçalho da data" },
