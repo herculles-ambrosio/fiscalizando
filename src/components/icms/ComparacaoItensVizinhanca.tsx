@@ -17,7 +17,7 @@ export function ComparacaoItensVizinhanca({ slug, codigo, meu, melhor, meuNome, 
   meuNome: string;
   melhorNome: string;
   itens: Item[];
-  atividades?: AtividadeEsportes[];
+  atividades?: AtividadeEsportes[] | undefined;
 }) {
   const esportes = slug === "esportes";
   const ambiente = slug === "meio_ambiente" || slug === "meio-ambiente";
@@ -65,7 +65,7 @@ export function ComparacaoItensVizinhanca({ slug, codigo, meu, melhor, meuNome, 
   return <div className="space-y-2">
     <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-xs">
       <thead><tr className="border-b text-muted-foreground"><th className="py-2 text-left">Informação publicada</th><th className="py-2 pr-4 text-right">{melhorNome}</th><th className="py-2 text-right">{meuNome}</th></tr></thead>
-      <tbody>{linhas.map(([nome, melhorValor, meuValor], i) => <Linha key={`${nome}-${i}`} nome={nome} melhor={melhorValor} meu={meuValor} />)}</tbody>
+      <tbody>{linhas.map(([nome, melhorValor, meuValor], i) => <Linha key={`${nome}-${i}`} nome={nome ?? "—"} melhor={melhorValor ?? "—"} meu={meuValor ?? "—"} />)}</tbody>
     </table></div>
     <p className="text-xs text-muted-foreground">— indica informação não registrada. As linhas mostram medidas publicadas, não parcelas somáveis do índice.</p>
   </div>;
