@@ -51,7 +51,7 @@ export function ComparacaoItensVizinhanca({ slug, codigo, meu, melhor, meuNome, 
       const rows = registros(municipio, chave);
       if (!rows.length) return "—";
       const unicos = new Map(rows.map((i) => [`${i.identidade_fonte ?? ""}|${i.observacao ?? ""}|${i.pontuacao ?? ""}`, i]));
-      return [...unicos.values()].map((i) => `${valor(i.pontuacao)}${i.observacao ? ` · ${i.observacao}` : ""}${i.identidade_fonte ? ` · ${i.identidade_fonte}` : ""}`).join("; ");
+      return [...unicos.values()].map((i) => `${valor(i.pontuacao)}${i.observacao ? ` · ${i.observacao}` : ""}${i.identidade_fonte ? ` · fonte: ${i.identidade_fonte}` : ""}`).join("; ");
     };
     return [nome, texto(melhor), texto(meu)];
   }) : [
