@@ -180,7 +180,7 @@ function DetalheGenerico({ slug }: { slug: string }) {
    * uma fatia do índice do critério (saneamento, unidades de conservação e
    * mata seca). Por isso a projeção é apresentada em % do critério.
    */
-  const unidade = ehMeioAmbiente ? "% do critério" : "pontos";
+  const unidade = ehMeioAmbiente ? "de índice publicado" : "pontos";
 
   if (!criterio) {
     return (

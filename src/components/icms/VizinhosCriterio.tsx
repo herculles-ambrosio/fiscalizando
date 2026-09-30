@@ -386,13 +386,13 @@ export function VizinhosCriterio({
                       ) : null}
                       <span className="flex-1">
                         <span className="block font-medium">{l.nome}</span>
-                        <span className="block text-xs text-muted-foreground">
+                         <span className="block text-xs text-muted-foreground">
                           {l.quantos} vizinho(s) pontuam este item; o melhor é {l.quem} com{" "}
-                          {num(l.melhor)} {unidade}. Hoje {nomeMunicipio ?? "o município"} tem{" "}
-                          {num(l.meu)}.
+                           {num(l.melhor, 8)} {slug === "turismo" ? "de índice" : unidade}. Hoje {nomeMunicipio ?? "o município"} tem{" "}
+                           {num(l.meu, 8)}.
                         </span>
                         <Badge className="mt-2 bg-emerald-600 text-white hover:bg-emerald-600">
-                          +{num(l.melhor - l.meu)} {unidade} ao igualar
+                           +{num(l.melhor - l.meu, 8)} {slug === "turismo" ? "de índice" : unidade} ao igualar
                         </Badge>
                          {expansivel && !expandido && (
                           <span className="ml-2 text-xs text-muted-foreground">
