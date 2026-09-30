@@ -28,6 +28,7 @@ export type ItemCriterioRow = {
   pontuacao: number | null;
   quantidade: number | null;
   observacao: string | null;
+  identidade_fonte: string | null;
 };
 
 export type ImportacaoRow = {

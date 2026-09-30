@@ -395,6 +395,7 @@ export function CriterioEsportesDetalhe() {
               item_nome: a.atividade_nome,
               pontuacao: a.pontuacao,
             }))}
+            atividadesExternas={atividadesVizinhos ?? []}
           />
         </TabsContent>
 
