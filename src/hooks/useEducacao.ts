@@ -221,3 +221,27 @@ export function useVersoesEducacao(exercicio: number | null) {
     },
   });
 }
+
+/** Dados constitutivos de alguns municípios (comparação com o melhor vizinho). */
+export function useDadosConstitutivosMunicipios(
+  exercicio: number | null,
+  versao: VersaoEducacao,
+  municipios: string[],
+  habilitado = true,
+) {
+  return useQuery({
+    queryKey: ["educacao-dados-municipios", exercicio, versao, [...municipios].sort()],
+    enabled: habilitado && !!exercicio && municipios.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("educacao_dados_constitutivos")
+        .select("municipio, municipio_nome, coluna_origem, valor_num, valor_texto")
+        .eq("exercicio", exercicio!)
+        .eq("fonte_versao", versao)
+        .in("municipio", municipios);
+      if (error) throw error;
+      return (data ?? []) as unknown as DadoConstitutivoRow[];
+    },
+  });
+}

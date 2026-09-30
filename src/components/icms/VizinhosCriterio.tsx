@@ -7,6 +7,7 @@ import { useItensCriterioMunicipios, type FonteRelatorio } from "@/hooks/useCrit
 import { formatarPopulacao, usePopulacao } from "@/hooks/usePopulacao";
 import { regiaoDe, vizinhosDe } from "@/lib/icms/criterios/regioes";
 import { baixarCsv, montarCsv } from "@/lib/csv";
+import { ComparacaoIndicadoresEducacao, abaDoIndice } from "@/components/icms/ComparacaoIndicadoresEducacao";
 
 export type LinhaRankingVizinho = {
   municipio: string;
@@ -58,6 +59,7 @@ export function VizinhosCriterio({
 }: Props) {
   const populacao = usePopulacao();
   const [aberto, setAberto] = useState<string | null>(null);
+  const [itemAberto, setItemAberto] = useState<string | null>(null);
 
   const regiao = regiaoDe(chaveMunicipio);
   const chavesVizinhas = useMemo(() => vizinhosDe(chaveMunicipio), [chaveMunicipio]);
@@ -124,12 +126,14 @@ export function VizinhosCriterio({
       meu: number;
       melhor: number;
       quem: string;
+      quemChave: string;
       quantos: number;
     }[] = [];
     for (const codigo of codigos) {
       const meu = meus?.get(codigo)?.pontuacao ?? 0;
       let melhor = 0;
       let quem = "";
+      let quemChave = "";
       let quantos = 0;
       let nome = "";
       for (const linha of linhas) {
@@ -141,9 +145,10 @@ export function VizinhosCriterio({
         if (p.pontuacao > melhor) {
           melhor = p.pontuacao;
           quem = linha.municipio_nome;
+          quemChave = linha.municipio;
         }
       }
-      if (melhor > meu) lista.push({ codigo, nome: nome || codigo, meu, melhor, quem, quantos });
+      if (melhor > meu) lista.push({ codigo, nome: nome || codigo, meu, melhor, quem, quemChave, quantos });
     }
     return lista.sort((a, b) => b.melhor - b.meu - (a.melhor - a.meu));
   }, [pontosPorItem, linhas, chaveMunicipio]);
@@ -349,19 +354,57 @@ export function VizinhosCriterio({
                 </span>{" "}
                 neste critério.
               </div>
-              {lacunas.map((l) => (
-                <div key={l.codigo} className="rounded-md border p-3">
-                  <p className="font-medium">{l.nome}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {l.quantos} vizinho(s) pontuam este item; o melhor é {l.quem} com{" "}
-                    {num(l.melhor)} {unidade}. Hoje {nomeMunicipio ?? "o município"} tem{" "}
-                    {num(l.meu)}.
-                  </p>
-                  <Badge className="mt-2 bg-emerald-600 text-white hover:bg-emerald-600">
-                    +{num(l.melhor - l.meu)} {unidade} ao igualar
-                  </Badge>
-                </div>
-              ))}
+              {lacunas.map((l) => {
+                const aba = slug === "educacao" ? abaDoIndice(l.nome) : null;
+                const expandido = itemAberto === l.codigo;
+                return (
+                  <div key={l.codigo} className="rounded-md border p-3">
+                    <button
+                      type="button"
+                      disabled={!aba}
+                      onClick={() => setItemAberto(expandido ? null : l.codigo)}
+                      className="flex w-full items-start gap-2 text-left disabled:cursor-default"
+                    >
+                      {aba ? (
+                        expandido ? (
+                          <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                        )
+                      ) : null}
+                      <span className="flex-1">
+                        <span className="block font-medium">{l.nome}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {l.quantos} vizinho(s) pontuam este item; o melhor é {l.quem} com{" "}
+                          {num(l.melhor)} {unidade}. Hoje {nomeMunicipio ?? "o município"} tem{" "}
+                          {num(l.meu)}.
+                        </span>
+                        <Badge className="mt-2 bg-emerald-600 text-white hover:bg-emerald-600">
+                          +{num(l.melhor - l.meu)} {unidade} ao igualar
+                        </Badge>
+                        {aba && !expandido && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            Clique para ver indicador por indicador
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                    {aba && expandido && chaveMunicipio && (
+                      <div className="mt-3 border-t pt-3">
+                        <ComparacaoIndicadoresEducacao
+                          exercicio={ano}
+                          versao={fonte === "preliminar" ? "provisorio" : "definitivo"}
+                          aba={aba}
+                          meu={chaveMunicipio}
+                          meuNome={nomeMunicipio ?? "Município"}
+                          melhor={l.quemChave}
+                          melhorNome={l.quem}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </>
           )}
         </CardContent>
