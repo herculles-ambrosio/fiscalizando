@@ -147,6 +147,8 @@ export type LinhaFiscalizacao = {
   issDeclarado: number | null;
   issPago: number | null;
   /** ISS calculado sobre os emolumentos publicados pelo TJMG. */
+  /** Emolumentos menos 7% do Recompe — base de cálculo do ISS. */
+  baseRecompe: number;
   issDevido: number;
   diferencaBase: number | null;
   diferencaIss: number | null;
@@ -217,6 +219,10 @@ export function useCompetenciasCartorio() {
     },
   });
 }
+
+/** Desconto do Recompe (7%) aplicado sobre os emolumentos antes do ISS. */
+export const DESCONTO_RECOMPE = 0.07;
+export const baseSemRecompe = (emolumentos: number) => emolumentos * (1 - DESCONTO_RECOMPE);
 
 /** Cruzamento emolumentos × declarado, já com o ISS devido pela alíquota. */
 export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | null) {
@@ -295,7 +301,8 @@ export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | nul
           declaradas.get(prefixo + chave(String(e.cns))) ??
           declaradas.get(prefixo + chave(String(e.serventia_nome ?? "")));
         const emolumentos = Number(e.emolumentos ?? 0);
-        const issDevido = (emolumentos * aliquota) / 100;
+        const baseRecompe = baseSemRecompe(emolumentos);
+        const issDevido = (baseRecompe * aliquota) / 100;
         const baseDeclarada = d ? Number(d.base_declarada ?? 0) : null;
         const issDeclarado = d ? Number(d.iss_declarado ?? 0) : null;
         return {
@@ -311,8 +318,9 @@ export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | nul
           baseDeclarada,
           issDeclarado,
           issPago: d ? Number(d.iss_pago ?? 0) : null,
+          baseRecompe,
           issDevido,
-          diferencaBase: baseDeclarada == null ? null : emolumentos - baseDeclarada,
+          diferencaBase: baseDeclarada == null ? null : baseRecompe - baseDeclarada,
           diferencaIss:
             issDeclarado == null
               ? null
@@ -632,7 +640,7 @@ export function useResumoMunicipios(ano: number | null) {
         }
         const valor = Number(e.emolumentos ?? 0);
         r.emolumentos += valor;
-        r.issDevido += (valor * r.aliquota) / 100;
+        r.issDevido += (baseSemRecompe(valor) * r.aliquota) / 100;
         r.cnsSet.add(String(e.cns));
         r.mesesSet.add(`${e.competencia_ano}-${e.competencia_mes}`);
 
