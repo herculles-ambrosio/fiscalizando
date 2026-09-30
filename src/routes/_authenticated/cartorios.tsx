@@ -74,6 +74,7 @@ import CargasView from "@/components/cartorios/CargasView";
 import DocumentosView from "@/components/cartorios/DocumentosView";
 import ModelosCartorioView from "@/components/cartorios/ModelosCartorioView";
 import ResumoMunicipiosView from "@/components/cartorios/ResumoMunicipiosView";
+import GradeAnualCartorio from "@/components/cartorios/GradeAnualCartorio";
 
 
 export const Route = createFileRoute("/_authenticated/cartorios")({
@@ -121,6 +122,27 @@ function FiscalizaCartorio() {
   const { data: todasLinhas, isFetching } = useFiscalizacaoCartorio(competencia);
   const aliquota = config?.aliquota_iss ?? 5;
 
+  /** Seletor de cartório: com um escolhido, a tela mostra a grade anual. */
+  const [cartorioSel, setCartorioSel] = useState("todos");
+  const [anoSel, setAnoSel] = useState("");
+  const { data: linhasAno } = useFiscalizacaoCartorio(competencias?.length ? "todos" : null);
+  const listaCartorios = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const l of linhasAno ?? [])
+      m.set(`${l.cns}|${l.tipoServico}`, `${l.nome}${l.tipoServico ? ` — ${l.tipoServico}` : ""}`);
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
+  }, [linhasAno]);
+  const anosDisponiveis = useMemo(
+    () => [...new Set((competencias ?? []).map((c) => c.ano))].sort((a, b) => b - a),
+    [competencias],
+  );
+  const anoGrade = Number(anoSel) || anosDisponiveis[0] || anoAtual;
+  const linhasCartorio = useMemo(
+    () => (linhasAno ?? []).filter((l) => `${l.cns}|${l.tipoServico}` === cartorioSel),
+    [linhasAno, cartorioSel],
+  );
+  const tituloCartorio = listaCartorios.find(([k]) => k === cartorioSel)?.[1] ?? "";
+
   /** Alguns municípios não cobram ISS de serventias vagas — a escolha fica gravada no perfil. */
   const { valor: incluirVagos, definir: definirIncluirVagos } = usePreferencia(
     "cartorio-incluir-vagos",
@@ -148,6 +170,7 @@ function FiscalizaCartorio() {
         continue;
       }
       atual.emolumentos += linha.emolumentos;
+      atual.baseRecompe += linha.baseRecompe;
       atual.recompe += linha.recompe;
       atual.tfj += linha.tfj;
       atual.despesa += linha.despesa;
@@ -168,7 +191,7 @@ function FiscalizaCartorio() {
       atual.temDeclaracao = atual.temDeclaracao && linha.temDeclaracao;
       atual.meses = atual.competencias.size;
       atual.diferencaBase =
-        atual.baseDeclarada == null ? null : atual.emolumentos - atual.baseDeclarada;
+        atual.baseDeclarada == null ? null : atual.baseRecompe - atual.baseDeclarada;
       atual.diferencaIss =
         atual.issDeclarado == null ? null : atual.issDevido - atual.issDeclarado;
     }
@@ -190,6 +213,7 @@ function FiscalizaCartorio() {
     return {
       cartorios: l.length,
       emolumentos: l.reduce((s, x) => s + x.emolumentos, 0),
+      recompe: l.reduce((s, x) => s + x.baseRecompe, 0),
       devido: l.reduce((s, x) => s + x.issDevido, 0),
       declarado: l.reduce((s, x) => s + (x.issDeclarado ?? 0), 0),
       semDeclaracao: l.filter((x) => !x.temDeclaracao).length,
@@ -239,7 +263,50 @@ function FiscalizaCartorio() {
 
 
         <TabsContent value="fiscalizacao" className="space-y-4 pt-4">
-          {!competencia ? (
+          {!!competencias?.length && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={cartorioSel} onValueChange={setCartorioSel}>
+                <SelectTrigger className="h-9 w-96 max-w-full">
+                  <SelectValue placeholder="Cartório" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os cartórios</SelectItem>
+                  {listaCartorios.map(([k, rotulo]) => (
+                    <SelectItem key={k} value={k}>
+                      {rotulo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {cartorioSel !== "todos" && (
+                <>
+                  <Select value={String(anoGrade)} onValueChange={setAnoSel}>
+                    <SelectTrigger className="h-9 w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {anosDisponiveis.map((a) => (
+                        <SelectItem key={a} value={String(a)}>
+                          {a}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="sm" onClick={() => setCartorioSel("todos")}>
+                    Voltar para todos
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+          {cartorioSel !== "todos" ? (
+            <GradeAnualCartorio
+              linhas={linhasCartorio}
+              ano={anoGrade}
+              aliquota={aliquota}
+              titulo={tituloCartorio}
+            />
+          ) : !competencia ? (
             <Card>
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
                 Nenhum mês carregado ainda. Use a aba “Carga de dados” para enviar a lista de
@@ -248,10 +315,11 @@ function FiscalizaCartorio() {
             </Card>
           ) : (
             <>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
                 {[
                     [competencia === "todos" ? "Cartórios no período" : "Cartórios no mês", String(totais.cartorios)],
                   ["Emolumentos (TJMG)", formatarMoeda(totais.emolumentos)],
+                  ["(-) 7% Recompe", formatarMoeda(totais.recompe)],
                   [`ISS devido (${aliquota}%)`, formatarMoeda(totais.devido)],
                   ["ISS declarado", formatarMoeda(totais.declarado)],
                   ["Diferença a apurar", formatarMoeda(diferenca)],
@@ -339,6 +407,7 @@ function FiscalizaCartorio() {
                             "Tipo de serviço",
                             "Situação",
                             "Emolumentos (TJMG)",
+                            "(-) 7% Recompe",
                             "Base declarada",
                             "Diferença de base",
                             `ISS devido (${aliquota}%)`,
@@ -360,6 +429,7 @@ function FiscalizaCartorio() {
                             l.tipoServico,
                             l.status ?? "",
                             l.emolumentos,
+                            l.baseRecompe,
                             l.baseDeclarada ?? "",
                             l.diferencaBase ?? "",
                             l.issDevido,
@@ -389,6 +459,7 @@ function FiscalizaCartorio() {
                         )}
                         <TableHead>Tipo de serviço</TableHead>
                         <TableHead className="text-right">Emolumentos</TableHead>
+                        <TableHead className="text-right">(-) 7% Recompe</TableHead>
                         <TableHead className="text-right">ISS devido</TableHead>
                         <TableHead className="w-40 text-right">Base declarada</TableHead>
                         <TableHead className="w-36 text-right">ISS pago</TableHead>
@@ -414,7 +485,7 @@ function FiscalizaCartorio() {
                       })}
                       {!linhas?.length && (
                         <TableRow>
-                          <TableCell colSpan={competencia === "todos" ? 8 : 7} className="py-8 text-center text-sm text-muted-foreground">
+                          <TableCell colSpan={competencia === "todos" ? 9 : 8} className="py-8 text-center text-sm text-muted-foreground">
                             Nenhum cartório no período selecionado.
                           </TableCell>
                         </TableRow>
@@ -563,6 +634,7 @@ function LinhaCartorio({
       )}
       <TableCell className="text-sm">{linha.tipoServico || "—"}</TableCell>
       <TableCell className="text-right">{formatarMoeda(linha.emolumentos)}</TableCell>
+      <TableCell className="text-right">{formatarMoeda(linha.baseRecompe)}</TableCell>
       <TableCell className="text-right font-medium">{formatarMoeda(linha.issDevido)}</TableCell>
       <TableCell className="text-right">
         {consolidada ? (
