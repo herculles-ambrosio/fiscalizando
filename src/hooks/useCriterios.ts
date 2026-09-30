@@ -206,16 +206,22 @@ export function useItensCriterioMunicipios(
     enabled: !!criterio && !!ano && !!fonte && chaves.length > 0,
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<ItemCriterioRow[]> => {
-      const { data, error } = await supabase
-        .from("criterio_item_municipio")
-        .select("*")
-        .eq("criterio", criterio!)
-        .eq("ano_base", ano!)
-        .eq("fonte_relatorio", fonte!)
-        .in("municipio", chaves)
-        .limit(20000);
-      if (error) throw error;
-      return (data ?? []) as unknown as ItemCriterioRow[];
+      const resultado: ItemCriterioRow[] = [];
+      for (let inicio = 0; ; inicio += 1000) {
+        const { data, error } = await supabase
+          .from("criterio_item_municipio")
+          .select("*")
+          .eq("criterio", criterio!)
+          .eq("ano_base", ano!)
+          .eq("fonte_relatorio", fonte!)
+          .in("municipio", chaves)
+          .order("id")
+          .range(inicio, inicio + 999);
+        if (error) throw error;
+        resultado.push(...((data ?? []) as unknown as ItemCriterioRow[]));
+        if (!data || data.length < 1000) break;
+      }
+      return resultado;
     },
   });
 }
