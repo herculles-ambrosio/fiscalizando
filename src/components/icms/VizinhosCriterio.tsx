@@ -86,7 +86,7 @@ export function VizinhosCriterio({
       const atual = doMunicipio.get(i.item_codigo);
       doMunicipio.set(i.item_codigo, {
         nome: i.item_nome,
-        pontuacao: slug === "meio_ambiente" || slug === "meio-ambiente"
+        pontuacao: slug === "meio_ambiente" || slug === "meio-ambiente" || slug === "turismo"
           ? Math.max(atual?.pontuacao ?? 0, i.pontuacao ?? 0)
           : (atual?.pontuacao ?? 0) + (i.pontuacao ?? 0),
       });
