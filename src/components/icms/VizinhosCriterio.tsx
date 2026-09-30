@@ -8,6 +8,8 @@ import { formatarPopulacao, usePopulacao } from "@/hooks/usePopulacao";
 import { regiaoDe, vizinhosDe } from "@/lib/icms/criterios/regioes";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { ComparacaoIndicadoresEducacao, abaDoIndice } from "@/components/icms/ComparacaoIndicadoresEducacao";
+import { ComparacaoItensVizinhanca } from "@/components/icms/ComparacaoItensVizinhanca";
+import type { AtividadeEsportes } from "@/hooks/useEsportes";
 
 export type LinhaRankingVizinho = {
   municipio: string;
@@ -38,6 +40,7 @@ type Props = {
     item_nome: string;
     pontuacao: number | null;
   }[];
+  atividadesExternas?: AtividadeEsportes[];
 };
 
 const num = (v: number, casas = 2) => v.toLocaleString("pt-BR", { maximumFractionDigits: casas });
@@ -56,6 +59,7 @@ export function VizinhosCriterio({
   nomeMunicipio,
   unidade = "pontos",
   itensExternos,
+  atividadesExternas,
 }: Props) {
   const populacao = usePopulacao();
   const [aberto, setAberto] = useState<string | null>(null);
@@ -76,16 +80,20 @@ export function VizinhosCriterio({
     const mapa = new Map<string, Map<string, { nome: string; pontuacao: number }>>();
     for (const i of itens ?? []) {
       if (!i.item_codigo) continue;
+      if ((slug === "meio_ambiente" || slug === "meio-ambiente") && i.item_codigo !== "indice_criterio") continue;
+      if (slug === "turismo" && i.item_codigo !== "tur_indice") continue;
       const doMunicipio = mapa.get(i.municipio) ?? new Map();
       const atual = doMunicipio.get(i.item_codigo);
       doMunicipio.set(i.item_codigo, {
         nome: i.item_nome,
-        pontuacao: (atual?.pontuacao ?? 0) + (i.pontuacao ?? 0),
+        pontuacao: slug === "meio_ambiente" || slug === "meio-ambiente" || slug === "turismo"
+          ? Math.max(atual?.pontuacao ?? 0, i.pontuacao ?? 0)
+          : (atual?.pontuacao ?? 0) + (i.pontuacao ?? 0),
       });
       mapa.set(i.municipio, doMunicipio);
     }
     return mapa;
-  }, [itens]);
+  }, [itens, slug]);
 
   const linhas = useMemo(() => {
     const todos = ranking ?? [];
@@ -154,6 +162,7 @@ export function VizinhosCriterio({
   }, [pontosPorItem, linhas, chaveMunicipio]);
 
   const ganhoPossivel = lacunas.reduce((s, l) => s + (l.melhor - l.meu), 0);
+  const somavel = slug !== "turismo" && slug !== "meio_ambiente" && slug !== "meio-ambiente";
 
   /** O que falta a um vizinho para alcançar quem lidera a região. */
   const faltaPara = (chave: string) => {
@@ -346,26 +355,29 @@ export function VizinhosCriterio({
             </p>
           ) : (
             <>
-              <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/20">
-                Igualando o melhor vizinho em cada item, {nomeMunicipio ?? "o município"} somaria
-                cerca de{" "}
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400">
-                  +{num(ganhoPossivel)} {unidade}
-                </span>{" "}
-                neste critério.
-              </div>
+               {somavel && <div className="rounded-md border border-emerald-300 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/20">
+                 Igualando o melhor vizinho em cada item, {nomeMunicipio ?? "o município"} somaria
+                 cerca de{" "}
+                 <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                   +{num(ganhoPossivel)} {unidade}
+                 </span>{" "}
+                 neste critério.
+               </div>}
               {lacunas.map((l) => {
-                const aba = slug === "educacao" ? abaDoIndice(l.nome) : null;
+                 const aba = slug === "educacao" ? abaDoIndice(l.nome) : null;
+                 const expansivel = Boolean(aba || ["patrimonio_cultural", "esportes", "meio_ambiente", "meio-ambiente", "turismo"].includes(slug));
                 const expandido = itemAberto === l.codigo;
                 return (
-                  <div key={l.codigo} className="rounded-md border p-3">
-                    <button
-                      type="button"
-                      disabled={!aba}
+                   <div key={l.codigo} className="rounded-md border p-3">
+                     <Button
+                       variant="ghost"
+                       type="button"
+                       disabled={!expansivel}
                       onClick={() => setItemAberto(expandido ? null : l.codigo)}
-                      className="flex w-full items-start gap-2 text-left disabled:cursor-default"
+                       aria-expanded={expansivel ? expandido : undefined}
+                       className="flex h-auto w-full items-start justify-start gap-2 whitespace-normal p-0 text-left hover:bg-transparent disabled:cursor-default"
                     >
-                      {aba ? (
+                       {expansivel ? (
                         expandido ? (
                           <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                         ) : (
@@ -374,24 +386,24 @@ export function VizinhosCriterio({
                       ) : null}
                       <span className="flex-1">
                         <span className="block font-medium">{l.nome}</span>
-                        <span className="block text-xs text-muted-foreground">
+                         <span className="block text-xs text-muted-foreground">
                           {l.quantos} vizinho(s) pontuam este item; o melhor é {l.quem} com{" "}
-                          {num(l.melhor)} {unidade}. Hoje {nomeMunicipio ?? "o município"} tem{" "}
-                          {num(l.meu)}.
+                           {num(l.melhor, 8)} {slug === "turismo" ? "de índice" : unidade}. Hoje {nomeMunicipio ?? "o município"} tem{" "}
+                           {num(l.meu, 8)}.
                         </span>
                         <Badge className="mt-2 bg-emerald-600 text-white hover:bg-emerald-600">
-                          +{num(l.melhor - l.meu)} {unidade} ao igualar
+                           +{num(l.melhor - l.meu, 8)} {slug === "turismo" ? "de índice" : unidade} ao igualar
                         </Badge>
-                        {aba && !expandido && (
+                         {expansivel && !expandido && (
                           <span className="ml-2 text-xs text-muted-foreground">
-                            Clique para ver indicador por indicador
+                             Clique para ver o detalhamento
                           </span>
                         )}
                       </span>
-                    </button>
-                    {aba && expandido && chaveMunicipio && (
+                     </Button>
+                     {expansivel && expandido && chaveMunicipio && (
                       <div className="mt-3 border-t pt-3">
-                        <ComparacaoIndicadoresEducacao
+                         {aba ? <ComparacaoIndicadoresEducacao
                           exercicio={ano}
                           versao={fonte === "preliminar" ? "provisorio" : "definitivo"}
                           aba={aba}
@@ -399,7 +411,16 @@ export function VizinhosCriterio({
                           meuNome={nomeMunicipio ?? "Município"}
                           melhor={l.quemChave}
                           melhorNome={l.quem}
-                        />
+                         /> : <ComparacaoItensVizinhanca
+                           slug={slug}
+                           codigo={l.codigo}
+                           meu={chaveMunicipio}
+                           melhor={l.quemChave}
+                           meuNome={nomeMunicipio ?? "Município"}
+                           melhorNome={l.quem}
+                           itens={itensCriterio ?? []}
+                           atividades={atividadesExternas}
+                         />}
                       </div>
                     )}
                   </div>
