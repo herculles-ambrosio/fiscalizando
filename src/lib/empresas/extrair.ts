@@ -13,11 +13,19 @@ function txt(v: unknown): string | null {
   const t = String(v ?? "").trim();
   return t.length ? t : null;
 }
+
+function valida(iso: string): string | null {
+  const [a, m, d] = iso.split("-").map(Number);
+  if (!a || a < 1800 || !m || m > 12 || !d || d > 31) return null;
+  const x = new Date(Date.UTC(a, m - 1, d));
+  return x.getUTCMonth() === m - 1 ? iso : null;
+}
+
 function dt(v: unknown): string | null {
   const t = String(v ?? "").trim();
-  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return t.slice(0, 10);
-  if (/^\d{8}$/.test(t)) return `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`;
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(t)) return `${t.slice(6)}-${t.slice(3, 5)}-${t.slice(0, 2)}`;
+  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return valida(t.slice(0, 10));
+  if (/^\d{8}$/.test(t)) return valida(`${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`);
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(t)) return valida(`${t.slice(6)}-${t.slice(3, 5)}-${t.slice(0, 2)}`);
   return null;
 }
 function bool(v: unknown): boolean | null {
