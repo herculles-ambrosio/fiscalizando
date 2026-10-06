@@ -420,7 +420,11 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
     d.setMonth(d.getMonth() - 1);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
-  const pasta = `https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/${referencia}/`;
+  // A Receita migrou os dados abertos para um compartilhamento público (Nextcloud).
+  const COMPARTILHAMENTO = "https://arquivos.receitafederal.gov.br/index.php/s/gn672Ad4CF8N6TK";
+  const pasta = `${COMPARTILHAMENTO}?dir=/Dados/Cadastros/CNPJ/${referencia}`;
+  const baixar = (arquivo: string) =>
+    `${COMPARTILHAMENTO}/download?path=/Dados/Cadastros/CNPJ/${referencia}&files=${arquivo}`;
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [estado, setEstado] = useState<string | null>(null);
   const [pct, setPct] = useState(0);
@@ -484,7 +488,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
           <DialogTitle>Importar base completa da Receita</DialogTitle>
           <DialogDescription>
             Baixe os arquivos <b>Estabelecimentos0.zip</b> a <b>Estabelecimentos9.zip</b> (e o <b>Municipios.zip</b>) em{" "}
-            <a className="underline" href="https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/" target="_blank" rel="noreferrer">
+            <a className="underline" href="https://arquivos.receitafederal.gov.br/index.php/s/gn672Ad4CF8N6TK?dir=/Dados/Cadastros/CNPJ" target="_blank" rel="noreferrer">
               dados abertos do CNPJ
             </a>{" "}
             e selecione aqui. O navegador lê os arquivos e guarda só as empresas de {municipioNome}. Mantenha a tela aberta.
@@ -501,9 +505,9 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
               Clique para baixar (cada arquivo tem algumas centenas de MB). Se o mês ainda não foi publicado, escolha o mês anterior.
             </p>
             <div className="flex flex-wrap gap-1.5">
-              <a className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={`${pasta}Municipios.zip`} target="_blank" rel="noreferrer">Municipios.zip</a>
+              <a className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={baixar("Municipios.zip")} target="_blank" rel="noreferrer">Municipios.zip</a>
               {Array.from({ length: 10 }, (_, n) => (
-                <a key={n} className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={`${pasta}Estabelecimentos${n}.zip`} target="_blank" rel="noreferrer">
+                <a key={n} className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={baixar(`Estabelecimentos${n}.zip`)} target="_blank" rel="noreferrer">
                   Estabelecimentos{n}.zip
                 </a>
               ))}
