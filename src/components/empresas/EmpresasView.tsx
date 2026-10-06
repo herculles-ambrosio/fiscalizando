@@ -58,6 +58,12 @@ export function EmpresasView() {
   const [fAlerta, setFAlerta] = useState(false);
   const [detalhe, setDetalhe] = useState<Empresa | null>(null);
   const [baseAberta, setBaseAberta] = useState(false);
+  const [listaAberta, setListaAberta] = useState(false);
+  const [textoLista, setTextoLista] = useState("");
+  const cnpjsLista = useMemo(
+    () => [...new Set((textoLista.match(/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/g) ?? []).map((c) => c.replace(/\D/g, "")))],
+    [textoLista],
+  );
 
   const iePorCnpj = useMemo(() => {
     const m = new Map<string, string>();
@@ -152,7 +158,7 @@ export function EmpresasView() {
       e.opcao_simples == null ? "" : e.opcao_simples ? "Sim" : "Não", e.opcao_mei == null ? "" : e.opcao_mei ? "Sim" : "Não",
       formatarCodigoCnae(e.cnae_principal), e.cnae_descricao ?? descricaoCnae(e.cnae_principal),
       [e.logradouro, e.numero, e.complemento].filter(Boolean).join(", "), e.bairro, e.cep, e.email, e.telefone,
-      e.origem === "sef" ? "Cadastro SEF" : "Base Receita", alertas(e).join("; "),
+      e.origem === "sef" ? "Cadastro SEF" : e.origem === "lista" ? "Lista de CNPJs" : "Base Receita", alertas(e).join("; "),
     ]);
     baixarCsv(`empresas-${municipio?.nome ?? "municipio"}.csv`, montarCsv(cab, linhas));
   }
@@ -171,7 +177,14 @@ export function EmpresasView() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => importarSef(false)} disabled={!!progresso}>
+          <Button variant="outline" onClick={() => setListaAberta(true)} disabled={!!progresso}>
+            <Search className="mr-2 h-4 w-4" /> Importar lista de CNPJs
+          </Button>
+          <Button
+            onClick={() => importarSef(false)}
+            disabled={!!progresso || !iePorCnpj.size}
+            title={iePorCnpj.size ? undefined : "Esta prefeitura não tem arquivo da SEF carregado. Use a base da Receita ou uma lista de CNPJs."}
+          >
             <Building2 className="mr-2 h-4 w-4" /> Importar do cadastro da SEF ({iePorCnpj.size})
           </Button>
           <Button variant="outline" onClick={() => setBaseAberta(true)} disabled={!!progresso}>
@@ -296,6 +309,33 @@ export function EmpresasView() {
         )}
       </div>
 
+      <Dialog open={listaAberta} onOpenChange={setListaAberta}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Importar lista de CNPJs</DialogTitle>
+            <DialogDescription>
+              Cole os CNPJs (de uma planilha do ISS, alvarás, JUCEMG etc.) ou envie um arquivo CSV/TXT. O sistema consulta cada um na Receita.
+            </DialogDescription>
+          </DialogHeader>
+          <Input type="file" accept=".csv,.txt" onChange={(e) => { const f = e.target.files?.[0]; if (f) void f.text().then(setTextoLista); }} />
+          <textarea
+            className="min-h-40 w-full rounded-md border bg-background p-2 text-sm"
+            placeholder="00.000.000/0001-91"
+            value={textoLista}
+            onChange={(e) => setTextoLista(e.target.value)}
+          />
+          <Button
+            disabled={!cnpjsLista.length}
+            onClick={() => {
+              setListaAberta(false);
+              void processar(cnpjsLista.map((cnpj) => ({ cnpj, ie: iePorCnpj.get(cnpj) ?? null, origem: "lista" })), "Importando lista de CNPJs");
+            }}
+          >
+            Consultar {cnpjsLista.length} CNPJ(s)
+          </Button>
+        </DialogContent>
+      </Dialog>
+
       <DetalheEmpresa empresa={detalhe} onClose={() => setDetalhe(null)} onTipo={mudarTipo} onReconsultar={(e) => void processar([{ cnpj: e.cnpj, ie: e.inscricao_estadual, origem: e.origem }], "Reconsultando")} />
       <ImportarBase
         aberto={baseAberta}
@@ -339,7 +379,7 @@ function DetalheEmpresa({ empresa: e, onClose, onTipo, onReconsultar }: {
                 ["Município", `${e.municipio_nome ?? "—"}/${e.uf ?? ""}`],
                 ["E-mail", e.email],
                 ["Telefone", e.telefone],
-                ["Origem", `${e.origem === "sef" ? "Cadastro da SEF" : "Base completa da Receita"}${e.referencia_base ? ` (${e.referencia_base})` : ""}`],
+                ["Origem", `${e.origem === "sef" ? "Cadastro da SEF" : e.origem === "lista" ? "Lista de CNPJs" : "Base completa da Receita"}${e.referencia_base ? ` (${e.referencia_base})` : ""}`],
                 ["Última consulta", e.consultado_em ? `${new Date(e.consultado_em).toLocaleString("pt-BR")} · ${e.fonte ?? ""}` : "Nunca"],
               ].map(([r, v]) => (
                 <div key={r} className="min-w-0">
@@ -375,7 +415,12 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   aberto: boolean; onClose: () => void; municipioId: string; municipioNome: string; iePorCnpj: Map<string, string>; aoConcluir: () => void;
 }) {
   const [codigo, setCodigo] = useState("");
-  const [referencia, setReferencia] = useState("");
+  const [referencia, setReferencia] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const pasta = `https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/${referencia}/`;
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [estado, setEstado] = useState<string | null>(null);
   const [pct, setPct] = useState(0);
@@ -446,6 +491,24 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 text-sm">
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="font-medium">Baixar da Receita — mês</span>
+              <Input type="month" className="h-8 w-40" value={referencia} onChange={(e) => setReferencia(e.target.value)} disabled={lendo} />
+              <a className="ml-auto text-xs underline" href={pasta} target="_blank" rel="noreferrer">Abrir pasta do mês</a>
+            </div>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Clique para baixar (cada arquivo tem algumas centenas de MB). Se o mês ainda não foi publicado, escolha o mês anterior.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <a className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={`${pasta}Municipios.zip`} target="_blank" rel="noreferrer">Municipios.zip</a>
+              {Array.from({ length: 10 }, (_, n) => (
+                <a key={n} className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={`${pasta}Estabelecimentos${n}.zip`} target="_blank" rel="noreferrer">
+                  Estabelecimentos{n}.zip
+                </a>
+              ))}
+            </div>
+          </div>
           <label className="block space-y-1">
             <span>1. Tabela de municípios (opcional, encontra o código)</span>
             <Input type="file" accept=".zip,.csv,.MUNICCSV" disabled={lendo} onChange={(e) => e.target.files?.[0] && void lerMunicipios(e.target.files[0])} />
@@ -455,10 +518,10 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
               <span>Código do município na Receita</span>
               <Input value={codigo} onChange={(e) => setCodigo(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="ex.: 4123" disabled={lendo} />
             </label>
-            <label className="space-y-1">
-              <span>Mês de referência da base</span>
-              <Input type="month" value={referencia} onChange={(e) => setReferencia(e.target.value)} disabled={lendo} />
-            </label>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <span>Referência gravada</span>
+              <p className="pt-2 text-sm text-foreground">{referencia}</p>
+            </div>
           </div>
           <label className="block space-y-1">
             <span>2. Arquivos de Estabelecimentos (pode selecionar vários)</span>
