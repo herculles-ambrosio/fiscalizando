@@ -499,10 +499,12 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
             <div className="mb-2 flex items-center gap-2">
               <span className="font-medium">Baixar da Receita — mês</span>
               <Input type="month" className="h-8 w-40" value={referencia} onChange={(e) => setReferencia(e.target.value)} disabled={lendo} />
-              <a className="ml-auto text-xs underline" href={pasta} target="_blank" rel="noreferrer">Abrir pasta do mês</a>
+              <a className="ml-auto rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground" href={pasta} target="_blank" rel="noreferrer">Abrir pasta do mês</a>
             </div>
             <p className="mb-2 text-xs text-muted-foreground">
-              Clique para baixar (cada arquivo tem algumas centenas de MB). Se o mês ainda não foi publicado, escolha o mês anterior.
+              <b>Primeiro clique em “Abrir pasta do mês”</b> — o site da Receita só libera o download depois que a pasta é aberta
+              (sem isso aparece “Strict Cookie has not been found”). Lá você pode baixar direto, ou voltar aqui e usar os botões abaixo.
+              Se o mês ainda não foi publicado, escolha o mês anterior.
             </p>
             <div className="flex flex-wrap gap-1.5">
               <a className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={baixar("Municipios.zip")} target="_blank" rel="noreferrer">Municipios.zip</a>
