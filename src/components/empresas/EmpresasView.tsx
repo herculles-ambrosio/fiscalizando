@@ -9,7 +9,7 @@ import { usePerfil } from "@/hooks/usePerfil";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useEmpresas, type Empresa } from "@/hooks/useEmpresas";
 import { enriquecerEmpresas } from "@/lib/empresas/empresas.functions";
-import { atividadeExigeIe, ROTULO_TIPO, type TipoEmpresa } from "@/lib/empresas/extrair";
+import { atividadeExigeIe, classificar, ROTULO_TIPO, TIPOS_EMPRESA, type TipoEmpresa } from "@/lib/empresas/extrair";
 import { filtrarEstabelecimentos, lerMunicipiosReceita } from "@/lib/empresas/baseReceita";
 import { limparCnpj } from "@/lib/receita/normalizar";
 import { formatarCnpj, formatarData } from "@/lib/format";
@@ -23,7 +23,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-const tipoDe = (e: Empresa) => (e.tipo_manual ?? e.tipo_auto) as TipoEmpresa;
+const tipoDe = (e: Empresa) =>
+  (e.tipo_manual ?? (e.consultado_em && !e.erro_consulta ? classificar(e) : e.tipo_auto)) as TipoEmpresa;
 
 function alertas(e: Empresa): string[] {
   const a: string[] = [];
@@ -147,7 +148,7 @@ export function EmpresasView() {
   }, [empresas, busca, fTipo, fSit, fIe, fAlerta]);
 
   const totais = useMemo(() => {
-    const t: Record<string, number> = { MEI: 0, SIMPLES: 0, OUTRO: 0, NAO_CLASSIFICADO: 0, ATIVA: 0, alertas: 0 };
+    const t: Record<string, number> = { MEI: 0, SIMPLES: 0, LUCRO: 0, ATIVA: 0, alertas: 0 };
     for (const e of empresas) {
       t[tipoDe(e)] = (t[tipoDe(e)] ?? 0) + 1;
       if (e.situacao === "ATIVA") t["ATIVA"]! += 1;
@@ -396,7 +397,7 @@ function DetalheEmpresa({ empresa: e, onClose, onTipo, onReconsultar }: {
               <Select value={e.tipo_manual ?? "auto"} onValueChange={(t) => onTipo(e, t)}>
                 <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auto">Automática ({ROTULO_TIPO[e.tipo_auto as TipoEmpresa]})</SelectItem>
+                  <SelectItem value="auto">Automática ({ROTULO_TIPO[e.consultado_em && !e.erro_consulta ? classificar(e) : (e.tipo_auto as TipoEmpresa)]})</SelectItem>
                   {TIPOS_EMPRESA.filter((t) => t !== "NAO_CLASSIFICADO").map((t) => (
                     <SelectItem key={t} value={t}>{ROTULO_TIPO[t]}</SelectItem>
                   ))}
