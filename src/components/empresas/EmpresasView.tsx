@@ -9,7 +9,7 @@ import { usePerfil } from "@/hooks/usePerfil";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useEmpresas, type Empresa } from "@/hooks/useEmpresas";
 import { enriquecerEmpresas } from "@/lib/empresas/empresas.functions";
-import { atividadeExigeIe, ROTULO_TIPO, type TipoEmpresa } from "@/lib/empresas/extrair";
+import { atividadeExigeIe, classificar, ROTULO_TIPO, TIPOS_EMPRESA, type TipoEmpresa } from "@/lib/empresas/extrair";
 import { filtrarEstabelecimentos, lerMunicipiosReceita } from "@/lib/empresas/baseReceita";
 import { limparCnpj } from "@/lib/receita/normalizar";
 import { formatarCnpj, formatarData } from "@/lib/format";
@@ -23,7 +23,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-const tipoDe = (e: Empresa) => (e.tipo_manual ?? e.tipo_auto) as TipoEmpresa;
+const tipoDe = (e: Empresa) =>
+  (e.tipo_manual ?? (e.consultado_em && !e.erro_consulta ? classificar(e) : e.tipo_auto)) as TipoEmpresa;
 
 function alertas(e: Empresa): string[] {
   const a: string[] = [];
@@ -38,6 +39,11 @@ function alertas(e: Empresa): string[] {
 const COR_TIPO: Record<TipoEmpresa, string> = {
   MEI: "bg-primary/10 text-primary border-primary/30",
   SIMPLES: "bg-normal text-normal-foreground border-normal-foreground/20",
+  LUCRO: "bg-accent text-accent-foreground border-border",
+  PARTIDO: "bg-secondary text-secondary-foreground border-border",
+  CARTORIO: "bg-secondary text-secondary-foreground border-border",
+  ASSOCIACAO: "bg-secondary text-secondary-foreground border-border",
+  PUBLICO: "bg-secondary text-secondary-foreground border-border",
   OUTRO: "bg-muted text-foreground border-border",
   NAO_CLASSIFICADO: "bg-muted text-muted-foreground border-dashed border-border",
 };
@@ -142,7 +148,7 @@ export function EmpresasView() {
   }, [empresas, busca, fTipo, fSit, fIe, fAlerta]);
 
   const totais = useMemo(() => {
-    const t: Record<string, number> = { MEI: 0, SIMPLES: 0, OUTRO: 0, NAO_CLASSIFICADO: 0, ATIVA: 0, alertas: 0 };
+    const t: Record<string, number> = { MEI: 0, SIMPLES: 0, LUCRO: 0, ATIVA: 0, alertas: 0 };
     for (const e of empresas) {
       t[tipoDe(e)] = (t[tipoDe(e)] ?? 0) + 1;
       if (e.situacao === "ATIVA") t["ATIVA"]! += 1;
@@ -206,13 +212,10 @@ export function EmpresasView() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5 xl:grid-cols-6">
         {[
           ["Total", empresas.length, "todos"],
-          ["MEI", totais["MEI"], "MEI"],
-          ["Simples Nacional", totais["SIMPLES"], "SIMPLES"],
-          ["Outro", totais["OUTRO"], "OUTRO"],
-          ["Não classificado", totais["NAO_CLASSIFICADO"], "NAO_CLASSIFICADO"],
+          ...TIPOS_EMPRESA.filter((t) => totais[t] || ["MEI", "SIMPLES", "LUCRO"].includes(t)).map((t) => [ROTULO_TIPO[t], totais[t] ?? 0, t]),
         ].map(([r, n, t]) => (
           <button
             key={r as string}
@@ -394,10 +397,10 @@ function DetalheEmpresa({ empresa: e, onClose, onTipo, onReconsultar }: {
               <Select value={e.tipo_manual ?? "auto"} onValueChange={(t) => onTipo(e, t)}>
                 <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auto">Automática ({ROTULO_TIPO[e.tipo_auto as TipoEmpresa]})</SelectItem>
-                  <SelectItem value="MEI">MEI</SelectItem>
-                  <SelectItem value="SIMPLES">Simples Nacional</SelectItem>
-                  <SelectItem value="OUTRO">Outro</SelectItem>
+                  <SelectItem value="auto">Automática ({ROTULO_TIPO[e.consultado_em && !e.erro_consulta ? classificar(e) : (e.tipo_auto as TipoEmpresa)]})</SelectItem>
+                  {TIPOS_EMPRESA.filter((t) => t !== "NAO_CLASSIFICADO").map((t) => (
+                    <SelectItem key={t} value={t}>{ROTULO_TIPO[t]}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Button variant="outline" className="ml-auto" onClick={() => onReconsultar(e)}>

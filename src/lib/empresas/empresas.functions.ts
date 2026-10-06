@@ -46,7 +46,7 @@ export const enriquecerEmpresas = createServerFn({ method: "POST" })
         situacao: r.registro.situacao,
         situacao_data: r.registro.situacao_data,
         motivo: r.registro.motivo,
-        tipo_auto: classificar(d),
+        tipo_auto: classificar({ ...d, natureza_juridica: d.natureza_juridica, cnae_principal: d.cnae_principal }),
         fonte: r.registro.fonte,
         erro_consulta: null,
       };
