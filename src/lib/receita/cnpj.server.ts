@@ -10,7 +10,7 @@ const FONTES: Fonte[] = [
 ];
 
 export type ResultadoConsulta =
-  | { cnpj: string; ok: true; registro: RegistroReceita }
+  | { cnpj: string; ok: true; registro: RegistroReceita; bruto: Record<string, unknown> }
   | { cnpj: string; ok: false; naoEncontrado: boolean; erro: string };
 
 async function buscarEm(fonte: Fonte, cnpj: string): Promise<ResultadoConsulta | null> {
@@ -26,7 +26,7 @@ async function buscarEm(fonte: Fonte, cnpj: string): Promise<ResultadoConsulta |
     }
     if (!resposta.ok) return null; // tenta a próxima fonte (limite, indisponibilidade…)
     const bruto = (await resposta.json()) as Record<string, unknown>;
-    return { cnpj, ok: true, registro: normalizarRetorno(cnpj, fonte.nome, bruto) };
+    return { cnpj, ok: true, registro: normalizarRetorno(cnpj, fonte.nome, bruto), bruto };
   } catch {
     return null;
   } finally {
