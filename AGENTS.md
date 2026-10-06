@@ -12,3 +12,4 @@
 - Os ofícios VAF aceitam ano de apuração e ano de aplicação separados, pois o intervalo não é necessariamente de um ano.
 - As publicações ambientais são complementares por exercício, versão e identidade da fonte; a importação atômica substitui somente a mesma fonte e o Fator de Qualidade não sobrescreve o índice consolidado, para evitar somas e duplicações indevidas.
 - Na comparação regional dos critérios, componentes de escalas distintas devem ser exibidos separadamente; índices consolidados ambientais usam o maior índice publicado, não a soma das linhas, para preservar o significado oficial.
+- Empresas (`empresas`) é por município; dados vêm das fontes públicas de CNPJ por consulta e da base aberta da Receita lida em fluxo no navegador — o servidor nunca recebe os arquivos brutos (muitos GB).

@@ -23,3 +23,4 @@
 - [x] Exibir oito casas na pontuação de Educação e retirar a extrapolação de anos e repasses dos quadros de Patrimônio Cultural e Turismo.
 - [x] Distinguir competências ambientais, impedir reimportação idêntica e eliminar cópias exatas de itens antigos.
 - [x] Expandir a comparação com vizinhos em Patrimônio Cultural, Esportes, Meio Ambiente e Turismo, respeitando as escalas de cada publicação.
+- [x] Módulo Empresas: importação (cadastro SEF e base completa da Receita), classificação MEI/Simples/Outro e fiscalização.
