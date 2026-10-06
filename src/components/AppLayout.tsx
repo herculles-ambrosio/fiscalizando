@@ -68,6 +68,8 @@ const NAV_SUPERADMIN = [
 ];
 
 // Módulo Fiscaliza Cartório — ISS das serventias extrajudiciais.
+const NAV_EMPRESAS = [{ to: "/empresas", rotulo: "Empresas", icone: Building2 }];
+
 const NAV_NOTICIAS = [{ to: "/noticias", rotulo: "Mural de notícias", icone: Newspaper }];
 
 const NAV_CARTORIO = [{ to: "/cartorios", rotulo: "Fiscaliza Cartório", icone: Stamp }];
@@ -125,7 +127,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }, [municipioId, pathname, navigate, queryClient]);
 
   // Produto ativo: Apura VAF (padrão) ou ICMS Robin Hood.
-  const produto: "vaf" | "icms" | "cartorio" | "noticias" = pathname.startsWith("/noticias")
+  const produto: "vaf" | "icms" | "cartorio" | "noticias" | "empresas" = pathname.startsWith("/empresas")
+    ? "empresas"
+    : pathname.startsWith("/noticias")
     ? "noticias"
     : pathname.startsWith("/icms")
     ? "icms"
@@ -134,7 +138,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
       : "vaf";
 
   const grupos =
-    produto === "noticias"
+    produto === "empresas"
+      ? [{ rotulo: "Operação", itens: NAV_EMPRESAS }]
+      : produto === "noticias"
       ? [{ rotulo: "Notícias", itens: NAV_NOTICIAS }]
       : produto === "cartorio"
       ? [
@@ -237,6 +243,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
           >
             Notícias
+          </Link>
+          <Link
+            to="/empresas"
+            onClick={limparTela}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
+              produto === "empresas"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+            )}
+          >
+            Empresas
           </Link>
         </div>
 

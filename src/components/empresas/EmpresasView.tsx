@@ -384,9 +384,10 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   async function lerMunicipios(f: File) {
     setEstado("Lendo a tabela de municípios…");
     const mapa = await lerMunicipiosReceita(f);
-    const alvo = municipioNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+    const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+    const alvo = norm(municipioNome);
     // A tabela não traz UF; vários municípios homônimos existem — confira o código.
-    const achados = [...mapa.entries()].filter(([, n]) => n.trim().toUpperCase() === alvo);
+    const achados = [...mapa.entries()].filter(([, n]) => norm(n) === alvo);
     if (achados.length === 1) {
       setCodigo(achados[0]![0]);
       setEstado(`Código encontrado: ${achados[0]![0]}.`);

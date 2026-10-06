@@ -19,6 +19,7 @@ import { Route as AuthenticatedConsultoriaRouteRouteImport } from './routes/_aut
 import { Route as AuthenticatedContribuintesRouteImport } from './routes/_authenticated/contribuintes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEmissoesRouteImport } from './routes/_authenticated/emissoes'
+import { Route as AuthenticatedEmpresasRouteImport } from './routes/_authenticated/empresas'
 import { Route as AuthenticatedEstatisticasRouteImport } from './routes/_authenticated/estatisticas'
 import { Route as AuthenticatedEvolucaoRouteImport } from './routes/_authenticated/evolucao'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
@@ -105,6 +106,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedEmissoesRoute = AuthenticatedEmissoesRouteImport.update({
   id: '/emissoes',
   path: '/emissoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEmpresasRoute = AuthenticatedEmpresasRouteImport.update({
+  id: '/empresas',
+  path: '/empresas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEstatisticasRoute =
@@ -316,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/contribuintes': typeof AuthenticatedContribuintesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/emissoes': typeof AuthenticatedEmissoesRoute
+  '/empresas': typeof AuthenticatedEmpresasRoute
   '/estatisticas': typeof AuthenticatedEstatisticasRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -361,6 +368,7 @@ export interface FileRoutesByTo {
   '/contribuintes': typeof AuthenticatedContribuintesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/emissoes': typeof AuthenticatedEmissoesRoute
+  '/empresas': typeof AuthenticatedEmpresasRoute
   '/estatisticas': typeof AuthenticatedEstatisticasRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -409,6 +417,7 @@ export interface FileRoutesById {
   '/_authenticated/contribuintes': typeof AuthenticatedContribuintesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/emissoes': typeof AuthenticatedEmissoesRoute
+  '/_authenticated/empresas': typeof AuthenticatedEmpresasRoute
   '/_authenticated/estatisticas': typeof AuthenticatedEstatisticasRoute
   '/_authenticated/evolucao': typeof AuthenticatedEvolucaoRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
@@ -457,6 +466,7 @@ export interface FileRouteTypes {
     | '/contribuintes'
     | '/dashboard'
     | '/emissoes'
+    | '/empresas'
     | '/estatisticas'
     | '/evolucao'
     | '/historico'
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/contribuintes'
     | '/dashboard'
     | '/emissoes'
+    | '/empresas'
     | '/estatisticas'
     | '/evolucao'
     | '/historico'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/_authenticated/contribuintes'
     | '/_authenticated/dashboard'
     | '/_authenticated/emissoes'
+    | '/_authenticated/empresas'
     | '/_authenticated/estatisticas'
     | '/_authenticated/evolucao'
     | '/_authenticated/historico'
@@ -662,6 +674,13 @@ declare module '@tanstack/react-router' {
       path: '/emissoes'
       fullPath: '/emissoes'
       preLoaderRoute: typeof AuthenticatedEmissoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/empresas': {
+      id: '/_authenticated/empresas'
+      path: '/empresas'
+      fullPath: '/empresas'
+      preLoaderRoute: typeof AuthenticatedEmpresasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estatisticas': {
@@ -990,6 +1009,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedContribuintesRoute: typeof AuthenticatedContribuintesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEmissoesRoute: typeof AuthenticatedEmissoesRoute
+  AuthenticatedEmpresasRoute: typeof AuthenticatedEmpresasRoute
   AuthenticatedEstatisticasRoute: typeof AuthenticatedEstatisticasRoute
   AuthenticatedEvolucaoRoute: typeof AuthenticatedEvolucaoRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
@@ -1016,6 +1036,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedContribuintesRoute: AuthenticatedContribuintesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEmissoesRoute: AuthenticatedEmissoesRoute,
+  AuthenticatedEmpresasRoute: AuthenticatedEmpresasRoute,
   AuthenticatedEstatisticasRoute: AuthenticatedEstatisticasRoute,
   AuthenticatedEvolucaoRoute: AuthenticatedEvolucaoRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
