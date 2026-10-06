@@ -100,10 +100,18 @@ function texto(valor: unknown): string | null {
   return t.length ? t : null;
 }
 
+
+function valida(iso: string): string | null {
+  const [a, m, d] = iso.split("-").map(Number);
+  if (!a || a < 1800 || !m || m > 12 || !d || d > 31) return null;
+  const x = new Date(Date.UTC(a, m - 1, d));
+  return x.getUTCMonth() === m - 1 ? iso : null;
+}
+
 function data(valor: unknown): string | null {
   const t = String(valor ?? "").trim();
-  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return t.slice(0, 10);
-  if (/^\d{8}$/.test(t)) return `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`;
+  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return valida(t.slice(0, 10));
+  if (/^\d{8}$/.test(t)) return valida(`${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}`);
   return null;
 }
 
