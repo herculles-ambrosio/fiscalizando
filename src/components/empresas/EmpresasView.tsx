@@ -113,7 +113,7 @@ export function EmpresasView() {
       .from("empresas")
       .update({ tipo_manual: valor, tipo_manual_por: valor ? perfil?.id ?? null : null, tipo_manual_em: valor ? new Date().toISOString() : null })
       .eq("id", e.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     void qc.invalidateQueries({ queryKey: ["empresas", municipioId] });
     setDetalhe((d) => (d && d.id === e.id ? { ...d, tipo_manual: valor } : d));
   }
@@ -397,8 +397,8 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   }
 
   async function importar() {
-    if (!/^\d{4}$/.test(codigo)) return toast.error("Informe o código do município na Receita (4 dígitos).");
-    if (!arquivos.length) return toast.error("Selecione os arquivos de Estabelecimentos.");
+    if (!/^\d{4}$/.test(codigo)) { toast.error("Informe o código do município na Receita (4 dígitos)."); return; }
+    if (!arquivos.length) { toast.error("Selecione os arquivos de Estabelecimentos."); return; }
     setLendo(true);
     let total = 0;
     try {
