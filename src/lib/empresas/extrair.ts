@@ -1,10 +1,17 @@
 /** Dados de empresa extraídos das fontes públicas do CNPJ e classificação para fiscalização. */
 
-export const TIPOS_EMPRESA = ["MEI", "SIMPLES", "OUTRO", "NAO_CLASSIFICADO"] as const;
+export const TIPOS_EMPRESA = [
+  "MEI", "SIMPLES", "LUCRO", "PARTIDO", "CARTORIO", "ASSOCIACAO", "PUBLICO", "OUTRO", "NAO_CLASSIFICADO",
+] as const;
 export type TipoEmpresa = (typeof TIPOS_EMPRESA)[number];
 export const ROTULO_TIPO: Record<TipoEmpresa, string> = {
   MEI: "MEI",
   SIMPLES: "Simples Nacional",
+  LUCRO: "Lucro Presumido/Real",
+  PARTIDO: "Partido/Candidato",
+  CARTORIO: "Cartório",
+  ASSOCIACAO: "Associação/Entidade",
+  PUBLICO: "Órgão público",
   OUTRO: "Outro",
   NAO_CLASSIFICADO: "Não classificado",
 };
@@ -121,11 +128,28 @@ export function extrairEmpresa(b: Record<string, unknown>): DadosEmpresa {
   };
 }
 
-export function classificar(d: { opcao_mei: boolean | null; opcao_simples: boolean | null }): TipoEmpresa {
+function sem(t: string | null | undefined) {
+  return String(t ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+/** Classifica uma empresa já consultada na Receita pelo regime e pela natureza jurídica/CNAE. */
+export function classificar(d: {
+  opcao_mei: boolean | null;
+  opcao_simples: boolean | null;
+  natureza_juridica?: string | null;
+  cnae_principal?: string | null;
+}): TipoEmpresa {
   if (d.opcao_mei) return "MEI";
   if (d.opcao_simples) return "SIMPLES";
-  if (d.opcao_mei === false || d.opcao_simples === false) return "OUTRO";
-  return "NAO_CLASSIFICADO";
+  const n = sem(d.natureza_juridica);
+  const cnae = String(d.cnae_principal ?? "").replace(/\D/g, "");
+  if (/partido|candidato|comite financeiro/.test(n) || cnae.startsWith("94928")) return "PARTIDO";
+  if (/notarial|registral|cartorio/.test(n) || cnae.startsWith("69125")) return "CARTORIO";
+  if (/orgao publico|autarquia|fundacao publica|municipio|estado ou do distrito|consorcio publico|fundo publico|poder (executivo|legislativo|judiciario)/.test(n))
+    return "PUBLICO";
+  if (/associacao|organizacao religiosa|organizacao social|fundacao|cooperativa|sindical|entidade|servico social|condominio|oscip/.test(n))
+    return "ASSOCIACAO";
+  return "LUCRO";
 }
 
 /** Divisões CNAE de indústria (05–33) e comércio (45–47): normalmente exigem inscrição estadual. */
