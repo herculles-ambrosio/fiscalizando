@@ -560,7 +560,7 @@ function ComparativoIcms() {
                       <TableRow>
                         <TableHead className="w-12">#</TableHead>
                         <TableHead className="min-w-40">Município</TableHead>
-                        <TableHead className="text-right whitespace-nowrap">
+                        <TableHead className="text-right whitespace-nowrap bg-emerald-500/10">
                           População
                           {populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
                         </TableHead>
