@@ -38,6 +38,11 @@ function alertas(e: Empresa): string[] {
 const COR_TIPO: Record<TipoEmpresa, string> = {
   MEI: "bg-primary/10 text-primary border-primary/30",
   SIMPLES: "bg-normal text-normal-foreground border-normal-foreground/20",
+  LUCRO: "bg-accent text-accent-foreground border-border",
+  PARTIDO: "bg-secondary text-secondary-foreground border-border",
+  CARTORIO: "bg-secondary text-secondary-foreground border-border",
+  ASSOCIACAO: "bg-secondary text-secondary-foreground border-border",
+  PUBLICO: "bg-secondary text-secondary-foreground border-border",
   OUTRO: "bg-muted text-foreground border-border",
   NAO_CLASSIFICADO: "bg-muted text-muted-foreground border-dashed border-border",
 };
@@ -206,13 +211,10 @@ export function EmpresasView() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5 xl:grid-cols-6">
         {[
           ["Total", empresas.length, "todos"],
-          ["MEI", totais["MEI"], "MEI"],
-          ["Simples Nacional", totais["SIMPLES"], "SIMPLES"],
-          ["Outro", totais["OUTRO"], "OUTRO"],
-          ["Não classificado", totais["NAO_CLASSIFICADO"], "NAO_CLASSIFICADO"],
+          ...TIPOS_EMPRESA.filter((t) => totais[t] || ["MEI", "SIMPLES", "LUCRO"].includes(t)).map((t) => [ROTULO_TIPO[t], totais[t] ?? 0, t]),
         ].map(([r, n, t]) => (
           <button
             key={r as string}
@@ -395,9 +397,9 @@ function DetalheEmpresa({ empresa: e, onClose, onTipo, onReconsultar }: {
                 <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="auto">Automática ({ROTULO_TIPO[e.tipo_auto as TipoEmpresa]})</SelectItem>
-                  <SelectItem value="MEI">MEI</SelectItem>
-                  <SelectItem value="SIMPLES">Simples Nacional</SelectItem>
-                  <SelectItem value="OUTRO">Outro</SelectItem>
+                  {TIPOS_EMPRESA.filter((t) => t !== "NAO_CLASSIFICADO").map((t) => (
+                    <SelectItem key={t} value={t}>{ROTULO_TIPO[t]}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Button variant="outline" className="ml-auto" onClick={() => onReconsultar(e)}>
