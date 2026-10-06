@@ -1127,6 +1127,146 @@ export type Database = {
         }
         Relationships: []
       }
+      empresas: {
+        Row: {
+          atualizado_em: string
+          bairro: string | null
+          cep: string | null
+          cnae_descricao: string | null
+          cnae_principal: string | null
+          cnaes_secundarios: string[]
+          cnpj: string
+          complemento: string | null
+          consultado_em: string | null
+          criado_em: string
+          data_exclusao_mei: string | null
+          data_exclusao_simples: string | null
+          data_inicio: string | null
+          data_opcao_mei: string | null
+          data_opcao_simples: string | null
+          email: string | null
+          erro_consulta: string | null
+          fonte: string | null
+          id: string
+          inscricao_estadual: string | null
+          logradouro: string | null
+          motivo: string | null
+          municipio_id: string
+          municipio_nome: string | null
+          natureza_juridica: string | null
+          nome_fantasia: string | null
+          numero: string | null
+          opcao_mei: boolean | null
+          opcao_simples: boolean | null
+          origem: string
+          porte: string | null
+          razao_social: string | null
+          referencia_base: string | null
+          situacao: string | null
+          situacao_data: string | null
+          telefone: string | null
+          tipo_auto: string
+          tipo_manual: string | null
+          tipo_manual_em: string | null
+          tipo_manual_por: string | null
+          uf: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          bairro?: string | null
+          cep?: string | null
+          cnae_descricao?: string | null
+          cnae_principal?: string | null
+          cnaes_secundarios?: string[]
+          cnpj: string
+          complemento?: string | null
+          consultado_em?: string | null
+          criado_em?: string
+          data_exclusao_mei?: string | null
+          data_exclusao_simples?: string | null
+          data_inicio?: string | null
+          data_opcao_mei?: string | null
+          data_opcao_simples?: string | null
+          email?: string | null
+          erro_consulta?: string | null
+          fonte?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          logradouro?: string | null
+          motivo?: string | null
+          municipio_id: string
+          municipio_nome?: string | null
+          natureza_juridica?: string | null
+          nome_fantasia?: string | null
+          numero?: string | null
+          opcao_mei?: boolean | null
+          opcao_simples?: boolean | null
+          origem?: string
+          porte?: string | null
+          razao_social?: string | null
+          referencia_base?: string | null
+          situacao?: string | null
+          situacao_data?: string | null
+          telefone?: string | null
+          tipo_auto?: string
+          tipo_manual?: string | null
+          tipo_manual_em?: string | null
+          tipo_manual_por?: string | null
+          uf?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          bairro?: string | null
+          cep?: string | null
+          cnae_descricao?: string | null
+          cnae_principal?: string | null
+          cnaes_secundarios?: string[]
+          cnpj?: string
+          complemento?: string | null
+          consultado_em?: string | null
+          criado_em?: string
+          data_exclusao_mei?: string | null
+          data_exclusao_simples?: string | null
+          data_inicio?: string | null
+          data_opcao_mei?: string | null
+          data_opcao_simples?: string | null
+          email?: string | null
+          erro_consulta?: string | null
+          fonte?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          logradouro?: string | null
+          motivo?: string | null
+          municipio_id?: string
+          municipio_nome?: string | null
+          natureza_juridica?: string | null
+          nome_fantasia?: string | null
+          numero?: string | null
+          opcao_mei?: boolean | null
+          opcao_simples?: boolean | null
+          origem?: string
+          porte?: string | null
+          razao_social?: string | null
+          referencia_base?: string | null
+          situacao?: string | null
+          situacao_data?: string | null
+          telefone?: string | null
+          tipo_auto?: string
+          tipo_manual?: string | null
+          tipo_manual_em?: string | null
+          tipo_manual_por?: string | null
+          uf?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       esportes_atividade_municipio: {
         Row: {
           ano_base: number
