@@ -13,7 +13,7 @@ export const enriquecerEmpresas = createServerFn({ method: "POST" })
       .map((x) => ({
         cnpj: String(x.cnpj ?? "").replace(/\D/g, ""),
         ie: x.ie ? String(x.ie).replace(/\D/g, "") || null : null,
-        origem: x.origem === "base_receita" ? "base_receita" : "sef",
+        origem: x.origem === "base_receita" || x.origem === "lista" ? x.origem : "sef",
       }))
       .filter((x) => x.cnpj.length === 14 && !vistos.has(x.cnpj) && vistos.add(x.cnpj))
       .slice(0, 40);
