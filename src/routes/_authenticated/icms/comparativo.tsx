@@ -602,7 +602,7 @@ function ComparativoIcms() {
                               {r.nome}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell className="text-right tabular-nums bg-emerald-500/10">
                             {formatarPopulacao(populacao.de(r.nome))}
                           </TableCell>
                           {r.meses.map((v, idx) => (
