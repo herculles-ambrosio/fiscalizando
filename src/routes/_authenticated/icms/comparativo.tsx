@@ -560,7 +560,7 @@ function ComparativoIcms() {
                       <TableRow>
                         <TableHead className="w-12">#</TableHead>
                         <TableHead className="min-w-40">Município</TableHead>
-                        <TableHead className="text-right whitespace-nowrap">
+                        <TableHead className="text-right whitespace-nowrap bg-emerald-500/10">
                           População
                           {populacao.anoReferencia ? ` (${populacao.anoReferencia})` : ""}
                         </TableHead>
@@ -602,7 +602,7 @@ function ComparativoIcms() {
                               {r.nome}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell className="text-right tabular-nums bg-emerald-500/10">
                             {formatarPopulacao(populacao.de(r.nome))}
                           </TableCell>
                           {r.meses.map((v, idx) => (
