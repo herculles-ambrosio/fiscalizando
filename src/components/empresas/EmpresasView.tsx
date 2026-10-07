@@ -62,6 +62,8 @@ export function EmpresasView() {
   const [fSit, setFSit] = useState("todos");
   const [fIe, setFIe] = useState("todos");
   const [fAlerta, setFAlerta] = useState(false);
+  const [porPagina, setPorPagina] = useState(20);
+  const [pagina, setPagina] = useState(1);
   const [detalhe, setDetalhe] = useState<Empresa | null>(null);
   const [baseAberta, setBaseAberta] = useState(false);
   const [listaAberta, setListaAberta] = useState(false);
@@ -146,6 +148,10 @@ export function EmpresasView() {
       return true;
     });
   }, [empresas, busca, fTipo, fSit, fIe, fAlerta]);
+
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const naPagina = filtradas.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina);
 
   const totais = useMemo(() => {
     const t: Record<string, number> = { MEI: 0, SIMPLES: 0, LUCRO: 0, ATIVA: 0, alertas: 0 };
@@ -282,7 +288,7 @@ export function EmpresasView() {
                 {empresas.length ? "Nenhuma empresa com estes filtros." : "Nenhuma empresa importada. Use “Importar do cadastro da SEF” ou “Importar base da Receita”."}
               </td></tr>
             )}
-            {filtradas.slice(0, 500).map((e) => (
+            {naPagina.map((e) => (
               <tr key={e.id} className="cursor-pointer border-t hover:bg-muted/30" onClick={() => setDetalhe(e)}>
                 <td className="p-3">
                   <p className="font-medium">{e.razao_social ?? e.nome_fantasia ?? "—"}</p>
@@ -307,8 +313,35 @@ export function EmpresasView() {
             ))}
           </tbody>
         </table>
-        {filtradas.length > 500 && (
-          <p className="border-t p-3 text-xs text-muted-foreground">Mostrando 500 de {filtradas.length}. Refine os filtros ou exporte o CSV.</p>
+        {filtradas.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>Empresas por página</span>
+              <Select
+                value={String(porPagina)}
+                onValueChange={(v) => {
+                  setPorPagina(Number(v));
+                  setPagina(1);
+                }}
+              >
+                <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[10, 15, 20, 25].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>Página {paginaAtual} de {totalPaginas}</span>
+              <Button size="sm" variant="outline" disabled={paginaAtual <= 1} onClick={() => setPagina(paginaAtual - 1)}>
+                Anterior
+              </Button>
+              <Button size="sm" variant="outline" disabled={paginaAtual >= totalPaginas} onClick={() => setPagina(paginaAtual + 1)}>
+                Próxima
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
