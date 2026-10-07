@@ -149,6 +149,10 @@ export function EmpresasView() {
     });
   }, [empresas, busca, fTipo, fSit, fIe, fAlerta]);
 
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const naPagina = filtradas.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina);
+
   const totais = useMemo(() => {
     const t: Record<string, number> = { MEI: 0, SIMPLES: 0, LUCRO: 0, ATIVA: 0, alertas: 0 };
     for (const e of empresas) {
@@ -284,7 +288,7 @@ export function EmpresasView() {
                 {empresas.length ? "Nenhuma empresa com estes filtros." : "Nenhuma empresa importada. Use “Importar do cadastro da SEF” ou “Importar base da Receita”."}
               </td></tr>
             )}
-            {filtradas.slice(0, 500).map((e) => (
+            {naPagina.map((e) => (
               <tr key={e.id} className="cursor-pointer border-t hover:bg-muted/30" onClick={() => setDetalhe(e)}>
                 <td className="p-3">
                   <p className="font-medium">{e.razao_social ?? e.nome_fantasia ?? "—"}</p>
