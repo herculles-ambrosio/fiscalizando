@@ -346,6 +346,30 @@ export function EmpresasView() {
               </tr>
             ))}
           </tbody>
+          {filtradas.length > 0 && (() => {
+            const comIe = filtradas.filter((e) => e.inscricao_estadual).length;
+            const naoClass = filtradas.filter((e) => tipoDe(e) === "NAO_CLASSIFICADO").length;
+            const ativas = filtradas.filter((e) => e.situacao === "ATIVA").length;
+            const exc = filtradas.filter((e) => perfilServico(e) === "EXCLUSIVO").length;
+            const mis = filtradas.filter((e) => perfilServico(e) === "MISTO").length;
+            const comEnd = filtradas.filter((e) => e.logradouro).length;
+            const bairros = new Set(filtradas.map((e) => e.bairro).filter(Boolean)).size;
+            const fisc = filtradas.filter((e) => alertas(e).length > 0).length;
+            const n = (x: number) => x.toLocaleString("pt-BR");
+            return (
+              <tfoot className="border-t-2 bg-muted/50 text-xs font-medium">
+                <tr className="align-top">
+                  <td className="p-3">Total: {n(filtradas.length)} empresa(s)</td>
+                  <td className="p-3">{n(comIe)} com IE<br /><span className="text-muted-foreground">{n(filtradas.length - comIe)} sem IE</span></td>
+                  <td className="p-3">{n(filtradas.length - naoClass)} classificada(s)<br /><span className="text-muted-foreground">{n(naoClass)} não classificada(s)</span></td>
+                  <td className="p-3">{n(ativas)} ativa(s)<br /><span className="text-muted-foreground">{n(filtradas.length - ativas)} baixada/inapta/outras</span></td>
+                  <td className="p-3">{n(exc + mis)} com serviço<br /><span className="text-muted-foreground">{n(exc)} exclusivo · {n(mis)} misto</span></td>
+                  <td className="p-3">{n(comEnd)} com endereço<br /><span className="text-muted-foreground">{n(bairros)} bairro(s)</span></td>
+                  <td className="p-3 text-destructive">{n(fisc)} para fiscalizar</td>
+                </tr>
+              </tfoot>
+            );
+          })()}
         </table>
         {filtradas.length > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs text-muted-foreground">
