@@ -313,8 +313,35 @@ export function EmpresasView() {
             ))}
           </tbody>
         </table>
-        {filtradas.length > 500 && (
-          <p className="border-t p-3 text-xs text-muted-foreground">Mostrando 500 de {filtradas.length}. Refine os filtros ou exporte o CSV.</p>
+        {filtradas.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>Empresas por página</span>
+              <Select
+                value={String(porPagina)}
+                onValueChange={(v) => {
+                  setPorPagina(Number(v));
+                  setPagina(1);
+                }}
+              >
+                <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[10, 15, 20, 25].map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>Página {paginaAtual} de {totalPaginas}</span>
+              <Button size="sm" variant="outline" disabled={paginaAtual <= 1} onClick={() => setPagina(paginaAtual - 1)}>
+                Anterior
+              </Button>
+              <Button size="sm" variant="outline" disabled={paginaAtual >= totalPaginas} onClick={() => setPagina(paginaAtual + 1)}>
+                Próxima
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
