@@ -73,19 +73,27 @@ export async function filtrarEstabelecimentos(
   arquivo: File,
   codigoMunicipio: string,
   aoProgredir: (lidos: number, total: number, achados: number) => void,
-): Promise<EstabelecimentoBase[]> {
+  encerradasDesde?: string | null,
+): Promise<{ achados: EstabelecimentoBase[]; descartados: number }> {
   const achados: EstabelecimentoBase[] = [];
+  let descartados = 0;
   const marca = `";"MG";"${codigoMunicipio}";"`;
   await lerLinhas(
     arquivo,
     (l) => {
       if (!l.includes(marca)) return;
       const c = campos(l);
-      if (c[20] === codigoMunicipio) achados.push(converter(c));
+      if (c[20] !== codigoMunicipio) return;
+      const e = converter(c);
+      if (encerradasDesde && e.situacao !== "ATIVA" && (!e.situacao_data || e.situacao_data < encerradasDesde)) {
+        descartados++;
+        return;
+      }
+      achados.push(e);
     },
     (lidos) => aoProgredir(lidos, arquivo.size, achados.length),
   );
-  return achados;
+  return { achados, descartados };
 }
 
 async function lerLinhas(arquivo: File, aoLer: (linha: string) => void, aoProgredir?: (lidos: number) => void) {
