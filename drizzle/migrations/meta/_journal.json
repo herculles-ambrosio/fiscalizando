@@ -99,6 +99,13 @@
       "when": 1791313040428,
       "tag": "0013_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791391013559,
+      "tag": "0014_rls_leitura_autenticada_explicita",
+      "breakpoints": true
     }
   ]
 }
