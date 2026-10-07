@@ -13,11 +13,6 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    // No Worker publicado import.meta.url fica indefinido e createRequire()
-    // das libs CommonJS (docx, jszip) derruba o servidor inteiro.
-    environments: {
-      ssr: { define: { "import.meta.url": JSON.stringify("file:///worker.mjs") } },
-    },
     define: {
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     },
