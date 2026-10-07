@@ -9,7 +9,7 @@ import { usePerfil } from "@/hooks/usePerfil";
 import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useEmpresas, type Empresa } from "@/hooks/useEmpresas";
 import { enriquecerEmpresas } from "@/lib/empresas/empresas.functions";
-import { atividadeExigeIe, classificar, ROTULO_TIPO, TIPOS_EMPRESA, type TipoEmpresa } from "@/lib/empresas/extrair";
+import { atividadeExigeIe, classificar, perfilServico, ROTULO_SERVICO, ROTULO_TIPO, TIPOS_EMPRESA, type TipoEmpresa } from "@/lib/empresas/extrair";
 import { filtrarEstabelecimentos, lerMunicipiosReceita } from "@/lib/empresas/baseReceita";
 import { limparCnpj } from "@/lib/receita/normalizar";
 import { formatarCnpj, formatarData } from "@/lib/format";
@@ -62,6 +62,7 @@ export function EmpresasView() {
   const [fSit, setFSit] = useState("todos");
   const [fIe, setFIe] = useState("todos");
   const [fAlerta, setFAlerta] = useState(false);
+  const [fServ, setFServ] = useState("todos");
   const [porPagina, setPorPagina] = useState(20);
   const [pagina, setPagina] = useState(1);
   const [detalhe, setDetalhe] = useState<Empresa | null>(null);
@@ -141,13 +142,17 @@ export function EmpresasView() {
       if (fIe === "com" && !e.inscricao_estadual) return false;
       if (fIe === "sem" && e.inscricao_estadual) return false;
       if (fAlerta && !alertas(e).length) return false;
+      if (fServ !== "todos") {
+        const ps = perfilServico(e);
+        if (fServ === "servico" ? ps === "NAO" : ps !== fServ) return false;
+      }
       if (q) {
         const alvo = `${e.razao_social ?? ""} ${e.nome_fantasia ?? ""} ${e.bairro ?? ""} ${e.cnae_descricao ?? ""}`.toLowerCase();
         if (!alvo.includes(q) && !(qd && (e.cnpj.includes(qd) || e.cnae_principal?.includes(qd)))) return false;
       }
       return true;
     });
-  }, [empresas, busca, fTipo, fSit, fIe, fAlerta]);
+  }, [empresas, busca, fTipo, fSit, fIe, fAlerta, fServ]);
 
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
   const paginaAtual = Math.min(pagina, totalPaginas);
@@ -159,18 +164,21 @@ export function EmpresasView() {
       t[tipoDe(e)] = (t[tipoDe(e)] ?? 0) + 1;
       if (e.situacao === "ATIVA") t["ATIVA"]! += 1;
       if (alertas(e).length) t["alertas"]! += 1;
+      const ps = perfilServico(e);
+      if (ps !== "NAO") t["servico"] = (t["servico"] ?? 0) + 1;
+      t[`serv_${ps}`] = (t[`serv_${ps}`] ?? 0) + 1;
     }
     return t;
   }, [empresas]);
 
   function exportar() {
-    const cab = ["CNPJ", "Razão social", "Nome fantasia", "Inscrição estadual", "Tipo", "Situação", "Data situação", "Simples", "MEI", "CNAE", "Atividade", "Endereço", "Bairro", "CEP", "E-mail", "Telefone", "Origem", "Alertas"];
+    const cab = ["CNPJ", "Razão social", "Nome fantasia", "Inscrição estadual", "Tipo", "Situação", "Data situação", "Simples", "MEI", "CNAE", "Atividade", "Endereço", "Bairro", "CEP", "E-mail", "Telefone", "Origem", "Prestação de serviço", "Alertas"];
     const linhas = filtradas.map((e) => [
       formatarCnpj(e.cnpj), e.razao_social, e.nome_fantasia, e.inscricao_estadual, ROTULO_TIPO[tipoDe(e)], e.situacao, e.situacao_data,
       e.opcao_simples == null ? "" : e.opcao_simples ? "Sim" : "Não", e.opcao_mei == null ? "" : e.opcao_mei ? "Sim" : "Não",
       formatarCodigoCnae(e.cnae_principal), e.cnae_descricao ?? descricaoCnae(e.cnae_principal),
       [e.logradouro, e.numero, e.complemento].filter(Boolean).join(", "), e.bairro, e.cep, e.email, e.telefone,
-      e.origem === "sef" ? "Cadastro SEF" : e.origem === "lista" ? "Lista de CNPJs" : "Base Receita", alertas(e).join("; "),
+      e.origem === "sef" ? "Cadastro SEF" : e.origem === "lista" ? "Lista de CNPJs" : "Base Receita", ROTULO_SERVICO[perfilServico(e)], alertas(e).join("; "),
     ]);
     baixarCsv(`empresas-${municipio?.nome ?? "municipio"}.csv`, montarCsv(cab, linhas));
   }
@@ -233,6 +241,16 @@ export function EmpresasView() {
           </button>
         ))}
         <button
+          onClick={() => setFServ((v) => (v === "todos" ? "servico" : "todos"))}
+          className={cn("rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary", fServ !== "todos" && "border-primary")}
+        >
+          <p className="text-xs text-muted-foreground">Prestação de serviço</p>
+          <p className="font-display text-2xl font-semibold">{(totais["servico"] ?? 0).toLocaleString("pt-BR")}</p>
+          <p className="text-[11px] text-muted-foreground">
+            {(totais["serv_EXCLUSIVO"] ?? 0).toLocaleString("pt-BR")} exclusivo · {(totais["serv_MISTO"] ?? 0).toLocaleString("pt-BR")} misto
+          </p>
+        </button>
+        <button
           onClick={() => setFAlerta((v) => !v)}
           className={cn("rounded-xl border bg-card p-4 text-left hover:border-destructive", fAlerta && "border-destructive")}
         >
@@ -266,6 +284,16 @@ export function EmpresasView() {
             <SelectItem value="todos">Com e sem IE</SelectItem>
             <SelectItem value="com">Com inscrição estadual</SelectItem>
             <SelectItem value="sem">Sem inscrição estadual</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={fServ} onValueChange={setFServ}>
+          <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as atividades</SelectItem>
+            <SelectItem value="servico">Prestação de serviço (todos)</SelectItem>
+            <SelectItem value="EXCLUSIVO">Serviço exclusivo</SelectItem>
+            <SelectItem value="MISTO">Serviço misto</SelectItem>
+            <SelectItem value="NAO">Sem serviço</SelectItem>
           </SelectContent>
         </Select>
         <Button variant="outline" onClick={exportar} disabled={!filtradas.length}>
@@ -306,7 +334,13 @@ export function EmpresasView() {
                 <td className="p-3">
                   <SituacaoReceitaBadge situacao={e.situacao} motivo={e.situacao_data ? `Desde ${formatarData(e.situacao_data)}` : e.erro_consulta} />
                 </td>
-                <td className="max-w-64 p-3 text-xs">{formatarCodigoCnae(e.cnae_principal)} {e.cnae_descricao ?? descricaoCnae(e.cnae_principal) ?? ""}</td>
+                <td className="max-w-64 p-3 text-xs">{formatarCodigoCnae(e.cnae_principal)} {e.cnae_descricao ?? descricaoCnae(e.cnae_principal) ?? ""}
+                  {perfilServico(e) !== "NAO" && (
+                    <span className="ml-1 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] whitespace-nowrap text-primary">
+                      {perfilServico(e) === "EXCLUSIVO" ? "Serviço" : "Misto"}
+                    </span>
+                  )}
+                </td>
                 <td className="max-w-56 p-3 text-xs">{[e.logradouro, e.numero].filter(Boolean).join(", ")}{e.bairro ? ` — ${e.bairro}` : ""}</td>
                 <td className="p-3 text-xs text-destructive">{alertas(e).join(" · ")}</td>
               </tr>

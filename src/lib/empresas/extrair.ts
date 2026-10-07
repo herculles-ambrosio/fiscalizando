@@ -157,3 +157,27 @@ export function atividadeExigeIe(cnae: string | null | undefined): boolean {
   const d = Number(String(cnae ?? "").replace(/\D/g, "").padStart(7, "0").slice(0, 2));
   return (d >= 5 && d <= 33) || (d >= 45 && d <= 47);
 }
+
+/** Divisões CNAE de serviço (sujeitas ao ISS): construção (41–43) e 49–99. */
+export function cnaeEhServico(cnae: string | null | undefined): boolean {
+  const s = String(cnae ?? "").replace(/\D/g, "");
+  if (!s) return false;
+  const d = Number(s.padStart(7, "0").slice(0, 2));
+  return (d >= 41 && d <= 43) || d >= 49;
+}
+
+export type PerfilServico = "EXCLUSIVO" | "MISTO" | "NAO";
+export const ROTULO_SERVICO: Record<PerfilServico, string> = {
+  EXCLUSIVO: "Serviço exclusivo",
+  MISTO: "Misto",
+  NAO: "Não",
+};
+
+/** Exclusivo: todas as atividades são serviço. Misto: serviço junto com comércio/indústria/outras. */
+export function perfilServico(d: { cnae_principal?: string | null; cnaes_secundarios?: string[] | null }): PerfilServico {
+  const todos = [d.cnae_principal, ...(d.cnaes_secundarios ?? [])].filter((c) => String(c ?? "").replace(/\D/g, ""));
+  if (!todos.length) return "NAO";
+  const serv = todos.filter((c) => cnaeEhServico(c)).length;
+  if (!serv) return "NAO";
+  return serv === todos.length ? "EXCLUSIVO" : "MISTO";
+}
