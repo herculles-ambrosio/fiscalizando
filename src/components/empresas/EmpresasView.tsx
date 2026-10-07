@@ -500,6 +500,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   const [pct, setPct] = useState(0);
   const [lendo, setLendo] = useState(false);
   const [desde, setDesde] = useState("");
+  const [limpar, setLimpar] = useState(false);
 
   async function lerMunicipios(f: File) {
     setEstado("Lendo a tabela de municípios…");
@@ -519,10 +520,16 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   async function importar() {
     if (!/^\d{4}$/.test(codigo)) { toast.error("Informe o código do município na Receita (4 dígitos)."); return; }
     if (!arquivos.length) { toast.error("Selecione os arquivos de Estabelecimentos."); return; }
+    if (limpar && !window.confirm(`Apagar TODAS as empresas já gravadas de ${municipioNome} antes de importar? Isso não pode ser desfeito.`)) return;
     setLendo(true);
     let total = 0;
     let ignoradas = 0;
     try {
+      if (limpar) {
+        setEstado("Limpando a base do município…");
+        const { error } = await supabase.from("empresas").delete().eq("municipio_id", municipioId);
+        if (error) throw error;
+      }
       for (const [i, f] of arquivos.entries()) {
         const { achados, descartados } = await filtrarEstabelecimentos(f, codigo, (lidos, tam, n) => {
           setPct(((i + lidos / tam) / arquivos.length) * 100);
@@ -597,6 +604,13 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
             <span>Trazer baixadas/inativas somente a partir de (opcional)</span>
             <Input type="date" className="w-48" value={desde} onChange={(e) => setDesde(e.target.value)} disabled={lendo} />
             <span className="block text-xs text-muted-foreground">As ativas vêm sempre. Em branco, traz todas.</span>
+          </label>
+          <label className="flex items-start gap-2">
+            <input type="checkbox" className="mt-1" checked={limpar} onChange={(e) => setLimpar(e.target.checked)} disabled={lendo} />
+            <span>
+              Limpar a base do município antes de importar
+              <span className="block text-xs text-muted-foreground">Apaga todas as empresas já gravadas desta prefeitura (inclusive classificações manuais) e grava somente o que vier nesta importação.</span>
+            </span>
           </label>
           {estado && <p className="text-muted-foreground">{estado}</p>}
           {lendo && <Progress value={pct} />}
