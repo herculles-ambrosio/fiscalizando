@@ -51,10 +51,19 @@ export const enriquecerEmpresas = createServerFn({ method: "POST" })
         erro_consulta: null,
       };
     });
-    if (linhas.length) {
+    // Linhas de formatos diferentes num único upsert viram NULL nas colunas
+    // ausentes (NOT NULL quebra o lote e dados já importados seriam apagados).
+    const sucesso = linhas.filter((l) => l.erro_consulta === null);
+    const falha = linhas.filter((l) => l.erro_consulta !== null);
+    const porFormato = new Map<string, typeof linhas>();
+    for (const l of [...sucesso, ...falha]) {
+      const chave = Object.keys(l).sort().join(",");
+      porFormato.set(chave, [...(porFormato.get(chave) ?? []), l]);
+    }
+    for (const grupo of porFormato.values()) {
       const { error } = await context.supabase
         .from("empresas")
-        .upsert(linhas as never, { onConflict: "municipio_id,cnpj" });
+        .upsert(grupo as never, { onConflict: "municipio_id,cnpj", defaultToNull: false });
       if (error) throw new Error(error.message);
     }
     const oks = resultados.filter((r) => r.ok);
