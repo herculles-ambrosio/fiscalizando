@@ -62,7 +62,8 @@ export function EmpresasView() {
   const [fSit, setFSit] = useState("todos");
   const [fIe, setFIe] = useState("todos");
   const [fAlerta, setFAlerta] = useState(false);
-  const [detalhe, setDetalhe] = useState<Empresa | null>(null);
+  const [porPagina, setPorPagina] = useState(20);
+  const [pagina, setPagina] = useState(1);
   const [baseAberta, setBaseAberta] = useState(false);
   const [listaAberta, setListaAberta] = useState(false);
   const [textoLista, setTextoLista] = useState("");
