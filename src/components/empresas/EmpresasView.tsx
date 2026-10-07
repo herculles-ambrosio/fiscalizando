@@ -64,7 +64,7 @@ export function EmpresasView() {
   const [fAlerta, setFAlerta] = useState(false);
   const [porPagina, setPorPagina] = useState(20);
   const [pagina, setPagina] = useState(1);
-  const [baseAberta, setBaseAberta] = useState(false);
+  const [detalhe, setDetalhe] = useState<Empresa | null>(null);
   const [listaAberta, setListaAberta] = useState(false);
   const [textoLista, setTextoLista] = useState("");
   const cnpjsLista = useMemo(
