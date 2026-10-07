@@ -499,6 +499,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   const [estado, setEstado] = useState<string | null>(null);
   const [pct, setPct] = useState(0);
   const [lendo, setLendo] = useState(false);
+  const [desde, setDesde] = useState("");
 
   async function lerMunicipios(f: File) {
     setEstado("Lendo a tabela de municípios…");
@@ -520,12 +521,14 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
     if (!arquivos.length) { toast.error("Selecione os arquivos de Estabelecimentos."); return; }
     setLendo(true);
     let total = 0;
+    let ignoradas = 0;
     try {
       for (const [i, f] of arquivos.entries()) {
-        const achados = await filtrarEstabelecimentos(f, codigo, (lidos, tam, n) => {
+        const { achados, descartados } = await filtrarEstabelecimentos(f, codigo, (lidos, tam, n) => {
           setPct(((i + lidos / tam) / arquivos.length) * 100);
           setEstado(`Arquivo ${i + 1} de ${arquivos.length} (${f.name}): ${n} empresa(s) do município`);
-        });
+        }, desde || null);
+        ignoradas += descartados;
         for (let j = 0; j < achados.length; j += 500) {
           const lote = achados.slice(j, j + 500).map((a) => ({
             ...a,
@@ -541,7 +544,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
         }
         total += achados.length;
       }
-      toast.success(`${total} empresa(s) da base da Receita gravadas. Use “Completar na Receita” para trazer Simples/MEI e razão social.`);
+      toast.success(`${total} empresa(s) da base da Receita gravadas${ignoradas ? ` · ${ignoradas} encerrada(s) antes da data ignorada(s)` : ""}. Use “Completar na Receita” para trazer Simples/MEI e razão social.`);
       aoConcluir();
       onClose();
     } catch (e) {
@@ -571,19 +574,6 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
               <Input type="month" className="h-8 w-40" value={referencia} onChange={(e) => setReferencia(e.target.value)} disabled={lendo} />
               <a className="ml-auto rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground" href={pasta} target="_blank" rel="noreferrer">Abrir pasta do mês</a>
             </div>
-            <p className="mb-2 text-xs text-muted-foreground">
-              <b>Primeiro clique em “Abrir pasta do mês”</b> — o site da Receita só libera o download depois que a pasta é aberta
-              (sem isso aparece “Strict Cookie has not been found”). Lá você pode baixar direto, ou voltar aqui e usar os botões abaixo.
-              Se o mês ainda não foi publicado, escolha o mês anterior.
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              <a className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={baixar("Municipios.zip")} target="_blank" rel="noreferrer">Municipios.zip</a>
-              {Array.from({ length: 10 }, (_, n) => (
-                <a key={n} className="rounded-md border bg-card px-2 py-1 text-xs hover:border-primary" href={baixar(`Estabelecimentos${n}.zip`)} target="_blank" rel="noreferrer">
-                  Estabelecimentos{n}.zip
-                </a>
-              ))}
-            </div>
           </div>
           <label className="block space-y-1">
             <span>1. Tabela de municípios (opcional, encontra o código)</span>
@@ -602,6 +592,11 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
           <label className="block space-y-1">
             <span>2. Arquivos de Estabelecimentos (pode selecionar vários)</span>
             <Input type="file" multiple accept=".zip,.csv,.ESTABELE" disabled={lendo} onChange={(e) => setArquivos([...(e.target.files ?? [])])} />
+          </label>
+          <label className="block space-y-1">
+            <span>Trazer baixadas/inativas somente a partir de (opcional)</span>
+            <Input type="date" className="w-48" value={desde} onChange={(e) => setDesde(e.target.value)} disabled={lendo} />
+            <span className="block text-xs text-muted-foreground">As ativas vêm sempre. Em branco, traz todas.</span>
           </label>
           {estado && <p className="text-muted-foreground">{estado}</p>}
           {lendo && <Progress value={pct} />}
