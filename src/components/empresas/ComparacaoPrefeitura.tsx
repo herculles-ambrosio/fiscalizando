@@ -245,6 +245,15 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
                 <SelectItem value="FORA">Endereço em outro município</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={obs} onValueChange={mudarObs}>
+              <SelectTrigger className="w-80"><SelectValue placeholder="Observação" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={OBS_TODAS}>Todas as observações</SelectItem>
+                {observacoes.map(([rotulo, qt]) => (
+                  <SelectItem key={rotulo} value={rotulo}>{rotulo} ({n(qt)})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button variant="outline" onClick={exportar} disabled={!filtradas.length}><Download className="mr-2 h-4 w-4" /> CSV</Button>
           </div>
 
