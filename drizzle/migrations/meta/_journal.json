@@ -120,6 +120,13 @@
       "when": 1791486058205,
       "tag": "0016_empresas_prefeitura",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791491138145,
+      "tag": "0017_empresas_notificacoes",
+      "breakpoints": true
     }
   ]
 }

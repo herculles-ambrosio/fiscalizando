@@ -1267,6 +1267,118 @@ export type Database = {
           },
         ]
       }
+      empresas_modelos: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          cabecalho: string | null
+          chave: string
+          corpo: string
+          criado_em: string
+          id: string
+          margem_direita: number
+          margem_esquerda: number
+          margem_inferior: number
+          margem_topo: number
+          municipio_id: string
+          nome: string
+          observacao: string
+          rodape: string | null
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          cabecalho?: string | null
+          chave: string
+          corpo: string
+          criado_em?: string
+          id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
+          municipio_id: string
+          nome: string
+          observacao?: string
+          rodape?: string | null
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          cabecalho?: string | null
+          chave?: string
+          corpo?: string
+          criado_em?: string
+          id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
+          municipio_id?: string
+          nome?: string
+          observacao?: string
+          rodape?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_modelos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas_notificacoes: {
+        Row: {
+          cnpj: string
+          criado_em: string
+          emitido_por: string | null
+          emitido_por_nome: string | null
+          id: string
+          modelo_chave: string
+          modelo_nome: string
+          municipio_id: string
+          nome: string | null
+          observacao: string
+        }
+        Insert: {
+          cnpj: string
+          criado_em?: string
+          emitido_por?: string | null
+          emitido_por_nome?: string | null
+          id?: string
+          modelo_chave: string
+          modelo_nome: string
+          municipio_id: string
+          nome?: string | null
+          observacao: string
+        }
+        Update: {
+          cnpj?: string
+          criado_em?: string
+          emitido_por?: string | null
+          emitido_por_nome?: string | null
+          id?: string
+          modelo_chave?: string
+          modelo_nome?: string
+          municipio_id?: string
+          nome?: string | null
+          observacao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_notificacoes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresas_prefeitura: {
         Row: {
           alerta_municipio: string | null
