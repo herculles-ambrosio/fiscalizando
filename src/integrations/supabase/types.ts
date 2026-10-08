@@ -1267,6 +1267,83 @@ export type Database = {
           },
         ]
       }
+      empresas_prefeitura: {
+        Row: {
+          alerta_municipio: string | null
+          arquivo_nome: string | null
+          bairro: string | null
+          carga_ref: string | null
+          cep: string | null
+          criado_em: string
+          criado_por: string | null
+          documento: string
+          endereco: string | null
+          id: string
+          inscricao_municipal: string | null
+          municipio_endereco: string | null
+          municipio_id: string
+          nome: string | null
+          regime: string | null
+          repetido: boolean
+          simples_optante: boolean | null
+          situacao: string | null
+          situacao_normalizada: string | null
+          tipo_documento: string
+        }
+        Insert: {
+          alerta_municipio?: string | null
+          arquivo_nome?: string | null
+          bairro?: string | null
+          carga_ref?: string | null
+          cep?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          documento: string
+          endereco?: string | null
+          id?: string
+          inscricao_municipal?: string | null
+          municipio_endereco?: string | null
+          municipio_id: string
+          nome?: string | null
+          regime?: string | null
+          repetido?: boolean
+          simples_optante?: boolean | null
+          situacao?: string | null
+          situacao_normalizada?: string | null
+          tipo_documento: string
+        }
+        Update: {
+          alerta_municipio?: string | null
+          arquivo_nome?: string | null
+          bairro?: string | null
+          carga_ref?: string | null
+          cep?: string | null
+          criado_em?: string
+          criado_por?: string | null
+          documento?: string
+          endereco?: string | null
+          id?: string
+          inscricao_municipal?: string | null
+          municipio_endereco?: string | null
+          municipio_id?: string
+          nome?: string | null
+          regime?: string | null
+          repetido?: boolean
+          simples_optante?: boolean | null
+          situacao?: string | null
+          situacao_normalizada?: string | null
+          tipo_documento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_prefeitura_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       esportes_atividade_municipio: {
         Row: {
           ano_base: number
