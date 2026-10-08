@@ -45,6 +45,12 @@ type Linha = {
 
 const sim = (b: boolean | null | undefined) => (b == null ? "—" : b ? "Sim" : "Não");
 const OBS_TODAS = "todas";
+// Versão curta exibida no seletor fechado; a lista e a coluna mantêm o texto completo.
+const OBS_CURTA: Record<string, string> = {
+  "Não encontrada na base importada da Receita (confira filtro de data ou endereço)": "Não encontrada na base importada da Receita",
+};
+const obsCurta = (r: string) => OBS_CURTA[r] ?? r;
+
 
 
 export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onClose }: {
@@ -250,7 +256,7 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
               <SelectContent>
                 <SelectItem value={OBS_TODAS}>Todas as observações</SelectItem>
                 {observacoes.map(([rotulo, qt]) => (
-                  <SelectItem key={rotulo} value={rotulo}>{rotulo} ({n(qt)})</SelectItem>
+                  <SelectItem key={rotulo} value={rotulo} textValue={obsCurta(rotulo)}>{rotulo} ({n(qt)})</SelectItem>
                 ))}
               </SelectContent>
             </Select>
