@@ -24,3 +24,4 @@
 - [x] Distinguir competências ambientais, impedir reimportação idêntica e eliminar cópias exatas de itens antigos.
 - [x] Expandir a comparação com vizinhos em Patrimônio Cultural, Esportes, Meio Ambiente e Turismo, respeitando as escalas de cada publicação.
 - [x] Módulo Empresas: importação (cadastro SEF e base completa da Receita), classificação MEI/Simples/Outro e fiscalização.
+- [x] Módulo Fiscaliza Banco: ESTBAN, declarações, plano COSIF/alíquotas, conferência e notificações.

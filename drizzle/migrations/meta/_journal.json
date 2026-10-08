@@ -127,6 +127,13 @@
       "when": 1791491138145,
       "tag": "0017_empresas_notificacoes",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791502731902,
+      "tag": "0018_fiscaliza_banco",
+      "breakpoints": true
     }
   ]
 }

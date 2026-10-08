@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedAnalisesRouteImport } from './routes/_authenticated/analises'
+import { Route as AuthenticatedBancosRouteImport } from './routes/_authenticated/bancos'
 import { Route as AuthenticatedCartoriosRouteImport } from './routes/_authenticated/cartorios'
 import { Route as AuthenticatedComparacaoRouteImport } from './routes/_authenticated/comparacao'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -33,6 +34,11 @@ import { Route as AuthenticatedNovaApuracaoRouteImport } from './routes/_authent
 import { Route as AuthenticatedOficiosRouteImport } from './routes/_authenticated/oficios'
 import { Route as AuthenticatedPrevisaoRepasseRouteImport } from './routes/_authenticated/previsao-repasse'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
+import { Route as AuthenticatedBancosIndexRouteImport } from './routes/_authenticated/bancos.index'
+import { Route as AuthenticatedBancosContasRouteImport } from './routes/_authenticated/bancos.contas'
+import { Route as AuthenticatedBancosDeclaracoesRouteImport } from './routes/_authenticated/bancos.declaracoes'
+import { Route as AuthenticatedBancosInstituicoesRouteImport } from './routes/_authenticated/bancos.instituicoes'
+import { Route as AuthenticatedBancosNotificacoesRouteImport } from './routes/_authenticated/bancos.notificacoes'
 import { Route as AuthenticatedCargasCargaIdRouteImport } from './routes/_authenticated/cargas/$cargaId'
 import { Route as AuthenticatedConsultoriaCodigosSefRouteImport } from './routes/_authenticated/consultoria/codigos-sef'
 import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './routes/_authenticated/consultoria/prefeituras'
@@ -71,6 +77,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthenticatedAnalisesRoute = AuthenticatedAnalisesRouteImport.update({
   id: '/analises',
   path: '/analises',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBancosRoute = AuthenticatedBancosRouteImport.update({
+  id: '/bancos',
+  path: '/bancos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCartoriosRoute = AuthenticatedCartoriosRouteImport.update({
@@ -185,6 +196,36 @@ const AuthenticatedTrocarSenhaRoute =
     id: '/trocar-senha',
     path: '/trocar-senha',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBancosIndexRoute =
+  AuthenticatedBancosIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedBancosRoute,
+  } as any)
+const AuthenticatedBancosContasRoute =
+  AuthenticatedBancosContasRouteImport.update({
+    id: '/contas',
+    path: '/contas',
+    getParentRoute: () => AuthenticatedBancosRoute,
+  } as any)
+const AuthenticatedBancosDeclaracoesRoute =
+  AuthenticatedBancosDeclaracoesRouteImport.update({
+    id: '/declaracoes',
+    path: '/declaracoes',
+    getParentRoute: () => AuthenticatedBancosRoute,
+  } as any)
+const AuthenticatedBancosInstituicoesRoute =
+  AuthenticatedBancosInstituicoesRouteImport.update({
+    id: '/instituicoes',
+    path: '/instituicoes',
+    getParentRoute: () => AuthenticatedBancosRoute,
+  } as any)
+const AuthenticatedBancosNotificacoesRoute =
+  AuthenticatedBancosNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
+    getParentRoute: () => AuthenticatedBancosRoute,
   } as any)
 const AuthenticatedCargasCargaIdRoute =
   AuthenticatedCargasCargaIdRouteImport.update({
@@ -337,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/icms': typeof AuthenticatedIcmsRouteRouteWithChildren
   '/analises': typeof AuthenticatedAnalisesRoute
+  '/bancos': typeof AuthenticatedBancosRouteWithChildren
   '/cartorios': typeof AuthenticatedCartoriosRoute
   '/comparacao': typeof AuthenticatedComparacaoRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -356,6 +398,10 @@ export interface FileRoutesByFullPath {
   '/oficios': typeof AuthenticatedOficiosRoute
   '/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/bancos/contas': typeof AuthenticatedBancosContasRoute
+  '/bancos/declaracoes': typeof AuthenticatedBancosDeclaracoesRoute
+  '/bancos/instituicoes': typeof AuthenticatedBancosInstituicoesRoute
+  '/bancos/notificacoes': typeof AuthenticatedBancosNotificacoesRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -376,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
+  '/bancos/': typeof AuthenticatedBancosIndexRoute
   '/empresas/': typeof AuthenticatedEmpresasIndexRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
   '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
@@ -404,6 +451,10 @@ export interface FileRoutesByTo {
   '/oficios': typeof AuthenticatedOficiosRoute
   '/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/bancos/contas': typeof AuthenticatedBancosContasRoute
+  '/bancos/declaracoes': typeof AuthenticatedBancosDeclaracoesRoute
+  '/bancos/instituicoes': typeof AuthenticatedBancosInstituicoesRoute
+  '/bancos/notificacoes': typeof AuthenticatedBancosNotificacoesRoute
   '/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -424,6 +475,7 @@ export interface FileRoutesByTo {
   '/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
+  '/bancos': typeof AuthenticatedBancosIndexRoute
   '/empresas': typeof AuthenticatedEmpresasIndexRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
   '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
@@ -437,6 +489,7 @@ export interface FileRoutesById {
   '/_authenticated/consultoria': typeof AuthenticatedConsultoriaRouteRouteWithChildren
   '/_authenticated/icms': typeof AuthenticatedIcmsRouteRouteWithChildren
   '/_authenticated/analises': typeof AuthenticatedAnalisesRoute
+  '/_authenticated/bancos': typeof AuthenticatedBancosRouteWithChildren
   '/_authenticated/cartorios': typeof AuthenticatedCartoriosRoute
   '/_authenticated/comparacao': typeof AuthenticatedComparacaoRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -456,6 +509,10 @@ export interface FileRoutesById {
   '/_authenticated/oficios': typeof AuthenticatedOficiosRoute
   '/_authenticated/previsao-repasse': typeof AuthenticatedPrevisaoRepasseRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/_authenticated/bancos/contas': typeof AuthenticatedBancosContasRoute
+  '/_authenticated/bancos/declaracoes': typeof AuthenticatedBancosDeclaracoesRoute
+  '/_authenticated/bancos/instituicoes': typeof AuthenticatedBancosInstituicoesRoute
+  '/_authenticated/bancos/notificacoes': typeof AuthenticatedBancosNotificacoesRoute
   '/_authenticated/cargas/$cargaId': typeof AuthenticatedCargasCargaIdRoute
   '/_authenticated/consultoria/codigos-sef': typeof AuthenticatedConsultoriaCodigosSefRoute
   '/_authenticated/consultoria/prefeituras': typeof AuthenticatedConsultoriaPrefeiturasRoute
@@ -476,6 +533,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/_authenticated/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/_authenticated/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
+  '/_authenticated/bancos/': typeof AuthenticatedBancosIndexRoute
   '/_authenticated/empresas/': typeof AuthenticatedEmpresasIndexRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
   '/_authenticated/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
@@ -489,6 +547,7 @@ export interface FileRouteTypes {
     | '/consultoria'
     | '/icms'
     | '/analises'
+    | '/bancos'
     | '/cartorios'
     | '/comparacao'
     | '/configuracoes'
@@ -508,6 +567,10 @@ export interface FileRouteTypes {
     | '/oficios'
     | '/previsao-repasse'
     | '/trocar-senha'
+    | '/bancos/contas'
+    | '/bancos/declaracoes'
+    | '/bancos/instituicoes'
+    | '/bancos/notificacoes'
     | '/cargas/$cargaId'
     | '/consultoria/codigos-sef'
     | '/consultoria/prefeituras'
@@ -528,6 +591,7 @@ export interface FileRouteTypes {
     | '/icms/repasse-educacao'
     | '/icms/sincronizacao'
     | '/icms/transferencias'
+    | '/bancos/'
     | '/empresas/'
     | '/icms/'
     | '/icms/criterio/$slug'
@@ -556,6 +620,10 @@ export interface FileRouteTypes {
     | '/oficios'
     | '/previsao-repasse'
     | '/trocar-senha'
+    | '/bancos/contas'
+    | '/bancos/declaracoes'
+    | '/bancos/instituicoes'
+    | '/bancos/notificacoes'
     | '/cargas/$cargaId'
     | '/consultoria/codigos-sef'
     | '/consultoria/prefeituras'
@@ -576,6 +644,7 @@ export interface FileRouteTypes {
     | '/icms/repasse-educacao'
     | '/icms/sincronizacao'
     | '/icms/transferencias'
+    | '/bancos'
     | '/empresas'
     | '/icms'
     | '/icms/criterio/$slug'
@@ -588,6 +657,7 @@ export interface FileRouteTypes {
     | '/_authenticated/consultoria'
     | '/_authenticated/icms'
     | '/_authenticated/analises'
+    | '/_authenticated/bancos'
     | '/_authenticated/cartorios'
     | '/_authenticated/comparacao'
     | '/_authenticated/configuracoes'
@@ -607,6 +677,10 @@ export interface FileRouteTypes {
     | '/_authenticated/oficios'
     | '/_authenticated/previsao-repasse'
     | '/_authenticated/trocar-senha'
+    | '/_authenticated/bancos/contas'
+    | '/_authenticated/bancos/declaracoes'
+    | '/_authenticated/bancos/instituicoes'
+    | '/_authenticated/bancos/notificacoes'
     | '/_authenticated/cargas/$cargaId'
     | '/_authenticated/consultoria/codigos-sef'
     | '/_authenticated/consultoria/prefeituras'
@@ -627,6 +701,7 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/repasse-educacao'
     | '/_authenticated/icms/sincronizacao'
     | '/_authenticated/icms/transferencias'
+    | '/_authenticated/bancos/'
     | '/_authenticated/empresas/'
     | '/_authenticated/icms/'
     | '/_authenticated/icms/criterio/$slug'
@@ -662,6 +737,13 @@ declare module '@tanstack/react-router' {
       path: '/analises'
       fullPath: '/analises'
       preLoaderRoute: typeof AuthenticatedAnalisesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bancos': {
+      id: '/_authenticated/bancos'
+      path: '/bancos'
+      fullPath: '/bancos'
+      preLoaderRoute: typeof AuthenticatedBancosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cartorios': {
@@ -810,6 +892,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/trocar-senha'
       preLoaderRoute: typeof AuthenticatedTrocarSenhaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bancos/': {
+      id: '/_authenticated/bancos/'
+      path: '/'
+      fullPath: '/bancos/'
+      preLoaderRoute: typeof AuthenticatedBancosIndexRouteImport
+      parentRoute: typeof AuthenticatedBancosRoute
+    }
+    '/_authenticated/bancos/contas': {
+      id: '/_authenticated/bancos/contas'
+      path: '/contas'
+      fullPath: '/bancos/contas'
+      preLoaderRoute: typeof AuthenticatedBancosContasRouteImport
+      parentRoute: typeof AuthenticatedBancosRoute
+    }
+    '/_authenticated/bancos/declaracoes': {
+      id: '/_authenticated/bancos/declaracoes'
+      path: '/declaracoes'
+      fullPath: '/bancos/declaracoes'
+      preLoaderRoute: typeof AuthenticatedBancosDeclaracoesRouteImport
+      parentRoute: typeof AuthenticatedBancosRoute
+    }
+    '/_authenticated/bancos/instituicoes': {
+      id: '/_authenticated/bancos/instituicoes'
+      path: '/instituicoes'
+      fullPath: '/bancos/instituicoes'
+      preLoaderRoute: typeof AuthenticatedBancosInstituicoesRouteImport
+      parentRoute: typeof AuthenticatedBancosRoute
+    }
+    '/_authenticated/bancos/notificacoes': {
+      id: '/_authenticated/bancos/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/bancos/notificacoes'
+      preLoaderRoute: typeof AuthenticatedBancosNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedBancosRoute
     }
     '/_authenticated/cargas/$cargaId': {
       id: '/_authenticated/cargas/$cargaId'
@@ -1057,6 +1174,25 @@ const AuthenticatedIcmsRouteRouteWithChildren =
     AuthenticatedIcmsRouteRouteChildren,
   )
 
+interface AuthenticatedBancosRouteChildren {
+  AuthenticatedBancosContasRoute: typeof AuthenticatedBancosContasRoute
+  AuthenticatedBancosDeclaracoesRoute: typeof AuthenticatedBancosDeclaracoesRoute
+  AuthenticatedBancosInstituicoesRoute: typeof AuthenticatedBancosInstituicoesRoute
+  AuthenticatedBancosNotificacoesRoute: typeof AuthenticatedBancosNotificacoesRoute
+  AuthenticatedBancosIndexRoute: typeof AuthenticatedBancosIndexRoute
+}
+
+const AuthenticatedBancosRouteChildren: AuthenticatedBancosRouteChildren = {
+  AuthenticatedBancosContasRoute: AuthenticatedBancosContasRoute,
+  AuthenticatedBancosDeclaracoesRoute: AuthenticatedBancosDeclaracoesRoute,
+  AuthenticatedBancosInstituicoesRoute: AuthenticatedBancosInstituicoesRoute,
+  AuthenticatedBancosNotificacoesRoute: AuthenticatedBancosNotificacoesRoute,
+  AuthenticatedBancosIndexRoute: AuthenticatedBancosIndexRoute,
+}
+
+const AuthenticatedBancosRouteWithChildren =
+  AuthenticatedBancosRoute._addFileChildren(AuthenticatedBancosRouteChildren)
+
 interface AuthenticatedEmpresasRouteChildren {
   AuthenticatedEmpresasCompararRoute: typeof AuthenticatedEmpresasCompararRoute
   AuthenticatedEmpresasNotificacoesRoute: typeof AuthenticatedEmpresasNotificacoesRoute
@@ -1079,6 +1215,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConsultoriaRouteRoute: typeof AuthenticatedConsultoriaRouteRouteWithChildren
   AuthenticatedIcmsRouteRoute: typeof AuthenticatedIcmsRouteRouteWithChildren
   AuthenticatedAnalisesRoute: typeof AuthenticatedAnalisesRoute
+  AuthenticatedBancosRoute: typeof AuthenticatedBancosRouteWithChildren
   AuthenticatedCartoriosRoute: typeof AuthenticatedCartoriosRoute
   AuthenticatedComparacaoRoute: typeof AuthenticatedComparacaoRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
@@ -1106,6 +1243,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedConsultoriaRouteRouteWithChildren,
   AuthenticatedIcmsRouteRoute: AuthenticatedIcmsRouteRouteWithChildren,
   AuthenticatedAnalisesRoute: AuthenticatedAnalisesRoute,
+  AuthenticatedBancosRoute: AuthenticatedBancosRouteWithChildren,
   AuthenticatedCartoriosRoute: AuthenticatedCartoriosRoute,
   AuthenticatedComparacaoRoute: AuthenticatedComparacaoRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
