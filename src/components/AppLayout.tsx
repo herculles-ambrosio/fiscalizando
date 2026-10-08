@@ -72,6 +72,7 @@ const NAV_SUPERADMIN = [
 const NAV_EMPRESAS = [
   { to: "/empresas", rotulo: "Empresas", icone: Building2 },
   { to: "/empresas/comparar", rotulo: "Comparar com cadastro da prefeitura", icone: GitCompare },
+  { to: "/empresas/notificacoes", rotulo: "Notificações", icone: FileSignature },
 ];
 
 const NAV_NOTICIAS = [{ to: "/noticias", rotulo: "Mural de notícias", icone: Newspaper }];
