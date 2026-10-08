@@ -5,7 +5,7 @@ import { Download, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Empresa } from "@/hooks/useEmpresas";
 import {
-  divergencias, lerCadastroPrefeitura, regimeEhMei, ROTULO_ALERTA_MUNICIPIO, ROTULO_DIVERGENCIA,
+  divergencias, lerCadastroPrefeitura, ROTULO_ALERTA_MUNICIPIO, ROTULO_DIVERGENCIA,
   type Divergencia, type LinhaPrefeitura,
 } from "@/lib/empresas/prefeitura";
 import { formatarCnpj } from "@/lib/format";
@@ -225,7 +225,7 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
                       <p className="text-muted-foreground">{formatarCnpj(l.cnpj)}{l.p?.municipio_endereco && l.p.alerta_municipio ? ` · ${l.p.municipio_endereco}` : ""}</p>
                     </td>
                     <td className={cn("p-2", l.div.includes("MEI") && "font-semibold text-destructive")}>
-                      {l.p?.regime ?? "—"}{l.p && regimeEhMei(l.p.regime) ? "" : ""} × {l.r ? (l.r.opcao_mei ? "MEI" : l.r.opcao_mei === false ? "Não MEI" : "—") : "—"}
+                      {l.p?.regime ?? "—"} × {l.r ? (l.r.opcao_mei ? "MEI" : l.r.opcao_mei === false ? "Não MEI" : "—") : "—"}
                     </td>
                     <td className={cn("p-2", l.div.includes("SIMPLES") && "font-semibold text-destructive")}>{sim(l.p?.simples_optante)} × {sim(l.r?.opcao_simples)}</td>
                     <td className={cn("p-2", l.div.includes("SITUACAO") && "font-semibold text-destructive")}>{l.p?.situacao ?? "—"} × {l.r?.situacao ?? "—"}</td>
