@@ -36,8 +36,8 @@ export function contaConfig(conta: string, plano: ContaCfg[]): ContaCfg | undefi
   if (!d) return undefined;
   let melhor: ContaCfg | undefined;
   for (const c of plano) {
-    const p = digitos(c.conta).replace(/0+$/, "") || digitos(c.conta);
-    if (p && d.startsWith(p) && (!melhor || p.length > (digitos(melhor.conta).replace(/0+$/, "") || "").length)) melhor = c;
+    const p = digitos(c.conta);
+    if (p && d.startsWith(p) && (!melhor || p.length > digitos(melhor.conta).length)) melhor = c;
   }
   return melhor;
 }
