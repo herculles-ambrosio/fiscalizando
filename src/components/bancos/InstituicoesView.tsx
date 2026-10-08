@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { EstbanValoresView } from "./EstbanValoresView";
 import { useEstban, useGravarBancos, useIfdata, useInstituicoes } from "@/hooks/useBancos";
 import { importarEstban } from "@/lib/bancos/estban.functions";
 import { digitos } from "@/lib/bancos/conferencia";
@@ -85,6 +86,8 @@ export function InstituicoesView() {
           </Button>
         </CardContent>
       </Card>
+
+      <EstbanValoresView />
 
       <Card>
         <CardHeader><CardTitle className="text-base">Instituições do município</CardTitle></CardHeader>
