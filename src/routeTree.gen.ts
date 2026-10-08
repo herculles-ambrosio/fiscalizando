@@ -40,6 +40,7 @@ import { Route as AuthenticatedConsultoriaResolucaoRouteImport } from './routes/
 import { Route as AuthenticatedConsultoriaUsuariosRouteImport } from './routes/_authenticated/consultoria/usuarios'
 import { Route as AuthenticatedEmpresasIndexRouteImport } from './routes/_authenticated/empresas.index'
 import { Route as AuthenticatedEmpresasCompararRouteImport } from './routes/_authenticated/empresas.comparar'
+import { Route as AuthenticatedEmpresasNotificacoesRouteImport } from './routes/_authenticated/empresas.notificacoes'
 import { Route as AuthenticatedIcmsIndexRouteImport } from './routes/_authenticated/icms/index'
 import { Route as AuthenticatedIcmsCargasRouteImport } from './routes/_authenticated/icms/cargas'
 import { Route as AuthenticatedIcmsComparativoRouteImport } from './routes/_authenticated/icms/comparativo'
@@ -227,6 +228,12 @@ const AuthenticatedEmpresasCompararRoute =
     path: '/comparar',
     getParentRoute: () => AuthenticatedEmpresasRoute,
   } as any)
+const AuthenticatedEmpresasNotificacoesRoute =
+  AuthenticatedEmpresasNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
+    getParentRoute: () => AuthenticatedEmpresasRoute,
+  } as any)
 const AuthenticatedIcmsIndexRoute = AuthenticatedIcmsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -355,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/consultoria/resolucao': typeof AuthenticatedConsultoriaResolucaoRoute
   '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
   '/empresas/comparar': typeof AuthenticatedEmpresasCompararRoute
+  '/empresas/notificacoes': typeof AuthenticatedEmpresasNotificacoesRoute
   '/icms/cargas': typeof AuthenticatedIcmsCargasRoute
   '/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
@@ -402,6 +410,7 @@ export interface FileRoutesByTo {
   '/consultoria/resolucao': typeof AuthenticatedConsultoriaResolucaoRoute
   '/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
   '/empresas/comparar': typeof AuthenticatedEmpresasCompararRoute
+  '/empresas/notificacoes': typeof AuthenticatedEmpresasNotificacoesRoute
   '/icms/cargas': typeof AuthenticatedIcmsCargasRoute
   '/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
@@ -453,6 +462,7 @@ export interface FileRoutesById {
   '/_authenticated/consultoria/resolucao': typeof AuthenticatedConsultoriaResolucaoRoute
   '/_authenticated/consultoria/usuarios': typeof AuthenticatedConsultoriaUsuariosRoute
   '/_authenticated/empresas/comparar': typeof AuthenticatedEmpresasCompararRoute
+  '/_authenticated/empresas/notificacoes': typeof AuthenticatedEmpresasNotificacoesRoute
   '/_authenticated/icms/cargas': typeof AuthenticatedIcmsCargasRoute
   '/_authenticated/icms/comparativo': typeof AuthenticatedIcmsComparativoRoute
   '/_authenticated/icms/criterios': typeof AuthenticatedIcmsCriteriosRoute
@@ -504,6 +514,7 @@ export interface FileRouteTypes {
     | '/consultoria/resolucao'
     | '/consultoria/usuarios'
     | '/empresas/comparar'
+    | '/empresas/notificacoes'
     | '/icms/cargas'
     | '/icms/comparativo'
     | '/icms/criterios'
@@ -551,6 +562,7 @@ export interface FileRouteTypes {
     | '/consultoria/resolucao'
     | '/consultoria/usuarios'
     | '/empresas/comparar'
+    | '/empresas/notificacoes'
     | '/icms/cargas'
     | '/icms/comparativo'
     | '/icms/criterios'
@@ -601,6 +613,7 @@ export interface FileRouteTypes {
     | '/_authenticated/consultoria/resolucao'
     | '/_authenticated/consultoria/usuarios'
     | '/_authenticated/empresas/comparar'
+    | '/_authenticated/empresas/notificacoes'
     | '/_authenticated/icms/cargas'
     | '/_authenticated/icms/comparativo'
     | '/_authenticated/icms/criterios'
@@ -847,6 +860,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEmpresasCompararRouteImport
       parentRoute: typeof AuthenticatedEmpresasRoute
     }
+    '/_authenticated/empresas/notificacoes': {
+      id: '/_authenticated/empresas/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/empresas/notificacoes'
+      preLoaderRoute: typeof AuthenticatedEmpresasNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedEmpresasRoute
+    }
     '/_authenticated/icms/': {
       id: '/_authenticated/icms/'
       path: '/'
@@ -1039,11 +1059,14 @@ const AuthenticatedIcmsRouteRouteWithChildren =
 
 interface AuthenticatedEmpresasRouteChildren {
   AuthenticatedEmpresasCompararRoute: typeof AuthenticatedEmpresasCompararRoute
+  AuthenticatedEmpresasNotificacoesRoute: typeof AuthenticatedEmpresasNotificacoesRoute
   AuthenticatedEmpresasIndexRoute: typeof AuthenticatedEmpresasIndexRoute
 }
 
 const AuthenticatedEmpresasRouteChildren: AuthenticatedEmpresasRouteChildren = {
   AuthenticatedEmpresasCompararRoute: AuthenticatedEmpresasCompararRoute,
+  AuthenticatedEmpresasNotificacoesRoute:
+    AuthenticatedEmpresasNotificacoesRoute,
   AuthenticatedEmpresasIndexRoute: AuthenticatedEmpresasIndexRoute,
 }
 
