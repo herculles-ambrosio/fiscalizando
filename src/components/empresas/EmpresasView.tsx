@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Building2, Download, FileArchive, GitCompare, RefreshCw, Search } from "lucide-react";
-import { ComparacaoPrefeitura, useEmpresasPrefeitura } from "@/components/empresas/ComparacaoPrefeitura";
+import { Building2, Download, FileArchive, RefreshCw, Search } from "lucide-react";
+import { useEmpresasPrefeitura } from "@/components/empresas/ComparacaoPrefeitura";
 import { supabase } from "@/integrations/supabase/client";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { usePerfil } from "@/hooks/usePerfil";
@@ -65,7 +65,6 @@ export function EmpresasView() {
   const [fAlerta, setFAlerta] = useState(false);
   const [fServ, setFServ] = useState("todos");
   const [fPref, setFPref] = useState("todos");
-  const [compAberta, setCompAberta] = useState(false);
   const { data: pref = [] } = useEmpresasPrefeitura(municipioId);
   const cnpjsPref = useMemo(() => new Set(pref.filter((p) => p.tipo_documento === "CNPJ").map((p) => p.documento)), [pref]);
   const [porPagina, setPorPagina] = useState(20);
@@ -223,15 +222,9 @@ export function EmpresasView() {
           <Button variant="ghost" onClick={() => importarSef(true)} disabled={!!progresso}>
             Reconsultar todas do cadastro
           </Button>
-          <Button variant="outline" onClick={() => setCompAberta(true)}>
-            <GitCompare className="mr-2 h-4 w-4" /> Comparar com cadastro da prefeitura
-          </Button>
         </div>
       </div>
 
-      {compAberta && (
-        <ComparacaoPrefeitura municipioId={municipioId} municipioNome={municipio?.nome ?? ""} empresas={empresas} onClose={() => setCompAberta(false)} />
-      )}
 
       {progresso && (
         <div className="rounded-xl border bg-card p-4">

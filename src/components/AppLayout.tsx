@@ -8,6 +8,7 @@ import {
   Coins,
   FileUp,
   Gavel,
+  GitCompare,
   History,
   FileSignature,
   ListChecks,
@@ -68,7 +69,10 @@ const NAV_SUPERADMIN = [
 ];
 
 // Módulo Fiscaliza Cartório — ISS das serventias extrajudiciais.
-const NAV_EMPRESAS = [{ to: "/empresas", rotulo: "Empresas", icone: Building2 }];
+const NAV_EMPRESAS = [
+  { to: "/empresas", rotulo: "Empresas", icone: Building2 },
+  { to: "/empresas/comparar", rotulo: "Comparar com cadastro da prefeitura", icone: GitCompare },
+];
 
 const NAV_NOTICIAS = [{ to: "/noticias", rotulo: "Mural de notícias", icone: Newspaper }];
 
@@ -291,7 +295,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </p>
               {grupo.itens.map((item) => {
                 const ativo =
-                  item.to === "/icms" || item.to === "/impugnacao"
+                  item.to === "/icms" || item.to === "/impugnacao" || item.to === "/empresas"
                     ? pathname === item.to
                     : pathname.startsWith(item.to);
                 return (
