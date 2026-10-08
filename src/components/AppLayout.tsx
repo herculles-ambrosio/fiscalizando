@@ -68,7 +68,10 @@ const NAV_SUPERADMIN = [
 ];
 
 // Módulo Fiscaliza Cartório — ISS das serventias extrajudiciais.
-const NAV_EMPRESAS = [{ to: "/empresas", rotulo: "Empresas", icone: Building2 }];
+const NAV_EMPRESAS = [
+  { to: "/empresas", rotulo: "Empresas", icone: Building2 },
+  { to: "/empresas/comparar", rotulo: "Comparar com cadastro da prefeitura", icone: GitCompare },
+];
 
 const NAV_NOTICIAS = [{ to: "/noticias", rotulo: "Mural de notícias", icone: Newspaper }];
 
