@@ -54,6 +54,14 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
   const [ref, setRef] = useState(() => new Date().toISOString().slice(0, 7));
   const [filtro, setFiltro] = useState("divergentes");
   const [busca, setBusca] = useState("");
+  const [porPagina, setPorPagina] = useState(20);
+  const [pagina, setPagina] = useState(1);
+
+  function mudarFiltro(v: string) {
+    setFiltro(v);
+    setPagina(1);
+  }
+
 
   async function importar(f: File) {
     setEnviando(true);
@@ -126,6 +134,11 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
     });
   }, [linhas, filtro, busca]);
 
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const naPagina = filtradas.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina);
+
+
   const motivo = (l: Linha) => {
     if (l.grupo === "SO_RECEITA") return l.r?.situacao === "ATIVA" ? "Ativa na Receita e sem cadastro na prefeitura" : "Encerrada na Receita, sem cadastro na prefeitura";
     if (l.grupo === "SO_PREFEITURA") {
@@ -181,7 +194,7 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
         <>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
             {cards.map(([t, v, f, extra]) => (
-              <button key={t} onClick={() => setFiltro(f)} className={cn("rounded-lg border p-3 text-left hover:border-primary", filtro === f && "border-primary")}>
+              <button key={t} onClick={() => mudarFiltro(f)} className={cn("rounded-lg border p-3 text-left hover:border-primary", filtro === f && "border-primary")}>
                 <p className="text-xs text-muted-foreground">{t}</p>
                 <p className="font-display text-xl font-semibold">{n(v)}</p>
                 {extra && <p className="text-xs text-muted-foreground">{extra}</p>}
@@ -190,8 +203,8 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Input className="max-w-xs" placeholder="Nome ou CNPJ" value={busca} onChange={(e) => setBusca(e.target.value)} />
-            <Select value={filtro} onValueChange={setFiltro}>
+            <Input className="max-w-xs" placeholder="Nome ou CNPJ" value={busca} onChange={(e) => { setBusca(e.target.value); setPagina(1); }} />
+            <Select value={filtro} onValueChange={mudarFiltro}>
               <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="divergentes">Todas as divergências</SelectItem>
@@ -218,7 +231,7 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
                 </tr>
               </thead>
               <tbody>
-                {filtradas.slice(0, 500).map((l) => (
+                {naPagina.map((l) => (
                   <tr key={l.chave} className="border-t align-top">
                     <td className="p-2">
                       <p className="font-medium">{l.p?.nome ?? l.r?.razao_social ?? l.r?.nome_fantasia ?? "—"}</p>
@@ -236,7 +249,7 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
               </tbody>
               <tfoot className="sticky bottom-0 border-t-2 bg-muted font-medium">
                 <tr>
-                  <td className="p-2">Total: {n(filtradas.length)}{filtradas.length > 500 ? " (mostrando 500; o CSV traz todas)" : ""}</td>
+                  <td className="p-2">Total: {n(filtradas.length)}</td>
                   <td className="p-2">{n(filtradas.filter((l) => l.div.includes("MEI")).length)} divergente(s)</td>
                   <td className="p-2">{n(filtradas.filter((l) => l.div.includes("SIMPLES")).length)} divergente(s)</td>
                   <td className="p-2">{n(filtradas.filter((l) => l.div.includes("SITUACAO")).length)} divergente(s)</td>
@@ -244,6 +257,32 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span>Empresas por página</span>
+              <Select
+                value={String(porPagina)}
+                onValueChange={(v) => { setPorPagina(Number(v)); setPagina(1); }}
+              >
+                <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[10, 15, 20, 25].map((tamanho) => (
+                    <SelectItem key={tamanho} value={String(tamanho)}>{tamanho}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>Página {paginaAtual} de {totalPaginas}</span>
+              <Button size="sm" variant="outline" disabled={paginaAtual <= 1} onClick={() => setPagina(paginaAtual - 1)}>
+                Anterior
+              </Button>
+              <Button size="sm" variant="outline" disabled={paginaAtual >= totalPaginas} onClick={() => setPagina(paginaAtual + 1)}>
+                Próxima
+              </Button>
+            </div>
           </div>
         </>
       )}
