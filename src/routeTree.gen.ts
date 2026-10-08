@@ -38,6 +38,7 @@ import { Route as AuthenticatedConsultoriaCodigosSefRouteImport } from './routes
 import { Route as AuthenticatedConsultoriaPrefeiturasRouteImport } from './routes/_authenticated/consultoria/prefeituras'
 import { Route as AuthenticatedConsultoriaResolucaoRouteImport } from './routes/_authenticated/consultoria/resolucao'
 import { Route as AuthenticatedConsultoriaUsuariosRouteImport } from './routes/_authenticated/consultoria/usuarios'
+import { Route as AuthenticatedEmpresasIndexRouteImport } from './routes/_authenticated/empresas.index'
 import { Route as AuthenticatedEmpresasCompararRouteImport } from './routes/_authenticated/empresas.comparar'
 import { Route as AuthenticatedIcmsIndexRouteImport } from './routes/_authenticated/icms/index'
 import { Route as AuthenticatedIcmsCargasRouteImport } from './routes/_authenticated/icms/cargas'
@@ -214,6 +215,12 @@ const AuthenticatedConsultoriaUsuariosRoute =
     path: '/usuarios',
     getParentRoute: () => AuthenticatedConsultoriaRouteRoute,
   } as any)
+const AuthenticatedEmpresasIndexRoute =
+  AuthenticatedEmpresasIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedEmpresasRoute,
+  } as any)
 const AuthenticatedEmpresasCompararRoute =
   AuthenticatedEmpresasCompararRouteImport.update({
     id: '/comparar',
@@ -361,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
+  '/empresas/': typeof AuthenticatedEmpresasIndexRoute
   '/icms/': typeof AuthenticatedIcmsIndexRoute
   '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/noticias-coleta': typeof ApiPublicHooksNoticiasColetaRoute
@@ -376,7 +384,6 @@ export interface FileRoutesByTo {
   '/contribuintes': typeof AuthenticatedContribuintesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/emissoes': typeof AuthenticatedEmissoesRoute
-  '/empresas': typeof AuthenticatedEmpresasRouteWithChildren
   '/estatisticas': typeof AuthenticatedEstatisticasRoute
   '/evolucao': typeof AuthenticatedEvolucaoRoute
   '/historico': typeof AuthenticatedHistoricoRoute
@@ -408,6 +415,7 @@ export interface FileRoutesByTo {
   '/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
+  '/empresas': typeof AuthenticatedEmpresasIndexRoute
   '/icms': typeof AuthenticatedIcmsIndexRoute
   '/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/noticias-coleta': typeof ApiPublicHooksNoticiasColetaRoute
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/_authenticated/icms/repasse-educacao': typeof AuthenticatedIcmsRepasseEducacaoRoute
   '/_authenticated/icms/sincronizacao': typeof AuthenticatedIcmsSincronizacaoRoute
   '/_authenticated/icms/transferencias': typeof AuthenticatedIcmsTransferenciasRoute
+  '/_authenticated/empresas/': typeof AuthenticatedEmpresasIndexRoute
   '/_authenticated/icms/': typeof AuthenticatedIcmsIndexRoute
   '/_authenticated/icms/criterio/$slug': typeof AuthenticatedIcmsCriterioSlugRoute
   '/api/public/hooks/noticias-coleta': typeof ApiPublicHooksNoticiasColetaRoute
@@ -508,6 +517,7 @@ export interface FileRouteTypes {
     | '/icms/repasse-educacao'
     | '/icms/sincronizacao'
     | '/icms/transferencias'
+    | '/empresas/'
     | '/icms/'
     | '/icms/criterio/$slug'
     | '/api/public/hooks/noticias-coleta'
@@ -523,7 +533,6 @@ export interface FileRouteTypes {
     | '/contribuintes'
     | '/dashboard'
     | '/emissoes'
-    | '/empresas'
     | '/estatisticas'
     | '/evolucao'
     | '/historico'
@@ -555,6 +564,7 @@ export interface FileRouteTypes {
     | '/icms/repasse-educacao'
     | '/icms/sincronizacao'
     | '/icms/transferencias'
+    | '/empresas'
     | '/icms'
     | '/icms/criterio/$slug'
     | '/api/public/hooks/noticias-coleta'
@@ -604,6 +614,7 @@ export interface FileRouteTypes {
     | '/_authenticated/icms/repasse-educacao'
     | '/_authenticated/icms/sincronizacao'
     | '/_authenticated/icms/transferencias'
+    | '/_authenticated/empresas/'
     | '/_authenticated/icms/'
     | '/_authenticated/icms/criterio/$slug'
     | '/api/public/hooks/noticias-coleta'
@@ -822,6 +833,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConsultoriaUsuariosRouteImport
       parentRoute: typeof AuthenticatedConsultoriaRouteRoute
     }
+    '/_authenticated/empresas/': {
+      id: '/_authenticated/empresas/'
+      path: '/'
+      fullPath: '/empresas/'
+      preLoaderRoute: typeof AuthenticatedEmpresasIndexRouteImport
+      parentRoute: typeof AuthenticatedEmpresasRoute
+    }
     '/_authenticated/empresas/comparar': {
       id: '/_authenticated/empresas/comparar'
       path: '/comparar'
@@ -1021,10 +1039,12 @@ const AuthenticatedIcmsRouteRouteWithChildren =
 
 interface AuthenticatedEmpresasRouteChildren {
   AuthenticatedEmpresasCompararRoute: typeof AuthenticatedEmpresasCompararRoute
+  AuthenticatedEmpresasIndexRoute: typeof AuthenticatedEmpresasIndexRoute
 }
 
 const AuthenticatedEmpresasRouteChildren: AuthenticatedEmpresasRouteChildren = {
   AuthenticatedEmpresasCompararRoute: AuthenticatedEmpresasCompararRoute,
+  AuthenticatedEmpresasIndexRoute: AuthenticatedEmpresasIndexRoute,
 }
 
 const AuthenticatedEmpresasRouteWithChildren =
