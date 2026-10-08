@@ -44,14 +44,15 @@ export function InstituicoesView() {
       setBaixando(`${MESES[m - 1]}/${ano}`);
       try {
         const r = await baixar({ data: { municipioId, ano: Number(ano), mes: m } });
-        if (!r.ok) { msgs.push(r.mensagem); break; }
+        msgs.push(r.mensagem);
+        if (!r.ok) break;
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Falha ao consultar o Banco Central.");
         break;
       }
     }
     setBaixando(null);
-    toast.success(msgs[0] ?? "ESTBAN importado.");
+    toast.message(msgs.at(-1) ?? "ESTBAN importado.");
     await qc.invalidateQueries({ queryKey: ["bancos_estban"] });
     await qc.invalidateQueries({ queryKey: ["bancos_instituicoes"] });
   }

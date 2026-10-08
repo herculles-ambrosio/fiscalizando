@@ -48,5 +48,12 @@ export const importarEstban = createServerFn({ method: "POST" })
         { onConflict: "municipio_id,cnpj", ignoreDuplicates: true },
       );
     }
-    return { ok: true as const, instituicoes: linhas.length, mensagem: `${linhas.length} instituição(ões) no ESTBAN de ${String(data.mes).padStart(2, "0")}/${data.ano}.` };
+    const comp = `${String(data.mes).padStart(2, "0")}/${data.ano}`;
+    return {
+      ok: true as const,
+      instituicoes: linhas.length,
+      mensagem: linhas.length
+        ? `${linhas.length} instituição(ões) no ESTBAN de ${comp}.`
+        : `Nenhuma agência bancária de ${mun.nome} no ESTBAN de ${comp}. O município pode ser atendido só por cooperativas ou correspondentes — use o IF.data.`,
+    };
   });
