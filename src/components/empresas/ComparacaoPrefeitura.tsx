@@ -44,6 +44,8 @@ type Linha = {
 };
 
 const sim = (b: boolean | null | undefined) => (b == null ? "—" : b ? "Sim" : "Não");
+const OBS_TODAS = "todas";
+
 
 export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onClose }: {
   municipioId: string; municipioNome: string; empresas: Empresa[]; onClose: () => void;
@@ -53,14 +55,26 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
   const [enviando, setEnviando] = useState(false);
   const [ref, setRef] = useState(() => new Date().toISOString().slice(0, 7));
   const [filtro, setFiltro] = useState("divergentes");
+  const [obs, setObs] = useState(OBS_TODAS);
   const [busca, setBusca] = useState("");
   const [porPagina, setPorPagina] = useState(20);
   const [pagina, setPagina] = useState(1);
 
   function mudarFiltro(v: string) {
     setFiltro(v);
+    setObs(OBS_TODAS);
     setPagina(1);
   }
+
+  function mudarObs(v: string) {
+    setObs(v);
+    // Observações como "Ativa na Receita e sem cadastro na prefeitura" só
+    // existem em grupos que o filtro de divergências esconde, então o filtro
+    // principal volta para "Todos" quando uma observação é escolhida.
+    if (v !== OBS_TODAS) setFiltro("todos");
+    setPagina(1);
+  }
+
 
 
   async function importar(f: File) {
@@ -121,24 +135,6 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
     };
   }, [pref, empresas]);
 
-  const filtradas = useMemo(() => {
-    const q = busca.trim().toLowerCase();
-    return linhas.filter((l) => {
-      if (filtro === "divergentes" && !l.div.length) return false;
-      if (["SIMPLES", "MEI", "SITUACAO"].includes(filtro) && !l.div.includes(filtro as Divergencia)) return false;
-      if (["AMBOS", "SO_PREFEITURA", "SO_RECEITA"].includes(filtro) && l.grupo !== filtro) return false;
-      if (filtro === "SO_RECEITA_ATIVAS" && !(l.grupo === "SO_RECEITA" && l.r?.situacao === "ATIVA")) return false;
-      if (filtro === "FORA" && !l.p?.alerta_municipio) return false;
-      if (q && !`${l.cnpj} ${l.p?.nome ?? ""} ${l.r?.razao_social ?? ""} ${l.r?.nome_fantasia ?? ""}`.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [linhas, filtro, busca]);
-
-  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
-  const paginaAtual = Math.min(pagina, totalPaginas);
-  const naPagina = filtradas.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina);
-
-
   const motivo = (l: Linha) => {
     if (l.grupo === "SO_RECEITA") return l.r?.situacao === "ATIVA" ? "Ativa na Receita e sem cadastro na prefeitura" : "Encerrada na Receita, sem cadastro na prefeitura";
     if (l.grupo === "SO_PREFEITURA") {
@@ -147,6 +143,36 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
     }
     return l.div.map((d) => ROTULO_DIVERGENCIA[d]).join(" · ");
   };
+
+  const rotuloObs = (l: Linha) => motivo(l) || "Sem observação";
+
+  const observacoes = useMemo(() => {
+    const contagem = new Map<string, number>();
+    for (const l of linhas) {
+      const k = rotuloObs(l);
+      contagem.set(k, (contagem.get(k) ?? 0) + 1);
+    }
+    return [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
+  }, [linhas]);
+
+  const filtradas = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    return linhas.filter((l) => {
+      if (filtro === "divergentes" && !l.div.length) return false;
+      if (["SIMPLES", "MEI", "SITUACAO"].includes(filtro) && !l.div.includes(filtro as Divergencia)) return false;
+      if (["AMBOS", "SO_PREFEITURA", "SO_RECEITA"].includes(filtro) && l.grupo !== filtro) return false;
+      if (filtro === "SO_RECEITA_ATIVAS" && !(l.grupo === "SO_RECEITA" && l.r?.situacao === "ATIVA")) return false;
+      if (filtro === "FORA" && !l.p?.alerta_municipio) return false;
+      if (obs !== OBS_TODAS && rotuloObs(l) !== obs) return false;
+      if (q && !`${l.cnpj} ${l.p?.nome ?? ""} ${l.r?.razao_social ?? ""} ${l.r?.nome_fantasia ?? ""}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [linhas, filtro, busca, obs]);
+
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const naPagina = filtradas.slice((paginaAtual - 1) * porPagina, paginaAtual * porPagina);
+
 
   function exportar() {
     const cab = ["CNPJ", "Grupo", "Nome prefeitura", "Razão social Receita", "Regime prefeitura", "MEI Receita", "Simples prefeitura", "Simples Receita", "Situação prefeitura", "Situação Receita", "Município (endereço)", "Observação"];
