@@ -148,6 +148,380 @@ export type Database = {
           },
         ]
       }
+      bancos_contas_cosif: {
+        Row: {
+          aliquota: number
+          atualizado_em: string
+          conta: string
+          criado_em: string
+          descricao: string
+          id: string
+          item_lc116: string | null
+          municipio_id: string
+          tributavel: boolean
+        }
+        Insert: {
+          aliquota?: number
+          atualizado_em?: string
+          conta: string
+          criado_em?: string
+          descricao: string
+          id?: string
+          item_lc116?: string | null
+          municipio_id: string
+          tributavel?: boolean
+        }
+        Update: {
+          aliquota?: number
+          atualizado_em?: string
+          conta?: string
+          criado_em?: string
+          descricao?: string
+          id?: string
+          item_lc116?: string | null
+          municipio_id?: string
+          tributavel?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_contas_cosif_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bancos_declaracoes: {
+        Row: {
+          aliquota_declarada: number | null
+          arquivo_nome: string | null
+          atualizado_em: string
+          cnpj: string
+          competencia_ano: number
+          competencia_mes: number
+          conta: string
+          criado_em: string
+          criado_por: string | null
+          descricao: string | null
+          id: string
+          instituicao_nome: string | null
+          iss_declarado: number | null
+          municipio_id: string
+          origem: string
+          tributavel_declarado: boolean | null
+          valor: number
+        }
+        Insert: {
+          aliquota_declarada?: number | null
+          arquivo_nome?: string | null
+          atualizado_em?: string
+          cnpj: string
+          competencia_ano: number
+          competencia_mes: number
+          conta?: string
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          instituicao_nome?: string | null
+          iss_declarado?: number | null
+          municipio_id: string
+          origem?: string
+          tributavel_declarado?: boolean | null
+          valor?: number
+        }
+        Update: {
+          aliquota_declarada?: number | null
+          arquivo_nome?: string | null
+          atualizado_em?: string
+          cnpj?: string
+          competencia_ano?: number
+          competencia_mes?: number
+          conta?: string
+          criado_em?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          instituicao_nome?: string | null
+          iss_declarado?: number | null
+          municipio_id?: string
+          origem?: string
+          tributavel_declarado?: boolean | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_declaracoes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bancos_estban: {
+        Row: {
+          agencias: number | null
+          cnpj_raiz: string
+          competencia_ano: number
+          competencia_mes: number
+          criado_em: string
+          depositos: number | null
+          id: string
+          municipio_id: string
+          nome: string
+          operacoes_credito: number | null
+          verbete_710: number | null
+          verbete_711: number | null
+          verbete_712: number | null
+        }
+        Insert: {
+          agencias?: number | null
+          cnpj_raiz: string
+          competencia_ano: number
+          competencia_mes: number
+          criado_em?: string
+          depositos?: number | null
+          id?: string
+          municipio_id: string
+          nome: string
+          operacoes_credito?: number | null
+          verbete_710?: number | null
+          verbete_711?: number | null
+          verbete_712?: number | null
+        }
+        Update: {
+          agencias?: number | null
+          cnpj_raiz?: string
+          competencia_ano?: number
+          competencia_mes?: number
+          criado_em?: string
+          depositos?: number | null
+          id?: string
+          municipio_id?: string
+          nome?: string
+          operacoes_credito?: number | null
+          verbete_710?: number | null
+          verbete_711?: number | null
+          verbete_712?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_estban_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bancos_ifdata: {
+        Row: {
+          ano: number
+          atualizado_em: string
+          cnpj: string
+          criado_em: string
+          id: string
+          municipio_id: string
+          nome: string | null
+          origem: string
+          participacao_pct: number
+          rendas_servicos: number
+          trimestre: number
+        }
+        Insert: {
+          ano: number
+          atualizado_em?: string
+          cnpj: string
+          criado_em?: string
+          id?: string
+          municipio_id: string
+          nome?: string | null
+          origem?: string
+          participacao_pct?: number
+          rendas_servicos?: number
+          trimestre: number
+        }
+        Update: {
+          ano?: number
+          atualizado_em?: string
+          cnpj?: string
+          criado_em?: string
+          id?: string
+          municipio_id?: string
+          nome?: string | null
+          origem?: string
+          participacao_pct?: number
+          rendas_servicos?: number
+          trimestre?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_ifdata_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bancos_instituicoes: {
+        Row: {
+          atualizado_em: string
+          cnpj: string
+          codigo_bc: string | null
+          criado_em: string
+          id: string
+          municipio_id: string
+          nome: string
+          observacao: string | null
+          tipo: string
+        }
+        Insert: {
+          atualizado_em?: string
+          cnpj: string
+          codigo_bc?: string | null
+          criado_em?: string
+          id?: string
+          municipio_id: string
+          nome: string
+          observacao?: string | null
+          tipo?: string
+        }
+        Update: {
+          atualizado_em?: string
+          cnpj?: string
+          codigo_bc?: string | null
+          criado_em?: string
+          id?: string
+          municipio_id?: string
+          nome?: string
+          observacao?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_instituicoes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bancos_modelos: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          cabecalho: string | null
+          chave: string
+          corpo: string
+          criado_em: string
+          id: string
+          margem_direita: number
+          margem_esquerda: number
+          margem_inferior: number
+          margem_topo: number
+          municipio_id: string
+          nome: string
+          rodape: string | null
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          cabecalho?: string | null
+          chave: string
+          corpo: string
+          criado_em?: string
+          id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
+          municipio_id: string
+          nome: string
+          rodape?: string | null
+          tipo?: string
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          cabecalho?: string | null
+          chave?: string
+          corpo?: string
+          criado_em?: string
+          id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
+          municipio_id?: string
+          nome?: string
+          rodape?: string | null
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_modelos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bancos_notificacoes: {
+        Row: {
+          cnpj: string
+          competencia: string | null
+          criado_em: string
+          emitido_por: string | null
+          emitido_por_nome: string | null
+          id: string
+          modelo_chave: string
+          modelo_nome: string
+          municipio_id: string
+          nome: string | null
+        }
+        Insert: {
+          cnpj: string
+          competencia?: string | null
+          criado_em?: string
+          emitido_por?: string | null
+          emitido_por_nome?: string | null
+          id?: string
+          modelo_chave: string
+          modelo_nome: string
+          municipio_id: string
+          nome?: string | null
+        }
+        Update: {
+          cnpj?: string
+          competencia?: string | null
+          criado_em?: string
+          emitido_por?: string | null
+          emitido_por_nome?: string | null
+          id?: string
+          modelo_chave?: string
+          modelo_nome?: string
+          municipio_id?: string
+          nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_notificacoes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cargas: {
         Row: {
           arquivo_ativos_path: string | null
