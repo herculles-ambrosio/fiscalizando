@@ -86,7 +86,7 @@ export function useRegistrarNotificacoes() {
   return useMutation({
     mutationFn: async (itens: { cnpj: string; nome: string | null; observacao: string; modelo_chave: string; modelo_nome: string }[]) => {
       const { data: u } = await supabase.auth.getUser();
-      const nome = (u.user?.user_metadata?.nome as string | undefined) ?? u.user?.email ?? null;
+      const nome = (u.user?.user_metadata?.["nome"] as string | undefined) ?? u.user?.email ?? null;
       const { error } = await supabase.from("empresas_notificacoes").insert(
         itens.map((i) => ({ ...i, municipio_id: municipioId!, emitido_por: u.user?.id ?? null, emitido_por_nome: nome })),
       );

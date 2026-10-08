@@ -32,7 +32,7 @@ const EXEMPLO: EmpresaNotificada = {
   data_inicio: "2022-03-10",
 };
 
-export function ModelosNotificacaoView({ exemplo }: { exemplo?: EmpresaNotificada }) {
+export function ModelosNotificacaoView({ exemplo }: { exemplo?: EmpresaNotificada | undefined }) {
   const { data: modelos } = useModelosEmpresa();
   const { data: config } = useConfiguracao();
   const salvar = useSalvarModeloEmpresa();
