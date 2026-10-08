@@ -45,11 +45,19 @@ type Linha = {
 
 const sim = (b: boolean | null | undefined) => (b == null ? "—" : b ? "Sim" : "Não");
 const OBS_TODAS = "todas";
-// Versão curta exibida no seletor fechado; a lista e a coluna mantêm o texto completo.
+// Versão curta exibida no seletor fechado; a lista, a coluna e o CSV mantêm o texto completo.
 const OBS_CURTA: Record<string, string> = {
-  "Não encontrada na base importada da Receita (confira filtro de data ou endereço)": "Não encontrada na base importada da Receita",
+  "Ativa na Receita e sem cadastro na prefeitura": "Ativa na Receita, sem cadastro",
+  "Encerrada na Receita, sem cadastro na prefeitura": "Encerrada na Receita, sem cadastro",
+  "Baixada na prefeitura; fora da base importada da Receita": "Baixada na prefeitura, fora da base",
+  "Não encontrada na base importada da Receita (confira filtro de data ou endereço)": "Não encontrada na base da Receita",
+  "Simples Nacional divergente · MEI divergente · Situação divergente": "Simples + MEI + Situação",
+  "Simples Nacional divergente · MEI divergente": "Simples + MEI",
+  "Simples Nacional divergente · Situação divergente": "Simples + Situação",
+  "MEI divergente · Situação divergente": "MEI + Situação",
 };
 const obsCurta = (r: string) => OBS_CURTA[r] ?? r;
+
 
 
 
@@ -252,7 +260,9 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
               </SelectContent>
             </Select>
             <Select value={obs} onValueChange={mudarObs}>
-              <SelectTrigger className="w-[26rem] max-w-full"><SelectValue placeholder="Observação" /></SelectTrigger>
+              <SelectTrigger className="w-80 max-w-full">
+                <span className={cn("truncate", obs === OBS_TODAS && "text-muted-foreground")}>{obs === OBS_TODAS ? "Todas as observações" : obsCurta(obs)}</span>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value={OBS_TODAS}>Todas as observações</SelectItem>
                 {observacoes.map(([rotulo, qt]) => (
