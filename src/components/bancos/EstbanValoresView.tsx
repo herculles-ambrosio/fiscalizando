@@ -76,7 +76,7 @@ export function EstbanValoresView() {
   }, [estban, anoSel, raiz, nomes, mensal]);
 
   const mesesPresentes = useMemo(() => new Set(linhas.map((l) => l.competencia_mes)), [linhas]);
-  const faltantes = MESES.map((m, i) => i + 1).filter((m) => !mesPresentes.has(m));
+  const faltantes = MESES.map((m, i) => i + 1).filter((m) => !mesesPresentes.has(m));
 
   function exportar() {
     const csv = montarCsv(
