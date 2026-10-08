@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Building2, Download, FileArchive, RefreshCw, Search } from "lucide-react";
+import { Building2, Download, FileArchive, GitCompare, RefreshCw, Search } from "lucide-react";
+import { ComparacaoPrefeitura, useEmpresasPrefeitura } from "@/components/empresas/ComparacaoPrefeitura";
 import { supabase } from "@/integrations/supabase/client";
 import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { usePerfil } from "@/hooks/usePerfil";
@@ -63,6 +64,10 @@ export function EmpresasView() {
   const [fIe, setFIe] = useState("todos");
   const [fAlerta, setFAlerta] = useState(false);
   const [fServ, setFServ] = useState("todos");
+  const [fPref, setFPref] = useState("todos");
+  const [compAberta, setCompAberta] = useState(false);
+  const { data: pref = [] } = useEmpresasPrefeitura(municipioId);
+  const cnpjsPref = useMemo(() => new Set(pref.filter((p) => p.tipo_documento === "CNPJ").map((p) => p.documento)), [pref]);
   const [porPagina, setPorPagina] = useState(20);
   const [pagina, setPagina] = useState(1);
   const [detalhe, setDetalhe] = useState<Empresa | null>(null);
@@ -142,6 +147,8 @@ export function EmpresasView() {
       if (fIe === "com" && !e.inscricao_estadual) return false;
       if (fIe === "sem" && e.inscricao_estadual) return false;
       if (fAlerta && !alertas(e).length) return false;
+      if (fPref === "nao" && cnpjsPref.has(e.cnpj)) return false;
+      if (fPref === "sim" && !cnpjsPref.has(e.cnpj)) return false;
       if (fServ !== "todos") {
         const ps = perfilServico(e);
         if (fServ === "servico" ? ps === "NAO" : ps !== fServ) return false;
@@ -152,7 +159,7 @@ export function EmpresasView() {
       }
       return true;
     });
-  }, [empresas, busca, fTipo, fSit, fIe, fAlerta, fServ]);
+  }, [empresas, busca, fTipo, fSit, fIe, fAlerta, fServ, fPref, cnpjsPref]);
 
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
   const paginaAtual = Math.min(pagina, totalPaginas);
@@ -216,8 +223,15 @@ export function EmpresasView() {
           <Button variant="ghost" onClick={() => importarSef(true)} disabled={!!progresso}>
             Reconsultar todas do cadastro
           </Button>
+          <Button variant="outline" onClick={() => setCompAberta(true)}>
+            <GitCompare className="mr-2 h-4 w-4" /> Comparar com cadastro da prefeitura
+          </Button>
         </div>
       </div>
+
+      {compAberta && (
+        <ComparacaoPrefeitura municipioId={municipioId} municipioNome={municipio?.nome ?? ""} empresas={empresas} onClose={() => setCompAberta(false)} />
+      )}
 
       {progresso && (
         <div className="rounded-xl border bg-card p-4">
@@ -278,6 +292,16 @@ export function EmpresasView() {
             {["ATIVA", "SUSPENSA", "INAPTA", "BAIXADA", "NULA"].map((s) => <SelectItem key={s} value={s}>{s[0] + s.slice(1).toLowerCase()}</SelectItem>)}
           </SelectContent>
         </Select>
+        {pref.length > 0 && (
+          <Select value={fPref} onValueChange={setFPref}>
+            <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Com e sem cadastro na prefeitura</SelectItem>
+              <SelectItem value="nao">Não cadastrada na prefeitura</SelectItem>
+              <SelectItem value="sim">Cadastrada na prefeitura</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <Select value={fIe} onValueChange={setFIe}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -325,6 +349,9 @@ export function EmpresasView() {
                 <td className="p-3 whitespace-nowrap">
                   <p>{formatarCnpj(e.cnpj)}</p>
                   <p className="text-xs text-muted-foreground">IE {e.inscricao_estadual ?? "—"}</p>
+                  {pref.length > 0 && !cnpjsPref.has(e.cnpj) && (
+                    <span className="mt-1 inline-block rounded-full border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[10px] text-destructive">Não cadastrada na prefeitura</span>
+                  )}
                 </td>
                 <td className="p-3">
                   <span className={cn("rounded-full border px-2 py-0.5 text-xs whitespace-nowrap", COR_TIPO[tipoDe(e)])}>
