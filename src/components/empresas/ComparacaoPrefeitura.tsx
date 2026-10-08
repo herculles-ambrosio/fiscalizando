@@ -60,7 +60,7 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
     try {
       const XLSX = await import("xlsx");
       const wb = XLSX.read(await f.arrayBuffer());
-      const bruto = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[wb.SheetNames[0]], { raw: false, defval: "" });
+      const bruto = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[wb.SheetNames[0] ?? ""]!, { raw: false, defval: "" });
       const r = lerCadastroPrefeitura(bruto, municipioNome);
       if (!r.ok) { toast.error(r.erro); return; }
       const { data: u } = await supabase.auth.getUser();
@@ -90,7 +90,7 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
       if (p.tipo_documento !== "CNPJ" || p.repetido) continue;
       cnpjsPref.add(p.documento);
       const r = porCnpj.get(p.documento);
-      out.push({ chave: p.id, cnpj: p.documento, grupo: r ? "AMBOS" : "SO_PREFEITURA", p, r, div: r ? divergencias(p, r) : [] });
+      out.push(r ? { chave: p.id, cnpj: p.documento, grupo: "AMBOS", p, r, div: divergencias(p, r) } : { chave: p.id, cnpj: p.documento, grupo: "SO_PREFEITURA", p, div: [] });
     }
     for (const r of empresas) if (!cnpjsPref.has(r.cnpj)) out.push({ chave: r.id, cnpj: r.cnpj, grupo: "SO_RECEITA", r, div: [] });
     const conta = (f: (l: Linha) => boolean) => out.filter(f).length;

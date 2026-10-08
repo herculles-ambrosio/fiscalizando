@@ -58,7 +58,7 @@ export function lerCadastroPrefeitura(
   municipioAtivo: string,
 ): { ok: true; linhas: LinhaPrefeitura[]; municipioPlanilha: string } | { ok: false; erro: string } {
   if (!linhas.length) return { ok: false, erro: "A planilha está vazia." };
-  if (!("N. Documento" in linhas[0])) return { ok: false, erro: "Coluna “N. Documento” não encontrada na planilha." };
+  if (!("N. Documento" in (linhas[0] ?? {}))) return { ok: false, erro: "Coluna “N. Documento” não encontrada na planilha." };
 
   const contagem = new Map<string, number>();
   for (const l of linhas) {

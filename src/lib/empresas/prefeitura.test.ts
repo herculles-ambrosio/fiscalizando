@@ -14,8 +14,8 @@ describe("cadastro da prefeitura", () => {
       "Caparaó",
     );
     if (!r.ok) throw new Error();
-    expect(r.linhas[1].alerta_municipio).toBe("OUTRO_MUNICIPIO");
-    expect(r.linhas[2].alerta_municipio).toBe("PROVAVEL_ERRO");
+    expect(r.linhas[1]?.alerta_municipio).toBe("OUTRO_MUNICIPIO");
+    expect(r.linhas[2]?.alerta_municipio).toBe("PROVAVEL_ERRO");
   });
   it("traduz situação e Simples", () => {
     expect(normalizarSituacao("Provisório Nfse Nacional")).toBe("ATIVA");
