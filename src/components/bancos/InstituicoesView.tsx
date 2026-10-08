@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ export function InstituicoesView() {
   const gravarInst = useGravarBancos("bancos_instituicoes");
   const gravarIf = useGravarBancos("bancos_ifdata");
   const baixar = useServerFn(importarEstban);
+  const qc = useQueryClient();
 
   const [novo, setNovo] = useState({ cnpj: "", nome: "", tipo: "BANCO" });
   const [ano, setAno] = useState(String(anoAtual - 1));
@@ -49,9 +51,9 @@ export function InstituicoesView() {
       }
     }
     setBaixando(null);
-    await gravarInst.reset();
     toast.success(msgs[0] ?? "ESTBAN importado.");
-    window.setTimeout(() => location.reload(), 600);
+    await qc.invalidateQueries({ queryKey: ["bancos_estban"] });
+    await qc.invalidateQueries({ queryKey: ["bancos_instituicoes"] });
   }
 
   const mesesEstban = (raiz: string) => estban.filter((e) => e.cnpj_raiz === raiz.slice(0, 8)).length;

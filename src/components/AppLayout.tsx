@@ -9,6 +9,7 @@ import {
   FileUp,
   Gavel,
   GitCompare,
+  Landmark,
   History,
   FileSignature,
   ListChecks,
@@ -75,6 +76,14 @@ const NAV_EMPRESAS = [
   { to: "/empresas/notificacoes", rotulo: "Notificações", icone: FileSignature },
 ];
 
+const NAV_BANCOS = [
+  { to: "/bancos", rotulo: "Conferência", icone: Scale },
+  { to: "/bancos/instituicoes", rotulo: "Instituições", icone: Landmark },
+  { to: "/bancos/declaracoes", rotulo: "Declarações", icone: FileUp },
+  { to: "/bancos/contas", rotulo: "Plano de contas", icone: ListChecks },
+  { to: "/bancos/notificacoes", rotulo: "Notificações", icone: FileSignature },
+];
+
 const NAV_NOTICIAS = [{ to: "/noticias", rotulo: "Mural de notícias", icone: Newspaper }];
 
 const NAV_CARTORIO = [{ to: "/cartorios", rotulo: "Fiscaliza Cartório", icone: Stamp }];
@@ -132,7 +141,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }, [municipioId, pathname, navigate, queryClient]);
 
   // Produto ativo: Apura VAF (padrão) ou ICMS Robin Hood.
-  const produto: "vaf" | "icms" | "cartorio" | "noticias" | "empresas" = pathname.startsWith("/empresas")
+  const produto: "vaf" | "icms" | "cartorio" | "noticias" | "empresas" | "bancos" = pathname.startsWith("/bancos")
+    ? "bancos"
+    : pathname.startsWith("/empresas")
     ? "empresas"
     : pathname.startsWith("/noticias")
     ? "noticias"
@@ -143,7 +154,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
       : "vaf";
 
   const grupos =
-    produto === "empresas"
+    produto === "bancos"
+      ? [{ rotulo: "Fiscaliza Banco", itens: NAV_BANCOS }]
+      : produto === "empresas"
       ? [{ rotulo: "Operação", itens: NAV_EMPRESAS }]
       : produto === "noticias"
       ? [{ rotulo: "Notícias", itens: NAV_NOTICIAS }]
@@ -261,6 +274,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
           >
             Empresas
           </Link>
+          <Link
+            to="/bancos"
+            onClick={limparTela}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
+              produto === "bancos"
+                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
+            )}
+          >
+            Bancos
+          </Link>
         </div>
 
         {podeTrocar && (
@@ -296,7 +321,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </p>
               {grupo.itens.map((item) => {
                 const ativo =
-                  item.to === "/icms" || item.to === "/impugnacao" || item.to === "/empresas"
+                  item.to === "/icms" || item.to === "/impugnacao" || item.to === "/empresas" || item.to === "/bancos"
                     ? pathname === item.to
                     : pathname.startsWith(item.to);
                 return (
