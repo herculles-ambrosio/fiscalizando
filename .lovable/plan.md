@@ -4,7 +4,23 @@
 - 1.038 linhas: 753 com CNPJ, 285 com CPF (autônomos). 37 CNPJs aparecem repetidos.
 - Município: 1.013 em Caparaó e 25 em outras cidades.
 - Regime Tributário (Tributação Normal, MEI, Microempresa Municipal, Autônomo etc.), Simples Nacional (Optante / Não optante) e Situação (Ativo, Baixado, Suspenso, Provisório NFS-e).
-- No sistema, Caparaó ainda não tem nenhuma empresa importada da Receita. É preciso importar antes para a comparação fazer sentido.
+
+## Prévia do cruzamento (feita agora, com a base da Receita já importada)
+| Item | Quantidade |
+|---|---|
+| CNPJs únicos na planilha da prefeitura | 716 |
+| Empresas de Caparaó no nosso cadastro (Receita) | 822 (todas já completadas) |
+| Nos dois cadastros | 503 |
+| Só na prefeitura | 213 (137 baixadas, 69 ativas/provisórias; 14 com endereço em outra cidade) |
+| Só na Receita, sem cadastro na prefeitura | 319, sendo **98 ativas**: o principal alvo de fiscalização |
+| Simples: prefeitura "Optante" e Receita não optante | 121 |
+| Simples: prefeitura "Não optante" e Receita optante | 42 |
+| MEI na prefeitura e não MEI na Receita | 98 |
+| MEI na Receita e não MEI na prefeitura | 14 |
+| Ativa na prefeitura e baixada/inapta na Receita | 106 |
+| Baixada na prefeitura e ativa na Receita | 3 |
+
+Os 199 que estão "só na prefeitura" com endereço em Caparaó são, na maioria, empresas baixadas antes da data do filtro de importação ou de fora do município na Receita. A tela vai mostrar o motivo de cada caso.
 
 ## Sobre os municípios diferentes
 A coluna Município é a cidade do endereço do contribuinte, e não a prefeitura que o cadastrou. Por isso a maioria dos 25 casos não é erro:
