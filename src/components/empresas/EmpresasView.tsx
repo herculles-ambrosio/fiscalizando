@@ -349,6 +349,9 @@ export function EmpresasView() {
                 <td className="p-3 whitespace-nowrap">
                   <p>{formatarCnpj(e.cnpj)}</p>
                   <p className="text-xs text-muted-foreground">IE {e.inscricao_estadual ?? "—"}</p>
+                  {pref.length > 0 && !cnpjsPref.has(e.cnpj) && (
+                    <span className="mt-1 inline-block rounded-full border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[10px] text-destructive">Não cadastrada na prefeitura</span>
+                  )}
                 </td>
                 <td className="p-3">
                   <span className={cn("rounded-full border px-2 py-0.5 text-xs whitespace-nowrap", COR_TIPO[tipoDe(e)])}>
