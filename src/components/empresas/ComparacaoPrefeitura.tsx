@@ -246,7 +246,7 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
               </SelectContent>
             </Select>
             <Select value={obs} onValueChange={mudarObs}>
-              <SelectTrigger className="w-80"><SelectValue placeholder="Observação" /></SelectTrigger>
+              <SelectTrigger className="w-[26rem] max-w-full"><SelectValue placeholder="Observação" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={OBS_TODAS}>Todas as observações</SelectItem>
                 {observacoes.map(([rotulo, qt]) => (
