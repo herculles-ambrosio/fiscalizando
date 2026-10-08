@@ -120,8 +120,8 @@ export function ConferenciaView() {
                   <YAxis tickFormatter={(v: number) => formatarCompacto(v)} width={70} />
                   <Tooltip formatter={(v: number) => formatarMoeda(v)} />
                   <Legend />
-                  <Line type="monotone" dataKey="receita" name="Receita no Banco Central" stroke="hsl(var(--primary))" strokeWidth={2} />
-                  <Line type="monotone" dataKey="base" name="Base declarada" stroke="hsl(var(--destructive))" strokeWidth={2} />
+                  <Line type="monotone" dataKey="receita" name="Receita no Banco Central" stroke="var(--primary)" strokeWidth={2} />
+                  <Line type="monotone" dataKey="base" name="Base declarada" stroke="var(--destructive)" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
