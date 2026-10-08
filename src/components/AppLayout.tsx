@@ -8,6 +8,7 @@ import {
   Coins,
   FileUp,
   Gavel,
+  GitCompare,
   History,
   FileSignature,
   ListChecks,
@@ -294,7 +295,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </p>
               {grupo.itens.map((item) => {
                 const ativo =
-                  item.to === "/icms" || item.to === "/impugnacao"
+                  item.to === "/icms" || item.to === "/impugnacao" || item.to === "/empresas"
                     ? pathname === item.to
                     : pathname.startsWith(item.to);
                 return (
