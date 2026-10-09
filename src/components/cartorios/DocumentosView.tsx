@@ -40,7 +40,9 @@ import { carregarBrasao, baixarBlob } from "@/lib/oficios/pacote";
 import { hojeIso } from "@/lib/oficios/texto";
 import { formatarMoeda } from "@/lib/format";
 
-type Filtro = "diferenca" | "sem_declaracao" | "todos";
+type Filtro = "diferenca" | "sem_declaracao" | "nao_pago" | "todos";
+
+const FILTRO_DO_TIPO: Partial<Record<string, Filtro>> = { DIFERENCA: "diferenca", SEM_DECLARACAO: "sem_declaracao", NAO_PAGO: "nao_pago" };
 
 export default function DocumentosView({ competencia }: { competencia: Competencia | null }) {
   const { data: config } = useConfiguracao();
@@ -73,6 +75,8 @@ export default function DocumentosView({ competencia }: { competencia: Competenc
     const l = linhas ?? [];
     if (filtro === "diferenca") return l.filter((x) => (x.diferencaIss ?? 0) > 0.5);
     if (filtro === "sem_declaracao") return l.filter((x) => !x.temDeclaracao);
+    if (filtro === "nao_pago")
+      return l.filter((x) => x.temDeclaracao && (x.issPago ?? 0) < 0.01 && Math.max(x.issDeclarado ?? 0, x.issDevido) > 0.5);
     return l;
   }, [linhas, filtro]);
 
@@ -233,7 +237,11 @@ export default function DocumentosView({ competencia }: { competencia: Competenc
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1">
               <Label>Modelo</Label>
-              <Select value={modelo?.chave ?? ""} onValueChange={setChaveModelo}>
+              <Select value={modelo?.chave ?? ""} onValueChange={(v) => {
+                setChaveModelo(v);
+                const f = FILTRO_DO_TIPO[modelos?.find((m) => m.chave === v)?.tipo ?? ""];
+                if (f) setFiltro(f);
+              }}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Modelo" />
                 </SelectTrigger>
@@ -257,6 +265,7 @@ export default function DocumentosView({ competencia }: { competencia: Competenc
                 <SelectContent>
                   <SelectItem value="diferenca">Com ISS a menor</SelectItem>
                   <SelectItem value="sem_declaracao">Sem declaração no mês</SelectItem>
+                  <SelectItem value="nao_pago">Declarou e não pagou o ISS</SelectItem>
                   <SelectItem value="todos">Todos os cartórios do mês</SelectItem>
                 </SelectContent>
               </Select>

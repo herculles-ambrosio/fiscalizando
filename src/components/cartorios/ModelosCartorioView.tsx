@@ -111,6 +111,16 @@ export default function ModelosCartorioView({ competencia }: { competencia: Comp
     setChave(modelo.chave);
   }
 
+  function duplicar() {
+    if (!rascunho) return;
+    const nome = `${rascunho.nome} (cópia)`;
+    const { id: _id, ...resto } = rascunho;
+    const modelo: ModeloCartorio = { ...resto, chave: novaChaveCartorio(nome), nome };
+    setRascunho(modelo);
+    setChave(modelo.chave);
+    toast.success("Cópia criada. Ajuste e salve.");
+  }
+
   function restaurarPadrao() {
     const padrao = MODELOS_CARTORIO_PADRAO.find((m) => m.chave === rascunho?.chave);
     if (!padrao) {
@@ -158,11 +168,17 @@ export default function ModelosCartorioView({ competencia }: { competencia: Comp
                     {m.nome}
                   </SelectItem>
                 ))}
+                {rascunho && !modelos?.some((m) => m.chave === rascunho.chave) && (
+                  <SelectItem value={rascunho.chave}>{rascunho.nome} (não salvo)</SelectItem>
+                )}
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={novoModelo}>
               <Plus className="mr-2 size-4" />
               Novo
+            </Button>
+            <Button variant="outline" size="sm" onClick={duplicar} disabled={!rascunho}>
+              Duplicar
             </Button>
           </div>
         </CardHeader>
