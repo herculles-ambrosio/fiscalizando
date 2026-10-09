@@ -27,12 +27,10 @@ export function semAcento(t: string | null | undefined) {
 }
 
 export function normalizarSituacao(s: string | null | undefined): LinhaPrefeitura["situacao_normalizada"] {
-  const t = semAcento(s);
-  if (t.startsWith("ativo") || t.startsWith("provisorio")) return "ATIVA";
-  if (t.startsWith("baixad")) return "BAIXADA";
-  if (t.startsWith("suspens")) return "SUSPENSA";
-  return "OUTRA";
+  const c = situacaoComum(s);
+  return c === "ATIVA" || c === "BAIXADA" || c === "SUSPENSA" ? c : "OUTRA";
 }
+
 
 export function simplesDe(s: string | null | undefined): boolean | null {
   const t = semAcento(s);
