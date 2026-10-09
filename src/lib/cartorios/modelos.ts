@@ -78,7 +78,7 @@ export type DadosDocumentoCartorio = {
 };
 
 /** Substitui os campos próprios do cartório. Os demais ficam para o gerador do ofício. */
-export function aplicarPlaceholdersCartorio(texto: string, dados: DadosDocumentoCartorio): string {
+export function camposCartorio(dados: DadosDocumentoCartorio): Record<string, string> {
   const { linha, competencia, aliquota, prazoDias } = dados;
   const mapa: Record<string, string> = {
     serventia: linha.nome,
@@ -98,6 +98,12 @@ export function aplicarPlaceholdersCartorio(texto: string, dados: DadosDocumento
     diferenca_base: formatarMoeda(linha.diferencaBase ?? linha.emolumentos),
     prazo_dias: String(prazoDias),
   };
+  return mapa;
+}
+
+/** Substitui os campos próprios do cartório. Os demais ficam para o gerador do ofício. */
+export function aplicarPlaceholdersCartorio(texto: string, dados: DadosDocumentoCartorio): string {
+  const mapa = camposCartorio(dados);
   return texto.replace(/\{\{\s*([a-z_]+)\s*\}\}/gi, (todo, chave: string) => {
     const valor = mapa[chave.toLowerCase()];
     return valor === undefined ? todo : valor;
