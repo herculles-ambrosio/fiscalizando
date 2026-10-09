@@ -279,6 +279,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
           >
             Empresas
           </Link>
+        </div>
+
 
         {podeTrocar && (
           <div className="mt-6 rounded-xl border border-sidebar-border bg-white/5 p-2.5 shadow-soft">
