@@ -42,7 +42,7 @@ export type FonteDestinatario = {
   nome: string;
   documento: string;
   endereco: string;
-  detalhe?: string;
+  detalhe?: string | undefined;
   campos?: Record<string, string>;
 };
 
