@@ -146,13 +146,14 @@ export const ROTULO_SITUACAO_COMUM: Record<SituacaoComum, string> = {
 export function situacaoComum(s: string | null | undefined): SituacaoComum | null {
   const t = semAcento(s);
   if (!t) return null;
-  if (t.startsWith("ativo") || t.startsWith("provisorio")) return "ATIVA";
+  if (t.startsWith("ativo") || t.startsWith("ativa") || t.startsWith("provisorio")) return "ATIVA";
   if (t.startsWith("baixad")) return "BAIXADA";
   if (t.startsWith("suspens")) return "SUSPENSA";
   if (t.startsWith("inapt")) return "INAPTA";
   if (t.startsWith("nula")) return "NULA";
   return "OUTRA";
 }
+
 
 /** Situações presentes na linha, vindas do cadastro da prefeitura e/ou da base da Receita. */
 export function situacoesDaLinha(
