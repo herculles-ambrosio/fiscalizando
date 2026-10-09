@@ -322,9 +322,7 @@ export function useFiscalizacaoCartorio(competencia: Competencia | "todos" | nul
           issDevido,
           diferencaBase: baseDeclarada == null ? null : baseRecompe - baseDeclarada,
           diferencaIss:
-            issDeclarado == null
-              ? null
-              : issDevido - (issDeclarado || (baseDeclarada ?? 0) * (aliquota / 100)),
+            d ? issDevido - Number(d.iss_pago ?? 0) : null,
           temDeclaracao: !!d,
           competenciaAno: Number(e.competencia_ano),
           competenciaMes: Number(e.competencia_mes),

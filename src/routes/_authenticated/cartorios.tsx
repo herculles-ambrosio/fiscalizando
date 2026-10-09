@@ -193,7 +193,7 @@ function FiscalizaCartorio() {
       atual.diferencaBase =
         atual.baseDeclarada == null ? null : atual.baseRecompe - atual.baseDeclarada;
       atual.diferencaIss =
-        atual.issDeclarado == null ? null : atual.issDevido - atual.issDeclarado;
+        atual.issPago == null ? null : atual.issDevido - atual.issPago;
     }
     return [...acumuladas.values()]
       .map(({ competencias: _competencias, ...linha }) => linha)
@@ -216,11 +216,12 @@ function FiscalizaCartorio() {
       recompe: l.reduce((s, x) => s + x.baseRecompe, 0),
       devido: l.reduce((s, x) => s + x.issDevido, 0),
       declarado: l.reduce((s, x) => s + (x.issDeclarado ?? 0), 0),
+      pago: l.reduce((s, x) => s + (x.issPago ?? 0), 0),
       semDeclaracao: l.filter((x) => !x.temDeclaracao).length,
     };
   }, [linhas]);
 
-  const diferenca = totais.devido - totais.declarado;
+  const diferenca = totais.devido - totais.pago;
 
 
   return (
