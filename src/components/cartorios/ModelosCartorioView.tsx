@@ -114,7 +114,8 @@ export default function ModelosCartorioView({ competencia }: { competencia: Comp
   function duplicar() {
     if (!rascunho) return;
     const nome = `${rascunho.nome} (cópia)`;
-    const modelo: ModeloCartorio = { ...rascunho, id: undefined, chave: novaChaveCartorio(nome), nome };
+    const { id: _id, ...resto } = rascunho;
+    const modelo: ModeloCartorio = { ...resto, chave: novaChaveCartorio(nome), nome };
     setRascunho(modelo);
     setChave(modelo.chave);
     toast.success("Cópia criada. Ajuste e salve.");
