@@ -345,7 +345,7 @@ export default function DocumentosView({ competencia }: { competencia: Competenc
                 <TableHead>Serventia</TableHead>
                 <TableHead className="text-right">Emolumentos</TableHead>
                 <TableHead className="text-right">ISS devido</TableHead>
-                <TableHead className="text-right">ISS declarado</TableHead>
+                <TableHead className="text-right">ISS pago</TableHead>
                 <TableHead className="text-right">Diferença</TableHead>
               </TableRow>
             </TableHeader>
@@ -374,7 +374,7 @@ export default function DocumentosView({ competencia }: { competencia: Competenc
                     <TableCell className="text-right">{formatarMoeda(l.issDevido)}</TableCell>
                     <TableCell className="text-right">
                       {l.temDeclaracao ? (
-                        formatarMoeda(l.issDeclarado ?? 0)
+                        formatarMoeda(l.issPago ?? 0)
                       ) : (
                         <Badge variant="secondary">sem declaração</Badge>
                       )}
