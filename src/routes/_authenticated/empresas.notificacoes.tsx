@@ -6,7 +6,17 @@ import { useMunicipioAtivo } from "@/hooks/useMunicipio";
 import { useEmpresasPrefeitura } from "@/components/empresas/ComparacaoPrefeitura";
 import { EmitirNotificacoesView } from "@/components/empresas/EmitirNotificacoesView";
 import { ModelosNotificacaoView } from "@/components/empresas/ModelosNotificacaoView";
-import { ativasSemCadastro } from "@/lib/empresas/notificacoes";
+import { ativasSemCadastro, enderecoEmpresa } from "@/lib/empresas/notificacoes";
+import DocumentosPrefeituraView from "@/components/DocumentosPrefeituraView";
+import { formatarCnpj } from "@/lib/format";
+import type { FonteDestinatario } from "@/lib/documentosPrefeitura";
+
+const PLACEHOLDERS_EMP = [
+  { chave: "{{nome_fantasia}}", descricao: "Nome fantasia" },
+  { chave: "{{atividade}}", descricao: "CNAE principal e descrição" },
+  { chave: "{{situacao}}", descricao: "Situação cadastral na Receita" },
+  { chave: "{{inscricao_estadual}}", descricao: "Inscrição estadual" },
+];
 
 export const Route = createFileRoute("/_authenticated/empresas/notificacoes")({
   head: () => ({
@@ -27,6 +37,19 @@ function NotificacoesPage() {
   const { data: empresas = [] } = useEmpresas(municipioId);
   const { data: pref = [], isFetched } = useEmpresasPrefeitura(municipioId);
   const candidatas = useMemo(() => ativasSemCadastro(empresas, pref), [empresas, pref]);
+  const fontes = useMemo<FonteDestinatario[]>(() => empresas.map((e) => ({
+    id: e.cnpj,
+    nome: e.razao_social ?? e.cnpj,
+    documento: formatarCnpj(e.cnpj),
+    endereco: enderecoEmpresa(e),
+    detalhe: e.situacao ?? undefined,
+    campos: {
+      nome_fantasia: e.nome_fantasia ?? "—",
+      atividade: [e.cnae_principal, e.cnae_descricao].filter(Boolean).join(" - ") || "—",
+      situacao: e.situacao ?? "—",
+      inscricao_estadual: e.inscricao_estadual ?? "—",
+    },
+  })), [empresas]);
 
   if (!municipioId) return <p className="text-sm text-muted-foreground">Selecione uma prefeitura ativa.</p>;
 
@@ -40,9 +63,11 @@ function NotificacoesPage() {
         <TabsList>
           <TabsTrigger value="emitir">Emitir</TabsTrigger>
           <TabsTrigger value="modelos">Modelos</TabsTrigger>
+          <TabsTrigger value="prefeitura">Documentos da prefeitura</TabsTrigger>
         </TabsList>
         <TabsContent value="emitir"><EmitirNotificacoesView candidatas={candidatas} semPlanilha={isFetched && pref.length === 0} /></TabsContent>
         <TabsContent value="modelos"><ModelosNotificacaoView exemplo={candidatas[0]} /></TabsContent>
+        <TabsContent value="prefeitura"><DocumentosPrefeituraView modulo="empresas" fontes={fontes} rotuloFontes="Empresas da base" placeholdersModulo={PLACEHOLDERS_EMP} /></TabsContent>
       </Tabs>
     </div>
   );

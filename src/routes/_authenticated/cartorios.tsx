@@ -73,6 +73,7 @@ import { baixarCsv, montarCsv } from "@/lib/csv";
 import CargasView from "@/components/cartorios/CargasView";
 import DocumentosView from "@/components/cartorios/DocumentosView";
 import ModelosCartorioView from "@/components/cartorios/ModelosCartorioView";
+import DocumentosPrefeituraCartorio from "@/components/cartorios/DocumentosPrefeituraCartorio";
 import ResumoMunicipiosView from "@/components/cartorios/ResumoMunicipiosView";
 import GradeAnualCartorio from "@/components/cartorios/GradeAnualCartorio";
 
@@ -259,6 +260,7 @@ function FiscalizaCartorio() {
           <TabsTrigger value="cargas">Meses carregados</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
           <TabsTrigger value="modelos">Modelos</TabsTrigger>
+          <TabsTrigger value="prefeitura">Documentos da prefeitura</TabsTrigger>
           <TabsTrigger value="config">Alíquota do município</TabsTrigger>
         </TabsList>
 
@@ -525,6 +527,10 @@ function FiscalizaCartorio() {
 
         <TabsContent value="modelos" className="pt-4">
           <ModelosCartorioView competencia={competencia === "todos" ? null : competencia} />
+        </TabsContent>
+
+        <TabsContent value="prefeitura" className="pt-4">
+          <DocumentosPrefeituraCartorio competencia={competencia === "todos" ? null : competencia} />
         </TabsContent>
 
         <TabsContent value="config" className="pt-4">

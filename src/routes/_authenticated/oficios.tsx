@@ -2,8 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ModelosView from "@/components/oficios/ModelosView";
 import EmissoesView from "@/components/oficios/EmissoesView";
+import { useMemo } from "react";
+import DocumentosPrefeituraView from "@/components/DocumentosPrefeituraView";
+import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
+import { useMunicipioAtivo } from "@/hooks/useMunicipio";
+import { formatarCnpj } from "@/lib/format";
+import type { FonteDestinatario } from "@/lib/documentosPrefeitura";
 
-const ABAS = ["modelos", "emitidos"] as const;
+const ABAS = ["modelos", "emitidos", "prefeitura"] as const;
 type Aba = (typeof ABAS)[number];
 
 export const Route = createFileRoute("/_authenticated/oficios")({
@@ -45,6 +51,7 @@ function PaginaOficios() {
       <TabsList className="no-print">
         <TabsTrigger value="modelos">Modelos de ofício</TabsTrigger>
         <TabsTrigger value="emitidos">Ofícios emitidos</TabsTrigger>
+        <TabsTrigger value="prefeitura">Documentos da prefeitura</TabsTrigger>
       </TabsList>
 
       <TabsContent value="modelos">
@@ -53,6 +60,36 @@ function PaginaOficios() {
       <TabsContent value="emitidos">
         <EmissoesView />
       </TabsContent>
+      <TabsContent value="prefeitura">
+        <DocumentosVaf />
+      </TabsContent>
     </Tabs>
+  );
+}
+
+function DocumentosVaf() {
+  const { municipioId } = useMunicipioAtivo();
+  const { data: cadastro = {} } = useCadastroContribuintes(municipioId);
+  const fontes = useMemo<FonteDestinatario[]>(
+    () =>
+      Object.entries(cadastro)
+        .map(([ie, c]) => ({
+          id: ie,
+          nome: c.nome ?? `IE ${ie}`,
+          documento: c.cnpj ? formatarCnpj(c.cnpj) : `IE ${ie}`,
+          endereco: "",
+          detalhe: `IE ${ie}`,
+          campos: { ie },
+        }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
+    [cadastro],
+  );
+  return (
+    <DocumentosPrefeituraView
+      modulo="vaf"
+      fontes={fontes}
+      rotuloFontes="Contribuintes apurados"
+      placeholdersModulo={[{ chave: "{{ie}}", descricao: "Inscrição estadual" }]}
+    />
   );
 }
