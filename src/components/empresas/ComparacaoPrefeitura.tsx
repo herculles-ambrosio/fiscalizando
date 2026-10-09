@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, Upload, X } from "lucide-react";
@@ -175,41 +175,48 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
 
   const rotuloObs = (l: Linha) => motivo(l) || "Sem observação";
 
+  const q = busca.trim().toLowerCase();
+  // Um seletor não pode esconder as próprias opções: cada contagem ignora a si
+  // mesma, para mostrar quantas linhas a escolha realmente traria.
+  const passa = useCallback((l: Linha, ignora: "obs" | "sit" | null) => {
+    if (filtro === "divergentes" && !l.div.length) return false;
+    if (["SIMPLES", "MEI", "SITUACAO"].includes(filtro) && !l.div.includes(filtro as Divergencia)) return false;
+    if (["AMBOS", "SO_PREFEITURA", "SO_RECEITA"].includes(filtro) && l.grupo !== filtro) return false;
+    if (filtro === "SO_RECEITA_ATIVAS" && !(l.grupo === "SO_RECEITA" && l.r?.situacao === "ATIVA")) return false;
+    if (filtro === "FORA" && !l.p?.alerta_municipio) return false;
+    if (ignora !== "obs" && obs !== OBS_TODAS && rotuloObs(l) !== obs) return false;
+    if (ignora !== "sit" && sit !== TODAS_SIT && (sit === SEM_SIT ? l.sits.length > 0 : !l.sits.includes(sit as SituacaoComum))) return false;
+    if (q && !`${l.cnpj} ${l.p?.nome ?? ""} ${l.r?.razao_social ?? ""} ${l.r?.nome_fantasia ?? ""}`.toLowerCase().includes(q)) return false;
+    return true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtro, obs, sit, q]);
+
   const observacoes = useMemo(() => {
     const contagem = new Map<string, number>();
     for (const l of linhas) {
+      if (!passa(l, "obs")) continue;
       const k = rotuloObs(l);
       contagem.set(k, (contagem.get(k) ?? 0) + 1);
     }
     return [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
-  }, [linhas]);
+  }, [linhas, passa]);
 
   // Situações que realmente existem nos dois cadastros; uma linha pode aparecer
   // em duas quando prefeitura e Receita divergem (ex.: baixada × ativa).
   const situacoes = useMemo(() => {
     const contagem = new Map<string, number>();
     for (const l of linhas) {
+      if (!passa(l, "sit")) continue;
       if (!l.sits.length) contagem.set(SEM_SIT, (contagem.get(SEM_SIT) ?? 0) + 1);
       for (const s of l.sits) contagem.set(s, (contagem.get(s) ?? 0) + 1);
     }
     return [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
-  }, [linhas]);
+  }, [linhas, passa]);
 
 
-  const filtradas = useMemo(() => {
-    const q = busca.trim().toLowerCase();
-    return linhas.filter((l) => {
-      if (filtro === "divergentes" && !l.div.length) return false;
-      if (["SIMPLES", "MEI", "SITUACAO"].includes(filtro) && !l.div.includes(filtro as Divergencia)) return false;
-      if (["AMBOS", "SO_PREFEITURA", "SO_RECEITA"].includes(filtro) && l.grupo !== filtro) return false;
-      if (filtro === "SO_RECEITA_ATIVAS" && !(l.grupo === "SO_RECEITA" && l.r?.situacao === "ATIVA")) return false;
-      if (filtro === "FORA" && !l.p?.alerta_municipio) return false;
-      if (obs !== OBS_TODAS && rotuloObs(l) !== obs) return false;
-      if (sit !== TODAS_SIT && (sit === SEM_SIT ? l.sits.length > 0 : !l.sits.includes(sit as SituacaoComum))) return false;
-      if (q && !`${l.cnpj} ${l.p?.nome ?? ""} ${l.r?.razao_social ?? ""} ${l.r?.nome_fantasia ?? ""}`.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [linhas, filtro, busca, obs, sit]);
+
+  const filtradas = useMemo(() => linhas.filter((l) => passa(l, null)), [linhas, passa]);
+
 
 
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
