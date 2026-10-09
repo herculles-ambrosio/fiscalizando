@@ -140,7 +140,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [municipioId, pathname, navigate, queryClient]);
 
-  // Produto ativo: Apura VAF (padrão) ou ICMS Robin Hood.
+  // Módulo Bancos desabilitado por enquanto: apuração de ISS não fecha sem
+  // isolar receita de serviços. Qualquer rota do módulo volta ao painel.
   const produto: "vaf" | "icms" | "cartorio" | "noticias" | "empresas" | "bancos" = pathname.startsWith("/bancos")
     ? "bancos"
     : pathname.startsWith("/empresas")
@@ -152,6 +153,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
     : pathname.startsWith("/cartorios")
       ? "cartorio"
       : "vaf";
+
+  useEffect(() => {
+    if (produto === "bancos") navigate({ to: "/dashboard", replace: true });
+  }, [produto, navigate]);
 
   const grupos =
     produto === "bancos"
@@ -274,19 +279,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
           >
             Empresas
           </Link>
-          <Link
-            to="/bancos"
-            onClick={limparTela}
-            className={cn(
-              "flex-1 rounded-full px-3 py-1.5 text-center text-xs transition-colors",
-              produto === "bancos"
-                ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                : "text-sidebar-foreground/60 hover:text-sidebar-foreground",
-            )}
-          >
-            Bancos
-          </Link>
         </div>
+
 
         {podeTrocar && (
           <div className="mt-6 rounded-xl border border-sidebar-border bg-white/5 p-2.5 shadow-soft">
