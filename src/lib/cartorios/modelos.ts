@@ -14,6 +14,7 @@ import type { LinhaFiscalizacao } from "@/hooks/useCartorios";
 export const TIPOS_DOC_CARTORIO = [
   "DIFERENCA",
   "SEM_DECLARACAO",
+  "NAO_PAGO",
   "INTIMACAO",
   "TERMO",
   "GERAL",
@@ -24,6 +25,7 @@ export type TipoDocCartorio = (typeof TIPOS_DOC_CARTORIO)[number];
 export const ROTULO_TIPO_DOC: Record<TipoDocCartorio, string> = {
   DIFERENCA: "Diferença de ISS a menor",
   SEM_DECLARACAO: "Cartório sem declaração",
+  NAO_PAGO: "ISS declarado e não pago",
   INTIMACAO: "Intimação para apresentar documentos",
   TERMO: "Termo de início de fiscalização",
   GERAL: "Geral (qualquer situação)",
@@ -58,6 +60,7 @@ export const PLACEHOLDERS_CARTORIO: { chave: string; descricao: string }[] = [
   { chave: "{{iss_devido}}", descricao: "ISS devido sobre os emolumentos" },
   { chave: "{{iss_declarado}}", descricao: "ISS declarado pelo cartório" },
   { chave: "{{iss_pago}}", descricao: "ISS efetivamente pago" },
+  { chave: "{{iss_nao_pago}}", descricao: "ISS declarado que não foi recolhido (declarado − pago)" },
   { chave: "{{diferenca_iss}}", descricao: "Diferença de ISS apurada" },
   { chave: "{{diferenca_base}}", descricao: "Diferença entre emolumentos e base declarada" },
   { chave: "{{prazo_dias}}", descricao: "Prazo em dias para resposta" },
@@ -90,6 +93,7 @@ export function aplicarPlaceholdersCartorio(texto: string, dados: DadosDocumento
     iss_devido: formatarMoeda(linha.issDevido),
     iss_declarado: formatarMoeda(linha.issDeclarado ?? 0),
     iss_pago: formatarMoeda(linha.issPago ?? 0),
+    iss_nao_pago: formatarMoeda(Math.max((linha.issDeclarado ?? 0) - (linha.issPago ?? 0), 0)),
     diferenca_iss: formatarMoeda(linha.diferencaIss ?? linha.issDevido),
     diferenca_base: formatarMoeda(linha.diferencaBase ?? linha.emolumentos),
     prazo_dias: String(prazoDias),
@@ -145,6 +149,27 @@ Fica V. Sa. NOTIFICADA a apresentar, no prazo de {{prazo_dias}} dias, a declara�
 
 ${FECHO}`;
 
+const CORPO_NAO_PAGO = `${IDENTIFICACAO}
+A Fazenda Pública Municipal de {{municipio}} verificou que essa serventia apresentou declaração de ISSQN referente à competência {{competencia}}, porém não consta o recolhimento do imposto declarado, apurando-se o seguinte:
+
+* Emolumentos publicados (TJMG): {{emolumentos}}
+* Base de cálculo declarada ao município: {{base_declarada}}
+* ISSQN declarado: {{iss_declarado}}
+* ISSQN recolhido: {{iss_pago}}
+* ISSQN declarado e não pago: {{iss_nao_pago}}
+* ISSQN devido sobre os emolumentos ({{aliquota}}): {{iss_devido}}
+* Diferença total apurada: {{diferenca_iss}}
+
+${BASE_LEGAL}
+
+> A declaração do contribuinte constitui o crédito tributário, dispensando qualquer outra providência do Fisco para a sua cobrança (Súmula 436 do STJ).
+
+Fica V. Sa. NOTIFICADA a, no prazo de {{prazo_dias}} dias contados do recebimento deste, efetuar o recolhimento do ISSQN declarado e não pago, bem como da eventual diferença apurada, com os acréscimos legais, ou apresentar o comprovante de pagamento da competência.
+
+O não atendimento no prazo autoriza a inscrição do débito em dívida ativa e a adoção das medidas de cobrança cabíveis.
+
+${FECHO}`;
+
 const CORPO_INTIMACAO = `${IDENTIFICACAO}
 Em procedimento de fiscalização do ISSQN incidente sobre os serviços notariais e de registro, fica V. Sa. INTIMADA a apresentar a esta Fazenda Pública Municipal, no prazo de {{prazo_dias}} dias, os seguintes documentos relativos à competência {{competencia}}:
 
@@ -190,6 +215,14 @@ export const MODELOS_CARTORIO_PADRAO: ModeloCartorio[] = [
     ativo: true,
   },
   {
+    chave: "notificacao_iss_nao_pago",
+    nome: "Notificação — ISS não pago",
+    tipo: "NAO_PAGO",
+    titulo: "NOTIFICAÇÃO FISCAL — ISSQN DECLARADO E NÃO PAGO {{competencia_curta}}",
+    corpo: CORPO_NAO_PAGO,
+    ativo: true,
+  },
+  {
     chave: "intimacao_documentos",
     nome: "Intimação para apresentação de documentos",
     tipo: "INTIMACAO",
@@ -215,5 +248,5 @@ export function novaChaveCartorio(nome: string): string {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_|_$/g, "")
     .slice(0, 40);
-  return base || `modelo_${Date.now()}`;
+  return `${base || "modelo"}_${Date.now().toString(36)}`;
 }
