@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { divergencias, lerCadastroPrefeitura, normalizarSituacao, simplesDe } from "./prefeitura";
+import { divergencias, lerCadastroPrefeitura, normalizarSituacao, simplesDe, situacaoComum, situacoesDaLinha } from "./prefeitura";
+
 
 const linha = (doc: string, mun: string, cep = "36834-000") => ({ "N. Documento": doc, "Município": mun, CEP: cep });
 
@@ -30,4 +31,15 @@ describe("cadastro da prefeitura", () => {
     );
     expect(d).toEqual(["MEI", "SITUACAO"]);
   });
+  it("traduz situação da Receita e da prefeitura para a mesma escala", () => {
+    expect(situacaoComum("INAPTA")).toBe("INAPTA");
+    expect(situacaoComum("Sem Situação")).toBe("OUTRA");
+    expect(situacaoComum(null)).toBeNull();
+  });
+  it("aceita o filtro de situação quando qualquer um dos cadastros tem a situação", () => {
+    expect(situacoesDaLinha({ situacao: "Baixado" }, { situacao: "ATIVA" })).toEqual(["BAIXADA", "ATIVA"]);
+    expect(situacoesDaLinha(undefined, { situacao: "SUSPENSA" })).toEqual(["SUSPENSA"]);
+    expect(situacoesDaLinha({ situacao: null }, undefined)).toEqual([]);
+  });
 });
+

@@ -27,12 +27,10 @@ export function semAcento(t: string | null | undefined) {
 }
 
 export function normalizarSituacao(s: string | null | undefined): LinhaPrefeitura["situacao_normalizada"] {
-  const t = semAcento(s);
-  if (t.startsWith("ativo") || t.startsWith("provisorio")) return "ATIVA";
-  if (t.startsWith("baixad")) return "BAIXADA";
-  if (t.startsWith("suspens")) return "SUSPENSA";
-  return "OUTRA";
+  const c = situacaoComum(s);
+  return c === "ATIVA" || c === "BAIXADA" || c === "SUSPENSA" ? c : "OUTRA";
 }
+
 
 export function simplesDe(s: string | null | undefined): boolean | null {
   const t = semAcento(s);
@@ -129,3 +127,41 @@ export function divergencias(p: Pick<LinhaPrefeitura, "simples_optante" | "regim
   if (r.situacao && p.situacao_normalizada !== "OUTRA" && (p.situacao_normalizada === "ATIVA") !== ra) d.push("SITUACAO");
   return d;
 }
+
+/** Situação em uma escala única, usada para filtrar o cruzamento dos dois cadastros. */
+export type SituacaoComum = "ATIVA" | "BAIXADA" | "SUSPENSA" | "INAPTA" | "NULA" | "OUTRA";
+
+export const ROTULO_SITUACAO_COMUM: Record<SituacaoComum, string> = {
+  ATIVA: "Ativa",
+  BAIXADA: "Baixada",
+  SUSPENSA: "Suspensa",
+  INAPTA: "Inapta",
+  NULA: "Nula",
+  OUTRA: "Outra",
+};
+
+/** Normaliza a situação livre (texto da planilha ou código da Receita) para os dois cadastros serem comparáveis. */
+export function situacaoComum(s: string | null | undefined): SituacaoComum | null {
+  const t = semAcento(s);
+  if (!t) return null;
+  if (t.startsWith("ativo") || t.startsWith("ativa") || t.startsWith("provisorio")) return "ATIVA";
+  if (t.startsWith("baixad")) return "BAIXADA";
+  if (t.startsWith("suspens")) return "SUSPENSA";
+  if (t.startsWith("inapt")) return "INAPTA";
+  if (t.startsWith("nula")) return "NULA";
+  return "OUTRA";
+}
+
+
+/** Situações presentes na linha, vindas do cadastro da prefeitura e/ou da base da Receita. */
+export function situacoesDaLinha(
+  p: { situacao: string | null } | undefined,
+  r: { situacao: string | null } | undefined,
+): SituacaoComum[] {
+  const out: SituacaoComum[] = [];
+  for (const s of [situacaoComum(p?.situacao), situacaoComum(r?.situacao)]) {
+    if (s && !out.includes(s)) out.push(s);
+  }
+  return out;
+}
+
