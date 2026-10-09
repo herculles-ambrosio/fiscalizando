@@ -5,9 +5,10 @@ import { Download, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Empresa } from "@/hooks/useEmpresas";
 import {
-  divergencias, lerCadastroPrefeitura, ROTULO_ALERTA_MUNICIPIO, ROTULO_DIVERGENCIA,
-  type Divergencia, type LinhaPrefeitura,
+  divergencias, lerCadastroPrefeitura, ROTULO_ALERTA_MUNICIPIO, ROTULO_DIVERGENCIA, ROTULO_SITUACAO_COMUM,
+  situacoesDaLinha, type Divergencia, type LinhaPrefeitura, type SituacaoComum,
 } from "@/lib/empresas/prefeitura";
+
 import { formatarCnpj } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
 import { Button } from "@/components/ui/button";
@@ -41,10 +42,15 @@ type Linha = {
   p?: Gravada;
   r?: Empresa;
   div: Divergencia[];
+  sits: SituacaoComum[];
 };
+
 
 const sim = (b: boolean | null | undefined) => (b == null ? "—" : b ? "Sim" : "Não");
 const OBS_TODAS = "todas";
+const TODAS_SIT = "todas-as-situacoes";
+const SEM_SIT = "sem-situacao";
+
 // Versão curta exibida no seletor fechado; a lista, a coluna e o CSV mantêm o texto completo.
 const OBS_CURTA: Record<string, string> = {
   "Ativa na Receita e sem cadastro na prefeitura": "Ativa na Receita, sem cadastro",
@@ -70,6 +76,8 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
   const [ref, setRef] = useState(() => new Date().toISOString().slice(0, 7));
   const [filtro, setFiltro] = useState("divergentes");
   const [obs, setObs] = useState(OBS_TODAS);
+  const [sit, setSit] = useState(TODAS_SIT);
+
   const [busca, setBusca] = useState("");
   const [porPagina, setPorPagina] = useState(20);
   const [pagina, setPagina] = useState(1);
@@ -88,6 +96,12 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
     if (v !== OBS_TODAS) setFiltro("todos");
     setPagina(1);
   }
+
+  function mudarSit(v: string) {
+    setSit(v);
+    setPagina(1);
+  }
+
 
 
 
@@ -126,9 +140,10 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
       if (p.tipo_documento !== "CNPJ" || p.repetido) continue;
       cnpjsPref.add(p.documento);
       const r = porCnpj.get(p.documento);
-      out.push(r ? { chave: p.id, cnpj: p.documento, grupo: "AMBOS", p, r, div: divergencias(p, r) } : { chave: p.id, cnpj: p.documento, grupo: "SO_PREFEITURA", p, div: [] });
+      out.push(r ? { chave: p.id, cnpj: p.documento, grupo: "AMBOS", p, r, div: divergencias(p, r), sits: situacoesDaLinha(p, r) } : { chave: p.id, cnpj: p.documento, grupo: "SO_PREFEITURA", p, div: [], sits: situacoesDaLinha(p, undefined) });
     }
-    for (const r of empresas) if (!cnpjsPref.has(r.cnpj)) out.push({ chave: r.id, cnpj: r.cnpj, grupo: "SO_RECEITA", r, div: [] });
+    for (const r of empresas) if (!cnpjsPref.has(r.cnpj)) out.push({ chave: r.id, cnpj: r.cnpj, grupo: "SO_RECEITA", r, div: [], sits: situacoesDaLinha(undefined, r) });
+
     const conta = (f: (l: Linha) => boolean) => out.filter(f).length;
     return {
       linhas: out,
@@ -169,6 +184,18 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
     return [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
   }, [linhas]);
 
+  // Situações que realmente existem nos dois cadastros; uma linha pode aparecer
+  // em duas quando prefeitura e Receita divergem (ex.: baixada × ativa).
+  const situacoes = useMemo(() => {
+    const contagem = new Map<string, number>();
+    for (const l of linhas) {
+      if (!l.sits.length) contagem.set(SEM_SIT, (contagem.get(SEM_SIT) ?? 0) + 1);
+      for (const s of l.sits) contagem.set(s, (contagem.get(s) ?? 0) + 1);
+    }
+    return [...contagem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
+  }, [linhas]);
+
+
   const filtradas = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return linhas.filter((l) => {
@@ -178,10 +205,12 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
       if (filtro === "SO_RECEITA_ATIVAS" && !(l.grupo === "SO_RECEITA" && l.r?.situacao === "ATIVA")) return false;
       if (filtro === "FORA" && !l.p?.alerta_municipio) return false;
       if (obs !== OBS_TODAS && rotuloObs(l) !== obs) return false;
+      if (sit !== TODAS_SIT && (sit === SEM_SIT ? l.sits.length > 0 : !l.sits.includes(sit as SituacaoComum))) return false;
       if (q && !`${l.cnpj} ${l.p?.nome ?? ""} ${l.r?.razao_social ?? ""} ${l.r?.nome_fantasia ?? ""}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [linhas, filtro, busca, obs]);
+  }, [linhas, filtro, busca, obs, sit]);
+
 
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / porPagina));
   const paginaAtual = Math.min(pagina, totalPaginas);
@@ -259,7 +288,19 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
                 <SelectItem value="FORA">Endereço em outro município</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={sit} onValueChange={mudarSit}>
+              <SelectTrigger className="w-56 max-w-full">
+                <span className={cn("truncate", sit === TODAS_SIT && "text-muted-foreground")}>{sit === TODAS_SIT ? "Todas as situações" : sit === SEM_SIT ? "Sem situação informada" : ROTULO_SITUACAO_COMUM[sit as SituacaoComum]}</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODAS_SIT}>Todas as situações</SelectItem>
+                {situacoes.map(([rotulo, qt]) => (
+                  <SelectItem key={rotulo} value={rotulo} textValue={rotulo === SEM_SIT ? "Sem situação informada" : ROTULO_SITUACAO_COMUM[rotulo as SituacaoComum]}>{rotulo === SEM_SIT ? "Sem situação informada" : ROTULO_SITUACAO_COMUM[rotulo as SituacaoComum]} ({n(qt)})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={obs} onValueChange={mudarObs}>
+
               <SelectTrigger className="w-80 max-w-full">
                 <span className={cn("truncate", obs === OBS_TODAS && "text-muted-foreground")}>{obs === OBS_TODAS ? "Todas as observações" : obsCurta(obs)}</span>
               </SelectTrigger>
