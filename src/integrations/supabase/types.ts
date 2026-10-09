@@ -1357,6 +1357,74 @@ export type Database = {
         }
         Relationships: []
       }
+      documentos_prefeitura_modelos: {
+        Row: {
+          ativo: boolean
+          atualizado_em: string
+          cabecalho: string | null
+          chave: string
+          corpo: string
+          criado_em: string
+          destinatario: string
+          id: string
+          margem_direita: number
+          margem_esquerda: number
+          margem_inferior: number
+          margem_topo: number
+          modulo: string
+          municipio_id: string
+          nome: string
+          rodape: string | null
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_em?: string
+          cabecalho?: string | null
+          chave: string
+          corpo: string
+          criado_em?: string
+          destinatario?: string
+          id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
+          modulo: string
+          municipio_id: string
+          nome: string
+          rodape?: string | null
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_em?: string
+          cabecalho?: string | null
+          chave?: string
+          corpo?: string
+          criado_em?: string
+          destinatario?: string
+          id?: string
+          margem_direita?: number
+          margem_esquerda?: number
+          margem_inferior?: number
+          margem_topo?: number
+          modulo?: string
+          municipio_id?: string
+          nome?: string
+          rodape?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_prefeitura_modelos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       educacao_calendario: {
         Row: {
           atualizado_em: string
