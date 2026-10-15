@@ -273,6 +273,8 @@ export async function baixarPdfDiagnostico(
   if (comDetalhe.length) {
     blocos.push({ tipo: "secao", texto: "Detalhamento por fator" });
     for (const f of comDetalhe) {
+      /** base negativa não entra na conta nos fatores de quem permaneceu */
+      const baseZerada = f.chave === "quedas" || f.chave === "altas";
       blocos.push({
         tipo: "texto",
         bold: true,

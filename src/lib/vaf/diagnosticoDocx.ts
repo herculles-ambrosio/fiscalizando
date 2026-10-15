@@ -91,6 +91,8 @@ function tabelaFatores(fatores: FatorVariacao[]): Table {
 
 function tabelaDetalhe(fator: FatorVariacao): Table {
   const cols = [3626, 1800, 1800, 1800];
+  /** base negativa não entra na conta nos fatores de quem permaneceu */
+  const baseZerada = fator.chave === "quedas" || fator.chave === "altas";
   return new Table({
     width: { size: LARGURA, type: WidthType.DXA },
     columnWidths: cols,
