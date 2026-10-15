@@ -88,14 +88,25 @@ function montarFatores(
 
 const LIMITE_ITENS = 25;
 
-const itensDeclarantes = (lista: MovimentoDeclarante[]): ItemDetalhe[] =>
+/**
+ * Impacto do declarante nos fatores "Permaneceram e reduziram/aumentaram":
+ * quando a base é negativa, ela não entra na conta — o impacto é só o
+ * valor comparado/estimado (a base é tratada como zero).
+ */
+export const impactoDeclarante = (d: MovimentoDeclarante): number =>
+  d.vafBase < 0 ? d.vafAtual : d.diferenca;
+
+const itensDeclarantes = (
+  lista: MovimentoDeclarante[],
+  impacto?: (d: MovimentoDeclarante) => number,
+): ItemDetalhe[] =>
   lista.slice(0, LIMITE_ITENS).map((d) => ({
     chave: d.inscricao_estadual,
     rotulo: d.nome ?? "(sem nome)",
     sub: `IE ${d.inscricao_estadual}`,
     valorBase: d.vafBase,
     valorAtual: d.vafAtual,
-    impacto: d.diferenca,
+    impacto: impacto ? impacto(d) : d.diferenca,
   }));
 
 
@@ -152,8 +163,8 @@ export function diagnosticarEvolucao(
   const ganhoEntradas = cmp.entraram.reduce((s, d) => s + d.vafAtual, 0);
   const quedas = cmp.permaneceram.filter((d) => d.diferenca < 0);
   const altas = cmp.permaneceram.filter((d) => d.diferenca > 0);
-  const somaQuedas = quedas.reduce((s, d) => s + d.diferenca, 0);
-  const somaAltas = altas.reduce((s, d) => s + d.diferenca, 0);
+  const somaQuedas = quedas.reduce((s, d) => s + impactoDeclarante(d), 0);
+  const somaAltas = altas.reduce((s, d) => s + impactoDeclarante(d), 0);
 
   const deltaDeclarado = -perdaSaidas + ganhoEntradas + somaQuedas + somaAltas;
   const residual = diferenca - deltaDeclarado;
@@ -180,7 +191,10 @@ export function diagnosticarEvolucao(
       rotulo: `Permaneceram e reduziram (${quedas.length})`,
       detalhe: "Mesmos contribuintes declarando menos VAF",
       impacto: somaQuedas,
-      itens: itensDeclarantes([...quedas].sort((x, y) => x.diferenca - y.diferenca)),
+      itens: itensDeclarantes(
+        [...quedas].sort((x, y) => impactoDeclarante(x) - impactoDeclarante(y)),
+        impactoDeclarante,
+      ),
       totalItens: quedas.length,
     },
     {
@@ -188,7 +202,10 @@ export function diagnosticarEvolucao(
       rotulo: `Permaneceram e aumentaram (${altas.length})`,
       detalhe: "Mesmos contribuintes declarando mais VAF",
       impacto: somaAltas,
-      itens: itensDeclarantes([...altas].sort((x, y) => y.diferenca - x.diferenca)),
+      itens: itensDeclarantes(
+        [...altas].sort((x, y) => impactoDeclarante(y) - impactoDeclarante(x)),
+        impactoDeclarante,
+      ),
       totalItens: altas.length,
     },
     {
@@ -213,11 +230,17 @@ export function diagnosticarEvolucao(
   ]);
 
 
+  // nos cards "Maiores quedas/altas" a regra da base negativa vale para quem
+  // permaneceu; saídas e entradas mantêm a diferença direta
+  const impactoCard = (d: MovimentoDeclarante) =>
+    d.situacao === "manteve" ? impactoDeclarante(d) : d.diferenca;
   const topQuedas = [...cmp.todos]
+    .map((d) => ({ ...d, diferenca: impactoCard(d) }))
     .filter((d) => d.diferenca < 0)
     .sort((x, y) => x.diferenca - y.diferenca)
     .slice(0, 5);
   const topAltas = [...cmp.todos]
+    .map((d) => ({ ...d, diferenca: impactoCard(d) }))
     .filter((d) => d.diferenca > 0)
     .sort((x, y) => y.diferenca - x.diferenca)
     .slice(0, 5);
