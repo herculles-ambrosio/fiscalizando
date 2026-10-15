@@ -179,7 +179,7 @@ function Barra({
 
                   <td className="px-2 py-1.5 text-right font-mono tabular-nums">
                     {baseZerada && i.valorBase < 0 ? (
-                      <span className="text-destructive">(R$ 0,00)</span>
+                      <span className="text-destructive">({formatarMoeda(Math.abs(i.valorBase))})</span>
                     ) : (
                       formatarMoeda(i.valorBase)
                     )}

@@ -291,7 +291,7 @@ export async function baixarPdfDiagnostico(
         direita: [false, true, true, true],
         linhas: f.itens.map((i) => [
           i.sub ? `${i.rotulo} — ${i.sub}` : i.rotulo,
-          baseZerada && i.valorBase < 0 ? "(R$ 0,00)" : moeda(i.valorBase),
+          baseZerada && i.valorBase < 0 ? `(${moeda(Math.abs(i.valorBase))})` : moeda(i.valorBase),
           moeda(i.valorAtual),
           moeda(i.impacto),
         ]),
