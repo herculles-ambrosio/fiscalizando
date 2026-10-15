@@ -56,14 +56,17 @@ const arquivo = (declarantes: Declarante[], valorLiquido: number): ArquivoEvoluc
   outrasEntradas: { contribuintes: [], total: 0, temDetalhamento: false },
 });
 
-const comoDeclarantes = (ms: MovimentoDeclarante[]): Declarante[] =>
+const comoDeclarantes = (
+  ms: MovimentoDeclarante[],
+  lado: "base" | "atual",
+): Declarante[] =>
   ms.map((m) => ({
     inscricao_estadual: m.inscricao_estadual,
     cnpj: m.cnpj,
     nome: m.nome,
     exercicio: null,
     data_entrega: null,
-    vaf: m.situacao === "saiu" ? m.vafBase : m.vafAtual,
+    vaf: lado === "base" ? m.vafBase : m.vafAtual,
     origemNome: null,
     origemCnpj: null,
   }));
@@ -81,17 +84,23 @@ describe("impacto com base negativa", () => {
 
   it("fator 'Permaneceram e aumentaram' usa o comparado como impacto e mantém a base bruta", () => {
     const base = arquivo(
-      comoDeclarantes([
-        declarante("123", -2_890_096, 4_456_430),
-        declarante("456", 4_255_823, 6_043_387),
-      ]),
-      10_599_817, // -2.890.096 + 4.456.430 + 4.255.823 + 6.043.387 - 4.255.823 + 2.894.764 (simplificado)
+      comoDeclarantes(
+        [
+          declarante("123", -2_890_096, 4_456_430),
+          declarante("456", 4_255_823, 6_043_387),
+        ],
+        "base",
+      ),
+      1_609_737, // -2.890.096 + 4.456.430 (simplificado)
     );
     const atual = arquivo(
-      comoDeclarantes([
-        declarante("123", -2_890_096, 4_456_430),
-        declarante("456", 4_255_823, 6_043_387),
-      ]),
+      comoDeclarantes(
+        [
+          declarante("123", -2_890_096, 4_456_430),
+          declarante("456", 4_255_823, 6_043_387),
+        ],
+        "atual",
+      ),
       10_499_817,
     );
     const d = diagnosticarEvolucao(base, atual);
@@ -106,20 +115,26 @@ describe("impacto com base negativa", () => {
 
   it("a soma dos fatores por declarante fecha com a variação total", () => {
     const base = arquivo(
-      comoDeclarantes([
-        declarante("123", -2_890_096, 4_456_430),
-        declarante("456", 1_000, 500),
-        declarante("789", 2_000, 0, "saiu"),
-        declarante("321", 0, 3_000, "entrou"),
-      ]),
+      comoDeclarantes(
+        [
+          declarante("123", -2_890_096, 4_456_430),
+          declarante("456", 1_000, 500),
+          declarante("789", 2_000, 0, "saiu"),
+          declarante("321", 0, 3_000, "entrou"),
+        ],
+        "base",
+      ),
       0,
     );
     const atual = arquivo(
-      comoDeclarantes([
-        declarante("123", -2_890_096, 4_456_430),
-        declarante("456", 1_000, 500),
-        declarante("321", 0, 3_000, "entrou"),
-      ]),
+      comoDeclarantes(
+        [
+          declarante("123", -2_890_096, 4_456_430),
+          declarante("456", 1_000, 500),
+          declarante("321", 0, 3_000, "entrou"),
+        ],
+        "atual",
+      ),
       3_956_430 - 500 + 3_000 + 2_000,
     );
     const d = diagnosticarEvolucao(base, atual);
@@ -129,11 +144,11 @@ describe("impacto com base negativa", () => {
 
   it("cards 'Maiores altas' repetem o comparado quando a base é negativa", () => {
     const base = arquivo(
-      comoDeclarantes([declarante("123", -2_890_096, 4_456_430)]),
+      comoDeclarantes([declarante("123", -2_890_096, 4_456_430)], "base"),
       -2_890_096,
     );
     const atual = arquivo(
-      comoDeclarantes([declarante("123", -2_890_096, 4_456_430)]),
+      comoDeclarantes([declarante("123", -2_890_096, 4_456_430)], "atual"),
       4_456_430,
     );
     const d = diagnosticarEvolucao(base, atual);
