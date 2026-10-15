@@ -91,6 +91,8 @@ function tabelaFatores(fatores: FatorVariacao[]): Table {
 
 function tabelaDetalhe(fator: FatorVariacao): Table {
   const cols = [3626, 1800, 1800, 1800];
+  /** base negativa não entra na conta nos fatores de quem permaneceu */
+  const baseZerada = fator.chave === "quedas" || fator.chave === "altas";
   return new Table({
     width: { size: LARGURA, type: WidthType.DXA },
     columnWidths: cols,
@@ -108,7 +110,11 @@ function tabelaDetalhe(fator: FatorVariacao): Table {
           new TableRow({
             children: [
               celula(i.sub ? `${i.rotulo} — ${i.sub}` : i.rotulo, cols[0]!),
-              celula(moeda(i.valorBase), cols[1]!, { direita: true }),
+              celula(
+                baseZerada && i.valorBase < 0 ? "(R$ 0,00)" : moeda(i.valorBase),
+                cols[1]!,
+                { direita: true },
+              ),
               celula(moeda(i.valorAtual), cols[2]!, { direita: true }),
               celula(moeda(i.impacto), cols[3]!, { direita: true }),
             ],
