@@ -108,7 +108,11 @@ function tabelaDetalhe(fator: FatorVariacao): Table {
           new TableRow({
             children: [
               celula(i.sub ? `${i.rotulo} — ${i.sub}` : i.rotulo, cols[0]!),
-              celula(moeda(i.valorBase), cols[1]!, { direita: true }),
+              celula(
+                baseZerada && i.valorBase < 0 ? "(R$ 0,00)" : moeda(i.valorBase),
+                cols[1]!,
+                { direita: true },
+              ),
               celula(moeda(i.valorAtual), cols[2]!, { direita: true }),
               celula(moeda(i.impacto), cols[3]!, { direita: true }),
             ],
