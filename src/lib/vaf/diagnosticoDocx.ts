@@ -111,7 +111,7 @@ function tabelaDetalhe(fator: FatorVariacao): Table {
             children: [
               celula(i.sub ? `${i.rotulo} — ${i.sub}` : i.rotulo, cols[0]!),
               celula(
-                baseZerada && i.valorBase < 0 ? "(R$ 0,00)" : moeda(i.valorBase),
+                baseZerada && i.valorBase < 0 ? `(${moeda(Math.abs(i.valorBase))})` : moeda(i.valorBase),
                 cols[1]!,
                 { direita: true },
               ),
