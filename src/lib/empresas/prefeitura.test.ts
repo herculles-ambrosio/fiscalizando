@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { divergencias, lerCadastroPrefeitura, normalizarSituacao, simplesDe, situacaoComum, situacoesDaLinha } from "./prefeitura";
+import { divergencias, lerCadastroPrefeitura, normalizarSituacao, simplesDe, situacaoComum, situacoesDaLinha, tipoCadastroPrefeitura } from "./prefeitura";
 
 
 const linha = (doc: string, mun: string, cep = "36834-000") => ({ "N. Documento": doc, "Município": mun, CEP: cep });
@@ -41,5 +41,12 @@ describe("cadastro da prefeitura", () => {
     expect(situacoesDaLinha(undefined, { situacao: "SUSPENSA" })).toEqual(["SUSPENSA"]);
     expect(situacoesDaLinha({ situacao: null }, undefined)).toEqual([]);
   });
+  it("classifica o tipo pelo regime do cadastro da prefeitura", () => {
+    expect(tipoCadastroPrefeitura({ regime: "Micro Empreendedor Individual(MEI)", simples_optante: true })).toBe("MEI");
+    expect(tipoCadastroPrefeitura({ regime: "Simples Nacional", simples_optante: true })).toBe("SIMPLES");
+    expect(tipoCadastroPrefeitura({ regime: "Lucro Presumido", simples_optante: false })).toBe("LUCRO");
+    expect(tipoCadastroPrefeitura({ regime: "Regime Normal", simples_optante: null })).toBe("NAO_CLASSIFICADO");
+  });
 });
+
 
