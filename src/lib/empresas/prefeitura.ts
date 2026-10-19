@@ -1,4 +1,6 @@
 /** Cadastro econômico exportado do sistema da prefeitura e cruzamento com a base da Receita. */
+import type { TipoEmpresa } from "./extrair";
+
 
 export type LinhaPrefeitura = {
   documento: string;
@@ -164,4 +166,13 @@ export function situacoesDaLinha(
   }
   return out;
 }
+
+/** Tipo do contribuinte quando só existe o cadastro da prefeitura: afirma apenas o que o regime permite. */
+export function tipoCadastroPrefeitura(p: Pick<LinhaPrefeitura, "regime" | "simples_optante">): TipoEmpresa {
+  if (regimeEhMei(p.regime)) return "MEI";
+  if (p.simples_optante) return "SIMPLES";
+  if (/lucro/.test(semAcento(p.regime))) return "LUCRO";
+  return "NAO_CLASSIFICADO";
+}
+
 
