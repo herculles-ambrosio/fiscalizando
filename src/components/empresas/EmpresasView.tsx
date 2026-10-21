@@ -11,7 +11,7 @@ import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useEmpresas, type Empresa } from "@/hooks/useEmpresas";
 import { enriquecerEmpresas } from "@/lib/empresas/empresas.functions";
 import { atividadeExigeIe, classificar, perfilServico, ROTULO_SERVICO, ROTULO_TIPO, TIPOS_EMPRESA, type TipoEmpresa } from "@/lib/empresas/extrair";
-import { filtrarEstabelecimentos, lerMunicipiosReceita } from "@/lib/empresas/baseReceita";
+import { acharCodigoMunicipio, codigoPorCnpjs, filtrarEstabelecimentos, lerMunicipiosReceita } from "@/lib/empresas/baseReceita";
 import { limparCnpj } from "@/lib/receita/normalizar";
 import { formatarCnpj, formatarData } from "@/lib/format";
 import { formatarCodigoCnae, descricaoCnae } from "@/lib/vaf/cnae";
@@ -529,6 +529,8 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   aberto: boolean; onClose: () => void; municipioId: string; municipioNome: string; iePorCnpj: Map<string, string>; aoConcluir: () => void;
 }) {
   const [codigo, setCodigo] = useState("");
+  const codigoEstado = codigo;
+  const [cnpjManual, setCnpjManual] = useState("");
   const [referencia, setReferencia] = useState(() => {
     const d = new Date();
     d.setMonth(d.getMonth() - 1);
@@ -600,7 +602,8 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   }
 
   async function importar() {
-    let codigo = codigoAtual;
+    const codigoInformado = codigoEstado;
+    let codigo = codigoInformado;
     if (!arquivos.length) { toast.error("Selecione os arquivos de Estabelecimentos."); return; }
     if (!/^\d{4}$/.test(codigo)) {
       const c = await descobrirPorCnpj();
@@ -638,7 +641,8 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
         }
         total += achados.length;
       }
-      toast.success(`${total} empresa(s) da base da Receita gravadas${ignoradas ? ` · ${ignoradas} encerrada(s) antes da data ignorada(s)` : ""}. Use “Completar na Receita” para trazer Simples/MEI e razão social.`);
+      if (!total) toast.warning(`Nenhuma empresa encontrada no código ${codigo}. Use “Descobrir pelo CNPJ” para conferir o código.`);
+      else toast.success(`${total} empresa(s) da base da Receita gravadas${ignoradas ? ` · ${ignoradas} encerrada(s) antes da data ignorada(s)` : ""}. Use “Completar na Receita” para trazer Simples/MEI e razão social.`);
       aoConcluir();
       onClose();
     } catch (e) {
@@ -687,6 +691,14 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
             <span>2. Arquivos de Estabelecimentos (pode selecionar vários)</span>
             <Input type="file" multiple accept=".zip,.csv,.ESTABELE" disabled={lendo} onChange={(e) => setArquivos([...(e.target.files ?? [])])} />
           </label>
+          <div className="rounded-lg border p-3 space-y-2">
+            <span className="block font-medium">Não achou o código pelo nome? Descobrir pelo CNPJ</span>
+            <span className="block text-xs text-muted-foreground">Procura nos arquivos de Estabelecimentos os CNPJs do cadastro da prefeitura (ou o CNPJ digitado) e usa o código do município em que eles aparecem.</span>
+            <div className="flex gap-2">
+              <Input className="h-8" placeholder="CNPJ de uma empresa da cidade (opcional)" value={cnpjManual} onChange={(e) => setCnpjManual(e.target.value)} disabled={lendo} />
+              <Button size="sm" variant="outline" disabled={lendo || !arquivos.length} onClick={() => void descobrirPorCnpj()}>Descobrir pelo CNPJ</Button>
+            </div>
+          </div>
           <label className="block space-y-1">
             <span>Trazer baixadas/inativas somente a partir de (opcional)</span>
             <Input type="date" className="w-48" value={desde} onChange={(e) => setDesde(e.target.value)} disabled={lendo} />
