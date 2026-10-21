@@ -87,7 +87,11 @@ export function EmpresasView() {
     return m;
   }, [cadastro]);
 
-  async function processar(lista: { cnpj: string; ie?: string | null; origem?: string }[], rotulo: string) {
+  function processar(lista: { cnpj: string; ie?: string | null; origem?: string }[], rotulo: string) {
+    return manterAtivo(() => processarInterno(lista, rotulo));
+  }
+
+  async function processarInterno(lista: { cnpj: string; ie?: string | null; origem?: string }[], rotulo: string) {
     if (!municipioId || !lista.length) {
       toast.info("Nada para consultar.");
       return;
@@ -697,7 +701,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
             <span className="block text-xs text-muted-foreground">Procura nos arquivos de Estabelecimentos os CNPJs do cadastro da prefeitura (ou o CNPJ digitado) e usa o código do município em que eles aparecem.</span>
             <div className="flex gap-2">
               <Input className="h-8" placeholder="CNPJ de uma empresa da cidade (opcional)" value={cnpjManual} onChange={(e) => setCnpjManual(e.target.value)} disabled={lendo} />
-              <Button size="sm" variant="outline" disabled={lendo || !arquivos.length} onClick={() => void descobrirPorCnpj()}>Descobrir pelo CNPJ</Button>
+              <Button size="sm" variant="outline" disabled={lendo || !arquivos.length} onClick={() => void manterAtivo(descobrirPorCnpj)}>Descobrir pelo CNPJ</Button>
             </div>
           </div>
           )}
@@ -715,7 +719,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
           </label>
           {estado && <p className="text-muted-foreground">{estado}</p>}
           {lendo && <Progress value={pct} />}
-          <Button className="w-full" onClick={() => void importar()} disabled={lendo}>
+          <Button className="w-full" onClick={() => void manterAtivo(importar)} disabled={lendo}>
             {lendo ? "Lendo…" : `Importar ${arquivos.length || ""} arquivo(s)`}
           </Button>
         </div>
