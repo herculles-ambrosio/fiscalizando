@@ -549,21 +549,64 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   async function lerMunicipios(f: File) {
     setEstado("Lendo a tabela de municípios…");
     const mapa = await lerMunicipiosReceita(f);
-    const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-    const alvo = norm(municipioNome);
     // A tabela não traz UF; vários municípios homônimos existem — confira o código.
-    const achados = [...mapa.entries()].filter(([, n]) => norm(n) === alvo);
+    const { tipo, achados } = acharCodigoMunicipio(mapa, municipioNome);
     if (achados.length === 1) {
       setCodigo(achados[0]![0]);
-      setEstado(`Código encontrado: ${achados[0]![0]}.`);
+      setEstado(tipo === "exato"
+        ? `Código encontrado: ${achados[0]![0]} (${achados[0]![1]}).`
+        : `Código provável: ${achados[0]![0]} – ${achados[0]![1]}. Confira, ou use “Descobrir pelo CNPJ”.`);
     } else if (achados.length > 1) {
-      setEstado(`Há ${achados.length} municípios com esse nome (${achados.map((a) => a[0]).join(", ")}). Informe o de Minas Gerais.`);
-    } else setEstado("Município não encontrado na tabela; informe o código manualmente.");
+      setEstado(`Há ${achados.length} municípios com nome ${tipo === "exato" ? "igual" : "parecido"} (${achados.map((a) => `${a[0]} – ${a[1]}`).join(", ")}). Informe o de Minas Gerais ou use “Descobrir pelo CNPJ”.`);
+    } else setEstado("Município não encontrado na tabela; use “Descobrir pelo CNPJ” ou informe o código manualmente.");
+  }
+
+  async function cnpjsConhecidos(): Promise<string[]> {
+    const extra = limparCnpj(cnpjManual);
+    const [p, e] = await Promise.all([
+      supabase.from("empresas_prefeitura").select("documento").eq("municipio_id", municipioId).limit(2000),
+      supabase.from("empresas").select("cnpj").eq("municipio_id", municipioId).limit(2000),
+    ]);
+    return [...(extra ? [extra] : []), ...(p.data ?? []).map((r) => r.documento), ...(e.data ?? []).map((r) => r.cnpj)]
+      .map((c) => String(c ?? "").replace(/\D/g, "")).filter((c) => c.length === 14);
+  }
+
+  async function descobrirPorCnpj(): Promise<string | null> {
+    if (!arquivos.length) { toast.error("Selecione primeiro os arquivos de Estabelecimentos (passo 2)."); return null; }
+    setLendo(true);
+    try {
+      const cnpjs = await cnpjsConhecidos();
+      if (!cnpjs.length) { setEstado("Nenhum CNPJ conhecido desta prefeitura. Importe o cadastro econômico ou digite o CNPJ de uma empresa da cidade."); return null; }
+      for (const [i, f] of arquivos.entries()) {
+        setEstado(`Procurando ${cnpjs.length} CNPJ(s) da prefeitura em ${f.name}…`);
+        const r = await codigoPorCnpjs(f, cnpjs, (lidos, tam) => setPct(((i + lidos / tam) / arquivos.length) * 100));
+        if (r.length) {
+          const [cod, n] = r[0]!;
+          const tot = r.reduce((s, x) => s + x[1], 0);
+          setCodigo(cod);
+          setEstado(`Código ${cod} encontrado pelo CNPJ: ${n} de ${tot} empresa(s) localizadas estão nele.`);
+          return cod;
+        }
+      }
+      setEstado("Nenhum CNPJ da prefeitura apareceu nos arquivos selecionados.");
+      return null;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao ler o arquivo.");
+      return null;
+    } finally {
+      setLendo(false);
+      setPct(0);
+    }
   }
 
   async function importar() {
-    if (!/^\d{4}$/.test(codigo)) { toast.error("Informe o código do município na Receita (4 dígitos)."); return; }
+    let codigo = codigoAtual;
     if (!arquivos.length) { toast.error("Selecione os arquivos de Estabelecimentos."); return; }
+    if (!/^\d{4}$/.test(codigo)) {
+      const c = await descobrirPorCnpj();
+      if (!c) { toast.error("Informe o código do município na Receita (4 dígitos)."); return; }
+      codigo = c;
+    }
     if (limpar && !window.confirm(`Apagar TODAS as empresas já gravadas de ${municipioNome} antes de importar? Isso não pode ser desfeito.`)) return;
     setLendo(true);
     let total = 0;
