@@ -1,3 +1,4 @@
+import { cederVez } from "@/lib/segundoPlano";
 import { Unzip, UnzipInflate } from "fflate";
 
 /** Linha do arquivo "Estabelecimentos" dos dados abertos do CNPJ (layout oficial da Receita). */
@@ -198,7 +199,7 @@ async function lerLinhas(arquivo: File, aoLer: (linha: string) => void, aoProgre
     // fatia para não travar a tela em blocos grandes
     for (let i = 0; i < value.length; i += 1 << 20) unzip.push(value.subarray(i, i + (1 << 20)));
     aoProgredir?.(lidos);
-    await new Promise((r) => setTimeout(r, 0));
+    await cederVez();
   }
   if (!concluido) consumir(new Uint8Array(), true);
 }
