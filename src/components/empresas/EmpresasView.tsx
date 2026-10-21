@@ -654,7 +654,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
 
   return (
     <Dialog open={aberto} onOpenChange={(o) => !o && !lendo && onClose()}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Importar base completa da Receita</DialogTitle>
           <DialogDescription>
@@ -691,6 +691,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
             <span>2. Arquivos de Estabelecimentos (pode selecionar vários)</span>
             <Input type="file" multiple accept=".zip,.csv,.ESTABELE" disabled={lendo} onChange={(e) => setArquivos([...(e.target.files ?? [])])} />
           </label>
+          {!codigo && (
           <div className="rounded-lg border p-3 space-y-2">
             <span className="block font-medium">Não achou o código pelo nome? Descobrir pelo CNPJ</span>
             <span className="block text-xs text-muted-foreground">Procura nos arquivos de Estabelecimentos os CNPJs do cadastro da prefeitura (ou o CNPJ digitado) e usa o código do município em que eles aparecem.</span>
@@ -699,6 +700,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
               <Button size="sm" variant="outline" disabled={lendo || !arquivos.length} onClick={() => void descobrirPorCnpj()}>Descobrir pelo CNPJ</Button>
             </div>
           </div>
+          )}
           <label className="block space-y-1">
             <span>Trazer baixadas/inativas somente a partir de (opcional)</span>
             <Input type="date" className="w-48" value={desde} onChange={(e) => setDesde(e.target.value)} disabled={lendo} />
