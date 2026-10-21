@@ -1,3 +1,4 @@
+import { manterAtivo } from "@/lib/segundoPlano";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";

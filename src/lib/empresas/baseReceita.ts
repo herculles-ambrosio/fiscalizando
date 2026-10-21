@@ -1,3 +1,4 @@
+import { cederVez } from "@/lib/segundoPlano";
 import { Unzip, UnzipInflate } from "fflate";
 
 /** Linha do arquivo "Estabelecimentos" dos dados abertos do CNPJ (layout oficial da Receita). */
