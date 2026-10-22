@@ -65,6 +65,9 @@ function Barra({
   const temDetalhe = fator.itens.length > 0;
   /** fatores por declarante trazem a IE em `sub` — só neles a situação da Receita faz sentido */
   const porContribuinte = fator.itens.some((i) => i.sub?.startsWith("IE "));
+  /** nos fatores de quem permaneceu, base negativa não entra na conta (exibida como (R$ 0,00)) */
+  const baseZerada =
+    porContribuinte && (fator.chave === "quedas" || fator.chave === "altas");
   const ocultos = Math.max(0, fator.totalItens - fator.itens.length);
   const itens = useMemo(() => {
     if (!ordemData || !porContribuinte) return fator.itens;
@@ -175,7 +178,11 @@ function Barra({
                   )}
 
                   <td className="px-2 py-1.5 text-right font-mono tabular-nums">
-                    {formatarMoeda(i.valorBase)}
+                    {baseZerada && i.valorBase < 0 ? (
+                      <span className="text-destructive">({formatarMoeda(Math.abs(i.valorBase))})</span>
+                    ) : (
+                      formatarMoeda(i.valorBase)
+                    )}
                   </td>
                   <td className="px-2 py-1.5 text-right font-mono tabular-nums">
                     {formatarMoeda(i.valorAtual)}

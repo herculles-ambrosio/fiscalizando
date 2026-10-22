@@ -1,3 +1,4 @@
+import { manterAtivo } from "@/lib/segundoPlano";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -11,7 +12,7 @@ import { useCadastroContribuintes } from "@/hooks/useCadastroContribuintes";
 import { useEmpresas, type Empresa } from "@/hooks/useEmpresas";
 import { enriquecerEmpresas } from "@/lib/empresas/empresas.functions";
 import { atividadeExigeIe, classificar, perfilServico, ROTULO_SERVICO, ROTULO_TIPO, TIPOS_EMPRESA, type TipoEmpresa } from "@/lib/empresas/extrair";
-import { filtrarEstabelecimentos, lerMunicipiosReceita } from "@/lib/empresas/baseReceita";
+import { acharCodigoMunicipio, codigoPorCnpjs, filtrarEstabelecimentos, lerMunicipiosReceita } from "@/lib/empresas/baseReceita";
 import { limparCnpj } from "@/lib/receita/normalizar";
 import { formatarCnpj, formatarData } from "@/lib/format";
 import { formatarCodigoCnae, descricaoCnae } from "@/lib/vaf/cnae";
@@ -87,7 +88,11 @@ export function EmpresasView() {
     return m;
   }, [cadastro]);
 
-  async function processar(lista: { cnpj: string; ie?: string | null; origem?: string }[], rotulo: string) {
+  function processar(lista: { cnpj: string; ie?: string | null; origem?: string }[], rotulo: string) {
+    return manterAtivo(() => processarInterno(lista, rotulo));
+  }
+
+  async function processarInterno(lista: { cnpj: string; ie?: string | null; origem?: string }[], rotulo: string) {
     if (!municipioId || !lista.length) {
       toast.info("Nada para consultar.");
       return;
@@ -529,6 +534,8 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   aberto: boolean; onClose: () => void; municipioId: string; municipioNome: string; iePorCnpj: Map<string, string>; aoConcluir: () => void;
 }) {
   const [codigo, setCodigo] = useState("");
+  const codigoEstado = codigo;
+  const [cnpjManual, setCnpjManual] = useState("");
   const [referencia, setReferencia] = useState(() => {
     const d = new Date();
     d.setMonth(d.getMonth() - 1);
@@ -549,21 +556,65 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
   async function lerMunicipios(f: File) {
     setEstado("Lendo a tabela de municípios…");
     const mapa = await lerMunicipiosReceita(f);
-    const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-    const alvo = norm(municipioNome);
     // A tabela não traz UF; vários municípios homônimos existem — confira o código.
-    const achados = [...mapa.entries()].filter(([, n]) => norm(n) === alvo);
+    const { tipo, achados } = acharCodigoMunicipio(mapa, municipioNome);
     if (achados.length === 1) {
       setCodigo(achados[0]![0]);
-      setEstado(`Código encontrado: ${achados[0]![0]}.`);
+      setEstado(tipo === "exato"
+        ? `Código encontrado: ${achados[0]![0]} (${achados[0]![1]}).`
+        : `Código provável: ${achados[0]![0]} – ${achados[0]![1]}. Confira, ou use “Descobrir pelo CNPJ”.`);
     } else if (achados.length > 1) {
-      setEstado(`Há ${achados.length} municípios com esse nome (${achados.map((a) => a[0]).join(", ")}). Informe o de Minas Gerais.`);
-    } else setEstado("Município não encontrado na tabela; informe o código manualmente.");
+      setEstado(`Há ${achados.length} municípios com nome ${tipo === "exato" ? "igual" : "parecido"} (${achados.map((a) => `${a[0]} – ${a[1]}`).join(", ")}). Informe o de Minas Gerais ou use “Descobrir pelo CNPJ”.`);
+    } else setEstado("Município não encontrado na tabela; use “Descobrir pelo CNPJ” ou informe o código manualmente.");
+  }
+
+  async function cnpjsConhecidos(): Promise<string[]> {
+    const extra = limparCnpj(cnpjManual);
+    const [p, e] = await Promise.all([
+      supabase.from("empresas_prefeitura").select("documento").eq("municipio_id", municipioId).limit(2000),
+      supabase.from("empresas").select("cnpj").eq("municipio_id", municipioId).limit(2000),
+    ]);
+    return [...(extra ? [extra] : []), ...(p.data ?? []).map((r) => r.documento), ...(e.data ?? []).map((r) => r.cnpj)]
+      .map((c) => String(c ?? "").replace(/\D/g, "")).filter((c) => c.length === 14);
+  }
+
+  async function descobrirPorCnpj(): Promise<string | null> {
+    if (!arquivos.length) { toast.error("Selecione primeiro os arquivos de Estabelecimentos (passo 2)."); return null; }
+    setLendo(true);
+    try {
+      const cnpjs = await cnpjsConhecidos();
+      if (!cnpjs.length) { setEstado("Nenhum CNPJ conhecido desta prefeitura. Importe o cadastro econômico ou digite o CNPJ de uma empresa da cidade."); return null; }
+      for (const [i, f] of arquivos.entries()) {
+        setEstado(`Procurando ${cnpjs.length} CNPJ(s) da prefeitura em ${f.name}…`);
+        const r = await codigoPorCnpjs(f, cnpjs, (lidos, tam) => setPct(((i + lidos / tam) / arquivos.length) * 100));
+        if (r.length) {
+          const [cod, n] = r[0]!;
+          const tot = r.reduce((s, x) => s + x[1], 0);
+          setCodigo(cod);
+          setEstado(`Código ${cod} encontrado pelo CNPJ: ${n} de ${tot} empresa(s) localizadas estão nele.`);
+          return cod;
+        }
+      }
+      setEstado("Nenhum CNPJ da prefeitura apareceu nos arquivos selecionados.");
+      return null;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao ler o arquivo.");
+      return null;
+    } finally {
+      setLendo(false);
+      setPct(0);
+    }
   }
 
   async function importar() {
-    if (!/^\d{4}$/.test(codigo)) { toast.error("Informe o código do município na Receita (4 dígitos)."); return; }
+    const codigoInformado = codigoEstado;
+    let codigo = codigoInformado;
     if (!arquivos.length) { toast.error("Selecione os arquivos de Estabelecimentos."); return; }
+    if (!/^\d{4}$/.test(codigo)) {
+      const c = await descobrirPorCnpj();
+      if (!c) { toast.error("Informe o código do município na Receita (4 dígitos)."); return; }
+      codigo = c;
+    }
     if (limpar && !window.confirm(`Apagar TODAS as empresas já gravadas de ${municipioNome} antes de importar? Isso não pode ser desfeito.`)) return;
     setLendo(true);
     let total = 0;
@@ -595,7 +646,8 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
         }
         total += achados.length;
       }
-      toast.success(`${total} empresa(s) da base da Receita gravadas${ignoradas ? ` · ${ignoradas} encerrada(s) antes da data ignorada(s)` : ""}. Use “Completar na Receita” para trazer Simples/MEI e razão social.`);
+      if (!total) toast.warning(`Nenhuma empresa encontrada no código ${codigo}. Use “Descobrir pelo CNPJ” para conferir o código.`);
+      else toast.success(`${total} empresa(s) da base da Receita gravadas${ignoradas ? ` · ${ignoradas} encerrada(s) antes da data ignorada(s)` : ""}. Use “Completar na Receita” para trazer Simples/MEI e razão social.`);
       aoConcluir();
       onClose();
     } catch (e) {
@@ -607,7 +659,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
 
   return (
     <Dialog open={aberto} onOpenChange={(o) => !o && !lendo && onClose()}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Importar base completa da Receita</DialogTitle>
           <DialogDescription>
@@ -644,6 +696,16 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
             <span>2. Arquivos de Estabelecimentos (pode selecionar vários)</span>
             <Input type="file" multiple accept=".zip,.csv,.ESTABELE" disabled={lendo} onChange={(e) => setArquivos([...(e.target.files ?? [])])} />
           </label>
+          {!codigo && (
+          <div className="rounded-lg border p-3 space-y-2">
+            <span className="block font-medium">Não achou o código pelo nome? Descobrir pelo CNPJ</span>
+            <span className="block text-xs text-muted-foreground">Procura nos arquivos de Estabelecimentos os CNPJs do cadastro da prefeitura (ou o CNPJ digitado) e usa o código do município em que eles aparecem.</span>
+            <div className="flex gap-2">
+              <Input className="h-8" placeholder="CNPJ de uma empresa da cidade (opcional)" value={cnpjManual} onChange={(e) => setCnpjManual(e.target.value)} disabled={lendo} />
+              <Button size="sm" variant="outline" disabled={lendo || !arquivos.length} onClick={() => void manterAtivo(descobrirPorCnpj)}>Descobrir pelo CNPJ</Button>
+            </div>
+          </div>
+          )}
           <label className="block space-y-1">
             <span>Trazer baixadas/inativas somente a partir de (opcional)</span>
             <Input type="date" className="w-48" value={desde} onChange={(e) => setDesde(e.target.value)} disabled={lendo} />
@@ -658,7 +720,7 @@ function ImportarBase({ aberto, onClose, municipioId, municipioNome, iePorCnpj, 
           </label>
           {estado && <p className="text-muted-foreground">{estado}</p>}
           {lendo && <Progress value={pct} />}
-          <Button className="w-full" onClick={() => void importar()} disabled={lendo}>
+          <Button className="w-full" onClick={() => void manterAtivo(importar)} disabled={lendo}>
             {lendo ? "Lendo…" : `Importar ${arquivos.length || ""} arquivo(s)`}
           </Button>
         </div>

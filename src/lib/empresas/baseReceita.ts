@@ -1,3 +1,4 @@
+import { cederVez } from "@/lib/segundoPlano";
 import { Unzip, UnzipInflate } from "fflate";
 
 /** Linha do arquivo "Estabelecimentos" dos dados abertos do CNPJ (layout oficial da Receita). */
@@ -53,6 +54,62 @@ function converter(c: string[]): EstabelecimentoBase {
     telefone: tel || null,
     email: v(c[27])?.toLowerCase() ?? null,
   };
+}
+
+/** Normaliza nome de município: sem acentos, conectivos, hífens ou apóstrofos. */
+export function normalizarNomeMunicipio(t: string): string {
+  return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()
+    .replace(/\bD['’`]\s*/g, " ").replace(/[^A-Z0-9 ]/g, " ")
+    .split(/\s+/).filter((p) => p && !["DE", "DA", "DO", "DAS", "DOS", "E"].includes(p)).join(" ");
+}
+
+function distancia(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  let ant = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(ant[j]! + 1, cur[j - 1]! + 1, ant[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1));
+    ant = cur;
+  }
+  return ant[n]!;
+}
+
+/** Procura o código do município pelo nome: exato (normalizado) ou provável (até 2 letras de diferença). */
+export function acharCodigoMunicipio(mapa: Map<string, string>, nome: string): { tipo: "exato" | "provavel"; achados: [string, string][] } {
+  const alvo = normalizarNomeMunicipio(nome);
+  const todos = [...mapa.entries()];
+  const exatos = todos.filter(([, n]) => normalizarNomeMunicipio(n) === alvo);
+  if (exatos.length) return { tipo: "exato", achados: exatos };
+  let melhor = 3;
+  let prov: [string, string][] = [];
+  for (const e of todos) {
+    const d = distancia(normalizarNomeMunicipio(e[1]), alvo);
+    if (d < melhor) { melhor = d; prov = [e]; } else if (d === melhor) prov.push(e);
+  }
+  return { tipo: "provavel", achados: prov };
+}
+
+/**
+ * Descobre o código do município varrendo um arquivo de Estabelecimentos atrás de
+ * CNPJs conhecidos da prefeitura (em MG). Retorna códigos ordenados por ocorrências.
+ */
+export async function codigoPorCnpjs(arquivo: File, cnpjs: string[], aoProgredir?: (lidos: number, total: number) => void): Promise<[string, number][]> {
+  const alvo = new Set(cnpjs.map((c) => c.replace(/\D/g, "")).filter((c) => c.length === 14));
+  const cont = new Map<string, number>();
+  let achados = 0;
+  const PARAR = new Error("parar");
+  try {
+    await lerLinhas(arquivo, (l) => {
+      if (!l.includes('";"MG";"')) return;
+      const c = campos(l);
+      if (c[19] !== "MG" || !alvo.has(`${c[0]}${c[1]}${c[2]}`) || !c[20]) return;
+      cont.set(c[20], (cont.get(c[20]) ?? 0) + 1);
+      if (++achados >= 30) throw PARAR;
+    }, (lidos) => aoProgredir?.(lidos, arquivo.size));
+  } catch (e) {
+    if (e !== PARAR) throw e;
+  }
+  return [...cont.entries()].sort((a, b) => b[1] - a[1]);
 }
 
 /** Lê o arquivo Municipios(.zip/.csv) da Receita e devolve código → nome. */
@@ -142,7 +199,7 @@ async function lerLinhas(arquivo: File, aoLer: (linha: string) => void, aoProgre
     // fatia para não travar a tela em blocos grandes
     for (let i = 0; i < value.length; i += 1 << 20) unzip.push(value.subarray(i, i + (1 << 20)));
     aoProgredir?.(lidos);
-    await new Promise((r) => setTimeout(r, 0));
+    await cederVez();
   }
   if (!concluido) consumir(new Uint8Array(), true);
 }

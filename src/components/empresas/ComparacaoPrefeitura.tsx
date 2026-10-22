@@ -6,8 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Empresa } from "@/hooks/useEmpresas";
 import {
   divergencias, lerCadastroPrefeitura, ROTULO_ALERTA_MUNICIPIO, ROTULO_DIVERGENCIA, ROTULO_SITUACAO_COMUM,
-  situacoesDaLinha, type Divergencia, type LinhaPrefeitura, type SituacaoComum,
+  situacoesDaLinha, tipoCadastroPrefeitura, type Divergencia, type LinhaPrefeitura, type SituacaoComum,
 } from "@/lib/empresas/prefeitura";
+import { classificar, ROTULO_TIPO, TIPOS_EMPRESA, type TipoEmpresa } from "@/lib/empresas/extrair";
+
 
 import { formatarCnpj } from "@/lib/format";
 import { baixarCsv, montarCsv } from "@/lib/csv";
@@ -64,6 +66,12 @@ const OBS_CURTA: Record<string, string> = {
 };
 const obsCurta = (r: string) => OBS_CURTA[r] ?? r;
 
+const tipoDe = (e: Empresa) =>
+  (e.tipo_manual ?? (e.consultado_em && !e.erro_consulta ? classificar(e) : e.tipo_auto)) as TipoEmpresa;
+const tipoDaLinha = (l: Linha): TipoEmpresa =>
+  l.r ? tipoDe(l.r) : l.p ? tipoCadastroPrefeitura(l.p) : "NAO_CLASSIFICADO";
+
+
 
 
 
@@ -77,6 +85,8 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
   const [filtro, setFiltro] = useState("divergentes");
   const [obs, setObs] = useState(OBS_TODAS);
   const [sit, setSit] = useState(TODAS_SIT);
+  const [tipo, setTipo] = useState("todos");
+
 
   const [busca, setBusca] = useState("");
   const [porPagina, setPorPagina] = useState(20);
@@ -101,6 +111,12 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
     setSit(v);
     setPagina(1);
   }
+
+  function mudarTipo(v: string) {
+    setTipo(v);
+    setPagina(1);
+  }
+
 
 
 
@@ -186,10 +202,12 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
     if (filtro === "FORA" && !l.p?.alerta_municipio) return false;
     if (ignora !== "obs" && obs !== OBS_TODAS && rotuloObs(l) !== obs) return false;
     if (ignora !== "sit" && sit !== TODAS_SIT && (sit === SEM_SIT ? l.sits.length > 0 : !l.sits.includes(sit as SituacaoComum))) return false;
+    if (tipo !== "todos" && tipoDaLinha(l) !== tipo) return false;
     if (q && !`${l.cnpj} ${l.p?.nome ?? ""} ${l.r?.razao_social ?? ""} ${l.r?.nome_fantasia ?? ""}`.toLowerCase().includes(q)) return false;
     return true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtro, obs, sit, q]);
+  }, [filtro, obs, sit, tipo, q]);
+
 
   const observacoes = useMemo(() => {
     const contagem = new Map<string, number>();
@@ -306,7 +324,15 @@ export function ComparacaoPrefeitura({ municipioId, municipioNome, empresas, onC
                 ))}
               </SelectContent>
             </Select>
+            <Select value={tipo} onValueChange={mudarTipo}>
+              <SelectTrigger className="w-52 max-w-full"><SelectValue placeholder="Tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os tipos</SelectItem>
+                {TIPOS_EMPRESA.map((t) => <SelectItem key={t} value={t}>{ROTULO_TIPO[t]}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Select value={obs} onValueChange={mudarObs}>
+
 
               <SelectTrigger className="w-80 max-w-full">
                 <span className={cn("truncate", obs === OBS_TODAS && "text-muted-foreground")}>{obs === OBS_TODAS ? "Todas as observações" : obsCurta(obs)}</span>
